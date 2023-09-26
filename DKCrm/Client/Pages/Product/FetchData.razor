@@ -1,0 +1,65 @@
+﻿@page "/product"
+@inject HttpClient Client
+@inject IJSRuntime Js
+
+<h3>Products</h3>
+<small>Add as many productelopers as you wish.</small>
+<div class="form-group">
+    <a class="btn btn-success" href="product/create"><i class="oi oi-plus"></i> Create New</a>
+</div>
+<br>
+@if (Products == null)
+{
+    <text>Loading...</text>
+}
+else if (Products.Length == 0)
+{
+    <text>No Records Found.</text>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Id</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>PartNumber</th>
+                <th>Price</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (Product dev in Products)
+        {
+            <tr>
+                <td>@dev.Id</td>
+                <td>@dev.Name</td>
+                <td>@dev.Description</td>
+                <td>@dev.PartNumber</td>
+                <td>@dev.Price</td>
+                <td>
+                    <a class="btn btn-success" href="product/edit/@dev.Id">Edit</a>
+                    <button class="btn btn-danger" @onclick="@(() => Delete(dev.Id))">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+@code {
+    Product[] Products { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        Products = (await Client.GetFromJsonAsync<Product[]>("api/product"))!;
+    }
+    async Task Delete(Guid productId)
+    {
+        var dev = Products.First(x => x.Id == productId);
+        if (await Js.InvokeAsync<bool>("confirm", $"Do you want to delete {dev.Name}'s ({dev.Id}) Record?"))
+        {
+            await Client.DeleteAsync($"api/product/{productId}");
+            await OnInitializedAsync();
+        }
+    }
+}

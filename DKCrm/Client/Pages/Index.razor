@@ -1,0 +1,14 @@
+﻿@page "/"
+<AuthorizeView>
+    <Authorized>
+        <h1>Hello
+            @if (context.User.Identity != null)
+            {
+                @context.User.Identity.Name
+            }
+            !!</h1>
+    </Authorized>
+    <Authorizing>
+        <h1>Загрузка ...</h1>
+    </Authorizing>
+</AuthorizeView>

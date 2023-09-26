@@ -1,0 +1,44 @@
+﻿@page "/login"
+@using Microsoft.AspNetCore.Components
+@layout AuthLayout
+@inject NavigationManager NavigationManager
+@inject CustomStateProvider AuthStateProvider
+
+<h1 class="h2 font-weight-normal login-title">
+    Вход
+</h1>
+<EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="LoginRequest">
+    <DataAnnotationsValidator />
+    <label for="inputUsername" class="sr-only">Логин</label>
+    <InputText id="inputUsername" class="form-control" @bind-Value="LoginRequest.UserName" autofocus placeholder="Логин" />
+    <ValidationMessage For="@(() => LoginRequest.UserName)" />
+    <label for="inputPassword" class="sr-only">Пароль</label>
+    <InputText type="password" id="inputPassword" class="form-control" placeholder="Пароль" @bind-Value="LoginRequest.Password" />
+    <ValidationMessage For="@(() => LoginRequest.Password)" />
+    <div class="form-check m-3">
+        <InputCheckbox id="inputRememberMe" class="form-check-input" @bind-Value="@LoginRequest.RememberMe" />
+        <label class="form-check-label" for="inputRememberMe">Запомнить меня</label>
+    </div>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+    <label class="text-danger">@Error</label>
+    <NavLink href="register">
+        <h6 class="font-weight-normal text-center">Создать аккаунт</h6>
+    </NavLink>
+</EditForm>
+@code{
+    LoginRequest LoginRequest { get; set; } = new LoginRequest();
+    string? Error { get; set; }
+    async Task OnSubmit()
+    {
+        Error = null;
+        try
+        {
+            await AuthStateProvider.Login(LoginRequest);
+            NavigationManager.NavigateTo("");
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+}
