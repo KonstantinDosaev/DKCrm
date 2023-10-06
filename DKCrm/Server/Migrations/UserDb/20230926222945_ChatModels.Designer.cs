@@ -3,6 +3,7 @@ using System;
 using DKCrm.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DKCrm.Server.Migrations.UserDb
 {
     [DbContext(typeof(UserDbContext))]
-    partial class UserDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230926222945_ChatModels")]
+    partial class ChatModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,41 +24,6 @@ namespace DKCrm.Server.Migrations.UserDb
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("DKCrm.Shared.Models.Address", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Home")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Placement")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Street")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Addresses");
-                });
-
             modelBuilder.Entity("DKCrm.Shared.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -64,15 +31,6 @@ namespace DKCrm.Server.Migrations.UserDb
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
-
-                    b.Property<Guid?>("AdditionalAddressId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AdditionalPhoneNumber")
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("AddressId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -84,12 +42,6 @@ namespace DKCrm.Server.Migrations.UserDb
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("FirstName")
-                        .HasColumnType("text");
-
-                    b.Property<string>("LastName")
-                        .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -125,10 +77,6 @@ namespace DKCrm.Server.Migrations.UserDb
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdditionalAddressId");
-
-                    b.HasIndex("AddressId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -300,21 +248,6 @@ namespace DKCrm.Server.Migrations.UserDb
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("DKCrm.Shared.Models.ApplicationUser", b =>
-                {
-                    b.HasOne("DKCrm.Shared.Models.Address", "AdditionalAddress")
-                        .WithMany()
-                        .HasForeignKey("AdditionalAddressId");
-
-                    b.HasOne("DKCrm.Shared.Models.Address", "Address")
-                        .WithMany()
-                        .HasForeignKey("AddressId");
-
-                    b.Navigation("AdditionalAddress");
-
-                    b.Navigation("Address");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.Chat.ChatMessage", b =>

@@ -1,7 +1,7 @@
 using DKCrm.Server.Data;
-using DKCrm.Server.Models;
+using DKCrm.Server.Services;
+using DKCrm.Shared.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +26,8 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 });
+
+builder.Services.AddSignalR();
 builder.Services.AddControllers().AddNewtonsoftJson();
 
 builder.Services.AddControllersWithViews();
@@ -58,5 +60,6 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+app.MapHub<SignalRHub>("/signalRHub");
 
 app.Run();

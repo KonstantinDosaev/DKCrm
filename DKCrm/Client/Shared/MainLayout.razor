@@ -1,25 +1,59 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.AspNetCore.SignalR.Client
+
+
+@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject CustomStateProvider AuthStateProvider
-
+<audio id="notification" src="/media/notification.mp3" />
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 <div class="page">
-    <div class="sidebar">
+
+
+<main>
         <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row">
-            <button type="button" class="btn btn-link ml-md-auto" @onclick="@LogoutClick">Выход</button>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+        <CascadingValue Value="hubConnection">
+        @Body
+    </CascadingValue>
+</main>
 </div>
 @functions{
     [CascadingParameter]
     Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private HubConnection hubConnection;
+    public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+    private string CurrentUserId { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
+        await hubConnection.StartAsync();
+        hubConnection.On<string, string, string>("ReceiveChatNotification", (message, receiverUserId, senderUserId) =>
+        {
+            if (CurrentUserId == receiverUserId)
+            {
+                _jsRuntime.InvokeAsync<string>("PlayAudio", "notification");
+                _snackBar.Add(message, MudBlazor.Severity.Info, config =>
+                {
+                    config.VisibleStateDuration = 100000;
+                    config.HideTransitionDuration = 500;
+                    config.ShowTransitionDuration = 500;
+                    config.Action = "Перейти в чат?";
+                    config.ActionColor = Color.Info;
+                    config.Onclick = snackbar =>
+                    {
+                        _navigationManager.NavigateTo($"chat/{senderUserId}");
+                        return Task.CompletedTask;
+                    };
+                });
+            }
+        });
+        var state = await _stateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+        CurrentUserId = user.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (!(await AuthenticationState).User.Identity!.IsAuthenticated)

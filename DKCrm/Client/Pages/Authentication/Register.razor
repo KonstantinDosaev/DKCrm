@@ -1,11 +1,11 @@
-﻿@page "/register"
+﻿@*@page "/register"*@
 @using Microsoft.AspNetCore.Components
 @layout AuthLayout
 @inject NavigationManager NavigationManager
 @inject CustomStateProvider AuthStateProvider
 
 <h1 class="h2 font-weight-normal login-title">
-    Регистрация
+    Регистрация пользователя
 </h1>
 <EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="RegisterRequest">
     <DataAnnotationsValidator />
@@ -18,11 +18,11 @@
     <label for ="inputPasswordConfirm"class="sr-only">Повторите пароль</label>
     <InputText type="password" id="inputPasswordConfirm" class="form-control" placeholder="Повторите пароль" @bind-Value="@RegisterRequest.PasswordConfirm" />
     <ValidationMessage For="@(() => RegisterRequest.PasswordConfirm)" />
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Создать аккаунт</button>
+    <button class="btn btn-lg btn-primary btn-block mt-4" type="submit">Создать аккаунт</button>
     <label class="text-danger">@Error</label>
-    <NavLink href="login">
+@*    <NavLink href="login">
         <h6 class="font-weight-normal text-center">У вас уже есть учетная запись? Нажмите здесь, чтобы войти в систему</h6>
-    </NavLink>
+    </NavLink>*@
 </EditForm>
 @functions{
     RegisterRequest RegisterRequest { get; set; } = new RegisterRequest();
@@ -33,7 +33,7 @@
         try
         {
             await AuthStateProvider.Register(RegisterRequest);
-            NavigationManager.NavigateTo("");
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad:true);
         }
         catch (Exception ex)
         {

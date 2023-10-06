@@ -1,4 +1,5 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,13 @@ namespace DKCrm.Server.Controllers
         {
             var dev = new Product { Id = id };
             _context.Remove(dev);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+        [HttpDelete("removerange")]
+        public async Task<IActionResult> DeleteRange(IEnumerable<ApplicationUser> users)
+        {
+          _context.RemoveRange(users);
             await _context.SaveChangesAsync();
             return NoContent();
         }

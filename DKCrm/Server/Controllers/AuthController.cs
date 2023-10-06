@@ -1,4 +1,5 @@
-﻿using DKCrm.Server.Models;
+﻿using DKCrm.Shared.Constants;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -36,11 +37,13 @@ namespace DKCrm.Server.Controllers
             user.UserName = parameters.UserName;
             var result = await _userManager.CreateAsync(user, parameters.Password);
             if (!result.Succeeded) return BadRequest(result.Errors.FirstOrDefault()?.Description);
-            return await Login(new LoginRequest
-            {
-                UserName = parameters.UserName,
-                Password = parameters.Password
-            });
+            await _userManager.AddToRoleAsync(user, RoleNames.User);
+            //return await Login(new LoginRequest
+            //{
+            //    UserName = parameters.UserName,
+            //    Password = parameters.Password
+            //});
+            return Ok();
         }
 
         [Authorize]

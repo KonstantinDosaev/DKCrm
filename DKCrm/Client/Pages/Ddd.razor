@@ -1,0 +1,188 @@
+﻿@*@page "/ddd"*@
+
+
+<MudText Typo="Typo.h4" Style="margin: 1rem 0 0 1rem;">Профиль пользователя</MudText>
+<MudCard>
+    <MudForm Model="@User" @ref="@UserProfileForm" Validation="@(_applicationUserValidator.ValidateValue)" ValidationDelay="0">
+        <MudCardContent>
+            <MudTextField @bind-Value="User.UserName"
+                          For="@(() => User.UserName)"
+                          Immediate="true"
+                          Label="Ник"/>
+
+            <MudTextField @bind-Value="User.Email"
+                          For="@(() => User.Email)"
+                          Immediate="true"
+                          Label="Email"/>
+
+            <MudTextField @bind-Value="User.FirstName"
+                          For="@(() => User.FirstName)"
+                          Immediate="true"
+                          Label="Имя"/>
+
+            <MudTextField @bind-Value="User.LastName"
+                          For="@(() => User.LastName)"
+                          Immediate="true"
+                          Label="Фамилия"/>
+
+            <MudTextField @bind-Value="User.PhoneNumber"
+                          For="@(() => User.PhoneNumber)"
+                          Immediate="true"
+                          Label="Телефонный номер"/>
+
+            <MudTextField @bind-Value="User.LastName"
+                          For="@(() => User.LastName)"
+                          Immediate="true"
+                          Label="Дополнительный телефонный номер"/>
+
+
+            @if (User.Address != null)
+            {
+                <p class="mt-6 fs-4">Основной адрес</p>
+                <MudTextField @bind-Value="User.Address.Country"
+                              For="@(() => User.Address.Country)"
+                              Immediate="true"
+                              Label="Страна"/>
+
+                <MudTextField @bind-Value="User.Address.City"
+                              For="@(() => User.Address.City)"
+                              Immediate="true"
+                              Label="Город" />
+
+                <MudTextField @bind-Value="User.Address.Street"
+                              For="@(() => User.Address.Street)"
+                              Immediate="true"
+                              Label="Улица" />
+
+                <MudTextField @bind-Value="User.Address.Home"
+                              For="@(() => User.Address.Home)"
+                              Immediate="true"
+                              Label="Дом/Сторение" />
+
+                <MudTextField @bind-Value="User.Address.Placement"
+                              For="@(() => User.Address.Placement)"
+                              Immediate="true"
+                              Label="Помещение/Квартира" />
+
+                <MudTextField @bind-Value="User.Address.PostalCode"
+                          For="@(() => User.Address.PostalCode)"
+                          Immediate="true"
+                          Label="Почтовый код" />
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => User.Address = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">Добавить основной адрес
+                    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/></MudButton><br/>
+            }
+            @if (User.AdditionalAddress != null)
+            {
+                <p class="mt-6 fs-4">Дополнительный адрес</p>
+                <MudTextField @bind-Value="User.AdditionalAddress.Country"
+                          For="@(() => User.AdditionalAddress.Country)"
+                              Immediate="true"
+                              Label="Страна"/>
+
+                <MudTextField @bind-Value="User.AdditionalAddress.City"
+                          For="@(() => User.AdditionalAddress.City)"
+                              Immediate="true"
+                              Label="Город" />
+
+                <MudTextField @bind-Value="User.AdditionalAddress.Street"
+                          For="@(() => User.AdditionalAddress.Street)"
+                              Immediate="true"
+                              Label="Улица" />
+
+                <MudTextField @bind-Value="User.AdditionalAddress.Home"
+                          For="@(() => User.AdditionalAddress.Home)"
+                              Immediate="true"
+                              Label="Дом/Сторение" />
+
+                <MudTextField @bind-Value="User.AdditionalAddress.Placement"
+                          For="@(() => User.AdditionalAddress.Placement)"
+                              Immediate="true"
+                              Label="Помещение/Квартира" />
+
+                <MudTextField @bind-Value="User.AdditionalAddress.PostalCode"
+                          For="@(() => User.AdditionalAddress.PostalCode)"
+                              Immediate="true"
+                              Label="Почтовый код" />
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => User.AdditionalAddress = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                    Добавить дополнительный адрес
+                    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/></MudButton>
+            }
+        </MudCardContent>
+        @*        <MudCardContent Class="pa-0">
+
+            <MudTable Items="@User.OrderDetails" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Offer</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Description">
+                        <MudForm Model="@context" Validation=@(_addressValidator.ValidateValue)>
+                            <MudTextField Label="Enter Description"
+                                          @bind-Value="context.Description"
+                                          For="(() => context.Description)" />
+                        </MudForm>
+                    </MudTd>
+                    <MudTd DataLabel="Offer">
+                        <MudForm Model="@context">
+                            <MudNumericField Label="Enter Offer"
+                                             @bind-Value="context.Offer"
+                                             Validation=@(_addressValidator.ValidateValue)
+                                             For="(() => context.Offer)" />
+                        </MudForm>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+        </MudCardContent>*@
+    </MudForm>
+    <MudCardActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await Submit())">Применить</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Inject] ISnackbar Snackbar { get; set; }
+
+    MudForm UserProfileForm;
+
+    ApplicationUserModelFluentValidator _applicationUserValidator = new ApplicationUserModelFluentValidator();
+
+    AddressModelFluentValidator _addressValidator = new AddressModelFluentValidator();
+
+    ApplicationUser User = new ApplicationUser();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await _stateProvider.GetAuthenticationStateAsync();
+        var userName = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!; ;
+        User = await UserManagerCustom.GetUserDetailsAsync(userName);
+    }
+
+    void AddAddress() => User.Address = new Address();
+
+    private async Task Submit()
+    {
+        await UserProfileForm.Validate();
+
+        if (UserProfileForm.IsValid)
+        {
+            await UserManagerCustom.UpdateUser(User);
+          
+            Snackbar.Add("Изменения применены!");
+        }
+    }
+
+
+    
+
+
+  
+}

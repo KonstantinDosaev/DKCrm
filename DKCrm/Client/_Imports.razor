@@ -8,8 +8,25 @@
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Authorization
 
+@using MudBlazor
+
+@inject NavigationManager _navigationManager
+@inject ISnackbar _snackBar
+@inject IJSRuntime _jsRuntime
+@inject AuthenticationStateProvider _stateProvider;
+
+@inject IChatManager _chatManager
+@inject IUserManagerCustom UserManagerCustom
+
 @using DKCrm.Client
 @using DKCrm.Client.Shared
 @using DKCrm.Shared.Models.Products
 @using DKCrm.Client.Services.Auth
+@using DKCrm.Client.Services.Chat
+@using DKCrm.Client.Services.UserService
 @using DKCrm.Shared.Models.UserAuth
+@using DKCrm.Shared.Models
+
+
+
+@using FluentValidation
