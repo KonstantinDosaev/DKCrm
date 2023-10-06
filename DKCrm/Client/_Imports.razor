@@ -17,6 +17,8 @@
 
 @inject IChatManager _chatManager
 @inject IUserManagerCustom UserManagerCustom
+@inject IProductManager ProductManager
+@inject IBrandManager BrandManager
 
 @using DKCrm.Client
 @using DKCrm.Client.Shared
@@ -26,7 +28,9 @@
 @using DKCrm.Client.Services.UserService
 @using DKCrm.Shared.Models.UserAuth
 @using DKCrm.Shared.Models
-
+@using DKCrm.Client.Pages.Authentication
+@using DKCrm.Client.Services.BrandService
+@using DKCrm.Client.Services.ProductServices
 
 
 @using FluentValidation

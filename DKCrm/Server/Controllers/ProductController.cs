@@ -1,6 +1,7 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,8 +20,8 @@ namespace DKCrm.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var devs = await _context.Products.ToListAsync();
-            return Ok(devs);
+            //var е =  _context.Products.ToList();
+            return Ok(await _context.Products.ToListAsync());
         }
 
         [HttpGet("{id}")]
@@ -31,19 +32,28 @@ namespace DKCrm.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Product developer)
+        public async Task<IActionResult> Post(Product product)
         {
-            _context.Add(developer);
+            _context.Add(product);
             await _context.SaveChangesAsync();
-            return Ok(developer.Id);
+            return Ok(product.Id);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put(Product developer)
+        public async Task<IActionResult> Put(Product product)
         {
-            _context.Entry(developer).State = EntityState.Modified;
+            var entityToBeUpdated = await _context.Products.FirstOrDefaultAsync(a => a.Id == product.Id);
+            if (entityToBeUpdated == null)
+                return BadRequest($"Entity with id = {product.Id} was not found.");
+            entityToBeUpdated.Name = product.Name;
+            entityToBeUpdated.PartNumber = product.PartNumber;
+            entityToBeUpdated.Brand = product.Brand;
+            entityToBeUpdated.Category = product.Category;
+
+            //_context.Entry(product).State = EntityState.Modified;
+            _context.Products.Update(entityToBeUpdated);
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(product);
         }
 
         [HttpDelete("{id}")]
@@ -54,12 +64,12 @@ namespace DKCrm.Server.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
-        [HttpDelete("removerange")]
-        public async Task<IActionResult> DeleteRange(IEnumerable<ApplicationUser> users)
+        [HttpPost("removerange")]
+        public async Task<IActionResult> DeleteRange(IEnumerable<Product> products)
         {
-          _context.RemoveRange(users);
+          _context.RemoveRange(products);
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(products.Count());
         }
     }
 }

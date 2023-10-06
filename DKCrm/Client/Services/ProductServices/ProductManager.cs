@@ -33,7 +33,7 @@ namespace DKCrm.Client.Services.ProductServices
 
         public async Task RemoveRangeProductsAsync(IEnumerable<Product> user)
         {
-             await _httpClient.DeleteAsync($"api/product/removerange");
+             await _httpClient.PostAsJsonAsync($"api/product/removerange",user);
         }
     }
 }

@@ -1,13 +1,13 @@
-﻿@using Microsoft.AspNetCore.Components
-@inject HttpClient httpClient
+﻿@page "/ddd"
+@using Microsoft.AspNetCore.Components
 @inject ISnackbar Snackbar
-@page "/usermanager"
+
 <MudTable Items="@Elements"
           Dense="true"
           Hover="true"
           ReadOnly="false"
           CanCancelEdit="true"
-          Filter="new Func<ApplicationUser, bool>(FilterFunc)"
+          Filter="new Func<Product, bool>(FilterFunc)"
           @bind-SelectedItems="selectedItems"
           SortLabel="Sort By"
           CommitEditTooltip="Commit Edit"
@@ -20,53 +20,74 @@
           EditTrigger="@editTrigger"
           MultiSelection="true"
           SelectOnRowClick="true">
-         
+
     <ToolBarContent>
-        <MudText Typo="Typo.h4">Управление пользователями</MudText>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="OpenDialog" Style="margin-left: 1rem;" Color="Color.Tertiary">Создать пользователя  <MudIcon Size="@Size.Large" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" /></MudButton>
+        <MudText Typo="Typo.h4">Список продуктов</MudText>
+        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="AddProduct" Style="margin-left: 1rem;" Color="Color.Tertiary">Добавить продукт  <MudIcon Size="@Size.Large" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" /></MudButton>
 
         @if (selectedItems.Any())
         {
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnButtonDeleteClicked" Style="margin-left: 1rem;">Удалить</MudButton>
         }
-        <MudSpacer/>
+        <MudSpacer />
         <MudTextField @bind-Value="searchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
         @if (applyButtonPosition.DisplayApplyButtonAtStart() || (editButtonPosition.DisplayEditButtonAtStart() && editTrigger == TableEditTrigger.EditButton))
         {
-            <col style="width: 50px;"/>
+            <col style="width: 50px;" />
         }
-        <col style="width: 50px;"/>
-        <col style="width: 150px;"/>
-        <col style="width: 150px;"/>
-        <col/>
-        <col/>
+        <col style="width: 50px;" />
+        <col style="width: 150px;" />
+        <col style="width: 150px;" />
+        <col />
+        <col />
         @if (applyButtonPosition.DisplayApplyButtonAtEnd() || (editButtonPosition.DisplayEditButtonAtEnd() && editTrigger == TableEditTrigger.EditButton))
         {
-            <col style="width: 50px;"/>
+            <col style="width: 50px;" />
         }
     </ColGroup>
     <HeaderContent>
-        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Id)">Nr</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Email)">Sign</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ApplicationUser, object>(x => x.UserName)">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.Id)">Nr</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.PartNumber)">P/N</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Product, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Nr">@context.Id</MudTd>
-        <MudTd DataLabel="Email">@context.Email</MudTd>
-        <MudTd DataLabel="Name">@context.UserName</MudTd>
-        
+        <MudTd DataLabel="Email">@context.PartNumber</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Brand">
+            @if (context.Brand != null)
+            {
+                @context.Brand.Name
+            }
+        </MudTd>
 
         <MudTd DataLabel="Role"> <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => OpenRoleDialog(context)" Color="Color.Tertiary">Изменить роль</MudButton> </MudTd>
     </RowTemplate>
     <RowEditingTemplate>
         <MudTd DataLabel="Nr">@context.Id</MudTd>
-        <MudTd DataLabel="Email">
-            <MudTextField @bind-Value="@context.Email" Required/>
+        <MudTd DataLabel="P/N">
+            <MudTextField @bind-Value="@context.PartNumber" Required />
         </MudTd>
         <MudTd DataLabel="Name">
-            <MudTextField @bind-Value="@context.UserName" Required/>
+            <MudTextField @bind-Value="@context.Name" Required />
+        </MudTd>
+        <MudTd DataLabel="Brand">
+            <MudForm >
+                <MudTextField @bind-Value="value" T="string" Label="Username" Required="true" RequiredError="Brand name is required!" />
+            </MudForm>
+            <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => AddBrand()" Color="Color.Tertiary">Создать</MudButton>
+            <MudSelect T="Brand" Label="US States" @bind-Value="@context.Brand">
+                @foreach (var state in Brands)
+                {
+                    if (state != null)
+                    {
+                        <MudSelectItem T="Brand" Value="@state">@state.Name</MudSelectItem>
+                    }
+
+                }
+            </MudSelect>
         </MudTd>
 
     </RowEditingTemplate>
@@ -75,20 +96,20 @@
     </PagerContent>
 
     <EditButtonContent Context="button">
-        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled"/>
+        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
     </EditButtonContent>
 </MudTable>
 
 <MudDialog @bind-IsVisible="_visibleRegisterDialog" Options="_registerDialogOptions">
     <DialogContent>
-        <Register/>
+        <Register />
     </DialogContent>
 </MudDialog>
 
-<MudDialog @bind-IsVisible="_visibleRoleDialog" Options="_roleDialogOptions">
+@*<MudDialog @bind-IsVisible="_visibleRoleDialog" Options="_roleDialogOptions">
     <DialogContent>
-        <MudSelect T="string" Label="US States"  @bind-Value="value" >
-            @foreach (var state in Roles ?? new ())
+        <MudSelect T="string" Label="US States" @bind-Value="value">
+            @foreach (var state in Roles ?? new())
             {
                 <MudSelectItem T="string" Value="@state.Name">@state.Name</MudSelectItem>
             }
@@ -96,9 +117,10 @@
         <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="UpdateRoles" Color="Color.Tertiary" Style="margin-top: 1rem;">Изменить роль</MudButton>
     </DialogContent>
 </MudDialog>
+*@
 
 
 
+@code {
 
-
-
+}

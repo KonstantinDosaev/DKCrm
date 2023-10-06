@@ -1,4 +1,5 @@
 ﻿using DKCrm.Shared.Iterfaces;
+using System.Text.Json.Serialization;
 
 namespace DKCrm.Shared.Models.Products
 {

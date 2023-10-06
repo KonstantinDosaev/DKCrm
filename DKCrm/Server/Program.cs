@@ -12,7 +12,7 @@ var connectionStringUser = builder.Configuration.GetConnectionString("UserContex
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseNpgsql(connectionStringProduct));
+    options.UseLazyLoadingProxies().UseNpgsql(connectionStringProduct));
 builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseNpgsql(connectionStringUser));
 
