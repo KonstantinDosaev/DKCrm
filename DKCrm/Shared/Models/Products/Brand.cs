@@ -1,5 +1,6 @@
-﻿using DKCrm.Shared.Iterfaces;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using DKCrm.Shared.Iterfaces;
+
 
 namespace DKCrm.Shared.Models.Products
 {
@@ -9,7 +10,7 @@ namespace DKCrm.Shared.Models.Products
         public string Name { get; set; } = null!;
         public string? Image { get; set; } = null!;
         public string? Description { get; set; }
-        //[JsonIgnore]
-       // public virtual ICollection<Product>? Products { get; set; } 
+        [JsonIgnore]
+        public virtual ICollection<Product>? Products { get; set; }
     }
 }

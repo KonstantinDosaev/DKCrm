@@ -28,7 +28,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddSignalR();
-builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddControllers().AddNewtonsoftJson(opt=>opt.SerializerSettings.ReferenceLoopHandling= Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
