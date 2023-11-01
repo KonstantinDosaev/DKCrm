@@ -7,9 +7,14 @@ namespace DKCrm.Client.Pages.ProductManagement
 {
     partial class ProductPage
     {
+        [Parameter]
+        public Guid CategoryId { get; set; }
+
+        private string? _currentCategoryName;
         private List<Product> Elements = new List<Product>();
         // private List<IdentityRole> Roles = new List<IdentityRole>();
-        private List<Brand> Brands = new List<Brand>();
+        private List<Brand>? Brands { get; set; }
+        private List<Category>? Categories { get; set; }
         private List<string> editEvents = new();
         private string searchString = "";
         private Product elementBeforeEdit;
@@ -20,31 +25,39 @@ namespace DKCrm.Client.Pages.ProductManagement
         private TableEditTrigger editTrigger = TableEditTrigger.EditButton;
 
 
-        private void OpenDialog() => _visibleRegisterDialog = true;
-        private DialogOptions _registerDialogOptions = new() { FullWidth = true, CloseButton = true };
-        private bool _visibleRegisterDialog;
 
-        private Product _currentUser;
-        private static List<string> _currentRoles;
-        private DialogOptions _roleDialogOptions = new() { FullWidth = true, CloseButton = true };
-        private bool _visibleRoleDialog;
+        private bool _visibleProductFilter;
+
+
         private string value { get; set; } = "Nothing selected";
-        private async void OpenRoleDialog(Product user)
-        {
-            _currentUser = user;
-           // _currentRoles = await UserManagerCustom.GetRoleFromUser(user.Id);
-            value = _currentRoles.FirstOrDefault()!;
-            _visibleRoleDialog = true;
-        }
-
+       
         protected override async Task OnInitializedAsync()
         {
 
             Elements = await ProductManager.GetProductsAsync();
+
             //Brands = await BrandManager.GetAsync();
             // Roles = await UserManagerCustom.GetAllRolesAsync();
 
 
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            if (CategoryId != null && CategoryId != Guid.Empty)
+            {
+                var resultProducts = await CategoryManager.GetDetailsAsync(CategoryId);
+                if (resultProducts.Products != null)
+                    Elements = resultProducts.Products.ToList();
+               
+                _currentCategoryName = resultProducts.Name;
+                
+            }
+            else
+            {
+                Elements = await ProductManager.GetProductsAsync();
+                _currentCategoryName= null;
+            }
         }
 
         private void AddEditionEvent(string message)
@@ -53,14 +66,22 @@ namespace DKCrm.Client.Pages.ProductManagement
             StateHasChanged();
         }
 
-        private void BackupItem(object element)
+        private async void BackupItem(object element)
         {
             elementBeforeEdit = new()
             { Id = ((Product)element).Id,
                 Name = ((Product)element).Name,
                 PartNumber = ((Product)element).PartNumber,
                 Brand = ((Product)element).Brand,
+                Category = ((Product)element).Category,
             };
+            Brands ??= await BrandManager.GetAsync();
+            if (Categories==null)
+            {
+                Categories = await CategoryManager.GetAsync();
+                Categories = Categories.Where(w => w.Children == null|| !w.Children.Any()).OrderBy(o=>o.Name).ToList();
+            }
+            
             AddEditionEvent($"RowEditPreview event: made a backup of Element {((Product)element).PartNumber}");
         }
 
@@ -72,6 +93,7 @@ namespace DKCrm.Client.Pages.ProductManagement
                 Name = ((Product)element).Name,
                 PartNumber = ((Product)element).PartNumber,
                 Brand = ((Product)element).Brand,
+                Category = ((Product)element).Category,
             };
             await ProductManager.UpdateProductAsync(elementBeforeEdit);
             AddEditionEvent($"RowEditCommit event: Changes to Element {((Product)element).PartNumber} committed");
@@ -83,7 +105,7 @@ namespace DKCrm.Client.Pages.ProductManagement
             ((Product)element).Name = elementBeforeEdit.Name;
 
             ((Product)element).Brand = elementBeforeEdit.Brand;
- 
+            ((Product)element).Category = elementBeforeEdit.Category;
             AddEditionEvent($"RowEditCancel event: Editing of Element {((Product)element).PartNumber} canceled");
         }
 
@@ -95,6 +117,8 @@ namespace DKCrm.Client.Pages.ProductManagement
                 return true;
             if (element.PartNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
+            //if (element.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            //    return true;
             if ($"{element.Id}".Contains(searchString))
                 return true;
             return false;
@@ -118,13 +142,24 @@ namespace DKCrm.Client.Pages.ProductManagement
         {
             var tempList = new List<Product>(selectedItems);
             ProductManager.RemoveRangeProductsAsync(tempList);
-            _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
+            foreach (var item in selectedItems)
+            {
+                Elements.Remove(item);
+            }
+            
+            //_navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
         }
 
         private async Task AddProduct()
         {
-            await ProductManager.AddProductAsync(new Product() { Name = "_Новый продукт" });
-            _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad:true);
+            var createdProduct = new Product { Name = "_Новый продукт" };
+            if (CategoryId!=null && CategoryId!= Guid.Empty)
+            {
+                createdProduct.CategoryId = CategoryId;
+            }
+
+            await ProductManager.AddProductAsync(createdProduct);
+            Elements.Add(createdProduct);
         }
         private async Task AddBrand()
         {
@@ -134,5 +169,6 @@ namespace DKCrm.Client.Pages.ProductManagement
             _snackBar.Add("Изменения применены!");
             //_navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
         }
+        Func<Brand, string> converter = p => p?.Name;
     }
 }

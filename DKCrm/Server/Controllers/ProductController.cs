@@ -55,6 +55,14 @@ namespace DKCrm.Server.Controllers
             await _context.SaveChangesAsync();
             return Ok(product);
         }
+        [HttpPut("range")]
+        public async Task<IActionResult> PutRange(IEnumerable<Product> products)
+        {
+            //_context.Entry(product).State = EntityState.Modified;
+            _context.Products.UpdateRange(products);
+            await _context.SaveChangesAsync();
+            return Ok(products.Count());
+        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)

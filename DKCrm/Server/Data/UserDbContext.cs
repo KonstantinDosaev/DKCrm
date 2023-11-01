@@ -11,8 +11,8 @@ namespace DKCrm.Server.Data
         public UserDbContext(DbContextOptions<UserDbContext> options) : base(options)
         {
         }
-        public DbSet<ChatMessage> ChatMessages { get; set; }
-        public DbSet<Address> Addresses { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
+        public DbSet<Address> Addresses { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

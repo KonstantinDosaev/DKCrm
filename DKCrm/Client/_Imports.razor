@@ -19,7 +19,7 @@
 @inject IUserManagerCustom UserManagerCustom
 @inject IProductManager ProductManager
 @inject IBrandManager BrandManager
-
+@inject ICategoryManager CategoryManager
 @using DKCrm.Client
 @using DKCrm.Client.Shared
 @using DKCrm.Shared.Models.Products
@@ -30,7 +30,9 @@
 @using DKCrm.Shared.Models
 @using DKCrm.Client.Pages.Authentication
 @using DKCrm.Client.Services.BrandService
+@using DKCrm.Client.Services.CategoryService
 @using DKCrm.Client.Services.ProductServices
+@using DKCrm.Client.Components
 
 
 @using FluentValidation

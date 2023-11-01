@@ -23,8 +23,8 @@ namespace DKCrm.Client.FluentValidation
             RuleFor(x => x.LastName)
                 .Length(1, 100);
 
-            RuleFor(x => x.Address).SetValidator(new AddressModelFluentValidator());
-            RuleFor(x => x.AdditionalAddress).SetValidator(new AddressModelFluentValidator());
+            RuleFor(x => x.Address).SetValidator(new AddressModelFluentValidator()!);
+            RuleFor(x => x.AdditionalAddress).SetValidator(new AddressModelFluentValidator()!);
         }
 
         private async Task<bool> IsUniqueAsync(string email)

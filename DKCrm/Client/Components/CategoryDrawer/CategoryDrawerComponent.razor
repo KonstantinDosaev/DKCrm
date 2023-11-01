@@ -1,0 +1,221 @@
+﻿ <MudDrawerContainer Class="mud-height-full">
+
+     <MudDrawer  @bind-Open="@open" Anchor="Anchor.Left" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
+         <MudDrawerHeader>
+             <MudText Typo="Typo.h6">Каталог</MudText>
+
+         </MudDrawerHeader>
+
+                 @if (Categories != null)
+                 {
+                     <MudText Typo="Typo.h6">Категории</MudText>
+                     <MudSwitch @bind-Checked="@Label_Switch1" Label="Перемещение категорий" Color="Color.Info"/>
+
+                     @if (Label_Switch1)
+                     {
+                         @if (RelocatedCategory != null)
+                         {
+                             <MudText Style="text-decoration: underline" Typo="Typo.subtitle1">Перемещаемая категория @RelocatedCategory.Name</MudText>
+                             @if (ParentToRelocation != null)
+                             {
+                                 <MudText Style="text-decoration: underline" Typo="Typo.subtitle1">Место перемещения @(ParentToRelocation.Name ?? "Корневая директория")</MudText>
+                             }
+                             else
+                             {
+                                 <MudText Typo="Typo.subtitle1">Выберите место для перемещения</MudText>
+                             }
+                             <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" Size="Size.Small" OnClick="GetRelocationCategory" Color="Color.Tertiary">Переместить</MudButton>
+                             <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" Size="Size.Small" OnClick="ResetRelocationCategory" Color="Color.Primary">Сбросить</MudButton>
+                         }
+                         else
+                         {
+                             <MudText Typo="Typo.subtitle1">Выберите категорию для перемещения</MudText>
+                         }
+
+                     }
+
+                     <MudTabs Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
+                         @if (@RelocatedOrParent)
+                         {
+                             <MudTabPanel>
+                                 <ChildContent>
+
+                                 </ChildContent>
+                                 <TabContent>
+
+                                     <MudButton OnClick="() => SetParentToRelocation(new Category() { ParentId = null })" Color="Color.Success">
+                                         <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.ArrowCircleDown"/> В Корневую папку
+                                     </MudButton>
+                                 </TabContent>
+                             </MudTabPanel>
+                         }
+                         @foreach (var category in Categories.Where(w => w.ParentId == null))
+                         {
+                             @if (category.Children != null && category.Children.Any())
+                             {
+                                 <MudTabPanel>
+                                     <ChildContent>
+                                         <MudPaper Width="100%">
+                                             <MudList Style="" Clickable="true" @bind-SelectedItem="selectedItem" @bind-SelectedValue="selectedValue" Color="Color.Primary">
+                                                 @foreach (var subCategory in category.Children.OrderBy(o => o.Name))
+                                                 {
+                                                     <CategoryMenuItemComponent CloseCategoryDrawerCallback="CloseCategoryDrawer"
+                                                                                category="subCategory"
+                                                                                CheckedRelocatedCategory="@SetRelocatedCategory"
+                                                                                CheckedParentCategory="@SetParentToRelocation"
+                                                                                VisableButtonRelocation="Label_Switch1"
+                                                                                RelocatedOrParent="RelocatedOrParent"
+                                                                                RefreshCategoryListCallback="GetCategory"/>
+                                                 }
+                                             </MudList>
+                                         </MudPaper>
+                                     </ChildContent>
+
+                                     <TabContent>
+                                         <CategoryRelocatedButtonPanel CurrentCategory="category"
+                                                                       CheckedParentCategory="SetParentToRelocation"
+                                                                       CheckedRelocatedCategory="SetRelocatedCategory"
+                                                                       VisibleButtons="Label_Switch1"
+                                                                       RelocatedOrParent="RelocatedOrParent"/>
+                                         @category.Name
+                                <CategorySettingsMenuComponent RefreshCategoryListCallback="GetCategory" CurrentCategory="category" />
+                                     </TabContent>
+                                 </MudTabPanel>
+                             }
+                             else
+                             {
+                                 <div>
+                                     <MudTabPanel OnClick="CloseCategoryDrawer">
+                                         <ChildContent>
+
+                                         </ChildContent>
+
+                                         <TabContent>
+                                             <CategoryRelocatedButtonPanel CurrentCategory="category"
+                                                                           CheckedParentCategory="SetParentToRelocation"
+                                                                           CheckedRelocatedCategory="SetRelocatedCategory"
+                                                                           VisibleButtons="Label_Switch1"
+                                                                           RelocatedOrParent="RelocatedOrParent"/>
+                                             <a style="width: 100%; height: 100%;" href=@($"/ddd/{category.Id}")>@category.Name</a>
+                                             <CategorySettingsMenuComponent RefreshCategoryListCallback="GetCategory" CurrentCategory="category"/>
+                                         </TabContent>
+                                     </MudTabPanel>
+
+                                 </div>
+                             }
+                         }
+                         <MudTabPanel>
+                             <ChildContent>
+                                 <MudForm Style="">
+                                     <MudTextField @bind-Value="value" T="string" Label="Категория" Required="true" RequiredError="Введите название категории!" Lines="3"/>
+                                     <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" Size="Size.Small" OnClick="AddCategory" Color="Color.Tertiary">Создать</MudButton>
+                                 </MudForm>
+                             </ChildContent>
+                             <TabContent>
+                                 <MudText>Добавить категорию</MudText> <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Add" class="ml-auto"></MudIcon>
+                             </TabContent>
+                         </MudTabPanel>
+                     </MudTabs>
+                 }
+          
+            
+       
+     </MudDrawer>
+
+     @* <MudDrawer @bind-Open="@open" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="600px">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Производители</MudText>
+
+        </MudDrawerHeader>
+
+       
+    </MudDrawer>*@
+ </MudDrawerContainer>
+
+@code {
+    MudListItem selectedItem;
+    object selectedValue = 1;
+    string value;
+
+    private List<Category>? Categories { get; set; }
+    private List<Brand>? Brands { get; set; }
+
+
+    public bool open { get; set; }
+    private Brand _currentCategory;
+
+    public Category? ParentToRelocation;
+    public Category? RelocatedCategory;
+    public bool Label_Switch1 { get; set; } = false;
+    public bool RelocatedOrParent{ get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+
+    private async Task GetCategory()
+    {
+       
+  
+        Categories = await CategoryManager.GetAsync();
+        Categories = Categories.OrderBy(o => o.Name).ToList();
+        StateHasChanged();
+    }
+
+    public void SetParentToRelocation(Category category)
+    {
+        ParentToRelocation = category;
+    }    
+    public void SetRelocatedCategory(Category category)
+    {
+        RelocatedCategory = category;
+        RelocatedOrParent = true;
+    }
+
+    public async void OpenCategoryDrawer()
+    {
+ 
+        open=true;
+        if (Categories==null)
+        {
+            await GetCategory();
+        }
+
+        StateHasChanged();
+    }
+
+    void CloseCategoryDrawer()
+    {
+        open = false; 
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private async Task AddCategory()
+    {
+        var category = new Category() { Name = value };
+        await CategoryManager.AddAsync(category);
+        Categories!.Add(category);
+        _snackBar.Add("Категория добавлена!");
+    }
+
+    private async void GetRelocationCategory()
+    {
+        if (RelocatedCategory == null || ParentToRelocation == null) return;
+        RelocatedCategory.ParentId = ParentToRelocation.Id;
+        if (await CategoryManager.UpdateAsync(RelocatedCategory))
+        {
+            ResetRelocationCategory();
+            await GetCategory();
+            _snackBar.Add("Категория перемещена!");
+        }
+        
+    }
+    private  void ResetRelocationCategory()
+    {
+        RelocatedCategory = null;
+        ParentToRelocation = null;
+        RelocatedOrParent = false;
+    }
+}

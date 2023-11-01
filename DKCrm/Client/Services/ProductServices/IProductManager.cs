@@ -6,7 +6,8 @@ namespace DKCrm.Client.Services.ProductServices
     {
         Task<List<Product>> GetProductsAsync();
         Task<Product> GetProductDetailsAsync(string userId);
-        Task UpdateProductAsync(Product user);
+        Task<bool> UpdateProductAsync(Product user);
+        Task <bool> UpdateRangeProductsAsync(IEnumerable<Product> user);
         Task AddProductAsync(Product user);
         Task RemoveRangeProductsAsync(IEnumerable<Product> user);
     }

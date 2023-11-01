@@ -1,0 +1,164 @@
+﻿<MudMenu  ActivationEvent="@MouseEvent.LeftClick">
+    <ActivatorContent>
+        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary"></MudIconButton>
+    </ActivatorContent>
+    <ChildContent>
+        <MudMenuItem Style="text-align: end;"><MudIcon Icon="@Icons.Material.Filled.Close"></MudIcon></MudMenuItem>
+        <MudMenuItem OnClick="() => _visibleAddCategoryDialog = true">
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Add" Color="Color.Success" class="ml-auto" />
+            Добавить подкатегорию
+        </MudMenuItem>
+        <MudMenuItem OnClick="() => _visibleRemoveCategoryDialog = true">
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" class="ml-auto"/>
+            Удалить
+        </MudMenuItem>
+        <MudMenuItem OnClick="() => _visibleUpdateCategoryDialog = true">
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" class="ml-auto"/>
+            Редактировать
+        </MudMenuItem>
+    </ChildContent>
+</MudMenu>
+
+<MudDialog @bind-IsVisible="_visibleAddCategoryDialog">
+    <DialogContent>
+        <MudText>Создание категории</MudText>
+        <MudForm @ref="_createCategoryForm"Style="display: flex">
+            <MudTextField @bind-Value="_categoryName" T="string" Label="Название категории" Required="true" RequiredError="Введите название категории!"/>
+            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="async () => await AddSubCategory()" Color="Color.Tertiary">Создать</MudButton>
+        </MudForm>
+    </DialogContent>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="_visibleRemoveCategoryDialog">
+    <DialogContent>
+        <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
+       
+        @if (CurrentCategory.Products != null && CurrentCategory.Products.Any())
+        {
+            @if(AllCategories!=null && _visibleRelocatedProductDialog){
+                <MudText Class="pb-3 text-decoration-underline text-danger">Выберите категорию в которую переместить содержимое</MudText>
+                <MudSelect T="Category" ToStringFunc="category => category.Name "  Label="Категория" @bind-Value="@CategoryToRelocateProduct">
+                    @foreach (var category in AllCategories)
+                    {
+                        <MudSelectItem T="Category" Value="@category">@category.Name</MudSelectItem>
+                    }
+                </MudSelect> 
+                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="RelocateProductsInOtherCategory" Color="Color.Success">Переместить содержимое</MudButton>
+            }
+            else
+            {
+                <MudText Class="pb-3 text-decoration-underline text-danger">Всё содержимое по данной категории удалится!!!</MudText>
+                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="OpenRelocatedProductDialog" Color="Color.Warning">Переместить</MudButton>
+            }
+        }
+       @if (CurrentCategory.Children.Any())
+       {
+            <MudText Class="pb-3 text-decoration-underline text-danger">Все под категории по данной категории переместятся в корневой раздел категорий!!!</MudText>
+       }
+        <div class="pt-5 justify-content-between d-flex">
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="async () => await DeleteCategory()" Color="Color.Error">Удалить</MudButton>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleRemoveCategoryDialog=false" Color="Color.Primary">Закрыть</MudButton>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="_visibleUpdateCategoryDialog">
+    <DialogContent>
+        <MudText>Редактирование категории</MudText>
+        <MudCard>
+            <MudForm @ref="_updateCategoryForm" Model="@CurrentCategory">
+                <MudCardContent>
+                    <MudTextField @bind-Value="CurrentCategory.Name" T="string" Label="Название категории" Required="true" RequiredError="Введите название категории!" />
+                </MudCardContent>
+            </MudForm>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateCategory())">Применить</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+
+@code {
+    private bool _visibleRemoveCategoryDialog;
+    private bool _visibleAddCategoryDialog;   
+    private bool _visibleUpdateCategoryDialog;
+    private bool _visibleRelocatedProductDialog;
+
+    private MudForm? _createCategoryForm;    
+    private MudForm? _updateCategoryForm;
+
+    MudListItem selectedItem;
+    object selectedValue = 1;
+    List<Category>? AllCategories { get; set; }
+    [Parameter]
+    public Category CurrentCategory { get; set; }
+
+    public Category CategoryToRelocateProduct { get; set; }
+    private string _categoryName;
+
+    [Parameter]
+    public EventCallback RefreshCategoryListCallback { get; set; }
+
+    private async Task AddSubCategory()
+    {
+        await _createCategoryForm!.Validate();
+        if (!_createCategoryForm.IsValid)return;
+
+        if (await CategoryManager.AddAsync(new Category() { Name = _categoryName, ParentId = CurrentCategory.Id }))
+        {
+            await RefreshCategoryListCallback.InvokeAsync();
+            _snackBar.Add("Категория добавлена!");
+        }
+    }
+
+    private async Task DeleteCategory()
+    {
+        if (await CategoryManager.RemoveAsync(CurrentCategory.Id))
+        {
+            _visibleRemoveCategoryDialog = false;
+            await RefreshCategoryListCallback.InvokeAsync();
+            _snackBar.Add("Категория удалена!");
+        }
+        else
+        {
+            _snackBar.Add("Ошибка при удалении!");
+        }
+    }
+
+    private async Task OpenRelocatedProductDialog()
+    {
+        AllCategories = await CategoryManager.GetAsync();
+        AllCategories = AllCategories.Where( w=> w.Children == null || !w.Children.Any()).OrderBy(o => o.Name).ToList();
+         _visibleRelocatedProductDialog = true;
+        
+    }
+    private async Task RelocateProductsInOtherCategory()
+    {
+        var relocatedId = CategoryToRelocateProduct.Id;
+        var tempListProduct = CurrentCategory.Products;
+        foreach (var product in tempListProduct!)
+        {
+            product.CategoryId = relocatedId;
+        }
+        if (await ProductManager.UpdateRangeProductsAsync(tempListProduct))
+        {
+            _snackBar.Add("Перемещение завершено!");
+            CurrentCategory.Products = null;
+            _visibleRelocatedProductDialog = false;
+        }
+    }
+    private async Task UpdateCategory()
+    {
+        await _updateCategoryForm!.Validate();
+        if (!_updateCategoryForm.IsValid)return;
+        if (await CategoryManager.UpdateAsync(CurrentCategory))
+        {
+            await RefreshCategoryListCallback.InvokeAsync();
+            _visibleUpdateCategoryDialog = false;
+            _snackBar.Add("Категория обновлена!");
+        }
+    }
+
+}

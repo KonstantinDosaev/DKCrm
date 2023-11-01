@@ -85,7 +85,7 @@
                         <div style="padding: 15px; background-color: antiquewhite; border-radius: 5px; margin-top: 5px">
                             <MudText Typo="Typo.body2" Style="">@message.Message</MudText>
                             <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.CreatedDate.ToString("dd MMM, yyyy hh:mm")</MudText>
-                            <input type="checkbox" @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs.Value); }" /> 
+                            <input type="checkbox" @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs.Value!); }" /> 
                         </div>
  
                     </div>

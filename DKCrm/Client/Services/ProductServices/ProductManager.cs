@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Client.Services.ProductServices
@@ -21,9 +22,15 @@ namespace DKCrm.Client.Services.ProductServices
             return await _httpClient.GetFromJsonAsync<Product>($"api/product/{userId}") ?? throw new InvalidOperationException();
         }
 
-        public async Task UpdateProductAsync(Product product)
+        public async Task<bool> UpdateProductAsync(Product product)
         {
-            await _httpClient.PutAsJsonAsync("api/product", product);
+           var result = await _httpClient.PutAsJsonAsync("api/product", product);
+            return result.StatusCode== HttpStatusCode.OK; 
+        }
+
+        public async Task<bool> UpdateRangeProductsAsync(IEnumerable<Product> products)
+        {
+           return (await _httpClient.PutAsJsonAsync("api/product/range", products)).StatusCode== HttpStatusCode.OK;
         }
 
         public async Task AddProductAsync(Product product)
@@ -31,9 +38,9 @@ namespace DKCrm.Client.Services.ProductServices
             await _httpClient.PostAsJsonAsync($"api/product", product);
         }
 
-        public async Task RemoveRangeProductsAsync(IEnumerable<Product> user)
+        public async Task RemoveRangeProductsAsync(IEnumerable<Product> products)
         {
-             await _httpClient.PostAsJsonAsync($"api/product/removerange",user);
+             await _httpClient.PostAsJsonAsync($"api/product/removerange",products);
         }
     }
 }

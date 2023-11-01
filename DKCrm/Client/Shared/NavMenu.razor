@@ -1,5 +1,9 @@
 ﻿@using DKCrm.Shared.Constants
+@using DKCrm.Client.Components
+@using DKCrm.Client.Components.CategoryDrawer
 @inject CustomStateProvider AuthStateProvider
+
+
 <div class="my-navbody">
     <div class="top-row ps-3 navbar navbar-dark">
         <div class="container-fluid">
@@ -42,40 +46,47 @@
                     <MudNavLink Class="my-navlink" Href="/ddd">
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.SupervisedUserCircle" Class="pa-0 ml-2"/>ddd
                     </MudNavLink>
-                </div>
+                </div>               
+                <MudButton Variant="Variant.Text" OnClick="@(() =>_categoryDrawerRef!.OpenCategoryDrawer())">End</MudButton>
+
             </div>
         </div>
     </div>
+    <CategoryDrawerComponent @ref="_categoryDrawerRef"/>
     <AuthorizeView>
         <Authorized>
-                @if (context.User.Identity != null)
-                {
-                    <div class="user-nav">
-                        <div class="my-navitem">
-                            <MudNavLink Class="my-navlink" Href="/userprofile">
-                                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.PermIdentity" Class="pa-0 ml-2"/>@context.User.Identity.Name
-                            </MudNavLink>
-                        </div>
-                        <div class="my-navitem">
-                            <MudNavLink Class="my-navlink" OnClick="@LogoutClick">
-                                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.DirectionsRun" Class="pa-0 ml-2"/>Выход
-                            </MudNavLink>
-                        </div>
+            @if (context.User.Identity != null)
+            {
+                <div class="user-nav">
+                    <div class="my-navitem">
+                        <MudNavLink Class="my-navlink" Href="/userprofile">
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.PermIdentity" Class="pa-0 ml-2"/>@context.User.Identity.Name
+                        </MudNavLink>
                     </div>
-                }
+                    <div class="my-navitem">
+                        <MudNavLink Class="my-navlink" OnClick="@LogoutClick">
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.DirectionsRun" Class="pa-0 ml-2"/>Выход
+                        </MudNavLink>
+                    </div>
+                </div>
+            }
         </Authorized>
         <Authorizing>
             <h1>Загрузка ...</h1>
         </Authorizing>
     </AuthorizeView>
 </div>
-@code {
-    private bool _collapseNavMenu = true;
 
+@code {
+   
+    private bool _collapseNavMenu = true;
+  
     private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
     private string? MyNavMenuCssClass => _collapseNavMenu ? "collapse" : null;
+    private CategoryDrawerComponent? _categoryDrawerRef;
 
 
+   
     private void ToggleNavMenu()
     {
         _collapseNavMenu = !_collapseNavMenu;
@@ -85,6 +96,7 @@
         await AuthStateProvider.Logout();
         _navigationManager.NavigateTo("/login");
     }
+   
 }
 <style>
 

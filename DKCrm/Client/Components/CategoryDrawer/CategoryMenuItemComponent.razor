@@ -1,0 +1,110 @@
+﻿@using DKCrm.Client.Components.CategoryDrawer
+
+@if (category.Children == null || !category.Children.Any())
+ {
+   
+     <MudListItem Dense="true" OnClick="@CloseCategoryDrawerCallback" Href=@($"/ddd/{category.Id}") Value="@category.Name">
+         <CategoryRelocatedButtonPanel CurrentCategory="@category" 
+                                       CheckedParentCategory="@CheckedParentCategory" 
+                                       CheckedRelocatedCategory="@CheckedRelocatedCategory" 
+                                       VisibleButtons="@VisableButtonRelocation"
+                                       RelocatedOrParent="RelocatedOrParent"/>
+         @category.Name
+         <CategorySettingsMenuComponent RefreshCategoryListCallback="RefreshCategoryListCallback" CurrentCategory="@category"/>
+     </MudListItem>
+    
+
+
+                                            
+ }
+ else
+ {
+   
+     <MudListItem Text="">
+         <ChildContent>
+             <CategoryRelocatedButtonPanel CurrentCategory="@category"
+                                           CheckedParentCategory="@CheckedParentCategory"
+                                           CheckedRelocatedCategory="@CheckedRelocatedCategory"
+                                           VisibleButtons="@VisableButtonRelocation"
+                                           RelocatedOrParent="RelocatedOrParent"/>
+                @category.Name
+             <CategorySettingsMenuComponent RefreshCategoryListCallback="RefreshCategoryListCallback" CurrentCategory="@category"/>
+         </ChildContent>
+         
+         <NestedList>
+
+             @foreach (var subCategory in @category.Children.OrderBy(o => o.Name))
+             {
+                 <CategoryMenuItemComponent CloseCategoryDrawerCallback="@CloseCategoryDrawerCallback"
+                                            category="@subCategory"
+                                            CheckedRelocatedCategory="CheckedRelocatedCategory"
+                                            CheckedParentCategory="@CheckedParentCategory"
+                                            VisableButtonRelocation="@VisableButtonRelocation"
+                                            RelocatedOrParent="RelocatedOrParent"
+                                            RefreshCategoryListCallback="RefreshCategoryListCallback"/>
+             }
+
+         </NestedList>
+        
+     </MudListItem>
+   
+  
+    
+ }
+
+@*<MudDialog @bind-IsVisible="_visibleAddCategoryDialog">
+    <DialogContent>
+        <MudForm Style="display: flex">
+            <MudTextField @bind-Value="value" T="string" Label="Категория" Required="true" RequiredError="Введите название категории!" />
+            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => AddSubCategory()" Color="Color.Tertiary">Создать</MudButton>
+        </MudForm>
+    </DialogContent>
+</MudDialog>*@
+
+
+
+
+@code {
+
+    [Parameter]
+    public Category category { get; set; }
+    [Parameter]
+    public bool VisableButtonRelocation { get; set; }
+    [Parameter]
+    public EventCallback CloseCategoryDrawerCallback { get; set; }
+    private bool _visibleAddCategoryDialog;
+    private Guid _currentCategory;
+    string value;
+
+    [Parameter]
+    public EventCallback RefreshCategoryListCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<Category> CheckedParentCategory { get; set; }
+    [Parameter]
+    public EventCallback<Category> CheckedRelocatedCategory { get; set; }
+    [Parameter]
+    public bool RelocatedOrParent { get; set; } = false;
+    //private async Task AddSubCategory()
+    //{
+    //    var category = new Category() { Name = value, ParentId = _currentCategory };
+    //    await CategoryManager.AddAsync(category);
+    //    _snackBar.Add("Категория добавлена!");
+    //    _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
+    //}
+    //private void OpenAddCategoryDialog(Guid id)
+    //{
+    //    _currentCategory = id;
+    //    _visibleAddCategoryDialog = true;
+
+    //}
+}
+<style>
+    .subcategory__tree{
+        font-weight: bold;
+    }
+
+    .category-tree__link {
+
+    }
+</style>

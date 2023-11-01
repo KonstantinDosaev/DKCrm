@@ -1,0 +1,29 @@
+﻿
+@if (VisibleButtons)
+{
+    if (RelocatedOrParent)
+    {
+        <MudIconButton OnClick="async () => await CheckedParentCategory.InvokeAsync(CurrentCategory)" Color="Color.Success" Icon="@Icons.Material.Filled.ArrowCircleDown"></MudIconButton>
+    }
+    else
+    {
+        <MudIconButton OnClick="async () => await CheckedRelocatedCategory.InvokeAsync(CurrentCategory)" Color="Color.Success" Icon="@Icons.Material.Filled.ArrowCircleRight"></MudIconButton>
+    }
+    
+    
+}
+@code {
+
+
+     [Parameter]
+     public Category CurrentCategory { get; set; }
+    [Parameter]
+    public EventCallback<Category> CheckedParentCategory { get; set; }
+    [Parameter]
+    public EventCallback<Category> CheckedRelocatedCategory { get; set; }
+     [Parameter]
+     public bool VisibleButtons { get; set; } = false;
+    [Parameter]
+    public bool RelocatedOrParent { get; set; } = false;
+
+}

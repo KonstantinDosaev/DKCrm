@@ -1,5 +1,4 @@
-﻿using DKCrm.Shared.Models.Chat;
-using DKCrm.Shared.Models;
+﻿using DKCrm.Shared.Models;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Identity;
 
