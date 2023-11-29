@@ -9,7 +9,7 @@ namespace DKCrm.Shared.Models
         public Guid Id { get; set; }
         [Required]
         public string Country { get; set; }
-
+        public string? Region { get; set; }
         [Required]
         public string City { get; set; }
 
@@ -22,7 +22,7 @@ namespace DKCrm.Shared.Models
         [Required]
         public string Placement { get; set; }
 
-        [Required]
+
         public string? PostalCode { get; set; }
 
     }

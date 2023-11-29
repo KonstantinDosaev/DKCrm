@@ -36,11 +36,11 @@
 
         @if (selectedItems.Any())
         {
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnButtonDeleteClicked" Style="margin-left: 1rem;">Удалить</MudButton>
+            <MudButton Variant="Variant.Filled"  StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnButtonDeleteClicked" Style="margin-left: 1rem;">Удалить</MudButton>
         }
 
         <MudSpacer />
-        <MudTextField @bind-Value="searchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudTextField @bind-Value="searchString" Clearable="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
         @if (applyButtonPosition.DisplayApplyButtonAtStart() || (editButtonPosition.DisplayEditButtonAtStart() && editTrigger == TableEditTrigger.EditButton))

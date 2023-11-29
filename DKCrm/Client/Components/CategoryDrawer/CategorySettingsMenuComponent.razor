@@ -109,6 +109,7 @@
         if (await CategoryManager.AddAsync(new Category() { Name = _categoryName, ParentId = CurrentCategory.Id }))
         {
             await RefreshCategoryListCallback.InvokeAsync();
+            _visibleAddCategoryDialog = false;
             _snackBar.Add("Категория добавлена!");
         }
     }

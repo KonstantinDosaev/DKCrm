@@ -115,7 +115,9 @@ namespace DKCrm.Client.Pages.ProductManagement
                 return true;
             if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
-            if (element.PartNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            if (element.PartNumber != null && element.PartNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.Brand != null && element.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
             //if (element.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             //    return true;

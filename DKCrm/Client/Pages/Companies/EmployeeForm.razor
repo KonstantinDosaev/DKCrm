@@ -1,0 +1,53 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+
+
+    <MudText Typo="Typo.h5" >@TitleText</MudText>
+    @if (Employee != null)
+    {
+        <EditForm Model="Employee" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        <MudCard>
+        <MudCardContent>
+
+                <MudTextField @bind-Value="@Employee.Position"
+                      For="@(() => Employee.Position)"
+                      Immediate="true"
+                      Label="Должность" />
+            <MudTextField @bind-Value="@Employee.LastName"
+                      For="@(() => Employee.LastName)"
+                      Immediate="true"
+                      Label="Фамилия" />
+            <MudTextField @bind-Value="@Employee.FirstName"
+                      For="@(() => Employee.FirstName)"
+                      Immediate="true"
+                      Label="Имя" />
+            <MudTextField @bind-Value="@Employee.MiddleName"
+                      For="@(() => Employee.MiddleName)"
+                      Immediate="true"
+                      Label="Отчество" />
+            <MudTextField @bind-Value="@Employee.Phone"
+                      For="@(() => Employee.Phone)"
+                      Immediate="true"
+                      Label="Телефон" />
+            <MudTextField @bind-Value="@Employee.Email"
+                      For="@(() => Employee.Email)"
+                      Immediate="true"
+                      Label="E-mail" />
+        
+        </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="OnValidSubmit" Color="Color.Tertiary">@ButtonText</MudButton>
+            </MudCardActions>
+        </MudCard>
+        </EditForm>
+        
+    }
+
+
+@code {
+    [Parameter] public Employee Employee { get; set; } = null!;
+    [Parameter] public string ButtonText { get; set; } = "Save";
+    [Parameter] public string TitleText { get; set; } = "";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+
+}

@@ -1,0 +1,272 @@
+﻿@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Client.Services.FnsRequesting
+@using System.Net
+
+<MudDialog @bind-IsVisible="_visibleAddCompanyDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+    <DialogContent>
+        <MudText>Создание компании</MudText>
+        <EditForm Model="CurrentCompany" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard>
+                <MudCardContent>
+                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите тип компании" @bind-Value="CurrentCompany.CompanyTypeId" HelperText="Тип компании" T="Guid?" ToStringFunc="companyType => companyType.ToString()" CloseIcon="@Icons.Material.Filled.Flag" AdornmentColor="Color.Tertiary">
+                        @if (CompanyTypes != null)
+                        {
+                            @foreach (var item in CompanyTypes)
+                            {
+                                <MudSelectItem T="Guid?" Value="@item.Id">@item.Name</MudSelectItem>
+                            }
+
+                        }
+                    </MudSelect>
+                    <MudTextField Label="Наименование компании" @bind-Value="CurrentCompany.Name"
+                                  For="@(() => CurrentCompany.Name)"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  RequiredError="Введите наименование компании!" />
+                    <MudTextField Label="Руководитель" @bind-Value="CurrentCompany.Director"
+                                  For="@(() => CurrentCompany.Director)"
+                                  Variant="Variant.Outlined"
+                                  RequiredError="Фактический руководитель!" />
+                    @if (CurrentCompany.ActualAddress != null)
+                    {
+                        <p class="mt-6 fs-4">Фактический адрес</p>
+                        <MudTextField @bind-Value="CurrentCompany.ActualAddress.Country"
+                                  For="@(() => CurrentCompany.ActualAddress.Country)"
+                                  Immediate="true"
+                                  Label="Страна"
+                                  Required="true" />
+                        <MudTextField @bind-Value="CurrentCompany.ActualAddress.Region"
+                                  For="@(() => CurrentCompany.ActualAddress.Region)"
+                                  Immediate="true"
+                                  Label="Регион" />
+                        <MudTextField @bind-Value="CurrentCompany.ActualAddress.City"
+                                  For="@(() => CurrentCompany.ActualAddress.City)"
+                                  Immediate="true"
+                                  Required="true"
+                                  Label="Город" />
+
+                        <MudTextField @bind-Value="CurrentCompany.ActualAddress.Street"
+                                  For="@(() => CurrentCompany.ActualAddress.Street)"
+                                  Immediate="true"
+                                  Required="true"
+                                  Label="Улица" />
+
+                        <MudTextField @bind-Value="CurrentCompany.ActualAddress.Home"
+                                  For="@(() => CurrentCompany.ActualAddress.Home)"
+                                  Immediate="true"
+                                  Required="true"
+                                  Label="Дом/Сторение" />
+
+                        <MudTextField @bind-Value="CurrentCompany.ActualAddress.Placement"
+                                  For="@(() => CurrentCompany.ActualAddress.Placement)"
+                                  Immediate="true"
+                                  Required="true"
+                                  Label="Помещение/Квартира" />
+
+                        <MudTextField @bind-Value="CurrentCompany.ActualAddress.PostalCode"
+                                  For="@(() => CurrentCompany.ActualAddress.PostalCode)"
+                                  Immediate="true"
+                                  Label="Почтовый код" />
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => CurrentCompany.ActualAddress = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                            Добавить фактический адрес
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                        </MudButton>
+
+                        <br />
+                    }
+                    <p class="mt-6 fs-4">Данные ЕГРЮЛ</p>
+                    @if (CurrentCompany.FnsRequest != null)
+                    {
+
+                        <MudTextField @bind-Value="CurrentCompany.FnsRequest.Name"
+                                  For="@(() => CurrentCompany.FnsRequest.Name)"
+                                  Immediate="true"
+                                  Label="Наименование полное" />
+                                  
+                        <MudTextField @bind-Value="CurrentCompany.FnsRequest.Director"
+                                      For="@(() => CurrentCompany.FnsRequest.Director)"
+                                      Immediate="true"
+                                      Label="Руководитель" />
+                        <MudTextField @bind-Value="CurrentCompany.FnsRequest.INN"
+                                  For="@(() => CurrentCompany.FnsRequest.INN)"
+                                  Immediate="true"
+                                  Label="ИНН" />
+
+                        <MudTextField @bind-Value="CurrentCompany.FnsRequest.ORGN"
+                                  For="@(() => CurrentCompany.FnsRequest.ORGN)"
+                                  Immediate="true"
+                                  Label="ОГРН" />
+
+                        <MudTextField @bind-Value="CurrentCompany.FnsRequest.OKVED"
+                                  For="@(() => CurrentCompany.FnsRequest.OKVED)"
+                                  Immediate="true"
+                                  Label="ОКВЭД" />
+
+                        <MudTextField @bind-Value="CurrentCompany.FnsRequest.Revenue"
+                                  For="@(() => CurrentCompany.FnsRequest.Revenue)"
+                                  Immediate="true"
+                                  Label="Капитал" />
+
+                        <MudTextField @bind-Value="CurrentCompany.FnsRequest.LegalAddress"
+                                      For="@(() => CurrentCompany.FnsRequest.LegalAddress)"
+                                      Immediate="true"
+                                      Label="Юридический адрес" />
+                        <MudTextField @bind-Value="_inn"
+                                      For="@(() => _inn)"
+                                      Immediate="true" Required="true"
+                                      Variant="Variant.Outlined"
+                                      Label="Введите ИНН или ОГРН" />
+
+                        <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn)" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                            запрос
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_inn"
+                                  For="@(() => _inn)"
+                                  Immediate="true" Required="true"
+                                  Variant="Variant.Outlined"
+                                  Label="Введите ИНН или ОГРН" />
+
+                        <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn)" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                            запрос
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                        </MudButton>
+
+                        <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => CurrentCompany.FnsRequest= new FnsRequest()" Style="margin-top: 2rem;" Color="Color.Primary">
+                            Ввести данные вручную
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                        </MudButton>
+                        <br />
+                    }
+
+                    <p class="mt-6 fs-4">Банковские реквизиты</p>
+                    @if (CurrentCompany.BankDetails != null)
+                    {
+                        @foreach (var bankDetail in CurrentCompany.BankDetails)
+                        {
+                            <MudCard Outlined="true" Class="m-1 pa-3 bg-gradient">
+                                <MudIconButton Icon="@Icons.Material.Sharp.DeleteOutline" Color="Color.Warning" OnClick="() =>RemoveBankDetail(bankDetail) "></MudIconButton>
+                                <MudTextField @bind-Value="@bankDetail.Name"
+                                              For="@(() => @bankDetail.Name)"
+                                              Immediate="true"
+                                              Label="Наименование банка"/>
+
+                                <MudTextField @bind-Value="@bankDetail.INN"
+                                              For="@(() => @bankDetail.INN)"
+                                              Immediate="true"
+                                              Label="ИНН"/>
+                                <MudTextField @bind-Value="@bankDetail.BankAccount"
+                                              For="@(() => @bankDetail.BankAccount)"
+                                              Immediate="true"
+                                              Label="БИК(Bank Account)"/>
+                                <MudTextField @bind-Value="@bankDetail.BeneficiaryAccount"
+                                              For="@(() => @bankDetail.BeneficiaryAccount)"
+                                              Immediate="true"
+                                              Label="Расчетный счет(Beneficiary Account)"/>
+                            </MudCard>
+                        }
+                        <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => CurrentCompany.BankDetails.Add(new BankDetails())" Style="margin-top: 2rem;" Color="Color.Primary">
+                            Добавить реквизиты
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => CurrentCompany.BankDetails= new List< BankDetails>(){new BankDetails()}" Style="margin-top: 2rem;" Color="Color.Primary">
+                            Добавить реквизиты
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                        </MudButton>
+                        <br />
+                    }
+
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="OnValidSubmit" Color="Color.Tertiary">@ButtonText</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+       
+    </DialogContent>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="_visibleResultFnsRequestDialog">
+    <DialogContent>
+        @foreach (var company in FnsRequests)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Dark" OnClick="() => {CurrentCompany.FnsRequest = company; _visibleResultFnsRequestDialog = false;}">
+                <div class="flex-row">
+                    <div>@company.Name</div>
+                    <div>@company.LegalAddress </div>
+                    <div>@company.Director</div>
+                    <div>ОГРН: @company.ORGN</div>
+                    <div>ОКВЭД: @company.OKVED</div>
+                    <div>ИНН: @company.INN</div>
+                </div>
+            </MudButton>
+      
+        }
+       
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="() => _visibleResultFnsRequestDialog=false">Закрыть</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [Parameter] public List<CompanyType>? CompanyTypes { get; set; }
+    public  List<FnsRequest>? FnsRequests { get; set; }
+   
+    //public MudForm? _createCompanyForm;
+    public string _inn;
+    private bool _checkedTag;
+    [Inject]
+    IRequestingFromFnsService requestingFromFnsService { get; set; }
+
+    public bool _visibleResultFnsRequestDialog;
+    public bool _visibleAddCompanyDialog;
+
+    
+    [Parameter] public Company CurrentCompany { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Save";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+
+    private async void RemoveBankDetail(BankDetails bankDetails)
+    {
+        CurrentCompany.BankDetails!.Remove(bankDetails);
+        if (await CompanyManager.RemoveBankDetailsAsync(bankDetails.Id))
+        {
+            _snackBar.Add("Реквизиты удалены");
+        }
+        
+    }
+ 
+    private async Task GetFns(string inn)
+    {
+        try
+        {
+            FnsRequests = (List<FnsRequest>?)await requestingFromFnsService.GetCompanyByInn(inn);
+            _visibleResultFnsRequestDialog = true;
+        }
+        catch
+        {
+            _snackBar.Add("Запрос не выполнен, возможно вы ввели данные ИП!");
+        }
+
+
+    }
+   
+    private bool CheckTag(TagsCompany tag)
+    {
+        return CurrentCompany.TagsCompanies != null && CurrentCompany.TagsCompanies.Contains(tag);
+    }
+   
+}

@@ -1,5 +1,25 @@
-﻿<h3>ProductFilterComponent</h3>
+﻿ <MudTabs Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
+    
+
+     <MudTabPanel>
+         <ChildContent>
+             Производители
+         </ChildContent>
+         <TabContent>
+             @if (Brands != null)
+             {
+
+             }
+         </TabContent>
+     </MudTabPanel>
+ </MudTabs>
 
 @code {
+    private List<Brand>? Brands { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Brands = await BrandManager.GetAsync();
+    }
 
 }

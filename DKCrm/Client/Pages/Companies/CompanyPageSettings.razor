@@ -1,0 +1,307 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+
+
+        @* <MudText Typo="Typo.h6">Общие настройки компаний</MudText>*@
+
+
+<MudTabs @bind-ActivePanelIndex="activeIndex" Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
+         
+    <MudTabPanel OnClick="LoadingData">
+        <ChildContent>
+            <div class="flex-column">
+                @if (CompanyTypes != null)
+                {
+                    @foreach (var companyType in CompanyTypes)
+                    {
+                             
+                        <MudPaper Class="pa-4 m-3" Style="display: flex; justify-content: space-between; align-items: center">
+                            <MudText>@companyType.Name</MudText>
+                            <MudButtonGroup>
+                                <MudIconButton OnClick="() => OpenCompanyTypeUpdateDialog(companyType)" Size="Size.Small" Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" class="ml-auto" />
+                                <MudIconButton OnClick="() => OpenCompanyTypeRemoveDialog(companyType)" Size="Size.Small" Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" class="ml-auto" />
+                            </MudButtonGroup>
+                        </MudPaper>
+                    }
+                }
+
+                <MudForm Style="margin-top: 2rem">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <MudTextField @bind-Value="_valueString" T="string" Label="Добавить тип компании" Required="true" Variant="Variant.Outlined" RequiredError="Введите название типа компании!" Lines="1"/>
+                        <MudButton Style="height: 30px; margin-left: 1rem" Variant="Variant.Filled" Size="Size.Small" OnClick="AddCompanyType" Color="Color.Tertiary">Добавить</MudButton>
+                    </div>
+                </MudForm>
+            </div >
+        </ChildContent>
+        <TabContent>
+            <MudText>Типы компании</MudText>
+        </TabContent>
+    </MudTabPanel>
+             
+            
+    <MudTabPanel OnClick="LoadingData">
+        <ChildContent>
+            <div class="flex-column">
+                @if (TagsCompanies != null)
+                {
+                    @foreach (var tagCompany in TagsCompanies)
+                    {
+                     
+                        <MudPaper Class="pa-4 m-3" Style="display: flex; justify-content: space-between; align-items: center">
+                            <MudText>@tagCompany.Name</MudText>
+                            <MudButtonGroup>
+                                <MudIconButton OnClick="() => OpenCompanyTagUpdateDialog(tagCompany)" Size="Size.Small" Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" class="ml-auto" />
+                                <MudIconButton OnClick="() => OpenCompanyTagRemoveDialog(tagCompany)" Size="Size.Small" Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" class="ml-auto" />
+                            </MudButtonGroup>
+                        </MudPaper>
+                    }
+                }
+
+                <MudForm Style="margin-top: 2rem">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <MudTextField @bind-Value="_valueString" T="string" Label="Добавить тег компании" Required="true" Variant="Variant.Outlined" RequiredError="Введите название тега компании!" Lines="1"/>
+                        <MudButton Style="height: 30px; margin-left: 1rem" Variant="Variant.Filled" Size="Size.Small" OnClick="AddCompanyTag" Color="Color.Tertiary">Добавить</MudButton>
+                    </div>
+                </MudForm>
+            </div >
+        </ChildContent>
+        <TabContent>
+            <MudText>Теги компании</MudText>
+        </TabContent>
+    </MudTabPanel>
+</MudTabs>
+
+
+      <MudDialog @bind-IsVisible="_visibleCompanyTypeUpdateDialog">
+          <DialogContent>
+              <MudText>Редактирование типа компании</MudText>
+              <MudCard>
+                  <MudForm @ref="_updateCompanyTypeForm" Model="@CurrentCompanyType">
+                      <MudCardContent>
+                          <MudTextField @bind-Value="CurrentCompanyType!.Name" T="string" Label="Тип компании" Required="true" RequiredError="Введите название типа компании!" />
+                      </MudCardContent>
+                  </MudForm>
+                  <MudCardActions>
+                      <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateCompanyType())">Применить</MudButton>
+                  </MudCardActions>
+              </MudCard>
+          </DialogContent>
+      </MudDialog>
+  
+
+<MudDialog @bind-IsVisible="_visibleCompanyTypeRemoveDialog">
+    <DialogContent>
+
+
+        @if (CurrentCompanyType.Companies != null && CurrentCompanyType.Companies.Any())
+        {
+            <MudText Class="pb-3 text-decoration-underline text-danger">За данным типом закреплены компании!!!Прикрепите их к другому типу</MudText>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleCompanyTypeRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
+        }
+        else
+        {
+            <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber"/>Подтвердите удаление</MudText>
+            <div class="pt-5 justify-content-between d-flex">
+                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="async () => await RemoveCompanyType()" Color="Color.Error">Удалить</MudButton>
+                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleCompanyTypeRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
+            </div>
+        }
+
+    </DialogContent>
+</MudDialog>
+
+
+    <MudDialog @bind-IsVisible="_visibleCompanyTagUpdateDialog">
+        <DialogContent>
+            <MudText>Редактирование тега компании</MudText>
+            <MudCard>
+                <MudForm @ref="_updateCompanyTagForm" Model="@CurrentTagCompany">
+                    <MudCardContent>
+                        <MudTextField @bind-Value="CurrentTagCompany!.Name" T="string" Label="Тег компании" Required="true" RequiredError="Введите название тега компании!" />
+                    </MudCardContent>
+                </MudForm>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateCompanyTag())">Применить</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </DialogContent>
+    </MudDialog>
+
+<MudDialog @bind-IsVisible="_visibleCompanyTagRemoveDialog">
+    <DialogContent>
+
+
+        @if (CurrentTagCompany.Companies != null && CurrentTagCompany.Companies.Any())
+        {
+            <MudText Class="pb-3 text-decoration-underline text-danger">За данным тегом закреплены компании!!!Прикрепите их к другому тегу</MudText>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleCompanyTagRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
+        }
+        else
+        {
+            <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
+            <div class="pt-5 justify-content-between d-flex">
+                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="async () => await RemoveCompanyTag()" Color="Color.Error">Удалить</MudButton>
+                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleCompanyTagRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
+            </div>
+        }
+
+    </DialogContent>
+</MudDialog>
+
+@code {
+    private int activeIndex = 0;
+    private string _valueString;
+
+    private List<CompanyType>? CompanyTypes { get; set; }
+    private CompanyType? CurrentCompanyType { get; set; }
+    private bool _visibleCompanyTypeUpdateDialog;
+    private bool _visibleCompanyTypeRemoveDialog;
+
+    private List<TagsCompany>? TagsCompanies { get; set; }
+    private TagsCompany? CurrentTagCompany { get; set; }
+    private bool _visibleCompanyTagUpdateDialog;
+    private bool _visibleCompanyTagRemoveDialog;
+
+
+    
+
+
+   
+
+    
+
+    MudForm? _updateCompanyTypeForm;
+    MudForm? _updateCompanyTagForm;
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadingData();
+    }
+
+    private async Task LoadingData()
+    {
+        switch (activeIndex)
+        {
+           
+            case 0:
+                if (CompanyTypes==null)
+                    await GetCompanyTypes();
+                break;
+            case 1:
+                if (TagsCompanies==null)
+                    await GetCompanyTags();
+                break;
+
+        }
+    }
+
+
+
+    private async Task GetCompanyTypes()
+    {
+        CompanyTypes = await CompanyTypeManager.GetAsync();
+        StateHasChanged();
+    }
+    public async void AddCompanyType()
+    {
+        var tempCompanyType = new CompanyType() { Name = _valueString };
+        if (await CompanyTypeManager.AddAsync(tempCompanyType))
+        {
+            CompanyTypes ??= new List<CompanyType>();
+            CompanyTypes.Add(tempCompanyType);
+            await GetCompanyTypes();
+        }
+    }
+    public void OpenCompanyTypeUpdateDialog(CompanyType companyType)
+    {
+        _visibleCompanyTypeUpdateDialog = true;
+        CurrentCompanyType = companyType;
+    }
+    private async Task UpdateCompanyType()
+    {
+        await _updateCompanyTypeForm!.Validate();
+        if (!_updateCompanyTypeForm.IsValid) return;
+        if (await CompanyTypeManager.UpdateAsync(CurrentCompanyType!))
+        {
+            await GetCompanyTypes();
+            _visibleCompanyTypeUpdateDialog = false;
+            _snackBar.Add("Тип компании обновлен!");
+        }
+        else
+        {
+            _snackBar.Add("Тип компании не обновлен!");
+        }
+    }
+    public void OpenCompanyTypeRemoveDialog(CompanyType companyType)
+    {
+        _visibleCompanyTypeRemoveDialog = true;
+        CurrentCompanyType = companyType;
+    }
+    private async Task RemoveCompanyType()
+    {
+        if (await CompanyTypeManager.RemoveAsync(CurrentCompanyType!.Id))
+        {
+            _visibleCompanyTypeRemoveDialog = false;
+            await GetCompanyTypes();
+            _snackBar.Add("Тип компании удален!");
+        }
+        else
+        {
+            _snackBar.Add("Ошибка при удалении!");
+        }
+    }
+
+
+
+    private async Task GetCompanyTags()
+    {
+        TagsCompanies = await CompanyTagsManager.GetAsync();
+        StateHasChanged();
+    }
+    public async void AddCompanyTag()
+    {
+        var tempCompanyType = new TagsCompany { Name = _valueString };
+        if (await CompanyTagsManager.AddAsync(tempCompanyType))
+        {
+            TagsCompanies ??= new List<TagsCompany>();
+            TagsCompanies.Add(tempCompanyType);
+            await GetCompanyTags();
+        }
+    }
+    public void OpenCompanyTagUpdateDialog(TagsCompany tagsCompany)
+    {
+        _visibleCompanyTagUpdateDialog = true;
+        CurrentTagCompany = tagsCompany;
+    }
+    private async Task UpdateCompanyTag()
+    {
+        await _updateCompanyTagForm!.Validate();
+        if (!_updateCompanyTagForm.IsValid) return;
+        if (await CompanyTagsManager.UpdateAsync(CurrentTagCompany!))
+        {
+            await GetCompanyTags();
+            _visibleCompanyTagUpdateDialog = false;
+            _snackBar.Add("Тег компании обновлен!");
+        }
+        else
+        {
+            _snackBar.Add("Ошибка при обновлении!");
+        }
+    }
+    public void OpenCompanyTagRemoveDialog(TagsCompany tagsCompany)
+    {
+        _visibleCompanyTagRemoveDialog = true;
+        CurrentTagCompany = tagsCompany;
+    }
+    private async Task RemoveCompanyTag()
+    {
+        if (await CompanyTagsManager.RemoveAsync(CurrentTagCompany!.Id))
+        {
+            _visibleCompanyTagRemoveDialog = false;
+            await GetCompanyTags();
+            _snackBar.Add("Тег компании удален!");
+        }
+        else
+        {
+            _snackBar.Add("Ошибка при удалении!");
+        }
+    }
+}

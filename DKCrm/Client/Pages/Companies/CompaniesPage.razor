@@ -1,0 +1,197 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+@page "/companies"
+@page "/companies/tag/{tagid:guid}"
+
+<MudText Typo="Typo.h4">Компании</MudText>
+<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _companyForm._visibleAddCompanyDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+    Добавить компанию
+    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+</MudButton>
+
+<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => VisibleCompanySettingsDrawer = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+    Настройки
+    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
+</MudButton>
+<MudGrid>
+    <MudItem xs="10">
+        <MudTable Height="" Class="m-2" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" OnRowClick="RowClickEvent" Filter="new Func<Company,bool>(FilterFunc1)">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Periodic Elements</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString1" Placeholder="Поиск" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x => x.Name)">Наименование компании</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<Company, object>(x => x.Director!)">Руководитель</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.Country)">Страна</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.City)">Город</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.CompanyType.Name)">Тип контрагента</MudTableSortLabel></MudTh>
+
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
+                <MudTd DataLabel="Руководитель">@context.Director</MudTd>
+                <MudTd DataLabel="Страна">
+                    @if (context.ActualAddress != null)
+                    {
+                        @context.ActualAddress.Country
+                    }
+                </MudTd>
+                <MudTd DataLabel="Город">
+                    @if (context.ActualAddress != null)
+                    {
+                        @context.ActualAddress.City
+                    }
+                </MudTd>
+                <MudTd DataLabel="Тип контрагента">
+                    @if (context.CompanyType != null)
+                    {
+                        @context.CompanyType.Name
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+    <MudItem xs="2">
+        <MudCard Outlined="true" Class="m-3 pa-3">
+            <MudText Typo="Typo.h4">Теги</MudText>
+            @if (TagsCompanies != null)
+            {
+                <MudList Style="" Clickable="true" @bind-SelectedItem="selectedItem" @bind-SelectedValue="selectedValue" Color="Color.Primary">
+                    <MudListItem Dense="true" OnClick="GetAllCompanies" >
+                        Все компании
+                    </MudListItem>
+                    @foreach (var tag in TagsCompanies)
+                    {
+
+                        <MudListItem Dense="true" OnClick="(() => FilterCompanyByTag(tag.Id))" Value="@tag.Name">
+                            @tag.Name
+                        </MudListItem>
+                    }
+
+                </MudList>
+            }
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+
+
+<CompanyForm CurrentCompany="CreatedCompany"
+             OnValidSubmit="AddCompany"
+             CompanyTypes="CompanyTypes"
+             ButtonText="Создать"
+             @ref="_companyForm"/>
+
+<MudDrawerContainer Class="mud-height-full">
+
+    <MudDrawer @bind-Open="@VisibleCompanySettingsDrawer" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Общие настройки компаний</MudText>
+        </MudDrawerHeader>
+        
+        <CompanyPageSettings/>
+    </MudDrawer>
+</MudDrawerContainer>
+@code {
+    [Parameter] public Guid TagId { get; set; }
+
+    private  List<CompanyType>? CompanyTypes { get; set; }
+    private  List<TagsCompany>? TagsCompanies { get; set; }
+    private List<Company>? Companies { get; set; }
+    private List<Company>? AllCompanies { get; set; }
+    CompanyForm _companyForm = null!;
+    public Company CreatedCompany { get; set; } = new ();
+    private string searchString1 = "";
+
+    public bool VisibleCompanySettingsDrawer { get; set; }
+    MudListItem selectedItem;
+    object selectedValue = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CompanyTypes = await CompanyTypeManager.GetAsync();
+  
+        TagsCompanies = await CompanyTagsManager.GetAsync();
+        if (TagId!= null && TagId!= Guid.Empty)
+        {
+            Companies = TagsCompanies.Where(w => w.Id == TagId)!.FirstOrDefault()!.Companies!.ToList();
+            selectedValue = TagsCompanies!.FirstOrDefault(w => w.Id == TagId)!.Name;
+        }
+        else
+        {
+            Companies = await CompanyManager.GetAsync();
+            AllCompanies = Companies;
+        }
+    }
+    private async Task GetAllCompanies()
+    {
+        if (AllCompanies!=null)
+        {
+            Companies = AllCompanies;
+        }
+        else
+        {
+            Companies = await CompanyManager.GetAsync();
+        }
+    }
+    private bool FilterFunc1(Company element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(Company element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Director != null && element.Director.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.ActualAddress != null)
+        {
+            if (element.ActualAddress.Country.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.ActualAddress.City.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+       
+        return false;
+    }
+    private async Task AddCompany()
+    {
+        //await _companyForm._createCompanyForm!.Validate();
+        //if (!_companyForm._createCompanyForm.IsValid) return;
+
+        if (await CompanyManager.AddAsync(CreatedCompany!))
+        {
+            _companyForm._visibleAddCompanyDialog = false;
+            _snackBar.Add("Компания добавлена!");
+        }
+    }
+    private void RowClickEvent(TableRowClickEventArgs<Company> tableRowClickEventArgs)
+    {
+        _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");
+    }
+
+        private async Task FilterCompanyByTag(Guid tagId)
+        {
+            
+            Companies = TagsCompanies.Where(w => w.Id == tagId)!.FirstOrDefault()!.Companies!.ToList();
+
+   
+        }
+    //private async Task DeleteCompany()
+    //{
+    //    if (await CompanyManager.RemoveAsync(CurrentCategory.Id))
+    //    {
+    //        _visibleRemoveCategoryDialog = false;
+    //        await RefreshCategoryListCallback.InvokeAsync();
+    //        _snackBar.Add("Категория удалена!");
+    //    }
+    //    else
+    //    {
+    //        _snackBar.Add("Ошибка при удалении!");
+    //    }
+    //}
+}

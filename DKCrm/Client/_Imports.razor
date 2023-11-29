@@ -15,11 +15,17 @@
 @inject IJSRuntime _jsRuntime
 @inject AuthenticationStateProvider _stateProvider;
 
+
 @inject IChatManager _chatManager
 @inject IUserManagerCustom UserManagerCustom
 @inject IProductManager ProductManager
 @inject IBrandManager BrandManager
 @inject ICategoryManager CategoryManager
+@inject ICompanyManager CompanyManager
+@inject ICompanyTypeManager CompanyTypeManager
+@inject ICompanyTagsManager CompanyTagsManager
+@inject IEmployeeManager EmployeeManager
+
 @using DKCrm.Client
 @using DKCrm.Client.Shared
 @using DKCrm.Shared.Models.Products
@@ -33,6 +39,7 @@
 @using DKCrm.Client.Services.CategoryService
 @using DKCrm.Client.Services.ProductServices
 @using DKCrm.Client.Components
+@using DKCrm.Client.Services.CompanyServices
 
 
 @using FluentValidation

@@ -1,0 +1,373 @@
+﻿@page "/companies/{CompanyId:guid}"
+@using DKCrm.Shared.Models.CompanyModels
+
+
+@if (Company != null)
+{
+    <div class="d-flex justify-content-between m-4">
+        <MudText  Typo="Typo.h4">@Company.Name.ToUpper()</MudText>
+        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="OpenUpdateCompanyDialog" Style="margin-left: 1rem;" Color="Color.Tertiary">
+            Изменить
+            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
+        </MudButton>
+    </div>
+    <MudGrid>
+        <MudItem xs="10">
+  
+            <MudPaper Elevation="12"Class="p-4 m-1">
+        
+                <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Тип контрагента:</span>
+                    @if (Company.CompanyType != null)
+                    {
+                        @Company.CompanyType.Name
+                    }
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Фактический руководитель:</span>
+                    @if (!string.IsNullOrEmpty(Company.Director))
+                    {
+                        @Company.Director
+                    }
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Фактический адрес:</span>
+                    @if (Company.ActualAddress != null)
+                    {
+                        <span></span><span>@Company.ActualAddress.Country,</span>
+                        @if (Company.ActualAddress.Region != null)
+                        {
+                            <span> обл. @Company.ActualAddress.Region,</span>
+                        }
+                        <span> г. @Company.ActualAddress.City,</span>
+                        <span> ул. @Company.ActualAddress.Street,</span>
+                        <span> д./стр. @Company.ActualAddress.Home,</span>
+                        <span> пом./кв. @Company.ActualAddress.Placement</span>
+                        @if (Company.ActualAddress.PostalCode != null)
+                        {
+                            <div>Почтовый индекс: @Company.ActualAddress.PostalCode</div>
+                        }
+                    }
+                </MudText>
+            </MudPaper>
+            @if (Company.FnsRequest != null)
+            {
+                <MudPaper Elevation="12"Class="p-4 m-1">
+                    <p class="fs-3 mb-2 ">Данные ЕГРЮЛ</p>
+                    <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Название полное:</span>
+                        @Company.FnsRequest.Name
+                    </MudText>
+                    <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Руководитель:</span>
+                        @Company.FnsRequest.Director
+                    </MudText>
+                    <MudText Typo="Typo.body1">
+                        <span class="mr-2 fw-bold">ИНН:</span>
+                        @Company.FnsRequest.INN
+                    </MudText>
+                    <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">ОГРН:</span>
+                        @Company.FnsRequest.ORGN
+                    </MudText>
+                    <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">ОКВЭД:</span>
+                        @Company.FnsRequest.OKVED
+                    </MudText>
+                    <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Капитал:</span>
+                        @Company.FnsRequest.Revenue
+                    </MudText>
+                    <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Юридический адрес:</span>
+                        @Company.FnsRequest.LegalAddress
+                    </MudText>
+                </MudPaper>
+            }
+
+            <MudPaper Elevation="12"Class="p-4 m-1">
+                <div class="d-flex align-items-center m-1">
+                    <p class="fs-4 m-0">Сотрудники</p> 
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                        <MudMenuItem Icon="@Icons.Material.Sharp.Add" OnClick="() =>  _visibleAddEmployeeDialog=true">Добавить сотрудника</MudMenuItem>
+                    </MudMenu>
+                </div>
+                @if (Company.Employees != null)
+                {
+                    @foreach (var employee in Company.Employees)
+                    {
+                        <MudCard  Outlined="true" Class="m-3 pa-3">
+                
+                            <div Class="d-flex align-items-center ">
+                                <div class="d-flex align-items-center mr-15">
+                                    <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                                        <MudMenuItem Icon="@Icons.Material.Sharp.Edit" OnClick="() => OpenUpdateEmployeeDialog(employee)">Редактировать</MudMenuItem>
+                                        <MudMenuItem Icon="@Icons.Material.Sharp.RemoveDone" OnClick="() => OpenRemoveEmployeeDialog(employee)">Удалить</MudMenuItem>
+                                    </MudMenu>
+
+                                    <MudText Typo="Typo.h6">@employee.Position</MudText>
+                                </div>
+                                <div class="d-flex mr-15">
+                                    <MudText Class="mr-2" Typo="Typo.h6">@employee.LastName</MudText>
+                                    <MudText Class="mr-2" Typo="Typo.h6">@employee.FirstName</MudText>
+                                    <MudText Typo="Typo.h6">@employee.MiddleName</MudText>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <MudText Typo="Typo.button"><span class="text-decoration-underline">Телефон: </span> @employee.Phone</MudText>
+                                    <MudText Typo="Typo.button"><span class="text-decoration-underline">E-mail: </span> @employee.Email</MudText>
+                                </div>
+                            </div>
+                            <div Class="mt-4 fs-4" Style="flex: 1 1 auto">
+                                <MudExpansionPanels>
+                                    <MudExpansionPanel Class="fw-bold"Text="Дополнительная информация">
+                                        <div class="">
+
+                                            <MudSwitch Label="Развернуть" @bind-Checked="@_checkSizeEmployeeInfo" @onclick="() => _sizeEmployeeInfo = _sizeEmployeeInfo == 5 ? 30 : 5" Color="Color.Primary" />
+                                            <MudTextField T="string" Label="Дополнительная информация" Variant="Variant.Outlined" @bind-Value="employee.Description" Lines="@_sizeEmployeeInfo"/>
+
+                                        </div>
+                               
+                                        <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SaveEmployeeInfo(employee)" Color="Color.Primary">Сохранить</MudButton>
+
+                                    </MudExpansionPanel>
+                                </MudExpansionPanels>
+                    
+                            </div>
+              
+                        </MudCard>
+                    }
+
+                }
+            </MudPaper>
+
+            @if (Company.BankDetails != null && Company.BankDetails.Any())
+            {
+                <MudPaper Elevation="12" Class="p-4 m-1">
+                    <p class="fs-3 mb-2 ">Банковские реквизиты</p>
+                    @foreach (var bankDetailsItem in Company.BankDetails)
+                    {
+                        <MudCard Outlined="true" Class="m-3 pa-3">
+                            <MudText Typo="Typo.body1">
+                                <span class="mr-2 fw-bold">Название банка:</span>
+                                @bankDetailsItem.Name
+                            </MudText>
+                            <MudText Typo="Typo.body1">
+                                <span class="mr-2 fw-bold">ИНН:</span>
+                                @if (bankDetailsItem.INN != null)
+                                {
+                                    @bankDetailsItem.INN
+                                }
+                            </MudText>
+                            <MudText Typo="Typo.body1">
+                                <span class="mr-2 fw-bold">БИК(Bank Account):</span>
+                                @bankDetailsItem.BankAccount
+                            </MudText>
+                            <MudText Typo="Typo.body1">
+                                <span class="mr-2 fw-bold">Расчетный счет(Beneficiary Account):</span>
+                                @bankDetailsItem.BeneficiaryAccount
+                            </MudText>
+                        </MudCard>
+                    }
+                </MudPaper>
+            }
+        </MudItem>
+        <MudItem xs="2">
+            <MudCard Outlined="true" Class="m-3 pa-3">
+                <MudText Typo="Typo.h4">Теги</MudText>
+                @if (Company.TagsCompanies != null)
+                {
+                    <MudList Style="" Clickable="true" Color="Color.Primary">
+                        @foreach (var tag in Company.TagsCompanies)
+                        {
+                            <MudListItem Dense="true" Href=@($"/companies/tag/{tag.Id}") Value="@tag.Name">
+                                @tag.Name
+                            </MudListItem>
+                        }
+                        <MudListItem OnClick="OpenAddToTagsDialog" Dense="true"  >
+                            Добавить к тегу +
+                        </MudListItem>
+                    </MudList>
+                }
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+    <CompanyForm CurrentCompany="Company"
+                 OnValidSubmit="UpdateCompany"
+                 CompanyTypes="CompanyTypes"
+                 ButtonText="Применить"
+                 @ref="_companyForm"/>
+
+
+}
+<MudDialog @bind-IsVisible="_visibleRemoveEmployeeDialog">
+    <DialogContent>
+        <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
+        <div class="pt-5 justify-content-between d-flex">
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="RemoveEmployee" Color="Color.Error">Удалить</MudButton>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleRemoveEmployeeDialog=false" Color="Color.Primary">Закрыть</MudButton>
+        </div>
+    </DialogContent>
+</MudDialog>
+<MudDialog @bind-IsVisible="_visibleAddEmployeeDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+    <DialogContent>
+        <EmployeeForm 
+            ButtonText="Сохранить" 
+            OnValidSubmit="AddEmployee" 
+            Employee="Employee"
+            TitleText="Добавление сотрудника"
+        />
+    </DialogContent>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="_visibleUpdateEmployeeDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+    <DialogContent>
+        <EmployeeForm ButtonText="Сохранить"
+                      OnValidSubmit="UpdateEmployee"
+                      Employee="Employee"
+                      TitleText="Редактирование данных сотрудника" />
+    </DialogContent>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="_visibleAddToTagDialog">
+    <DialogContent>
+        <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Добавить/удалить тег</MudText>
+
+        @foreach (var tag in TagsCompanies!)
+        {
+            @if (Company.TagsCompanies != null && Company.TagsCompanies.Select(s => s.Id).Contains(tag.Id))
+                Checked = true;
+            else
+                Checked = false;
+
+              <MudCheckBox Checked="Checked " @onclick="() => AddRemoveToTag(tag)" Color="@Color.Primary">
+                   @tag.Name
+               </MudCheckBox>
+
+        }
+        <div class="pt-5 justify-content-between d-flex">
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => UpdateTags()" Color="Color.Primary">Применить</MudButton>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [Parameter]
+    public Guid CompanyId { get; set; }
+    public List<TagsCompany>? TagsCompanies { get; set; }
+    public List<TagsCompany>? TagsCompaniesToUpdate { get; set; }
+    private List<CompanyType>? CompanyTypes { get; set; }
+    public Company Company { get; set; }
+    public Employee Employee { get; set; } = new();
+    CompanyForm _companyForm = null!;
+
+    private bool _checkSizeEmployeeInfo { get; set; } = false;
+    private int _sizeEmployeeInfo = 5;
+    private bool _visibleAddEmployeeDialog;
+    private bool _visibleUpdateEmployeeDialog;
+    private bool _visibleRemoveEmployeeDialog;
+    private bool _visibleAddToTagDialog;
+    public bool Checked;
+
+    private bool WindowEmployeeMax()
+    {
+        _sizeEmployeeInfo = _sizeEmployeeInfo == 5 ? 30 : 5;
+        return true;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await GetCompany();
+
+    }
+    private async Task GetCompany()
+    {
+        Company = await CompanyManager.GetDetailsAsync(CompanyId);
+       
+    }
+    private async Task OpenUpdateCompanyDialog()
+    {
+        CompanyTypes = await CompanyTypeManager.GetAsync();
+        _companyForm._visibleAddCompanyDialog = true;
+
+    }
+
+    private async Task UpdateCompany()
+    {
+        if (await CompanyManager.UpdateAsync(Company!))
+        {
+            _companyForm._visibleAddCompanyDialog = false;
+            _snackBar.Add("Данные компании обновлены!");
+            await GetCompany();
+        }
+    }
+    private async Task AddEmployee()
+    {
+        Employee.CompanyId = Company.Id;
+        if (await EmployeeManager.AddAsync(Employee!))
+        {
+            _visibleAddEmployeeDialog = false;
+            _snackBar.Add("Сотрудник добавлен!");
+            await GetCompany();
+        }
+    }
+    private void OpenUpdateEmployeeDialog(Employee employee)
+    {
+        Employee = employee;
+        _visibleUpdateEmployeeDialog = true;
+
+    }
+    private async Task UpdateEmployee()
+    {
+        
+        if (await EmployeeManager.UpdateAsync(Employee!))
+        {
+            _visibleUpdateEmployeeDialog = false;
+            _snackBar.Add("Данные сотрудника обновлены!");
+            await GetCompany();
+        }
+    }
+    private void OpenRemoveEmployeeDialog(Employee employee)
+    {
+        Employee = employee;
+        _visibleRemoveEmployeeDialog = true;
+
+    }
+    private async void RemoveEmployee()
+    {
+        if (await EmployeeManager.RemoveAsync(Employee.Id))
+        {
+            _visibleRemoveEmployeeDialog = false;
+            _snackBar.Add("Сотрудник удален");
+            await GetCompany();
+        }
+    }
+    private async void SaveEmployeeInfo(Employee employee)
+    {
+        Employee = employee;
+        await UpdateEmployee();
+        _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
+
+    }
+
+    private async Task OpenAddToTagsDialog()
+    {
+        TagsCompanies ??= await CompanyTagsManager.GetAsync();
+        TagsCompanies ??=new List<TagsCompany>();
+        _visibleAddToTagDialog = true;
+    }
+    private void AddRemoveToTag(TagsCompany tag)
+    {
+
+        if (Company.TagsCompanies != null && Company.TagsCompanies.Select(s => s.Id).Contains(tag.Id))
+        {
+            Company.TagsCompanies.Remove(Company.TagsCompanies.FirstOrDefault(w => w.Id == tag.Id));
+        }
+        else
+        {
+            Company.TagsCompanies ??= new List<TagsCompany>();
+            Company.TagsCompanies.Add(tag);
+        }
+    }
+    private async Task UpdateTags()
+    {
+        var tagIdList = Company.TagsCompanies!.Select(s => s.Id).ToList();
+        var request = new TagsRequest() { CompanyId = CompanyId, TagCollection = tagIdList };
+        await CompanyManager.UpdateTagsAsync(request);
+        _visibleAddToTagDialog = false;
+        _snackBar.Add("Теги обновлены");
+    }
+
+}
