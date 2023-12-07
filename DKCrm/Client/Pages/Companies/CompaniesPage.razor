@@ -113,30 +113,24 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await GetAllCompanies();
         CompanyTypes = await CompanyTypeManager.GetAsync();
-  
         TagsCompanies = await CompanyTagsManager.GetAsync();
+
         if (TagId!= null && TagId!= Guid.Empty)
         {
-            Companies = TagsCompanies.Where(w => w.Id == TagId)!.FirstOrDefault()!.Companies!.ToList();
+            //Companies = TagsCompanies.Where(w => w.Id == TagId)!.FirstOrDefault()!.Companies!.ToList();
+            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains(TagId)).ToList();
             selectedValue = TagsCompanies!.FirstOrDefault(w => w.Id == TagId)!.Name;
         }
-        else
-        {
-            Companies = await CompanyManager.GetAsync();
-            AllCompanies = Companies;
-        }
+      
     }
     private async Task GetAllCompanies()
     {
-        if (AllCompanies!=null)
-        {
-            Companies = AllCompanies;
-        }
-        else
-        {
-            Companies = await CompanyManager.GetAsync();
-        }
+      
+        AllCompanies ??= await CompanyManager.GetAsync();
+        Companies = AllCompanies;
+        
     }
     private bool FilterFunc1(Company element) => FilterFunc(element, searchString1);
 
@@ -174,12 +168,9 @@
         _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");
     }
 
-        private async Task FilterCompanyByTag(Guid tagId)
+        private  void FilterCompanyByTag(Guid tagId)
         {
-            
-            Companies = TagsCompanies.Where(w => w.Id == tagId)!.FirstOrDefault()!.Companies!.ToList();
-
-   
+            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains(tagId)).ToList();
         }
     //private async Task DeleteCompany()
     //{

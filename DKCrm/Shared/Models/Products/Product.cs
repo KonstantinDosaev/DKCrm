@@ -1,5 +1,6 @@
 ﻿using DKCrm.Shared.Iterfaces;
 using System.Text.Json.Serialization;
+using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Shared.Models.Products
 {
@@ -12,8 +13,6 @@ namespace DKCrm.Shared.Models.Products
         public string? PartNumber { get; set; }
         public decimal? Price { get; set; }
         public decimal? SalePrice { get; set; }
-        public int? Quantity { get; set; }
-        public int? QuantityTwo { get; set; }
         public DateTime? DateTimeCreated { get; set; }
         public DateTime? DateTimeUpdated { get; set; }
         public DateOnly? DateDelivery { get; set; }
@@ -22,7 +21,13 @@ namespace DKCrm.Shared.Models.Products
         public Guid? BrandId { get; set; }
         public virtual Category? Category { get; set; }
         public Guid? CategoryId { get; set; }
-        public virtual ICollection<ProductOption>? ProductOption { get; set; } 
+        public virtual ICollection<ProductOption>? ProductOption { get; set; }
+        public virtual ICollection<Storage>? Storage { get; set; }
+        public virtual ICollection<ProductsInStorage>? ProductsInStorage { get; set; }
+
+        public virtual ICollection<ExportedProduct>? ExportedProducts { get; set; }
+        public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
+
 
     }
 }

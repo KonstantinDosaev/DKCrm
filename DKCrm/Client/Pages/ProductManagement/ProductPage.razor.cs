@@ -24,9 +24,9 @@ namespace DKCrm.Client.Pages.ProductManagement
         private TableEditButtonPosition editButtonPosition = TableEditButtonPosition.Start;
         private TableEditTrigger editTrigger = TableEditTrigger.EditButton;
 
-
-
+        private StorageSettings? _storageSettings;
         private bool _visibleProductFilter;
+    
 
 
         private string value { get; set; } = "Nothing selected";
@@ -34,7 +34,7 @@ namespace DKCrm.Client.Pages.ProductManagement
         protected override async Task OnInitializedAsync()
         {
 
-            Elements = await ProductManager.GetProductsAsync();
+            //Elements = await ProductManager.GetProductsAsync();
 
             //Brands = await BrandManager.GetAsync();
             // Roles = await UserManagerCustom.GetAllRolesAsync();

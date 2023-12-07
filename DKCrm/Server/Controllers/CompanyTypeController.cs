@@ -9,9 +9,9 @@ namespace DKCrm.Server.Controllers
     [ApiController]
     public class CompanyTypeController : ControllerBase
     {
-        private readonly CompanyDbContext _context;
+        private readonly ApplicationDBContext _context;
 
-        public CompanyTypeController(CompanyDbContext context)
+        public CompanyTypeController(ApplicationDBContext context)
         {
             _context = context;
         }

@@ -5,7 +5,7 @@
 
 <MudDialog @bind-IsVisible="_visibleAddCompanyDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
     <DialogContent>
-        <MudText>Создание компании</MudText>
+        <MudText>Данные компании</MudText>
         <EditForm Model="CurrentCompany" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />
             <MudCard>

@@ -82,7 +82,7 @@
                 <div class="d-flex align-items-center m-1">
                     <p class="fs-4 m-0">Сотрудники</p> 
                     <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                        <MudMenuItem Icon="@Icons.Material.Sharp.Add" OnClick="() =>  _visibleAddEmployeeDialog=true">Добавить сотрудника</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Sharp.Add" OnClick="OpenAddEmployeeDialog">Добавить сотрудника</MudMenuItem>
                     </MudMenu>
                 </div>
                 @if (Company.Employees != null)
@@ -163,6 +163,9 @@
                     }
                 </MudPaper>
             }
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="()=>_visibleRemoveCompanyDialog=true" Style="margin-top: 2rem;" Color="Color.Warning">
+                Удалить компанию<MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.DeleteForever" Class="pa-0 ml-2" />
+            </MudButton>
         </MudItem>
         <MudItem xs="2">
             <MudCard Outlined="true" Class="m-3 pa-3">
@@ -176,9 +179,11 @@
                                 @tag.Name
                             </MudListItem>
                         }
-                        <MudListItem OnClick="OpenAddToTagsDialog" Dense="true"  >
-                            Добавить к тегу +
-                        </MudListItem>
+                       
+                            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="OpenAddToTagsDialog" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                                Изменить теги<MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                            </MudButton>
+                      
                     </MudList>
                 }
             </MudCard>
@@ -201,6 +206,16 @@
         </div>
     </DialogContent>
 </MudDialog>
+<MudDialog @bind-IsVisible="_visibleRemoveCompanyDialog">
+    <DialogContent>
+        <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление компании</MudText>
+        <div class="pt-5 justify-content-between d-flex">
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="RemoveCompany" Color="Color.Error">Удалить</MudButton>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleRemoveCompanyDialog=false" Color="Color.Primary">Закрыть</MudButton>
+        </div>
+    </DialogContent>
+</MudDialog>
+
 <MudDialog @bind-IsVisible="_visibleAddEmployeeDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
     <DialogContent>
         <EmployeeForm 
@@ -250,9 +265,9 @@
     public List<TagsCompany>? TagsCompanies { get; set; }
     public List<TagsCompany>? TagsCompaniesToUpdate { get; set; }
     private List<CompanyType>? CompanyTypes { get; set; }
-    public Company Company { get; set; }
+    public Company? Company { get; set; }
     public Employee Employee { get; set; } = new();
-    CompanyForm _companyForm = null!;
+    CompanyForm? _companyForm = null!;
 
     private bool _checkSizeEmployeeInfo { get; set; } = false;
     private int _sizeEmployeeInfo = 5;
@@ -260,13 +275,9 @@
     private bool _visibleUpdateEmployeeDialog;
     private bool _visibleRemoveEmployeeDialog;
     private bool _visibleAddToTagDialog;
+    private bool _visibleRemoveCompanyDialog;
     public bool Checked;
 
-    private bool WindowEmployeeMax()
-    {
-        _sizeEmployeeInfo = _sizeEmployeeInfo == 5 ? 30 : 5;
-        return true;
-    }
     protected override async Task OnInitializedAsync()
     {
         await GetCompany();
@@ -275,12 +286,11 @@
     private async Task GetCompany()
     {
         Company = await CompanyManager.GetDetailsAsync(CompanyId);
-       
     }
     private async Task OpenUpdateCompanyDialog()
     {
         CompanyTypes = await CompanyTypeManager.GetAsync();
-        _companyForm._visibleAddCompanyDialog = true;
+        _companyForm!._visibleAddCompanyDialog = true;
 
     }
 
@@ -288,14 +298,19 @@
     {
         if (await CompanyManager.UpdateAsync(Company!))
         {
-            _companyForm._visibleAddCompanyDialog = false;
+            _companyForm!._visibleAddCompanyDialog = false;
             _snackBar.Add("Данные компании обновлены!");
             await GetCompany();
         }
     }
+    private void OpenAddEmployeeDialog()
+    {
+        Employee = new Employee() { CompanyId = CompanyId };
+        _visibleAddEmployeeDialog = true;
+
+    }
     private async Task AddEmployee()
     {
-        Employee.CompanyId = Company.Id;
         if (await EmployeeManager.AddAsync(Employee!))
         {
             _visibleAddEmployeeDialog = false;
@@ -311,7 +326,6 @@
     }
     private async Task UpdateEmployee()
     {
-        
         if (await EmployeeManager.UpdateAsync(Employee!))
         {
             _visibleUpdateEmployeeDialog = false;
@@ -323,16 +337,16 @@
     {
         Employee = employee;
         _visibleRemoveEmployeeDialog = true;
-
     }
     private async void RemoveEmployee()
     {
         if (await EmployeeManager.RemoveAsync(Employee.Id))
         {
-            _visibleRemoveEmployeeDialog = false;
-            _snackBar.Add("Сотрудник удален");
             await GetCompany();
+            _snackBar.Add("Сотрудник удален");
+            
         }
+        _visibleRemoveEmployeeDialog = false;
     }
     private async void SaveEmployeeInfo(Employee employee)
     {
@@ -345,6 +359,7 @@
     private async Task OpenAddToTagsDialog()
     {
         TagsCompanies ??= await CompanyTagsManager.GetAsync();
+       
         TagsCompanies ??=new List<TagsCompany>();
         _visibleAddToTagDialog = true;
     }
@@ -368,6 +383,14 @@
         await CompanyManager.UpdateTagsAsync(request);
         _visibleAddToTagDialog = false;
         _snackBar.Add("Теги обновлены");
+    }
+    private async void RemoveCompany()
+    {
+        if (await CompanyManager.RemoveAsync(CompanyId))
+        {
+            _navigationManager.NavigateTo("/companies");
+            
+        }
     }
 
 }

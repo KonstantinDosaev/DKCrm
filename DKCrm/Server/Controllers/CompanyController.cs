@@ -3,7 +3,7 @@ using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+
 
 namespace DKCrm.Server.Controllers
 {
@@ -12,8 +12,8 @@ namespace DKCrm.Server.Controllers
     [ApiController]
     public class CompanyController : ControllerBase
     {
-        private readonly CompanyDbContext _context;
-        public CompanyController(CompanyDbContext context)
+        private readonly ApplicationDBContext _context;
+        public CompanyController(ApplicationDBContext context)
         {
             _context = context;
         }
@@ -22,13 +22,20 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> Get()
         {
             //var е =  _context.Products.ToList();
-            return Ok(await _context.Companies.ToListAsync());
+            return Ok(await _context.Companies.Include(i=>i.ActualAddress).
+                Include(i=>i.CompanyType).
+                Include(i=>i.TagsCompanies).ToListAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.Companies.FirstOrDefaultAsync(a => a.Id == id);
+            var dev = await _context.Companies.Include(i => i.ActualAddress).
+                Include(i => i.CompanyType).
+                Include(i => i.BankDetails).Include(i => i.FnsRequest).
+                Include(i => i.Employees).
+                Include(i => i.TagsCompanies)
+                .FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
 
@@ -79,8 +86,15 @@ namespace DKCrm.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var dev = new Company { Id = id };
-            _context.Remove(dev);
+            var dev = await _context.Companies.Include(i => i.ActualAddress).
+                Include(i => i.CompanyType).
+                Include(i => i.BankDetails).
+                Include(i => i.FnsRequest).
+                Include(i => i.Employees).
+                Include(i => i.TagsCompanies)
+                .FirstOrDefaultAsync(a => a.Id == id);
+            if (dev!.ActualAddress != null) _context.Remove((object)dev.ActualAddress);
+            _context.Remove(dev!);
             await _context.SaveChangesAsync();
             return NoContent();
         }
@@ -104,7 +118,7 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> UpdateTagsCompany(TagsRequest tagRequest)
         {
          
-                var changeCompany = await _context.Companies.FirstOrDefaultAsync(f => f.Id == tagRequest.CompanyId);
+                var changeCompany = await _context.Companies.Include(i=>i.TagsCompanies).FirstOrDefaultAsync(f => f.Id == tagRequest.CompanyId);
                 var tagsList = _context.TagsCompanies.Where(w => tagRequest.TagCollection.Contains(w.Id)).ToList();
                 foreach (var item in tagsList)
                 {
@@ -115,7 +129,7 @@ namespace DKCrm.Server.Controllers
                    
                     }
                 }
-                var except = changeCompany.TagsCompanies!.Except(tagsList).ToList();
+                var except = changeCompany!.TagsCompanies!.Except(tagsList).ToList();
                 if (except != null && except.Any())
                 {
                     foreach (var tag in except)

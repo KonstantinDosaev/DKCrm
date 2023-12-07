@@ -1,0 +1,152 @@
+﻿<MudDialog @bind-IsVisible="_visibleStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+    <DialogContent>
+
+        <MudPaper Elevation="12" Class="p-4 m-1">
+            <div class="d-flex align-items-center m-1">
+                <p class="fs-4 m-0">Склады</p>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Sharp.Add" OnClick="() =>  _visibleAddStorageDialog=true">Добавить склад</MudMenuItem>
+                </MudMenu>
+            </div>
+            @if (StorageList != null)
+            {
+                @foreach (var storage in StorageList)
+                {
+                    <MudCard Outlined="true" Class="m-3 pa-3">
+
+                        <div Class=" align-items-center ">
+                            <div class="d-flex align-items-center mr-15">
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                                    <MudMenuItem Icon="@Icons.Material.Sharp.Edit" OnClick="() => OpenUpdateStorageDialog(storage)">Редактировать</MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Sharp.RemoveDone" OnClick="() => OpenRemoveStorageDialog(storage)">Удалить</MudMenuItem>
+                                </MudMenu>
+
+                                <MudText Typo="Typo.h6">@storage.Name</MudText>
+                            </div>
+                            <MudText Typo="Typo.body1">
+                                <span class="mr-2 fw-bold">Адрес:</span>
+                                @if (storage.Address != null)
+                                {
+                                    <span></span>
+
+                                    <span>@storage.Address.Country,</span>
+                                    @if (storage.Address.Region != null)
+                                    {
+                                        <span> обл. @storage.Address.Region,</span>
+                                    }
+                                    <span> г. @storage.Address.City,</span>
+                                    <span> ул. @storage.Address.Street,</span>
+                                    <span> д./стр. @storage.Address.Home,</span>
+                                    <span> пом./кв. @storage.Address.Placement</span>
+                                    @if (storage.Address.PostalCode != null)
+                                    {
+                                        <div>Почтовый индекс: @storage.Address.PostalCode</div>
+                                    }
+                                }
+                            </MudText>
+                        </div>
+                    </MudCard>
+                }
+
+            }
+        </MudPaper>
+
+        <MudDialog @bind-IsVisible="_visibleRemoveStorageDialog">
+            <DialogContent>
+                <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
+                <div class="pt-5 justify-content-between d-flex">
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="RemoveStorage" Color="Color.Error">Удалить</MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleRemoveStorageDialog=false" Color="Color.Primary">Закрыть</MudButton>
+                </div>
+            </DialogContent>
+        </MudDialog>
+        <MudDialog @bind-IsVisible="_visibleAddStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+            <DialogContent>
+                <StorageForm 
+                    ButtonText="Сохранить" 
+                    OnValidSubmit="AddStorage" 
+                    Storage="Storage"
+                    TitleText="Добавление склад"
+                   
+                />
+            </DialogContent>
+        </MudDialog>
+
+        <MudDialog @bind-IsVisible="_visibleUpdateStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+            <DialogContent>
+                <StorageForm ButtonText="Сохранить"
+                              OnValidSubmit="UpdateStorage"
+                              Storage="Storage"
+                              TitleText="Редактирование данных склада" />
+            </DialogContent>
+        </MudDialog>
+    </DialogContent>
+</MudDialog>
+@code {
+    public List<Storage>? StorageList { get; set; }
+    public Storage? Storage { get; set; } = new();
+
+    private bool _visibleAddStorageDialog;
+    private bool _visibleUpdateStorageDialog;
+    private bool _visibleRemoveStorageDialog;
+    private bool _visibleStorageDialog;
+    public MudForm? _mudForm { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+       
+    }
+    public async Task OpenStorageDialog()
+    {
+        await GetStorageAll();
+        _visibleStorageDialog = true;
+        StateHasChanged();
+    }
+    private async Task GetStorageAll()
+    {
+        StorageList ??= await StorageManager.GetAsync();
+    }
+       
+
+    private async Task AddStorage()
+    {
+       
+        if (await StorageManager.AddAsync(Storage!))
+        {
+            StorageList ??= new List<Storage>();
+            StorageList.Add(Storage!);
+            _visibleAddStorageDialog = false;
+            _snackBar.Add("Склад добавлен!");
+        }
+    }
+    private void OpenUpdateStorageDialog(Storage storage)
+    {
+        Storage = storage;
+        _visibleUpdateStorageDialog = true;
+
+    }
+    private async Task UpdateStorage()
+    {
+        
+        if (await StorageManager.UpdateAsync(Storage!))
+        {
+            _visibleUpdateStorageDialog = false;
+            _snackBar.Add("Данные склада обновлены!");
+        }
+    }
+    private void OpenRemoveStorageDialog(Storage storage)
+    {
+        Storage = storage;
+        _visibleRemoveStorageDialog = true;
+
+    }
+    private async void RemoveStorage()
+    {
+        if (await StorageManager.RemoveAsync(Storage!.Id))
+        {
+            StorageList!.Remove(Storage);
+            _visibleRemoveStorageDialog = false;
+            _snackBar.Add("Склад удален");
+        }
+    }
+}

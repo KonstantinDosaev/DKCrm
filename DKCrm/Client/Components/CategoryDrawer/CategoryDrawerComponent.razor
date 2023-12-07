@@ -156,8 +156,6 @@
 
     private async Task GetCategory()
     {
-       
-  
         Categories = await CategoryManager.GetAsync();
         Categories = Categories.OrderBy(o => o.Name).ToList();
         StateHasChanged();

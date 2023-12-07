@@ -1,0 +1,92 @@
+﻿@using Microsoft.AspNetCore.Components
+
+ <MudText Typo="Typo.h5" >@TitleText</MudText>
+ @if (Storage != null)
+ {
+     <MudForm @ref="Form" @bind-IsValid="@success" >
+         <MudCard>
+             <MudCardContent>
+
+                 <MudTextField @bind-Value="@Storage.Name"
+                               For="@(() => Storage.Name)"
+                               Immediate="true"
+                               Required="true"
+                               RequiredError="Введите название"
+                               Label="Название склада" />
+                 @if (Storage.Address == null)
+                 {
+                     Storage.Address = new();
+                 }
+               
+                 <p class="mt-6 fs-4">Адрес</p>
+                 <MudTextField @bind-Value="Storage.Address.Country"
+                               For="@(() => Storage.Address.Country)"
+                       
+                               Label="Страна"
+                               Required="true" />
+                 <MudTextField @bind-Value="Storage.Address.Region"
+                               For="@(() => Storage.Address.Region)"
+                               Immediate="true"
+                               Label="Регион" />
+                 <MudTextField @bind-Value="Storage.Address.City"
+                               For="@(() => Storage.Address.City)"
+                               Immediate="true"
+                               Required="true"
+                               Label="Город" />
+
+                 <MudTextField @bind-Value="Storage.Address.Street"
+                               For="@(() => Storage.Address.Street)"
+                               Immediate="true"
+                               Required="true"
+                               Label="Улица" />
+
+                 <MudTextField @bind-Value="Storage.Address.Home"
+                               For="@(() => Storage.Address.Home)"
+                               Immediate="true"
+                               Required="true"
+                               Label="Дом/Сторение" />
+
+                 <MudTextField @bind-Value="Storage.Address.Placement"
+                               For="@(() => Storage.Address.Placement)"
+                               Immediate="true"
+                               Required="true"
+                               Label="Помещение/Квартира" />
+
+                 <MudTextField @bind-Value="Storage.Address.PostalCode"
+                               For="@(() => Storage.Address.PostalCode)"
+                               Immediate="true"
+                               Label="Почтовый код" />
+             
+       
+             </MudCardContent>
+             <MudCardActions>
+                 <MudButton  Variant="Variant.Text" Size="Size.Small" OnClick="Validation" Color="Color.Tertiary">@ButtonText</MudButton>
+             </MudCardActions>
+         </MudCard>
+     </MudForm>
+
+        
+ }
+
+
+ @code {
+     [Parameter] public Storage Storage { get; set; } = null!;
+     [Parameter] public string ButtonText { get; set; } = "Save";
+     [Parameter] public string TitleText { get; set; } = "";
+     [Parameter] public EventCallback OnValidSubmit { get; set; }
+    bool success;
+
+     [Parameter]
+     public MudForm? Form { get; set; }
+
+     private async Task Validation()
+     {
+         if (Form!.IsValid)
+             await OnValidSubmit.InvokeAsync();
+         
+         else
+             await Form.Validate();
+         
+     }
+
+ }

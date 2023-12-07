@@ -9,9 +9,9 @@ namespace DKCrm.Server.Controllers
     [ApiController]
     public class CompanyTagsController : ControllerBase
     {
-        private readonly CompanyDbContext _context;
+        private readonly ApplicationDBContext _context;
 
-        public CompanyTagsController(CompanyDbContext context)
+        public CompanyTagsController(ApplicationDBContext context)
         {
             _context = context;
         }

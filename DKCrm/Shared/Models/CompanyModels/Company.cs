@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DKCrm.Shared.Iterfaces;
+using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Shared.Models.CompanyModels
@@ -16,7 +17,7 @@ namespace DKCrm.Shared.Models.CompanyModels
         public string? Description { get; set; }
         public string? Director { get; set; }
         public virtual Address? ActualAddress { get; set; }
-
+        public  Guid? ActualAddressId { get; set; }
         public virtual CompanyType? CompanyType { get; set; }
         public Guid? CompanyTypeId { get; set; }
         public virtual FnsRequest? FnsRequest { get; set; }
@@ -24,6 +25,11 @@ namespace DKCrm.Shared.Models.CompanyModels
         public virtual ICollection<Employee>? Employees { get; set; }
         public virtual ICollection<BankDetails>? BankDetails { get; set; }
         public virtual ICollection<TagsCompany>? TagsCompanies { get; set; }
+
+        public virtual ICollection<ExportedOrder>? ExportedOrdersOurCompany { get; set; }
+        public virtual ICollection<ExportedOrder>? ExportedOrdersBuyerCompany { get; set; }
+        public virtual ICollection<ImportedOrder>? ImportedOrdersOurCompany { get; set; }
+        public virtual ICollection<ImportedOrder>? ImportedOrdersSellersCompany { get; set; }
 
     }
 }

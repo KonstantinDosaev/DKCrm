@@ -9,9 +9,9 @@ namespace DKCrm.Server.Controllers
     [ApiController]
     public class EmployeeController: ControllerBase
     {
-        private readonly CompanyDbContext _context;
+        private readonly ApplicationDBContext _context;
 
-        public EmployeeController(CompanyDbContext context)
+        public EmployeeController(ApplicationDBContext context)
         {
             _context = context;
         }

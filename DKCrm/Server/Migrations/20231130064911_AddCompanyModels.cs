@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace DKCrm.Server.Migrations.CompanyDb
+namespace DKCrm.Server.Migrations
 {
-    public partial class CompaniInit : Migration
+    public partial class AddCompanyModels : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -15,11 +15,12 @@ namespace DKCrm.Server.Migrations.CompanyDb
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Country = table.Column<string>(type: "text", nullable: false),
+                    Region = table.Column<string>(type: "text", nullable: true),
                     City = table.Column<string>(type: "text", nullable: false),
                     Street = table.Column<string>(type: "text", nullable: false),
                     Home = table.Column<string>(type: "text", nullable: false),
                     Placement = table.Column<string>(type: "text", nullable: false),
-                    PostalCode = table.Column<string>(type: "text", nullable: false)
+                    PostalCode = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -59,7 +60,8 @@ namespace DKCrm.Server.Migrations.CompanyDb
                     Description = table.Column<string>(type: "text", nullable: true),
                     Director = table.Column<string>(type: "text", nullable: true),
                     ActualAddressId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CompanyTypeId = table.Column<Guid>(type: "uuid", nullable: true)
+                    CompanyTypeId = table.Column<Guid>(type: "uuid", nullable: true),
+                    FnsRequestId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -160,7 +162,7 @@ namespace DKCrm.Server.Migrations.CompanyDb
                     OKVED = table.Column<string>(type: "text", nullable: false),
                     Revenue = table.Column<string>(type: "text", nullable: true),
                     LegalAddress = table.Column<string>(type: "text", nullable: true),
-                    CompanyId = table.Column<Guid>(type: "uuid", nullable: false)
+                    CompanyId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -201,7 +203,8 @@ namespace DKCrm.Server.Migrations.CompanyDb
             migrationBuilder.CreateIndex(
                 name: "IX_FnsRequests_CompanyId",
                 table: "FnsRequests",
-                column: "CompanyId");
+                column: "CompanyId",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

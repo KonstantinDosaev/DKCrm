@@ -33,7 +33,10 @@
             Фильтр
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
         </MudButton>
-
+            <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _storageSettings.OpenStorageDialog()" Style="margin-left: 1rem;" Color="Color.Warning">
+            Склады
+            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+        </MudButton>
         @if (selectedItems.Any())
         {
             <MudButton Variant="Variant.Filled"  StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnButtonDeleteClicked" Style="margin-left: 1rem;">Удалить</MudButton>
@@ -136,6 +139,9 @@
     </MudDrawerHeader>
     <ProductFilterComponent/>
 </MudDrawer>
+
+
+<StorageSettings @ref="_storageSettings"/>
 
 
 

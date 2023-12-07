@@ -33,6 +33,7 @@ builder.Services.AddTransient<ICompanyTypeManager, CompanyTypeManager>();
 builder.Services.AddTransient<ICompanyTagsManager, CompanyTagsManager>();
 builder.Services.AddTransient<IRequestingFromFnsService, RequestingFromFnsService>();
 builder.Services.AddTransient<IEmployeeManager, EmployeeManager>();
+builder.Services.AddTransient<IStorageManager, StorageManager>();
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

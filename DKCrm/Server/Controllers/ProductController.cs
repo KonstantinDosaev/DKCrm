@@ -21,7 +21,9 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> Get()
         {
             //var е =  _context.Products.ToList();
-            return Ok(await _context.Products.ToListAsync());
+            return Ok(await _context.Products.Include(i=>i.Brand)
+                .Include(i=>i.Category)
+                .Include(i=>i.Category!.Parent).ToListAsync());
         }
 
         [HttpGet("{id}")]

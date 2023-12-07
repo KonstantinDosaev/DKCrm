@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DKCrm.Server.Migrations.CompanyDb
+namespace DKCrm.Server.Migrations
 {
-    [DbContext(typeof(CompanyDbContext))]
-    [Migration("20231113081949_CompaniInit")]
-    partial class CompaniInit
+    [DbContext(typeof(ApplicationDBContext))]
+    [Migration("20231130064911_AddCompanyModels")]
+    partial class AddCompanyModels
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -62,7 +62,9 @@ namespace DKCrm.Server.Migrations.CompanyDb
                         .HasColumnType("text");
 
                     b.Property<string>("PostalCode")
-                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Region")
                         .HasColumnType("text");
 
                     b.Property<string>("Street")
@@ -125,6 +127,9 @@ namespace DKCrm.Server.Migrations.CompanyDb
 
                     b.Property<string>("Director")
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("FnsRequestId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -197,7 +202,7 @@ namespace DKCrm.Server.Migrations.CompanyDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Director")
@@ -228,7 +233,8 @@ namespace DKCrm.Server.Migrations.CompanyDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
+                    b.HasIndex("CompanyId")
+                        .IsUnique();
 
                     b.ToTable("FnsRequests");
                 });
@@ -246,6 +252,159 @@ namespace DKCrm.Server.Migrations.CompanyDb
                     b.HasKey("Id");
 
                     b.ToTable("TagsCompanies");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Brand", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Brands");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.CategoryOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Measure")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("CategoryOptions");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Product", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BrandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("DateDelivery")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("DateTimeCreated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DateTimeUpdated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DayToDelivery")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PartNumber")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("QuantityTwo")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("SalePrice")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BrandId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.ProductOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryOptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryOptionId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductOptions");
                 });
 
             modelBuilder.Entity("CompanyTagsCompany", b =>
@@ -303,12 +462,67 @@ namespace DKCrm.Server.Migrations.CompanyDb
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.FnsRequest", b =>
                 {
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
+                        .WithOne("FnsRequest")
+                        .HasForeignKey("DKCrm.Shared.Models.CompanyModels.FnsRequest", "CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Category", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.Products.Category", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.CategoryOption", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.Products.Category", "Category")
+                        .WithMany("CategoryOptions")
+                        .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Company");
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Product", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.Products.Brand", "Brand")
+                        .WithMany("Products")
+                        .HasForeignKey("BrandId");
+
+                    b.HasOne("DKCrm.Shared.Models.Products.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Brand");
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.ProductOption", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.Products.CategoryOption", "CategoryOption")
+                        .WithMany("ProductOption")
+                        .HasForeignKey("CategoryOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DKCrm.Shared.Models.Products.Product", "Product")
+                        .WithMany("ProductOption")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CategoryOption");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.Company", b =>
@@ -316,11 +530,37 @@ namespace DKCrm.Server.Migrations.CompanyDb
                     b.Navigation("BankDetails");
 
                     b.Navigation("Employees");
+
+                    b.Navigation("FnsRequest");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.CompanyType", b =>
                 {
                     b.Navigation("Companies");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Brand", b =>
+                {
+                    b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Category", b =>
+                {
+                    b.Navigation("CategoryOptions");
+
+                    b.Navigation("Children");
+
+                    b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.CategoryOption", b =>
+                {
+                    b.Navigation("ProductOption");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Products.Product", b =>
+                {
+                    b.Navigation("ProductOption");
                 });
 #pragma warning restore 612, 618
         }

@@ -10,15 +10,13 @@ var connectionStringProduct = builder.Configuration.GetConnectionString("Product
                               throw new InvalidOperationException("Connection string 'ProductContextConnection' not found.");
 var connectionStringUser = builder.Configuration.GetConnectionString("UserContextConnection") ??
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
-var connectionStringCompany = builder.Configuration.GetConnectionString("CompanyContextConnection") ??
-                           throw new InvalidOperationException("Connection string 'CompanyContextConnection' not found.");
+
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseLazyLoadingProxies().UseNpgsql(connectionStringProduct));
+    options.UseNpgsql(connectionStringProduct));
 builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseNpgsql(connectionStringUser));
-builder.Services.AddDbContext<CompanyDbContext>(options =>
-    options.UseLazyLoadingProxies().UseNpgsql(connectionStringCompany));
+
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<UserDbContext>();
 builder.Services.ConfigureApplicationCookie(options =>
