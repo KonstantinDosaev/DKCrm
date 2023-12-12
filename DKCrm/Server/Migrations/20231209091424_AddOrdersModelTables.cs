@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace DKCrm.Server.Migrations
 {
-    public partial class AddOrderModels : Migration
+    public partial class AddOrdersModelTables : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -89,6 +89,7 @@ namespace DKCrm.Server.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
                     DateTimeCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DateTimeUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Images = table.Column<string>(type: "text", nullable: true),

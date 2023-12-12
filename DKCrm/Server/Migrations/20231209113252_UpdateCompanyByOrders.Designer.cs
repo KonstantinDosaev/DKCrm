@@ -3,6 +3,7 @@ using System;
 using DKCrm.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DKCrm.Server.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20231209113252_UpdateCompanyByOrders")]
+    partial class UpdateCompanyByOrders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -299,7 +301,8 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CompanyBuyerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(1);
 
                     b.Property<double?>("CurrencyPercent")
                         .HasColumnType("double precision");
@@ -311,7 +314,8 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("EmployeeBuyerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(3);
 
                     b.Property<Guid?>("ExportedOrderStatusId")
                         .HasColumnType("uuid");
@@ -320,10 +324,12 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<Guid?>("OurCompanyId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(0);
 
                     b.Property<Guid?>("OurEmployeeId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(2);
 
                     b.HasKey("Id");
 
@@ -416,7 +422,8 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("EmployeeSellerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(3);
 
                     b.Property<string>("Images")
                         .HasColumnType("text");
@@ -428,13 +435,16 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<Guid?>("OurCompanyId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(0);
 
                     b.Property<Guid?>("OurEmployeeId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(2);
 
                     b.Property<Guid?>("SellersCompanyId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnOrder(1);
 
                     b.HasKey("Id");
 
@@ -862,13 +872,11 @@ namespace DKCrm.Server.Migrations
                 {
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "CompanyBuyer")
                         .WithMany("ExportedOrdersBuyerCompany")
-                        .HasForeignKey("CompanyBuyerId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("CompanyBuyerId");
 
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Employee", "EmployeeBuyer")
                         .WithMany("ExportedOrdersBuyer")
-                        .HasForeignKey("EmployeeBuyerId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("EmployeeBuyerId");
 
                     b.HasOne("DKCrm.Shared.Models.OrderModels.ExportedOrderStatus", "ExportedOrderStatus")
                         .WithMany("ExportedOrders")
@@ -876,13 +884,11 @@ namespace DKCrm.Server.Migrations
 
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "OurCompany")
                         .WithMany("ExportedOrdersOurCompany")
-                        .HasForeignKey("OurCompanyId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OurCompanyId");
 
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Employee", "OurEmployee")
                         .WithMany("ExportedOrdersOur")
-                        .HasForeignKey("OurEmployeeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OurEmployeeId");
 
                     b.Navigation("CompanyBuyer");
 
@@ -914,8 +920,7 @@ namespace DKCrm.Server.Migrations
                 {
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Employee", "EmployeeSeller")
                         .WithMany("ImportedOrdersSellers")
-                        .HasForeignKey("EmployeeSellerId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("EmployeeSellerId");
 
                     b.HasOne("DKCrm.Shared.Models.OrderModels.ImportedOrderStatus", "ImportedOrderStatus")
                         .WithMany("ImportedOrders")
@@ -923,18 +928,15 @@ namespace DKCrm.Server.Migrations
 
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "OurCompany")
                         .WithMany("ImportedOrdersOurCompany")
-                        .HasForeignKey("OurCompanyId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OurCompanyId");
 
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Employee", "OurEmployee")
                         .WithMany("ImportedOrdersOur")
-                        .HasForeignKey("OurEmployeeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OurEmployeeId");
 
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "SellersCompany")
                         .WithMany("ImportedOrdersSellersCompany")
-                        .HasForeignKey("SellersCompanyId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("SellersCompanyId");
 
                     b.Navigation("EmployeeSeller");
 

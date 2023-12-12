@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +23,10 @@ namespace DKCrm.Shared.Models.CompanyModels
         public virtual Company? Company { get; set; }
         public Guid CompanyId { get; set; }
 
-
+        //[InverseProperty(nameof(ExportedOrder.OurEmployee))] public virtual ICollection<ExportedOrder>? ExportedOrdersOur { get; set; }
+        //[InverseProperty(nameof(ExportedOrder.EmployeeBuyer))] public virtual ICollection<ExportedOrder>? ExportedOrdersBuyer { get; set; }
+        //[InverseProperty(nameof(ImportedOrder.OurEmployee))] public virtual ICollection<ImportedOrder>? ImportedOrdersOur { get; set; }
+        //[InverseProperty(nameof(ImportedOrder.EmployeeSeller))] public virtual ICollection<ImportedOrder>? ImportedOrdersSellers { get; set; }
         public virtual ICollection<ExportedOrder>? ExportedOrdersOur { get; set; }
         public virtual ICollection<ExportedOrder>? ExportedOrdersBuyer { get; set; }
         public virtual ICollection<ImportedOrder>? ImportedOrdersOur { get; set; }

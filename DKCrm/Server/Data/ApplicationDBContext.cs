@@ -139,6 +139,16 @@ namespace DKCrm.Server.Data
                 .HasForeignKey(m => m.EmployeeSellerId).OnDelete(DeleteBehavior.SetNull);
 
 
+            builder.Entity<Employee>()
+                .HasMany(m => m.ImportedOrdersOur)
+                .WithOne(t => t.OurEmployee)
+                .HasForeignKey(m => m.OurEmployeeId).OnDelete(DeleteBehavior.SetNull);
+            builder.Entity<Employee>()
+                .HasMany(m => m.ImportedOrdersSellers)
+                .WithOne(t => t.EmployeeSeller)
+                .HasForeignKey(m => m.EmployeeSellerId).OnDelete(DeleteBehavior.SetNull);
+
+
 
             builder
                 .Entity<Storage>()

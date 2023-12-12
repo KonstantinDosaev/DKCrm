@@ -21,16 +21,25 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> Get()
         {
             //var е =  _context.Products.ToList();
-            return Ok(await _context.Products.Include(i=>i.Brand)
+            return Ok(await _context.Products
+                .Include(i=>i.Brand)
                 .Include(i=>i.Category)
                 .Include(i=>i.Category!.Parent).ToListAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
             var dev = await _context.Products.FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
+        }
+        [HttpGet("category/{id:guid}")]
+        public async Task<IActionResult> GetProductByCategory(Guid id)
+        {
+            return Ok(await _context.Products
+                .Include(i => i.Brand)
+                .Include(i => i.Category)
+                .Include(i => i.Category!.Parent).Where(w=>w.CategoryId==id).ToListAsync());
         }
 
         [HttpPost]
@@ -66,7 +75,7 @@ namespace DKCrm.Server.Controllers
             return Ok(products.Count());
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var dev = new Product { Id = id };

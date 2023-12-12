@@ -22,11 +22,19 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> Get()
         {
             //var е =  _context.Products.ToList();
-            return Ok(await _context.Companies.Include(i=>i.ActualAddress).
-                Include(i=>i.CompanyType).
-                Include(i=>i.TagsCompanies).ToListAsync());
+            return Ok(await _context.Companies.Include(i=>i.ActualAddress)
+                .Include(i=>i.CompanyType)
+                .Include(i=>i.Employees)
+                .Include(i=>i.TagsCompanies).ToListAsync());
         }
-
+        //[HttpGet("import")]
+        //public async Task<IActionResult> GetByImportOrder()
+        //{
+        //    //var е =  _context.Products.ToList();
+        //    return Ok(await _context.Companies.Where(w=>w.ImportedOrdersOurCompany!=null||w.ImportedOrdersSellersCompany!=null)
+        //        .Include(i => i.CompanyType)
+        //        .Include(i => i.Employees).ToListAsync());
+        //}
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {

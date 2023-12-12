@@ -11,13 +11,13 @@ namespace DKCrm.Client.Pages.ProductManagement
         public Guid CategoryId { get; set; }
 
         private string? _currentCategoryName;
-        private List<Product> Elements = new List<Product>();
-        // private List<IdentityRole> Roles = new List<IdentityRole>();
+        private List<Product>? Elements { get; set; }
+
         private List<Brand>? Brands { get; set; }
         private List<Category>? Categories { get; set; }
-        private List<string> editEvents = new();
-        private string searchString = "";
-        private Product elementBeforeEdit;
+        private List<string> _editEvents = new();
+        private string _searchString = "";
+        private Product _elementBeforeEdit = null!;
 
         private HashSet<Product> selectedItems = new HashSet<Product>();
         private TableApplyButtonPosition applyButtonPosition = TableApplyButtonPosition.Start;
@@ -46,12 +46,9 @@ namespace DKCrm.Client.Pages.ProductManagement
         {
             if (CategoryId != null && CategoryId != Guid.Empty)
             {
-                var resultProducts = await CategoryManager.GetDetailsAsync(CategoryId);
-                if (resultProducts.Products != null)
-                    Elements = resultProducts.Products.ToList();
-               
-                _currentCategoryName = resultProducts.Name;
-                
+                Elements = await ProductManager.GetProductsByCategoryAsync(CategoryId);
+
+                if (Categories != null) _currentCategoryName = Categories.FirstOrDefault(f => f.Id == CategoryId)!.Name;
             }
             else
             {
@@ -62,13 +59,13 @@ namespace DKCrm.Client.Pages.ProductManagement
 
         private void AddEditionEvent(string message)
         {
-            editEvents.Add(message);
+            _editEvents.Add(message);
             StateHasChanged();
         }
 
         private async void BackupItem(object element)
         {
-            elementBeforeEdit = new()
+            _elementBeforeEdit = new()
             { Id = ((Product)element).Id,
                 Name = ((Product)element).Name,
                 PartNumber = ((Product)element).PartNumber,
@@ -87,7 +84,7 @@ namespace DKCrm.Client.Pages.ProductManagement
 
         private async void ItemHasBeenCommitted(object element)
         {
-            elementBeforeEdit = new()
+            _elementBeforeEdit = new()
             {
                 Id = ((Product)element).Id,
                 Name = ((Product)element).Name,
@@ -95,33 +92,33 @@ namespace DKCrm.Client.Pages.ProductManagement
                 Brand = ((Product)element).Brand,
                 Category = ((Product)element).Category,
             };
-            await ProductManager.UpdateProductAsync(elementBeforeEdit);
+            await ProductManager.UpdateProductAsync(_elementBeforeEdit);
             AddEditionEvent($"RowEditCommit event: Changes to Element {((Product)element).PartNumber} committed");
         }
 
         private void ResetItemToOriginalValues(object element)
         {
-            ((Product)element).Id = elementBeforeEdit.Id;
-            ((Product)element).Name = elementBeforeEdit.Name;
+            ((Product)element).Id = _elementBeforeEdit.Id;
+            ((Product)element).Name = _elementBeforeEdit.Name;
 
-            ((Product)element).Brand = elementBeforeEdit.Brand;
-            ((Product)element).Category = elementBeforeEdit.Category;
+            ((Product)element).Brand = _elementBeforeEdit.Brand;
+            ((Product)element).Category = _elementBeforeEdit.Category;
             AddEditionEvent($"RowEditCancel event: Editing of Element {((Product)element).PartNumber} canceled");
         }
 
         private bool FilterFunc(Product element)
         {
-            if (string.IsNullOrWhiteSpace(searchString))
+            if (string.IsNullOrWhiteSpace(_searchString))
                 return true;
-            if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            if (element.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
-            if (element.PartNumber != null && element.PartNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            if (element.PartNumber != null && element.PartNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
-            if (element.Brand != null && element.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            if (element.Brand != null && element.Brand.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
             //if (element.Brand.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             //    return true;
-            if ($"{element.Id}".Contains(searchString))
+            if ($"{element.Id}".Contains(_searchString))
                 return true;
             return false;
         }
@@ -146,10 +143,8 @@ namespace DKCrm.Client.Pages.ProductManagement
             ProductManager.RemoveRangeProductsAsync(tempList);
             foreach (var item in selectedItems)
             {
-                Elements.Remove(item);
+                Elements!.Remove(item);
             }
-            
-            //_navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
         }
 
         private async Task AddProduct()
@@ -161,12 +156,14 @@ namespace DKCrm.Client.Pages.ProductManagement
             }
 
             await ProductManager.AddProductAsync(createdProduct);
+            Elements ??= new List<Product>();
             Elements.Add(createdProduct);
         }
         private async Task AddBrand()
         {
             var brand = new Brand() { Name = value };
             await BrandManager.AddAsync(brand);
+            Brands ??= new List<Brand>();
             Brands.Add(brand);
             _snackBar.Add("Изменения применены!");
             //_navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);

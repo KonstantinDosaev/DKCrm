@@ -5,6 +5,7 @@ using DKCrm.Client.Services.CategoryService;
 using DKCrm.Client.Services.Chat;
 using DKCrm.Client.Services.CompanyServices;
 using DKCrm.Client.Services.FnsRequesting;
+using DKCrm.Client.Services.OrderServices;
 using DKCrm.Client.Services.ProductServices;
 using DKCrm.Client.Services.UserService;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -34,6 +35,13 @@ builder.Services.AddTransient<ICompanyTagsManager, CompanyTagsManager>();
 builder.Services.AddTransient<IRequestingFromFnsService, RequestingFromFnsService>();
 builder.Services.AddTransient<IEmployeeManager, EmployeeManager>();
 builder.Services.AddTransient<IStorageManager, StorageManager>();
+
+builder.Services.AddTransient<IExportedOrderManager, ExportedOrderManager>();
+builder.Services.AddTransient<IExportedProductManager, ExportedProductManager>();
+builder.Services.AddTransient<IExportedOrderStatusManager, ExportedOrderStatusManager>();
+builder.Services.AddTransient<IImportedOrderManager, ImportedOrderManager>();
+builder.Services.AddTransient<IImportedProductManager, ImportedProductManager>();
+builder.Services.AddTransient<IImportedOrderStatusManager, ImportedOrderStatusManager>();
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

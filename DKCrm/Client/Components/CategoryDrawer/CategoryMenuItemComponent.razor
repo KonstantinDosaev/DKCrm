@@ -2,8 +2,8 @@
 
 @if (category.Children == null || !category.Children.Any())
  {
-   
-     <MudListItem Dense="true" OnClick="@CloseCategoryDrawerCallback" Href=@($"/ddd/{category.Id}") Value="@category.Name">
+
+    <MudListItem Dense="true" OnClick="@CloseCategoryDrawerCallback" Href=@($"/product/{category.Id}") Value="@category.Name">
          <CategoryRelocatedButtonPanel CurrentCategory="@category" 
                                        CheckedParentCategory="@CheckedParentCategory" 
                                        CheckedRelocatedCategory="@CheckedRelocatedCategory" 

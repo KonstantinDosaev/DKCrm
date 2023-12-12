@@ -3,7 +3,7 @@
  <MudText Typo="Typo.h5" >@TitleText</MudText>
  @if (Storage != null)
  {
-     <MudForm @ref="Form" @bind-IsValid="@success" >
+     <MudForm @ref="Form" @bind-IsValid="@_success" >
          <MudCard>
              <MudCardContent>
 
@@ -74,7 +74,7 @@
      [Parameter] public string ButtonText { get; set; } = "Save";
      [Parameter] public string TitleText { get; set; } = "";
      [Parameter] public EventCallback OnValidSubmit { get; set; }
-    bool success;
+    bool _success;
 
      [Parameter]
      public MudForm? Form { get; set; }

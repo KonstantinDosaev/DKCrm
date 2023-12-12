@@ -1,5 +1,5 @@
-﻿@page "/ddd"
-@page "/ddd/{categoryid:guid}"
+﻿@page "/product"
+@page "/product/{categoryid:guid}"
 @using Microsoft.AspNetCore.Components
 @using DKCrm.Client.Components.ProductFilter
 @inject ISnackbar Snackbar
@@ -43,7 +43,7 @@
         }
 
         <MudSpacer />
-        <MudTextField @bind-Value="searchString" Clearable="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudTextField @bind-Value="_searchString" Clearable="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
         @if (applyButtonPosition.DisplayApplyButtonAtStart() || (editButtonPosition.DisplayEditButtonAtStart() && editTrigger == TableEditTrigger.EditButton))

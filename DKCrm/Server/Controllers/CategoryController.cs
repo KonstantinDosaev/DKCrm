@@ -18,13 +18,21 @@ namespace DKCrm.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _context.Categories.Include(i=>i.Parent).Include(i=>i.Children).ToListAsync());
+            return Ok(await _context.Categories
+                .Include(i=>i.Parent)
+                .Include(i=>i.Children)
+                .Include(i=>i.Products)
+                .ToListAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.Categories.FirstOrDefaultAsync(a => a.Id == id);
+            var dev = await _context.Categories
+                .Include(i => i.Parent)
+                .Include(i => i.Children)
+                .Include(i => i.Products)
+                .FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
 

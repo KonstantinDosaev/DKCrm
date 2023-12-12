@@ -14,11 +14,21 @@
 </MudButton>
 <MudGrid>
     <MudItem xs="10">
-        <MudTable Height="" Class="m-2" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" OnRowClick="RowClickEvent" Filter="new Func<Company,bool>(FilterFunc1)">
+        <MudTable Height="" Class="m-2" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" 
+                  OnRowClick="RowClickEvent" Filter="new Func<Company,bool>(FilterFunc1)"
+                  Striped="true" 
+                  Bordered="true" 
+                  HeaderClass="mud-table-header table-head-bordered">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Periodic Elements</MudText>
                 <MudSpacer />
-                <MudTextField @bind-Value="searchString1" Placeholder="Поиск" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                <MudTextField @bind-Value="_searchString1" 
+                              Placeholder="Поиск" 
+                              Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;border-radius: 6px;padding: 0.5rem; margin-bottom: 0.5rem"
+                              Clearable=" true"
+                              Adornment="Adornment.Start" 
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium" Class="mt-0"></MudTextField>
             </ToolBarContent>
             <HeaderContent>
                 <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x => x.Name)">Наименование компании</MudTableSortLabel></MudTh>
@@ -60,7 +70,7 @@
             <MudText Typo="Typo.h4">Теги</MudText>
             @if (TagsCompanies != null)
             {
-                <MudList Style="" Clickable="true" @bind-SelectedItem="selectedItem" @bind-SelectedValue="selectedValue" Color="Color.Primary">
+                <MudList Style="" Clickable="true" @bind-SelectedItem="_selectedItem" @bind-SelectedValue="_selectedValue" Color="Color.Primary">
                     <MudListItem Dense="true" OnClick="GetAllCompanies" >
                         Все компании
                     </MudListItem>
@@ -84,7 +94,8 @@
              OnValidSubmit="AddCompany"
              CompanyTypes="CompanyTypes"
              ButtonText="Создать"
-             @ref="_companyForm"/>
+             @ref="_companyForm
+"/>
 
 <MudDrawerContainer Class="mud-height-full">
 
@@ -97,19 +108,20 @@
     </MudDrawer>
 </MudDrawerContainer>
 @code {
+
     [Parameter] public Guid TagId { get; set; }
 
     private  List<CompanyType>? CompanyTypes { get; set; }
     private  List<TagsCompany>? TagsCompanies { get; set; }
     private List<Company>? Companies { get; set; }
     private List<Company>? AllCompanies { get; set; }
-    CompanyForm _companyForm = null!;
+    CompanyForm? _companyForm = null!;
     public Company CreatedCompany { get; set; } = new ();
-    private string searchString1 = "";
+    private string _searchString1 = "";
 
     public bool VisibleCompanySettingsDrawer { get; set; }
-    MudListItem selectedItem;
-    object selectedValue = 1;
+    MudListItem? _selectedItem;
+    object _selectedValue = 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,7 +133,7 @@
         {
             //Companies = TagsCompanies.Where(w => w.Id == TagId)!.FirstOrDefault()!.Companies!.ToList();
             Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains(TagId)).ToList();
-            selectedValue = TagsCompanies!.FirstOrDefault(w => w.Id == TagId)!.Name;
+            _selectedValue = TagsCompanies!.FirstOrDefault(w => w.Id == TagId)!.Name;
         }
       
     }
@@ -132,7 +144,7 @@
         Companies = AllCompanies;
         
     }
-    private bool FilterFunc1(Company element) => FilterFunc(element, searchString1);
+    private bool FilterFunc1(Company element) => FilterFunc(element, _searchString1);
 
     private bool FilterFunc(Company element, string searchString)
     {
@@ -159,7 +171,7 @@
 
         if (await CompanyManager.AddAsync(CreatedCompany!))
         {
-            _companyForm._visibleAddCompanyDialog = false;
+            _companyForm!._visibleAddCompanyDialog = false;
             _snackBar.Add("Компания добавлена!");
         }
     }
@@ -186,3 +198,11 @@
     //    }
     //}
 }
+<style>
+    .mud-table-header {
+        background-color: #cbf0ee;
+        color: white !important;
+        font-weight: bold;
+    }
+    
+</style>

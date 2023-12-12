@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DKCrm.Shared.Iterfaces;
 using DKCrm.Shared.Models.OrderModels;
@@ -26,10 +28,14 @@ namespace DKCrm.Shared.Models.CompanyModels
         public virtual ICollection<BankDetails>? BankDetails { get; set; }
         public virtual ICollection<TagsCompany>? TagsCompanies { get; set; }
 
+        //[InverseProperty(nameof(ExportedOrder.OurCompany))] public virtual ICollection<ExportedOrder>? ExportedOrdersOurCompany { get; set; }
+        //[InverseProperty(nameof(ExportedOrder.CompanyBuyer))] public virtual ICollection<ExportedOrder>? ExportedOrdersBuyerCompany { get; set; }
+        //[InverseProperty(nameof(ImportedOrder.OurCompany))] public virtual ICollection<ImportedOrder>? ImportedOrdersOurCompany { get; set; }
+        //[InverseProperty(nameof(ImportedOrder.SellersCompany))] public virtual ICollection<ImportedOrder>? ImportedOrdersSellersCompany { get; set; }
+
         public virtual ICollection<ExportedOrder>? ExportedOrdersOurCompany { get; set; }
         public virtual ICollection<ExportedOrder>? ExportedOrdersBuyerCompany { get; set; }
         public virtual ICollection<ImportedOrder>? ImportedOrdersOurCompany { get; set; }
         public virtual ICollection<ImportedOrder>? ImportedOrdersSellersCompany { get; set; }
-
     }
 }

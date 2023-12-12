@@ -1,6 +1,7 @@
 ﻿using DKCrm.Shared.Models.CompanyModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,14 @@ namespace DKCrm.Shared.Models.OrderModels
         public virtual ICollection<CommentOnExportedOrder>? Comments { get; set; }
 
         public virtual Company? OurCompany { get; set; }
+        //[ForeignKey(nameof(OurCompany)), Column(Order = 0)] public Guid? OurCompanyId { get; set; }
+        //public virtual Company? CompanyBuyer { get; set; }
+        //[ForeignKey(nameof(CompanyBuyer)), Column(Order = 1)] public Guid? CompanyBuyerId { get; set; }
+
+        //public virtual Employee? OurEmployee { get; set; }
+        //[ForeignKey(nameof(OurEmployee)), Column(Order = 2)] public Guid? OurEmployeeId { get; set; }
+        //public virtual Employee? EmployeeBuyer { get; set; }
+        //[ForeignKey(nameof(EmployeeBuyer)), Column(Order = 3)] public Guid? EmployeeBuyerId { get; set; }
         public Guid? OurCompanyId { get; set; }
         public virtual Company? CompanyBuyer { get; set; }
         public Guid? CompanyBuyerId { get; set; }

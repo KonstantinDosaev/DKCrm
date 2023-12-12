@@ -26,6 +26,12 @@
 @inject ICompanyTagsManager CompanyTagsManager
 @inject IEmployeeManager EmployeeManager
 @inject IStorageManager StorageManager
+@inject IExportedOrderManager ExportedOrderManager
+@inject IExportedProductManager ExportedProductManager
+@inject IExportedOrderStatusManager ExportedOrderStatusManager
+@inject IImportedOrderManager ImportedOrderManager
+@inject IImportedProductManager ImportedProductManager
+@inject IImportedOrderStatusManager ImportedOrderStatusManager
 
 @using DKCrm.Client
 @using DKCrm.Client.Shared
@@ -41,6 +47,7 @@
 @using DKCrm.Client.Services.ProductServices
 @using DKCrm.Client.Components
 @using DKCrm.Client.Services.CompanyServices
+@using DKCrm.Client.Services.OrderServices
 
 
 @using FluentValidation

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DKCrm.Server.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20231207214527_AddOrderModels")]
-    partial class AddOrderModels
+    [Migration("20231209091424_AddOrdersModelTables")]
+    partial class AddOrdersModelTables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -425,6 +425,9 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<Guid?>("ImportedOrderStatusId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("OurCompanyId")
                         .HasColumnType("uuid");
