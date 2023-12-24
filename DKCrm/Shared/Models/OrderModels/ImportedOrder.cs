@@ -17,7 +17,9 @@ namespace DKCrm.Shared.Models.OrderModels
         public DateTime? DateTimeUpdated { get; set; }
         public string? Images { get; set; }
         public double? CurrencyPercent { get; set; }
-
+        public string? TransactionCurrency { get; set; }
+        public string? SupplierCurrency { get; set; }
+        public string? LocalCurrency { get; set; }
 
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
         public virtual ICollection<CommentOnImportedOrder>? Comments { get; set; }

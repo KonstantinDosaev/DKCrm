@@ -1,0 +1,42 @@
+﻿
+
+@if (Category!.Children == null || !Category.Children.Any())
+{
+
+    <MudListItem Dense="true" OnClick="ChangeValue"  Value="@Category">
+        @Category.Name
+    </MudListItem>
+
+}
+else
+{
+
+    <MudListItem Text="">
+        <ChildContent>
+            @Category.Name
+        </ChildContent>
+        <NestedList>
+            @foreach (var subCategory in @Category.Children.OrderBy(o => o.Name))
+            {
+                <SelectedCategoriesListReqursion CloseCategoryDrawerCallback="@CloseCategoryDrawerCallback"
+                                                 Category="@subCategory"
+                                                 RefreshCategoryListCallback="RefreshCategoryListCallback"
+                                                 ChangeValue = "ChangeValue"/>
+            }
+        </NestedList>
+
+    </MudListItem>
+}
+@code {
+    [Parameter]
+    public Category? Category { get; set; }
+    
+    [Parameter]
+    public EventCallback CloseCategoryDrawerCallback { get; set; }
+    [Parameter]
+    public EventCallback ChangeValue { get; set; }
+    
+
+    [Parameter]
+    public EventCallback RefreshCategoryListCallback { get; set; }
+}

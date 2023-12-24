@@ -16,6 +16,11 @@ namespace DKCrm.Client.Services.OrderServices
             return await _httpClient.GetFromJsonAsync<List<ExportedProduct>>("api/ExportedProduct/Get") ?? throw new InvalidOperationException();
         }
 
+        public async Task<List<ExportedProduct>> GetNotEquippedAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<ExportedProduct>>("api/ExportedProduct/GetNotEquipped") ?? throw new InvalidOperationException();
+        }
+
         public async Task<ExportedProduct> GetDetailsAsync(Guid id)
         {
             return await _httpClient.GetFromJsonAsync<ExportedProduct>($"api/ExportedProduct/Get/{id}") ?? throw new InvalidOperationException();

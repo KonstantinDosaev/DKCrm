@@ -1,0 +1,268 @@
+﻿@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Constants
+@using DKCrm.Client.Pages.ProductManagement
+@using System.Formats.Asn1
+@using System.Globalization
+
+<MudText Typo="Typo.h5">@TitleText</MudText>
+@if (ImportedProduct != null)
+{
+    <MudForm @ref="ImportedOrderForm" @bind-IsValid="@_success">
+        
+           
+        <MudPaper Elevation="12" Class="p-4">
+            <MudAutocomplete T="Product" Label="Введите партномер или название продукта" 
+                             @bind-Value="ImportedProduct.Product" 
+                             SearchFuncWithCancel="@Search" 
+                             Variant="Variant.Outlined" 
+                             ShowProgressIndicator="true"
+                             ToStringFunc="@(e=> e==null?null : $"Парт-номер: {e.PartNumber} /  Наименование: {e.Name}  /  Производитель: {e.Brand?.Name}")"
+                             MinCharacters="1"
+                             Class="mb-3" />
+            @if (ImportedProduct.Product != null)
+            {
+                <MudButton Variant="Variant.Outlined" Size="Size.Medium" OnClick="()=>_visibleDetailProductDialog=true" Color="Color.Tertiary">Подробности о продукте</MudButton>
+                <ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
+                                     ProductId="ImportedProduct.Product.Id"
+                                     Close="() => _visibleDetailProductDialog=false" />
+            }
+                       
+            <span>Если товар не найден вы можете </span><MudButton Variant="Variant.Outlined" Size="Size.Medium" OnClick="()=>_visibleCreatedProductDialog=true" Color="Color.Tertiary">Создать новый продукт</MudButton>
+            <MudTextField Label="Количество" @bind-Value="ImportedProduct.Quantity"
+                          For="@(() => ImportedProduct.Quantity)"
+                          Variant="Variant.Outlined"
+                          RequiredError="Введите количество"
+                          Class="mb-3"/>
+        </MudPaper>
+
+        <MudPaper Elevation="12" Class="p-4 my-1">
+            @if (StorageList != null)
+            {
+                <MudText Typo="Typo.h5">Направление:</MudText>
+                <MudText Typo="Typo.h6">На склад:</MudText>
+                <MudMenu Style="margin: 1rem 0;" Variant="Variant.Filled"
+                         Color="Color.Tertiary"Label="Добавить на склад">
+
+                    @foreach (var item in StorageList)
+                    {
+                        <MudMenuItem T="Guid?"
+                                     OnClick="() => AddPurchaseAtStorage(item)">
+                            @item.Name <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
+                        </MudMenuItem>
+                    }
+                </MudMenu>
+                @if (ImportedProduct.PurchaseAtStorageList != null && ImportedProduct.PurchaseAtStorageList.Any())
+                {
+                    foreach (var item in ImportedProduct.PurchaseAtStorageList)
+                    {
+                        <div class="d-flex align-items-center">
+                            <MudText Class="mr-2" Typo="Typo.body1"><b>@item.Storage!.Name :</b></MudText>
+                            <MudTextField Variant="Variant.Outlined"
+                                          @bind-Value="item.Quantity"
+                                          For="@(() => item.Quantity)"
+                                          Immediate="true"
+                                          Label="Количество"/>
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                           Color="Color.Warning"
+                                           OnClick="() => RemovePurchaseAtStorage(item)"/>
+                        </div>
+                    }
+                }
+            }
+            @if (NotEquippedExportedProducts != null)
+            {
+                <MudText Typo="Typo.h6">На реализацию:</MudText>
+                <MudMenu Style="margin: 1rem 0;" Variant="Variant.Filled"
+                         Color="Color.Tertiary"Label="Добавить на экспорт">
+
+                    @foreach (var item in NotEquippedExportedProducts)
+                    {
+                        <MudMenuItem T="Guid?"
+                                     OnClick="() => AddPurchaseAtExport(item)">
+                            @item.ExportedOrder?.Name @item.ExportedOrder?.Id @item.ExportedOrder?.DateTimeCreated  <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
+                        </MudMenuItem>
+                    }
+
+
+
+                </MudMenu>
+                @if (ImportedProduct.PurchaseAtExportList != null && ImportedProduct.PurchaseAtExportList.Any())
+                {
+                    foreach (var item in ImportedProduct.PurchaseAtExportList)
+                    {
+                        <div class="d-flex align-items-center">
+                            <MudText Class="mr-2" Typo="Typo.body1"><b>@item.ExportedProduct!.ExportedOrder!.Name @item.ExportedProduct!.ExportedOrder!.DateTimeCreated:</b></MudText>
+                            <MudTextField Variant="Variant.Outlined"
+                                          @bind-Value="item.Quantity"
+                                          For="@(() => item.Quantity)"
+                                          Immediate="true"
+                                          Label="Количество"/>
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                           Color="Color.Warning"
+                                           OnClick="() => RemovePurchaseAtExport(item)"/>
+                        </div>
+                    }
+                }
+            }
+        </MudPaper>
+        
+        <MudPaper Elevation="12" Class="p-4">
+            @if (!_isSetCurrency)
+            {
+                <MudText Color="Color.Warning">Установите валюты в настройках основного заказа</MudText>
+            }
+            <div class="d-flex align-items-center">
+            <MudNumericField Disabled="!_isSetCurrency" Label="Цена поставщика" @bind-Value="ImportedProduct.PriceInSupplierCurrency"
+                             For="@(() => ImportedProduct.PriceInSupplierCurrency)"
+                             Variant="Variant.Outlined"
+                             RequiredError="Введите количество"
+                             Class="mb-3"
+                             Format="0.##"
+                             Step="0.1M"
+                             T="decimal?" Min="0"
+                             Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.SupplierCurrency" />
+            <MudIconButton Icon="@Icons.Material.Filled.Loop" />
+            </div>
+            <MudNumericField Disabled="!_isSetCurrency" Label="Цена в валюте сделки" @bind-Value="ImportedProduct.PriceInTransactionCurrency"
+                          For="@(() => ImportedProduct.PriceInTransactionCurrency)"
+                          Variant="Variant.Outlined"
+                          RequiredError="Введите количество"
+                          Class="mb-3"
+                          Format="0.##"
+                          Step="0.1M"
+                         T="decimal?" Min="0"
+                         Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.TransactionCurrency"/>
+      
+            <MudNumericField Disabled="!_isSetCurrency" Label="Цена в локальной валюте" @bind-Value="ImportedProduct.PriceLocal"
+                          For="@(() => ImportedProduct.PriceLocal)"
+                          Variant="Variant.Outlined"
+                          RequiredError="Введите количество"
+                          Class="mb-3"
+                          Format="0.##"
+                          Step="0.1M"
+                          T="decimal?" Min="0"
+                         Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.LocalCurrency"/>
+        </MudPaper>
+
+            <MudCardActions>
+                <MudButton Variant="Variant.Outlined" Size="Size.Medium" OnClick="Validation" Color="Color.Info">@ButtonText</MudButton>
+            </MudCardActions>
+      
+    </MudForm>
+
+    <CreateProductDialog VisibleDialog="_visibleCreatedProductDialog"
+                         RefreshProductList="StateHasChanged"
+                         Close="() => _visibleCreatedProductDialog=false" />
+
+
+}
+
+
+@code {
+    [Parameter]public MudForm? ImportedOrderForm { get; set; }
+    [Parameter] public ImportedProduct? ImportedProduct { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Save";
+    [Parameter] public string TitleText { get; set; } = "";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    public List<Storage>? StorageList { get; set; }
+    public List<ExportedProduct>? NotEquippedExportedProducts { get; set; }
+
+    private Product? _product;
+    bool _success;
+    private bool _isSetCurrency;
+
+    private bool _visibleCreatedProductDialog; 
+    private bool _visibleDetailProductDialog;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StorageList = await StorageManager.GetAsync();
+        NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync();
+        if (ImportedProduct!.ImportedOrder.LocalCurrency != null && 
+            ImportedProduct!.ImportedOrder.SupplierCurrency != null && 
+            ImportedProduct!.ImportedOrder.TransactionCurrency != null)
+        {
+            _isSetCurrency = true;
+        }
+    }
+    
+    private async Task Validation()
+    {
+        if (ImportedOrderForm!.IsValid)
+            await OnValidSubmit.InvokeAsync();
+
+        else
+            await ImportedOrderForm.Validate();
+
+    }
+
+    private async Task<IEnumerable<Product>> Search(string value, CancellationToken token)
+    {
+        var result = await ProductManager.GetSearchProductAsync(value);
+        return result;
+    }
+    private async void AddPurchaseAtStorage(Storage storage)
+    {
+        if (ImportedProduct != null)
+        {
+            ImportedProduct.PurchaseAtStorageList ??= new List<PurchaseAtStorage>();
+            ImportedProduct.StorageList ??= new List<Storage>();
+            ImportedProduct.StorageList.Add(storage);
+            ImportedProduct.PurchaseAtStorageList.Add(new PurchaseAtStorage
+            {
+                Storage = storage, StorageId = storage.Id,
+                ImportedProduct = ImportedProduct, ImportedProductId = ImportedProduct.Id
+            });
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    private async void RemovePurchaseAtStorage(PurchaseAtStorage purchaseAtStorage)
+    {
+        if (ImportedProduct != null)
+        {
+            ImportedProduct.StorageList!.Remove(purchaseAtStorage.Storage!);
+            ImportedProduct.PurchaseAtStorageList!.Remove(purchaseAtStorage);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    private async void AddPurchaseAtExport(ExportedProduct export)
+    {
+        if (ImportedProduct != null)
+        {
+            ImportedProduct.PurchaseAtExportList ??= new List<PurchaseAtExport>();
+            ImportedProduct.ExportedProducts ??= new List<ExportedProduct>();
+            ImportedProduct.ExportedProducts.Add(export);
+            ImportedProduct.PurchaseAtExportList.Add(new PurchaseAtExport()
+            {
+                ExportedProduct = export, ExportedProductId = export.Id,
+                ImportedProduct = ImportedProduct, ImportedProductId = ImportedProduct.Id
+            });
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    private async void RemovePurchaseAtExport(PurchaseAtExport purchaseAtExport)
+    {
+        if (ImportedProduct != null)
+        {
+            ImportedProduct.ExportedProducts!.Remove(purchaseAtExport.ExportedProduct!);
+            ImportedProduct.PurchaseAtExportList!.Remove(purchaseAtExport);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    private async void ConvertedCurrency(string charCode)
+    {
+        var curArr = new List<string>
+        {
+            ImportedProduct!.ImportedOrder!.SupplierCurrency!,
+            ImportedProduct.ImportedOrder!.LocalCurrency!,
+            ImportedProduct.ImportedOrder!.TransactionCurrency!
+        };
+        curArr.Remove(charCode);
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

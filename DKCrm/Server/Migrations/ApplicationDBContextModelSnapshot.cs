@@ -252,6 +252,26 @@ namespace DKCrm.Server.Migrations
                     b.ToTable("TagsCompanies");
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.InternalCompanyData", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("CurrencyPercent")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("KeyFns")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LocalCurrency")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InternalCompanyData");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.CommentOnExportedOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -298,6 +318,9 @@ namespace DKCrm.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BuyerCurrency")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("CompanyBuyerId")
                         .HasColumnType("uuid");
 
@@ -319,11 +342,20 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("Images")
                         .HasColumnType("text");
 
+                    b.Property<string>("LocalCurrency")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("OurCompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("OurEmployeeId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("TransactionCurrency")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -345,6 +377,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsValueConstant")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Position")
                         .HasColumnType("integer");
@@ -424,6 +459,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<Guid?>("ImportedOrderStatusId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("LocalCurrency")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
@@ -435,6 +473,12 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<Guid?>("SellersCompanyId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SupplierCurrency")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TransactionCurrency")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -456,6 +500,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsValueConstant")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Position")
                         .HasColumnType("integer");
@@ -513,10 +560,6 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.PurchaseAtExport", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("ExportedProductId")
                         .HasColumnType("uuid");
 
@@ -524,63 +567,55 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExportedProductId");
+                    b.HasKey("ExportedProductId", "ImportedProductId");
 
                     b.HasIndex("ImportedProductId");
 
-                    b.ToTable("PurchaseAtExports");
+                    b.ToTable("PurchaseAtExports", (string)null);
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.PurchaseAtStorage", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("StorageId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ImportedProductId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
-                    b.Property<Guid>("StorageId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
+                    b.HasKey("StorageId", "ImportedProductId");
 
                     b.HasIndex("ImportedProductId");
 
-                    b.HasIndex("StorageId");
-
-                    b.ToTable("PurchaseAtStorages");
+                    b.ToTable("PurchaseAtStorages", (string)null);
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.SoldFromStorage", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("StorageId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ExportedProductId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
-                    b.Property<Guid>("StorageId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
+                    b.HasKey("StorageId", "ExportedProductId");
 
                     b.HasIndex("ExportedProductId");
 
-                    b.HasIndex("StorageId");
-
-                    b.ToTable("SoldFromStorages");
+                    b.ToTable("SoldFromStorages", (string)null);
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.Products.Brand", b =>
@@ -732,26 +767,22 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.Products.ProductsInStorage", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid?>("StorageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProductId")
+                    b.Property<Guid?>("ProductId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
-                    b.Property<Guid>("StorageId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
+                    b.HasKey("StorageId", "ProductId");
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("StorageId");
-
-                    b.ToTable("ProductsInStorages");
+                    b.ToTable("ProductsInStorages", (string)null);
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.Products.Storage", b =>
@@ -760,7 +791,7 @@ namespace DKCrm.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AddressId")
+                    b.Property<Guid?>("AddressId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -1098,9 +1129,7 @@ namespace DKCrm.Server.Migrations
                 {
                     b.HasOne("DKCrm.Shared.Models.Address", "Address")
                         .WithMany()
-                        .HasForeignKey("AddressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AddressId");
 
                     b.Navigation("Address");
                 });

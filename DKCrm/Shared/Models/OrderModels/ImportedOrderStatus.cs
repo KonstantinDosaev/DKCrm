@@ -13,5 +13,6 @@ namespace DKCrm.Shared.Models.OrderModels
         public string Value { get; set; }
         public int Position { get; set; }
         public virtual ICollection<ImportedOrder>? ImportedOrders { get; set; }
+        public bool IsValueConstant { get; set; }
     }
 }

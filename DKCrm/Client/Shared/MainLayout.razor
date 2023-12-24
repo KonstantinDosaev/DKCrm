@@ -1,6 +1,4 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client
-
-
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject CustomStateProvider AuthStateProvider
@@ -9,9 +7,7 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 <div class="page">
-
-
-<main>
+    <main>
         <NavMenu />
         <CascadingValue Value="hubConnection">
         @Body

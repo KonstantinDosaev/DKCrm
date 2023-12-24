@@ -1,16 +1,16 @@
 ﻿@using DKCrm.Client.Components.CategoryDrawer
 
-@if (category.Children == null || !category.Children.Any())
+@if (Category!.Children == null || !Category.Children.Any())
  {
 
-    <MudListItem Dense="true" OnClick="@CloseCategoryDrawerCallback" Href=@($"/product/{category.Id}") Value="@category.Name">
-         <CategoryRelocatedButtonPanel CurrentCategory="@category" 
+    <MudListItem Dense="true" OnClick="@CloseCategoryDrawerCallback" Href=@($"/product/category/{Category.Id}") Value="@Category.Name">
+         <CategoryRelocatedButtonPanel CurrentCategory="@Category" 
                                        CheckedParentCategory="@CheckedParentCategory" 
                                        CheckedRelocatedCategory="@CheckedRelocatedCategory" 
                                        VisibleButtons="@VisableButtonRelocation"
                                        RelocatedOrParent="RelocatedOrParent"/>
-         @category.Name
-         <CategorySettingsMenuComponent RefreshCategoryListCallback="RefreshCategoryListCallback" CurrentCategory="@category"/>
+         @Category.Name
+         <CategorySettingsMenuComponent RefreshCategoryListCallback="RefreshCategoryListCallback" CurrentCategory="@Category"/>
      </MudListItem>
     
 
@@ -22,18 +22,18 @@
    
      <MudListItem Text="">
          <ChildContent>
-             <CategoryRelocatedButtonPanel CurrentCategory="@category"
+             <CategoryRelocatedButtonPanel CurrentCategory="@Category"
                                            CheckedParentCategory="@CheckedParentCategory"
                                            CheckedRelocatedCategory="@CheckedRelocatedCategory"
                                            VisibleButtons="@VisableButtonRelocation"
                                            RelocatedOrParent="RelocatedOrParent"/>
-                @category.Name
-             <CategorySettingsMenuComponent RefreshCategoryListCallback="RefreshCategoryListCallback" CurrentCategory="@category"/>
+                @Category.Name
+             <CategorySettingsMenuComponent RefreshCategoryListCallback="RefreshCategoryListCallback" CurrentCategory="@Category"/>
          </ChildContent>
          
          <NestedList>
 
-             @foreach (var subCategory in @category.Children.OrderBy(o => o.Name))
+             @foreach (var subCategory in Category.Children.OrderBy(o => o.Name))
              {
                  <CategoryMenuItemComponent CloseCategoryDrawerCallback="@CloseCategoryDrawerCallback"
                                             category="@subCategory"
@@ -67,7 +67,7 @@
 @code {
 
     [Parameter]
-    public Category category { get; set; }
+    public Category? Category { get; set; }
     [Parameter]
     public bool VisableButtonRelocation { get; set; }
     [Parameter]

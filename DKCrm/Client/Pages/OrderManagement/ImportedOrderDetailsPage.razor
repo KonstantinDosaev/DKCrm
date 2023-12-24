@@ -1,21 +1,23 @@
 ﻿@using DKCrm.Shared.Models.CompanyModels
-@using DKCrm.Client.Pages.Companies
 @using DKCrm.Shared.Models.OrderModels
-
+@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Client.Pages.OrderManagement.Dialogs
 @page "/imported_order/{id:guid}"
 
 @if (Order != null)
 {
-
+    <MudText Class="m-2" Typo="Typo.h4">Заказ № @Order.Id</MudText>
     @if (Order.OurCompany != null)
     {
-        <MudPaper Elevation="12"Class="p-2 m-1 d-flex justify-content-between align-items-center">
+        <MudPaper Elevation="12" Class="p-2 m-1 d-flex justify-content-between align-items-center">
             <div>
                 <p class="fs-4 mb-1 ">Наша компания</p>
-                <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Название компании:</span>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Название компании:</span>
                     @Order.OurCompany.Name
                 </MudText>
-                <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Сотрудник ведущий сделку:</span>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Сотрудник ведущий сделку:</span>
                     @if (Order.OurEmployee != null)
                     {
                         @Order.OurEmployee.FirstName
@@ -26,7 +28,7 @@
             </div>
             <MudButton Variant="Variant.Filled" Size="Size.Medium" Href=@($"/companies/{Order.OurCompanyId}") Style="margin-left: 1rem; max-height: 3rem;" Color="Color.Tertiary">
                 Подробнее
-                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.ArrowRight" Class="pa-0 ml-2"/>
+                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.ArrowRight" Class="pa-0 ml-2" />
             </MudButton>
 
         </MudPaper>
@@ -36,10 +38,12 @@
         <MudPaper Elevation="12" Class="p-2 m-1 d-flex justify-content-between align-items-center">
             <div>
                 <p class="fs-4 mb-1 ">Компания поставщик</p>
-                <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Название компании:</span>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Название компании:</span>
                     @Order.SellersCompany.Name
                 </MudText>
-                <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Сотрудник ведущий сделку:</span>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Сотрудник ведущий сделку:</span>
                     @if (Order.EmployeeSeller != null)
                     {
                         @Order.EmployeeSeller.FirstName
@@ -50,119 +54,107 @@
             </div>
             <MudButton Variant="Variant.Filled" Size="Size.Medium" Href=@($"/companies/{Order.SellersCompanyId}") Style="margin-left: 1rem; max-height: 3rem;" Color="Color.Tertiary">
                 Подробнее
-                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.ArrowRight" Class="pa-0 ml-2"/>
+                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.ArrowRight" Class="pa-0 ml-2" />
             </MudButton>
 
         </MudPaper>
     }
-    <MudText Typo="Typo.h4">Заказы от поставщиков</MudText>
-    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddProductDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+    <MudPaper Elevation="12" Class="p-2 m-1">
+        <p class="fs-4 mb-1 ">Компания поставщик</p>
+        <MudGrid>
+                
+            <MudItem xs="4" Class="p-0 d-flex justify-content-center align-items-baseline">
+                <MudIconButton Variant="Variant.Outlined" Size="Size.Medium" Style="margin-left: 1rem; max-height: 3rem;" Color="Color.Tertiary">
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight" Class="pa-0 mx-2" />
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight" Class="pa-0 mx-2" />
+                        </MudIconButton>
+                </MudItem>
+            <MudItem xs="4" Class="p-0 d-flex justify-content-center align-items-baseline">
+                    <MudIconButton Variant="Variant.Outlined" Size="Size.Medium" Style="margin-left: 1rem; max-height: 3rem;" Color="Color.Tertiary">
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Class="pa-0 mx-2" />
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight" Class="pa-0 mx-2" />
+                        </MudIconButton>
+                        </MudItem>
+            <MudItem xs="4" Class="p-0 d-flex justify-content-center align-items-baseline">
+                <MudIconButton Variant="Variant.Outlined" Size="Size.Medium" Style="margin-left: 1rem; max-height: 3rem;" Color="Color.Tertiary">
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Class="pa-0 mx-2" />
+                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight" Class="pa-0 mx-2" />
+                        </MudIconButton>
+                </MudItem>
+                
+            </MudGrid>
+
+        <MudButton Variant="Variant.Filled" Size="Size.Medium" Href=@($"/companies/{Order.SellersCompanyId}") Style="margin-left: 1rem; max-height: 3rem;" Color="Color.Tertiary">
+            Подробнее
+            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.ArrowRight" Class="pa-0 ml-2"/>
+        </MudButton>
+
+    </MudPaper>
+   
+    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddImportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
         Добавить продукт
-        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
     </MudButton>
 
-    <MudGrid>
-        <MudItem xs="10">
-            <MudTable Height="" Class="m-2" Items="@ImportedProducts" Hover="true" SortLabel="Sort By" T="ImportedProduct"
-                      OnRowClick="RowClickEvent" Filter="new Func<ImportedProduct, bool>(FilterFunc1)"
-                      Striped="true"
-                      Bordered="true"
-                      HeaderClass="mud-table-header table-head-bordered">
-                <ToolBarContent>
-                    <MudText Typo="Typo.h6">Periodic Elements</MudText>
-                    <MudSpacer/>
-                    <MudTextField @bind-Value="_searchString1"
-                                  Placeholder="Поиск"
-                                  Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem"
-                                  Clearable="true"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search"
-                                  IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.Name)">Наименование</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<int, object>(x => x!)">Количество</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.Name)">Цена в валюте поставщика</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<ImportedOrderStatus, object>(x => x.Value)">Цена в локальной валюте</MudTableSortLabel></MudTh>
+    <MudTable Height="" Class="m-2" Items="@ImportedProducts" Hover="true" SortLabel="Sort By" T="ImportedProduct"
+          OnRowClick="RowClickEvent" Filter="new Func<ImportedProduct, bool>(FilterFunc1)"
+          Striped="true"
+          Bordered="true"
+          HeaderClass="mud-table-header table-head-bordered">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="_searchString1"
+                      Placeholder="Поиск"
+                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem"
+                      Clearable="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.Name)">Наименование</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<int, object>(x => x!)">Количество</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.Name)">Цена в валюте поставщика</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<ImportedOrderStatus, object>(x => x.Value)">Цена в локальной валюте</MudTableSortLabel></MudTh>
 
 
-                </HeaderContent>
-                <RowTemplate>
-                @if (context.Product != null)
-                {
-                    <MudTd DataLabel="Парт-номер">@context.Product.PartNumber</MudTd>
-                    <MudTd DataLabel="Наименование">@context.Product.Name</MudTd>
-
-                }
-                <MudTd DataLabel="Количество">@context.Quantity</MudTd>
-                <MudTd DataLabel="Цена в валюте поставщика">@context.PriceInSupplierCurrency</MudTd>
-                    <MudTd DataLabel="Цена в валюте сделки">@context.Quantity</MudTd>
-                    <MudTd DataLabel="Цена в локальной валюте">@context.Quantity</MudTd>
-@*                    <MudTd DataLabel="Тип контрагента">
-
-                        <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Update" Class="pa-0 ml-2"/>
-
-                    </MudTd>*@
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager PageSizeOptions="new int[] { 10, 20 }"/>
-                </PagerContent>
-            </MudTable>
-        </MudItem>
-        <MudItem xs="2">
-            <MudCard Outlined="true" Class="m-3 pa-3">
-                <MudText Typo="Typo.h4">Теги</MudText>
-                @*@if (TagsCompanies != null)
+        </HeaderContent>
+        <RowTemplate>
+            @if (context.Product != null)
             {
-            <MudList Style="" Clickable="true" @bind-SelectedItem="_selectedItem" @bind-SelectedValue="_selectedValue" Color="Color.Primary">
-            <MudListItem Dense="true" OnClick="GetAllCompanies" >
-            Все компании
-            </MudListItem>
-            @foreach (var tag in TagsCompanies)
-            {
+                <MudTd DataLabel="Парт-номер">@context.Product.PartNumber</MudTd>
+                <MudTd DataLabel="Наименование">@context.Product.Name</MudTd>
 
-            <MudListItem Dense="true" OnClick="(() => FilterCompanyByTag(tag.Id))" Value="@tag.Name">
-            @tag.Name
-            </MudListItem>
             }
+            <MudTd DataLabel="Количество">@context.Quantity</MudTd>
+            <MudTd DataLabel="Цена в валюте поставщика">@context.PriceInSupplierCurrency</MudTd>
+            <MudTd DataLabel="Цена в валюте сделки">@context.PriceInTransactionCurrency</MudTd>
+            <MudTd DataLabel="Цена в локальной валюте">@context.PriceLocal</MudTd>
+            @*                    <MudTd DataLabel="Тип контрагента">
 
-            </MudList>
-            }*@
-            </MudCard>
-        </MudItem>
-    </MudGrid>
+        <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Update" Class="pa-0 ml-2"/>
+
+        </MudTd>*@
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
+        </PagerContent>
+    </MudTable>
 
 
 
 
 
-@*    <MudDialog @bind-IsVisible="_visibleAddOrderDialog" Style="min-width: 900px" Options="new DialogOptions() { CloseButton = true }">
-        <DialogContent>
-            <FormImportedOrder ImportedOrder="CreatedOrder"
-                               OnValidSubmit="AddOrder"
-                               ButtonText="Создать"
-                               @ref="_importOrderForm"/>
-        </DialogContent>
-    </MudDialog>*@
-    <MudDialog @bind-IsVisible="_visibleUpdateOrderDialog" Style="min-width: 900px" Options="new DialogOptions() { CloseButton = true }">
-        <DialogContent>
-            <FormImportedOrder ImportedOrder="Order"
-                               OnValidSubmit="UpdateOrder"
-                               ButtonText="Обновить"
-                               @ref="_importOrderForm"/>
-        </DialogContent>
-    </MudDialog>
-    <MudDrawerContainer Class="mud-height-full">
-
-        @*    <MudDrawer @bind-Open="@VisibleCompanySettingsDrawer" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
-    <MudDrawerHeader>
-    <MudText Typo="Typo.h6">Общие настройки компаний</MudText>
-    </MudDrawerHeader>
-
-    <CompanyPageSettings/>
-    </MudDrawer>*@
-    </MudDrawerContainer>
+    <CreateImportedProductDialog VisibleDialog="_visibleAddImportedProductDialog"
+                            Close="() => _visibleAddImportedProductDialog=false"
+                            RefreshProductList="OnInitializedAsync"
+                            Order="Order"/>
+@*    <EditImportedProductDialog VisibleDialog="_visibleEditImportedProductDialog"
+                          Close="() => _visibleEditImportedProductDialog=false"
+                          RefreshProductList="OnInitializedAsync"
+                          Id="ImportedProduct!.Id" />*@
 }
 @code {
 
@@ -170,17 +162,19 @@
     public ImportedOrder? Order { get; set; }
 
     private List<ImportedProduct>? ImportedProducts { get; set; }
-    private List<ImportedOrder>? AllOrders { get; set; }
 
-    
+    public ImportedProduct? ImportedProduct { get; set; }
+
+    //FormImportedProduct? _importProductForm = null!;
 
     private string _searchString1 = "";
-    FormImportedOrder? _importOrderForm = null!;
+
     public bool VisibleCompanySettingsDrawer { get; set; }
     MudListItem? _selectedItem;
     object _selectedValue = 1;
 
-    private bool _visibleAddProductDialog;
+    private bool _visibleAddImportedProductDialog;
+    private bool _visibleEditImportedProductDialog;
     private bool _visibleUpdateOrderDialog;
 
     protected override async Task OnInitializedAsync()
@@ -188,13 +182,7 @@
         Order = await ImportedOrderManager.GetDetailsAsync(Id);
         if (Order.ImportedProducts != null) ImportedProducts = Order.ImportedProducts.ToList();
     }
-    private async Task GetAllOrder()
-    {
 
-        
-        //Orders = AllOrders;
-
-    }
     private bool FilterFunc1(ImportedProduct element) => FilterFunc(element, _searchString1);
 
     private bool FilterFunc(ImportedProduct element, string searchString)
@@ -211,66 +199,19 @@
 
         return false;
     }
-    //private async Task AddOrder()
-    //{
-    //    //await _companyForm._createCompanyForm!.Validate();
-    //    //if (!_companyForm._createCompanyForm.IsValid) return;
-    //    //CreatedOrder.OurCompanyId = CreatedOrder.OurCompany!.Id;
-    //    //CreatedOrder.SellersCompanyId = CreatedOrder.SellersCompany!.Id;
-    //    //CreatedOrder.OurEmployeeId = CreatedOrder.OurEmployee!.Id;
-    //    //CreatedOrder.EmployeeSellerId = CreatedOrder.EmployeeSeller!.Id;
 
-    //    if (await ImportedOrderManager.AddAsync(CreatedOrder!))
-    //    {
-    //        _visibleAddOrderDialog = false;
-    //        _snackBar.Add("Заказ добавлен!");
-    //    }
-    //}
-    //private void OpenUpdateOrderDialog(ImportedOrder order)
-    //{
-    //    CreatedOrder = order;
-    //    _visibleUpdateOrderDialog = true;
-    //}
-    private async Task UpdateOrder()
+    private void OpenEditImportProductDialog(ImportedProduct importedProduct)
     {
-        //await _companyForm._createCompanyForm!.Validate();
-        //if (!_companyForm._createCompanyForm.IsValid) return;
-        _importOrderForm!.ImportedOrder.OurCompanyId = _importOrderForm!.ImportedOrder.OurCompany!.Id;
-        _importOrderForm!.ImportedOrder.SellersCompanyId = _importOrderForm!.ImportedOrder.SellersCompany!.Id;
-        _importOrderForm!.ImportedOrder.OurEmployeeId = _importOrderForm!.ImportedOrder.OurEmployee != null ? _importOrderForm!.ImportedOrder.OurEmployee!.Id : null;
-        _importOrderForm!.ImportedOrder.EmployeeSellerId = _importOrderForm!.ImportedOrder.EmployeeSeller != null ? _importOrderForm!.ImportedOrder.EmployeeSeller.Id : null;
-        //CreatedOrder.EmployeeSeller = null;
-        //CreatedOrder.OurEmployee = null;
-        //CreatedOrder.SellersCompany = null;
-        //CreatedOrder.OurCompany = null;
-        if (await ImportedOrderManager.UpdateAsync(_importOrderForm!.ImportedOrder))
-        {
-            _visibleUpdateOrderDialog = false;
-            _snackBar.Add("Заказ обновлен!");
-        }
+        ImportedProduct = importedProduct;
+        _visibleEditImportedProductDialog = true;
     }
     private void RowClickEvent(TableRowClickEventArgs<ImportedProduct> tableRowClickEventArgs)
     {
         _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");
     }
 
-    //private  void FilterCompanyByTag(Guid tagId)
-    //{
-    //    Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains(tagId)).ToList();
-    //}
-    //private async Task DeleteCompany()
-    //{
-    //    if (await CompanyManager.RemoveAsync(CurrentCategory.Id))
-    //    {
-    //        _visibleRemoveCategoryDialog = false;
-    //        await RefreshCategoryListCallback.InvokeAsync();
-    //        _snackBar.Add("Категория удалена!");
-    //    }
-    //    else
-    //    {
-    //        _snackBar.Add("Ошибка при удалении!");
-    //    }
-    //}
+   
+    
 }
 <style>
     .mud-table-header {

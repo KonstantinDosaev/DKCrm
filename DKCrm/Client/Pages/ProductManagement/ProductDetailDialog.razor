@@ -1,0 +1,135 @@
+﻿<MudDialog @bind-IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="Close" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+     
+            
+            
+            @if (Product != null)
+            {
+                <div class="d-flex justify-content-between">
+                    <MudText Typo="Typo.h4">@Product.Name.ToUpper()</MudText>
+                </div>
+               
+
+                        <MudPaper Elevation="12" Class="p-4 m-1">
+                            <div><MudText Typo="Typo.body1">
+                                    <span class="mr-2 fw-bold">Производитель:</span>
+                                    @if (Product.Brand != null)
+                                    {
+                                         @Product.Brand.Name
+                                    }
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <span class="mr-2 fw-bold">Парт-номер:</span>
+                                    @if (!string.IsNullOrEmpty(Product.PartNumber))
+                                    {
+                                        @Product.PartNumber
+                                    }
+                                </MudText>
+                            </div>
+
+                        </MudPaper>
+                <MudPaper Elevation="12" Class="p-4 m-1">
+                    <div><MudText Typo="Typo.body1">
+                            <span class="mr-2 fw-bold">Цена:</span>
+                            @if (Product.Price != null)
+                            {
+                                @Product.Price
+                            }
+                        </MudText>
+                    </div>
+
+                </MudPaper>              
+                <MudPaper Elevation="12" Class="p-4 m-1">
+                    <div><MudText Typo="Typo.body1">
+                            <span class="mr-2 fw-bold">Количество :</span>
+                        </MudText>
+                        @if (Product.ProductsInStorage != null)
+                        {
+                            @foreach (var item in Product.ProductsInStorage)
+                            {
+                                <MudText Typo="Typo.body1">
+                                    <div class="d-flex justify-content-between mw-100 border-bottom">
+                                    <span class="mx-4 fw-bold">@item.Storage!.Name:</span> @item.Quantity
+                                    </div>
+                                </MudText>
+                            }
+                            <MudText Typo="Typo.body1">
+                                <span class="mr-2 fw-bold">Суммарно на всех хранилищах :</span>
+                                <b>@Product.ProductsInStorage.Select(s=>s.Quantity).Sum()</b>
+                            </MudText>
+                        }
+                    </div>
+
+                </MudPaper>
+                <MudPaper Elevation="12" Class="p-4 m-1">
+                    <div><MudText Typo="Typo.body1">
+                            <span class="mr-2 fw-bold">Описание:</span>
+                            @if (Product.Description != null)
+                            {
+                                @Product.Description
+                            }
+                        </MudText>
+                 
+                    </div>
+
+                </MudPaper>          
+
+                  @*      <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="()=>_visibleRemoveCompanyDialog=true" Style="margin-top: 2rem;" Color="Color.Warning">
+                            Удалить компанию<MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.DeleteForever" Class="pa-0 ml-2" />
+                        </MudButton>*@
+
+
+
+            }
+            
+
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+
+    [Parameter]
+    public bool VisibleDialog { get; set; }
+
+    [Parameter]
+    public Product? Product { get; set; }
+
+    [Parameter]
+    public Guid? ProductId { get; set; }
+
+    [Parameter]
+    public EventCallback RefreshProductList { get; set; }
+
+    [Parameter]
+    public EventCallback Close { get; set; }
+
+   
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ProductId != null && ProductId != Guid.Empty) Product = await ProductManager.GetProductDetailsAsync((Guid)ProductId);
+    }
+
+    async Task EditProduct()
+    {
+        if (await ProductManager.UpdateProductAsync(Product))
+        {
+            _snackBar.Add("Продукт обновлен");
+            await RefreshProductList.InvokeAsync();
+            await Close.InvokeAsync();
+            VisibleDialog = false;
+        }
+
+
+    }
+
+}
+<style>
+
+</style>

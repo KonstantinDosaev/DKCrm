@@ -1,0 +1,112 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Constants
+<MudText Typo="Typo.h5">@TitleText</MudText>
+@if (ExportedOrder != null)
+{
+    <MudForm @ref="OrderForm" @bind-IsValid="@_success">
+        <MudCard>
+            <MudCardContent>
+
+                <MudTextField @bind-Value="@ExportedOrder.Name"
+                          For="@(() => ExportedOrder.Name)"
+                          Immediate="true"
+                          Label="Название заказа" />
+                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашу компанию" @bind-Value="ExportedOrder.OurCompany"
+                       Label="Наша компания"
+                       T="Company" ToStringFunc="companyType => companyType.Name.ToString()"
+                       CloseIcon="@Icons.Material.Filled.Flag"
+                       AdornmentColor="Color.Tertiary">
+                    @if (OurCompanies != null)
+                    {
+                        @foreach (var item in OurCompanies)
+                        {
+                            <MudSelectItem OnClick="() => ExportedOrder.OurEmployeeId=null" T="Company" Value="@item">@item.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                @if (ExportedOrder.OurCompany is { Employees: { } })
+                {
+                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашего сотрудника" @bind-Value="ExportedOrder.OurEmployee"
+                               Label="Наш сотрудник"
+                       T="Employee" ToStringFunc="eml => eml.FirstName.ToString() + eml.MiddleName + eml.LastName"
+                       CloseIcon="@Icons.Material.Filled.Flag"
+                       AdornmentColor="Color.Tertiary">
+
+                        @foreach (var item in ExportedOrder.OurCompany.Employees)
+                        {
+                            <MudSelectItem T="Employee" Value="@item">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите компанию покупателя" @bind-Value="ExportedOrder.CompanyBuyer"
+                           Label="Компания покупатель"
+                       T="Company" ToStringFunc="company => company.Name.ToString()"
+                       CloseIcon="@Icons.Material.Filled.Flag"
+                       AdornmentColor="Color.Tertiary"
+                       OnClose="() => ExportedOrder.CompanyBuyer=null">
+                    @if (BuyerCompanies != null)
+                    {
+                        @foreach (var item in BuyerCompanies)
+                        {
+                            <MudSelectItem T="Company" OnClick="() => ExportedOrder.EmployeeBuyerId=null" Value="@item">@item.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                @if (ExportedOrder.CompanyBuyer is { Employees: { } })
+                {
+                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите сотрудника покупателя" @bind-Value="ExportedOrder.EmployeeBuyerId"
+                               Label="Сотрудник компании покупателя"
+                       T="Guid?" ToStringFunc="eml => eml.ToString()"
+                       CloseIcon="@Icons.Material.Filled.Flag"
+                       AdornmentColor="Color.Tertiary">
+
+                        @foreach (var item in ExportedOrder.CompanyBuyer.Employees)
+                        {
+                            <MudSelectItem T="Guid?" Value="@item.Id">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="Validation" Color="Color.Tertiary">@ButtonText</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudForm>
+}
+
+
+@code {
+    [Parameter]public MudForm? OrderForm { get; set; }
+    [Parameter] public ExportedOrder? ExportedOrder { get; set; } = null!;
+    [Parameter] public string ButtonText { get; set; } = "Save";
+    [Parameter] public string TitleText { get; set; } = "";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    public List<Company>? Companies { get; set; } = null!;
+
+    public List<Company>? OurCompanies { get; set; }
+    public List<Company>? BuyerCompanies { get; set; }
+    public List<ExportedOrderStatus>? ExportedOrderStatus { get; set; }
+    //private List<Employee> OurEmployees { get; set; }
+    //private List<Employee> SellerEmployees { get; set; }
+
+    bool _success;
+    protected override async Task OnInitializedAsync()
+    {
+        ExportedOrderStatus = await ExportedOrderStatusManager.GetAsync();
+        Companies ??= await CompanyManager.GetAsync();
+        OurCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.OurCompanies).ToList();
+        BuyerCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.Customers).ToList();
+
+    }
+    private async Task Validation()
+    {
+        if (OrderForm!.IsValid)
+            await OnValidSubmit.InvokeAsync();
+
+        else
+            await OrderForm.Validate();
+
+    }
+}

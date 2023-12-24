@@ -11,11 +11,14 @@ namespace DKCrm.Shared.Models.OrderModels
     public class ExportedOrder
     {
         public Guid Id { get; set; }
+        public string? Name { get; set; }
         public DateTime? DateTimeCreated { get; set; }
         public DateTime? DateTimeUpdated { get; set; }
         public string? Images { get; set; }
         public double? CurrencyPercent { get; set; }
-
+        public string? TransactionCurrency { get; set; }
+        public string? BuyerCurrency { get; set; }
+        public string? LocalCurrency { get; set; }
         public virtual ICollection<ExportedProduct>? ExportedProducts { get; set; }
         public virtual ICollection<CommentOnExportedOrder>? Comments { get; set; }
 

@@ -20,20 +20,33 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _context.ExportedOrders.ToListAsync());
+            return Ok(await _context.ExportedOrders.Select(s=>new
+            {
+               s.Id, s.Name,s.OurCompany,s.CompanyBuyer,s.EmployeeBuyer,s.OurEmployee
+            }).ToListAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.ExportedOrders.FirstOrDefaultAsync(a => a.Id == id);
+            var dev = await _context.ExportedOrders.Select(s => new
+            {
+                s.Id,
+                s.Name,
+                s.OurCompany,
+                s.CompanyBuyer,
+                s.EmployeeBuyer,
+                s.OurEmployee,
+                s.EmployeeBuyerId,
+                s.OurEmployeeId
+            }).FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
 
         [HttpPost]
         public async Task<IActionResult> Post(ExportedOrder exportedOrder)
         {
-            _context.Add(exportedOrder);
+            _context.Entry(exportedOrder).State = EntityState.Added;
             await _context.SaveChangesAsync();
             return Ok(exportedOrder.Id);
         }

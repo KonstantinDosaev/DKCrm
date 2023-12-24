@@ -1,4 +1,5 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,25 @@ namespace DKCrm.Server.Controllers.OrderControllers
         {
             return Ok(await _context.ExportedProducts.ToListAsync());
         }
-
+        [HttpGet]
+        public async Task<IActionResult> GetNotEquipped()
+        {
+            var status = _context.ExportedOrderStatus.FirstOrDefault(f => f.Value == ExportOrderStatusNames.Delivery)!.Position;
+            return Ok(await _context.ExportedProducts.Select(s=> new
+            {
+                s.Product,
+                s.Quantity,
+                s.ExportedOrder,
+                s.ExportedOrderId,
+                s.ProductId,
+                s.ImportedProducts,
+                s.PurchaseAtExports,
+                s.SoldFromStorage,
+                s.StorageList
+            }).Where(w=>w.ExportedOrder!.ExportedOrderStatus!.Position < status)
+                .Where(w=>w.Quantity< w.SoldFromStorage!.Select(s=>s.Quantity).Sum() + w.PurchaseAtExports!.Select(s=>s.Quantity).Sum())
+                .ToListAsync());
+        }
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {

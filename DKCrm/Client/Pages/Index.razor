@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using DKCrm.Shared.Models
+@using DKCrm.Client.Services.CurrencyService
 <AuthorizeView>
     <Authorized>
         <h1>Hello
@@ -8,7 +9,7 @@
                 @context.User.Identity.Name
             }
             !!</h1>
-        
+       
     </Authorized>
     <Authorizing>
         <h1>Загрузка ...</h1>
@@ -17,6 +18,10 @@
 
 @code
 {
- 
+    List<string> t;
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
 }
 

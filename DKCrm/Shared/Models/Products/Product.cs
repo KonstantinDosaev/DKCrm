@@ -1,6 +1,7 @@
 ﻿using DKCrm.Shared.Iterfaces;
 using System.Text.Json.Serialization;
 using DKCrm.Shared.Models.OrderModels;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DKCrm.Shared.Models.Products
 {
@@ -23,7 +24,8 @@ namespace DKCrm.Shared.Models.Products
         public Guid? CategoryId { get; set; }
         public virtual ICollection<ProductOption>? ProductOption { get; set; }
         public virtual ICollection<Storage>? Storage { get; set; }
-        public virtual ICollection<ProductsInStorage>? ProductsInStorage { get; set; }
+
+         public virtual ICollection<ProductsInStorage>? ProductsInStorage { get; set; }
 
         public virtual ICollection<ExportedProduct>? ExportedProducts { get; set; }
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }

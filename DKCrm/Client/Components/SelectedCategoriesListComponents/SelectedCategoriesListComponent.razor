@@ -1,0 +1,56 @@
+﻿<MudPaper Width="100%">
+    <MudList Style="" Clickable="true" @bind-SelectedItem="_selectedItem"  @bind-SelectedValue="_selectedValue" Color="Color.Primary">
+        @if (CategoriesUpLevel != null)
+        {
+            foreach (var category in CategoriesUpLevel)
+            {
+                <SelectedCategoriesListReqursion CloseCategoryDrawerCallback="CloseCategory"
+                                           Category="category"
+                                           RefreshCategoryListCallback="GetCategories"
+                                           ChangeValue="ChangeValue"
+                                           />
+            }
+        }
+    </MudList>
+</MudPaper>
+
+@code {
+    MudListItem? _selectedItem;
+    public object? _selectedValue = 1;
+    string _value;
+
+    private List<Category>? Categories { get; set; }
+
+    private List<Category>? CategoriesUpLevel { get; set; }
+    [Parameter]
+    public Category? SelectedCategory {
+        get => (Category?)_selectedValue;
+        set => _selectedValue = value;
+    }
+    [Parameter]
+    public EventCallback<Category> SelectedCategoryChanged { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        await GetCategories();
+    }
+
+    async Task ChangeValue()
+    {
+        SelectedCategory = (Category?)_selectedValue;
+       await SelectedCategoryChanged.InvokeAsync((Category?)_selectedValue);
+    }
+
+    private async Task GetCategories()
+    {
+        Categories = await CategoryManager.GetAsync();
+        Categories = Categories.OrderBy(o => o.Name).ToList();
+        CategoriesUpLevel = Categories.Where(w => w.ParentId == null).ToList();
+    }
+    private void CloseCategory()
+    {
+        //open = false; 
+        //_selectedItem = null;
+        StateHasChanged();
+    }
+
+}

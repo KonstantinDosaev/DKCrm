@@ -1,0 +1,48 @@
+﻿@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared.Models.OrderModels
+
+<MudDialog @bind-IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="Close" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <FormImportedOrder OnValidSubmit="Edit"
+                               ImportedOrder="Order"
+                               ButtonText="Сохранить"
+                               TitleText="Изменение заказа от поставщика" />
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public ImportedOrder? Order { get; set; }
+    [Parameter] public Guid? Id { get; set; }
+    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != null && Id != Guid.Empty) Order = await ImportedOrderManager.GetDetailsAsync((Guid)Id);
+    }
+
+    async Task Edit()
+    {
+        if (await ImportedOrderManager.UpdateAsync(Order!))
+        {
+            Order!.OurCompanyId = Order.OurCompany!.Id;
+            Order.SellersCompanyId = Order.SellersCompany!.Id;
+            _snackBar.Add("Данные обновлены");
+            await RefreshProductList.InvokeAsync();
+            await Close.InvokeAsync();
+            VisibleDialog = false;
+        }
+
+
+    }
+
+}

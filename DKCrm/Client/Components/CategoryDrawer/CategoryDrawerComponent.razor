@@ -56,11 +56,11 @@
                                  <MudTabPanel>
                                      <ChildContent>
                                          <MudPaper Width="100%">
-                                             <MudList Style="" Clickable="true" @bind-SelectedItem="selectedItem" @bind-SelectedValue="selectedValue" Color="Color.Primary">
+                                             <MudList Style="" Clickable="true" @bind-SelectedItem="_selectedItem" @bind-SelectedValue="_selectedValue" Color="Color.Primary">
                                                  @foreach (var subCategory in category.Children.OrderBy(o => o.Name))
                                                  {
                                                      <CategoryMenuItemComponent CloseCategoryDrawerCallback="CloseCategoryDrawer"
-                                                                                category="subCategory"
+                                                                                Category="subCategory"
                                                                                 CheckedRelocatedCategory="@SetRelocatedCategory"
                                                                                 CheckedParentCategory="@SetParentToRelocation"
                                                                                 VisableButtonRelocation="Label_Switch1"
@@ -96,7 +96,7 @@
                                                                            CheckedRelocatedCategory="SetRelocatedCategory"
                                                                            VisibleButtons="Label_Switch1"
                                                                            RelocatedOrParent="RelocatedOrParent"/>
-                                    <a style="width: 100%; height: 100%;" href=@($"/product/{category.Id}")>@category.Name</a>
+                                    <a style="width: 100%; height: 100%;" href=@($"/product/category/{category.Id}")>@category.Name</a>
                                              <CategorySettingsMenuComponent RefreshCategoryListCallback="GetCategory" CurrentCategory="category"/>
                                          </TabContent>
                                      </MudTabPanel>
@@ -107,7 +107,7 @@
                          <MudTabPanel>
                              <ChildContent>
                                  <MudForm Style="">
-                                     <MudTextField @bind-Value="value" T="string" Label="Категория" Required="true" RequiredError="Введите название категории!" Lines="3"/>
+                                     <MudTextField @bind-Value="_value" T="string" Label="Категория" Required="true" RequiredError="Введите название категории!" Lines="3"/>
                                      <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" Size="Size.Small" OnClick="AddCategory" Color="Color.Tertiary">Создать</MudButton>
                                  </MudForm>
                              </ChildContent>
@@ -133,16 +133,16 @@
  </MudDrawerContainer>
 
 @code {
-    MudListItem selectedItem;
-    object selectedValue = 1;
-    string value;
+    MudListItem? _selectedItem;
+    object _selectedValue = 1;
+    string _value;
 
     private List<Category>? Categories { get; set; }
     private List<Brand>? Brands { get; set; }
 
 
     public bool open { get; set; }
-    private Brand _currentCategory;
+    //private Brand _currentCategory;
 
     public Category? ParentToRelocation;
     public Category? RelocatedCategory;
@@ -186,13 +186,13 @@
     void CloseCategoryDrawer()
     {
         open = false; 
-        selectedItem = null;
+        _selectedItem = null;
         StateHasChanged();
     }
 
     private async Task AddCategory()
     {
-        var category = new Category() { Name = value };
+        var category = new Category() { Name = _value };
         await CategoryManager.AddAsync(category);
         Categories!.Add(category);
         _snackBar.Add("Категория добавлена!");

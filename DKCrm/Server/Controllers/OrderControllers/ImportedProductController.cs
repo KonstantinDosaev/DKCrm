@@ -1,6 +1,7 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
+using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,14 +27,28 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.ImportedProducts.FirstOrDefaultAsync(a => a.Id == id);
+            var dev = await _context.ImportedProducts.Include(i=>i.ImportedOrder).FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
 
         [HttpPost]
         public async Task<IActionResult> Post(ImportedProduct importedProduct)
         {
-            _context.Add(importedProduct);
+            _context.Entry(importedProduct).State = EntityState.Added;
+            if (importedProduct.PurchaseAtStorageList != null)
+            {
+                foreach (var item in importedProduct.PurchaseAtStorageList)
+                {
+                    _context.Entry(item).State = EntityState.Added;
+                }
+            }
+            if (importedProduct.PurchaseAtExportList != null)
+            {
+                foreach (var item in importedProduct.PurchaseAtExportList)
+                {
+                    _context.Entry(item).State = EntityState.Added;
+                }
+            }
             await _context.SaveChangesAsync();
             return Ok(importedProduct.Id);
         }

@@ -1,0 +1,172 @@
+﻿@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Constants
+@using System.Formats.Asn1
+
+<MudText Typo="Typo.h5">@TitleText</MudText>
+@if (ImportedOrder != null)
+{
+    <MudForm @ref="ImportedOrderForm" @bind-IsValid="@_success">
+        <MudCard>
+             <MudCardContent>
+
+                <MudTextField @bind-Value="@ImportedOrder.Name"
+                          For="@(() => ImportedOrder.Name)"
+                          Immediate="true"
+                          Label="Название заказа" />
+                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашу компанию" @bind-Value="ImportedOrder.OurCompany" 
+                           Label="Наша компания" 
+                           T="Company" ToStringFunc="companyType => companyType.Name.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag" 
+                           AdornmentColor="Color.Tertiary">
+                    @if (OurCompanies != null)
+                    {
+                        @foreach (var item in OurCompanies)
+                        {
+                            <MudSelectItem OnClick="() => ImportedOrder.OurEmployeeId=null" T="Company" Value="@item">@item.Name</MudSelectItem>
+                        }
+
+                    }
+                </MudSelect>
+             @if (ImportedOrder.OurCompany is {Employees: { } })
+             {
+                 <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашего сотрудника" @bind-Value="ImportedOrder.OurEmployeeId"
+                       Label="Сотрудник"
+                            T="Guid?" ToStringFunc="eml => eml.ToString()"
+                            CloseIcon="@Icons.Material.Filled.Flag"
+                            AdornmentColor="Color.Tertiary">
+
+                     @foreach (var item in ImportedOrder.OurCompany.Employees)
+                     {
+                         <MudSelectItem T="Guid?" Value="@item.Id">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+                     }
+
+
+                 </MudSelect>
+             }
+                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите компанию поставщика" @bind-Value="ImportedOrder.SellersCompany"
+                       Label="Компания поставщик"
+                       T="Company" ToStringFunc="company => company.Name.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag" 
+                           AdornmentColor="Color.Tertiary"
+                           OnClose="() => ImportedOrder.EmployeeSeller=null">
+                    @if (SellersCompanies != null)
+                    {
+                        @foreach (var item in SellersCompanies)
+                        {
+                            <MudSelectItem T="Company" OnClick="() => ImportedOrder.EmployeeSellerId=null" Value="@item">@item.Name</MudSelectItem>
+                        }
+
+                    }
+                </MudSelect>
+             @if (ImportedOrder.SellersCompany is {Employees: { } })
+             {
+                 <MudSelect Variant="Variant.Outlined" Placeholder="Выберите сотрудника поставщика" @bind-Value="ImportedOrder.EmployeeSellerId"
+                       Label="Сотрудник"
+                            T="Guid?" ToStringFunc="eml => eml.ToString()"
+                            CloseIcon="@Icons.Material.Filled.Flag"
+                            AdornmentColor="Color.Tertiary">
+
+                     @foreach (var item in ImportedOrder.SellersCompany.Employees)
+                     {
+                         <MudSelectItem T="Guid?" Value="@item.Id">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+                     }
+                 </MudSelect>
+             }
+                <MudItem  Class="py-0 px-3">
+                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту поставщика" @bind-Value="ImportedOrder.SupplierCurrency"
+                           Label="Валюта поставщика"
+                           T="string" ToStringFunc="c => c.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag"
+                           AdornmentColor="Color.Tertiary"
+                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                        @if (CurrencyCharCodes != null)
+                        {
+                            @foreach (var item in CurrencyCharCodes)
+                            {
+                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem Class="py-0 px-3">
+                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ImportedOrder.TransactionCurrency"
+                           Label="Валюта сделки"
+                           T="string" ToStringFunc="c => c.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag"
+                           AdornmentColor="Color.Tertiary"
+                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                        @if (CurrencyCharCodes != null)
+                        {
+                            @foreach (var item in CurrencyCharCodes)
+                            {
+                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem Class="py-0 px-3">
+                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ImportedOrder.LocalCurrency"
+                           Label="Локальная валюта"
+                           T="string" ToStringFunc="c => c.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag"
+                           AdornmentColor="Color.Tertiary"
+                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                        @if (CurrencyCharCodes != null)
+                        {
+                            @foreach (var item in CurrencyCharCodes)
+                            {
+                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="Validation" Color="Color.Tertiary">@ButtonText</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudForm>
+
+
+}
+
+
+@code {
+    [Parameter] public ImportedOrder ImportedOrder { get; set; } = null!;
+    [Parameter] public string ButtonText { get; set; } = "Save";
+    [Parameter] public string TitleText { get; set; } = "";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter]public MudForm? ImportedOrderForm { get; set; }
+    public List<Company>? Companies { get; set; } = null!;
+
+    public List<Company>? OurCompanies { get; set; }
+    public List<Company>? SellersCompanies { get; set; }
+    public List<ImportedOrderStatus>? ImportedOrderStatusList { get; set; }
+    //private List<Employee> OurEmployees { get; set; }
+    //private List<Employee> SellerEmployees { get; set; }
+    public List<(string charCode, string name)>? CurrencyCharCodes { get; set; }
+    private async Task<List<(string charCode, string name)>> GetCurrencyCharCodes() => await CurrencyManager.GetCurrencyCharCode();
+
+
+    bool _success;
+    protected override async Task OnInitializedAsync()
+    {
+        ImportedOrderStatusList = await ImportedOrderStatusManager.GetAsync();
+        Companies ??= await CompanyManager.GetAsync();
+        OurCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.OurCompanies).ToList();
+        SellersCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.Suppliers).ToList();
+    }
+
+    private async Task Validation()
+    {
+        if (ImportedOrderForm!.IsValid)
+            await OnValidSubmit.InvokeAsync();
+
+        else
+            await ImportedOrderForm.Validate();
+
+    }
+
+ }

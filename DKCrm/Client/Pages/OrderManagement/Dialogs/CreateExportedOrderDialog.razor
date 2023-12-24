@@ -1,0 +1,37 @@
+﻿@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared.Models.OrderModels
+<MudDialog @bind-IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="Close" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <FormExportedOrder
+                OnValidSubmit="Create"
+                ExportedOrder="Order"
+                ButtonText="Сохранить"
+                TitleText="Создание заказа на продажу"/>
+
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    public ExportedOrder Order { get; set; }= new();
+
+    async Task Create()
+    {
+        Order.OurCompanyId = Order.OurCompany!.Id;
+        Order.CompanyBuyerId = Order.CompanyBuyer!.Id;
+        await ExportedOrderManager.AddAsync(Order);
+        await RefreshProductList.InvokeAsync();
+        _snackBar.Add("Заказ создан");
+        await Close.InvokeAsync();
+    }
+}

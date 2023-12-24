@@ -3,9 +3,9 @@ using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.OrderModels
 {
-    public class PurchaseAtExport: IIdentifiable
+    public class PurchaseAtExport
     {
-        public Guid Id { get; set; }
+    
         public int Quantity { get; set; }
 
         public Guid ExportedProductId { get; set; }

@@ -46,6 +46,7 @@ namespace DKCrm.Server.Data
         public DbSet<PurchaseAtExport> PurchaseAtExports { get; set; } = null!;
         public DbSet<PurchaseAtStorage> PurchaseAtStorages { get; set; } = null!;
         public DbSet<SoldFromStorage> SoldFromStorages { get; set; } = null!;
+        public DbSet<InternalCompanyData> InternalCompanyData { get; set; } = null!;
 
 
 
@@ -86,22 +87,37 @@ namespace DKCrm.Server.Data
                     j => j
                         .HasOne(pt => pt.Storage)
                         .WithMany(p => p.ProductsInStorage)
-                        .HasForeignKey(pt => pt.StorageId));
-            builder
-                .Entity<Product>()
-                .HasMany(c => c.Storage)
-                .WithMany(s => s.Products)
-                .UsingEntity<ProductsInStorage>(
-                    j => j
-                        .HasOne(pt => pt.Storage)
-                        .WithMany(t => t.ProductsInStorage)
                         .HasForeignKey(pt => pt.StorageId),
-                    j => j
-                        .HasOne(pt => pt.Product)
-                        .WithMany(p => p.ProductsInStorage)
-                        .HasForeignKey(pt => pt.ProductId));
+                    j =>
+            {
+                j.Property(pt => pt.Quantity).HasDefaultValue(0);
+                j.HasKey(t => new { t.StorageId, t.ProductId });
+                j.ToTable("ProductsInStorages");
+            });
 
-            
+            //builder
+            //    .Entity<Product>()
+            //    .HasMany(c => c.Storage)
+            //    .WithMany(s => s.Products)
+            //    .UsingEntity<ProductsInStorage>(
+            //        j => j
+            //            .HasOne(pt => pt.Storage)
+            //            .WithMany(t => t.ProductsInStorage)
+            //            .HasForeignKey(pt => pt.StorageId),
+            //        j => j
+            //            .HasOne(pt => pt.Product)
+            //            .WithMany(p => p.ProductsInStorage)
+            //            .HasForeignKey(pt => pt.ProductId),
+            //        j =>
+            //        {
+            //            j.Property(pt => pt.Quantity).HasDefaultValue(0);
+            //            j.HasKey(t => new { t.ProductId, t.StorageId });
+            //            j.ToTable("ProductsInStorages");
+            //        }
+            //        );
+
+
+
             builder.Entity<ExportedOrder>()
                 .HasOne(m => m.OurCompany)
                 .WithMany(t => t.ExportedOrdersOurCompany)
@@ -111,15 +127,6 @@ namespace DKCrm.Server.Data
                 .WithMany(t => t.ExportedOrdersBuyerCompany)
                 .HasForeignKey(m => m.CompanyBuyerId).OnDelete(DeleteBehavior.SetNull);
 
-            builder.Entity<ImportedOrder>()
-                .HasOne(m => m.OurCompany)
-                .WithMany(t => t.ImportedOrdersOurCompany)
-                .HasForeignKey(m => m.OurCompanyId).OnDelete(DeleteBehavior.SetNull);
-            builder.Entity<ImportedOrder>()
-                .HasOne(m => m.SellersCompany)
-                .WithMany(t => t.ImportedOrdersSellersCompany)
-                .HasForeignKey(m => m.SellersCompanyId).OnDelete(DeleteBehavior.SetNull);
-
             builder.Entity<ExportedOrder>()
                 .HasOne(m => m.OurEmployee)
                 .WithMany(t => t.ExportedOrdersOur)
@@ -128,6 +135,16 @@ namespace DKCrm.Server.Data
                 .HasOne(m => m.EmployeeBuyer)
                 .WithMany(t => t.ExportedOrdersBuyer)
                 .HasForeignKey(m => m.EmployeeBuyerId).OnDelete(DeleteBehavior.SetNull);
+
+
+            builder.Entity<ImportedOrder>()
+                .HasOne(m => m.OurCompany)
+                .WithMany(t => t.ImportedOrdersOurCompany)
+                .HasForeignKey(m => m.OurCompanyId).OnDelete(DeleteBehavior.SetNull);
+            builder.Entity<ImportedOrder>()
+                .HasOne(m => m.SellersCompany)
+                .WithMany(t => t.ImportedOrdersSellersCompany)
+                .HasForeignKey(m => m.SellersCompanyId).OnDelete(DeleteBehavior.SetNull);
 
             builder.Entity<ImportedOrder>()
                 .HasOne(m => m.OurEmployee)
@@ -139,31 +156,37 @@ namespace DKCrm.Server.Data
                 .HasForeignKey(m => m.EmployeeSellerId).OnDelete(DeleteBehavior.SetNull);
 
 
-            builder.Entity<Employee>()
-                .HasMany(m => m.ImportedOrdersOur)
-                .WithOne(t => t.OurEmployee)
-                .HasForeignKey(m => m.OurEmployeeId).OnDelete(DeleteBehavior.SetNull);
-            builder.Entity<Employee>()
-                .HasMany(m => m.ImportedOrdersSellers)
-                .WithOne(t => t.EmployeeSeller)
-                .HasForeignKey(m => m.EmployeeSellerId).OnDelete(DeleteBehavior.SetNull);
+            //builder.Entity<Employee>()
+            //    .HasMany(m => m.ImportedOrdersOur)
+            //    .WithOne(t => t.OurEmployee)
+            //    .HasForeignKey(m => m.OurEmployeeId).OnDelete(DeleteBehavior.SetNull);
+            //builder.Entity<Employee>()
+            //    .HasMany(m => m.ImportedOrdersSellers)
+            //    .WithOne(t => t.EmployeeSeller)
+            //    .HasForeignKey(m => m.EmployeeSellerId).OnDelete(DeleteBehavior.SetNull);
 
 
 
-            builder
-                .Entity<Storage>()
-                .HasMany(c => c.ImportedProducts)
-                .WithMany(s => s.StorageList)
-                .UsingEntity<PurchaseAtStorage>(
-                    j => j
-                        .HasOne(pt => pt.ImportedProduct)
-                        .WithMany(t => t.PurchaseAtStorageList)
-                        .HasForeignKey(pt => pt.ImportedProductId),
-                    j => j
-                        .HasOne(pt => pt.Storage)
-                        .WithMany(p => p.PurchaseAtStorageList)
-                        .HasForeignKey(pt => pt.StorageId));
-            //^^ подобный не добавлен к экспорту
+            //builder
+            //    .Entity<Storage>()
+            //    .HasMany(c => c.ImportedProducts)
+            //    .WithMany(s => s.StorageList)
+            //    .UsingEntity<PurchaseAtStorage>(
+            //        j => j
+            //            .HasOne(pt => pt.ImportedProduct)
+            //            .WithMany(t => t.PurchaseAtStorageList)
+            //            .HasForeignKey(pt => pt.ImportedProductId),
+            //        j => j
+            //            .HasOne(pt => pt.Storage)
+            //            .WithMany(p => p.PurchaseAtStorageList)
+            //            .HasForeignKey(pt => pt.StorageId),
+            //        j =>
+            //        {
+            //            j.Property(pt => pt.Quantity).HasDefaultValue(0);
+            //            j.HasKey(t => new { t.StorageId, t.ImportedProductId });
+            //            j.ToTable("PurchaseAtStorages");
+            //        });
+         
 
             builder
                 .Entity<ImportedProduct>()
@@ -177,7 +200,32 @@ namespace DKCrm.Server.Data
                     j => j
                         .HasOne(pt => pt.ImportedProduct)
                         .WithMany(p => p.PurchaseAtStorageList)
-                        .HasForeignKey(pt => pt.ImportedProductId));
+                        .HasForeignKey(pt => pt.ImportedProductId), j =>
+                    {
+                        j.Property(pt => pt.Quantity).HasDefaultValue(0);
+                        j.HasKey(t => new { t.StorageId, t.ImportedProductId });
+                        j.ToTable("PurchaseAtStorages");
+                    });
+
+            //builder
+            //    .Entity<Storage>()
+            //    .HasMany(c => c.ExportedProducts)
+            //    .WithMany(s => s.StorageList)
+            //    .UsingEntity<SoldFromStorage>(
+            //        j => j
+            //            .HasOne(pt => pt.ExportedProduct)
+            //            .WithMany(t => t.SoldFromStorage)
+            //            .HasForeignKey(pt => pt.ExportedProductId),
+            //        j => j
+            //            .HasOne(pt => pt.Storage)
+            //            .WithMany(p => p.SoldFromStorageList)
+            //            .HasForeignKey(pt => pt.StorageId),
+            //        j =>
+            //        {
+            //            j.Property(pt => pt.Quantity).HasDefaultValue(0);
+            //            j.HasKey(t => new { t.StorageId, t.ExportedProductId });
+            //            j.ToTable("SoldFromStorages");
+            //        });
 
             builder
                 .Entity<ExportedProduct>()
@@ -191,7 +239,13 @@ namespace DKCrm.Server.Data
                     j => j
                         .HasOne(pt => pt.ExportedProduct)
                         .WithMany(p => p.SoldFromStorage)
-                        .HasForeignKey(pt => pt.ExportedProductId));
+                        .HasForeignKey(pt => pt.ExportedProductId), 
+                    j =>
+                    {
+                        j.Property(pt => pt.Quantity).HasDefaultValue(0);
+                        j.HasKey(t => new { t.StorageId, t.ExportedProductId });
+                        j.ToTable("SoldFromStorages");
+                    });
 
             builder
                 .Entity<ExportedProduct>()
@@ -205,7 +259,32 @@ namespace DKCrm.Server.Data
                     j => j
                         .HasOne(pt => pt.ExportedProduct)
                         .WithMany(p => p.PurchaseAtExports)
-                        .HasForeignKey(pt => pt.ExportedProductId));
+                        .HasForeignKey(pt => pt.ExportedProductId),
+            j =>
+            {
+                j.Property(pt => pt.Quantity).HasDefaultValue(0);
+                j.HasKey(t => new { t.ExportedProductId, t.ImportedProductId });
+                j.ToTable("PurchaseAtExports");
+            });
+
+            //builder
+            //    .Entity<ImportedProduct>()
+            //    .HasMany(c => c.ExportedProducts)
+            //    .WithMany(s => s.ImportedProducts)
+            //    .UsingEntity<PurchaseAtExport>(
+            //        j => j
+            //            .HasOne(pt => pt.ExportedProduct)
+            //            .WithMany(t => t.PurchaseAtExports)
+            //            .HasForeignKey(pt => pt.ExportedProductId),
+            //        j => j
+            //            .HasOne(pt => pt.ImportedProduct)
+            //            .WithMany(p => p.PurchaseAtExportList)
+            //            .HasForeignKey(pt => pt.ImportedProductId), j =>
+            //        {
+            //            j.Property(pt => pt.Quantity).HasDefaultValue(0);
+            //            j.HasKey(t => new { t.ExportedProductId, t.ImportedProductId });
+            //            j.ToTable("PurchaseAtExports");
+            //        });
 
         }
 

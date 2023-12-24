@@ -1,31 +1,27 @@
 ﻿@page "/product"
-@page "/product/{categoryid:guid}"
+@page "/product/{chapter}/{chapterid:guid}"
 @using Microsoft.AspNetCore.Components
 @using DKCrm.Client.Components.ProductFilter
+@using Microsoft.OData.UriParser
 @inject ISnackbar Snackbar
-
-<MudTable Items="@Elements"
-          Dense="true"
+@*    SortLabel="Sort By"*@  @*   Filter="new Func<Product, bool>(FilterFunc)"*@    @*Items="@Elements"*@
+<MudTable ServerData="@(new Func<TableState, Task<TableData<ProductsDto>>>(ServerReload))"
+          Dense="false"
           Hover="true"
           ReadOnly="false"
-          CanCancelEdit="true"
-          Filter="new Func<Product, bool>(FilterFunc)"
           @bind-SelectedItems="selectedItems"
-          SortLabel="Sort By"
-          CommitEditTooltip="Commit Edit"
-          OnCommitEditClick="@(() => Snackbar.Add("Изменения сохранены!"))"
-          RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
-          RowEditCommit="ItemHasBeenCommitted"
-          IsEditRowSwitchingBlocked="true"
           ApplyButtonPosition="@applyButtonPosition"
-          EditButtonPosition="@editButtonPosition"
-          EditTrigger="@editTrigger"
           MultiSelection="true"
-          SelectOnRowClick="true">
+          SelectOnRowClick="false"
+          Striped="true" 
+          Bordered="true" 
+          HeaderClass="mud-table-header table-head-bordered"
+          OnRowClick="RowClickEvent" T="ProductsDto"
+          @ref="table">
 
     <ToolBarContent>
         <MudText Typo="Typo.h4">@(_currentCategoryName ?? "Список продуктов")</MudText>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="AddProduct" Style="margin-left: 1rem;" Color="Color.Tertiary">
+        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="()=> _visibleCreatedProductDialog =true" Style="margin-left: 1rem;" Color="Color.Tertiary">
             Добавить продукт
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
         </MudButton>
@@ -43,92 +39,68 @@
         }
 
         <MudSpacer />
-        <MudTextField @bind-Value="_searchString" Clearable="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
-        @if (applyButtonPosition.DisplayApplyButtonAtStart() || (editButtonPosition.DisplayEditButtonAtStart() && editTrigger == TableEditTrigger.EditButton))
-        {
-            <col style="width: 50px;" />
-        }
-@*        <col style="width: 50px;" />
-        <col style="width: 150px;" />
-        <col style="width: 150px;" />*@
-        <col />
-        <col />
-        <col />
-        <col />
-        @if (applyButtonPosition.DisplayApplyButtonAtEnd() || (editButtonPosition.DisplayEditButtonAtEnd() && editTrigger == TableEditTrigger.EditButton))
-        {
-            <col style="width: 50px;" />
-        }
+       
+        
     </ColGroup>
     <HeaderContent>
-        <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.Id)">Категория</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.PartNumber)">P/N</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Product, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
-        <MudTh>Производитель</MudTh>
+        <MudTh><MudTableSortLabel SortLabel="category_field" T="ProductsDto">Категория</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="name_field" T="ProductsDto">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="partNumber_field" T="ProductsDto">P/N</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="brand_field" T="ProductsDto">Производитель</MudTableSortLabel></MudTh>
+        <MudTh Style="max-width: 4rem; text-align: center">Количество
+            <MudIconButton Icon="@Icons.Material.Filled.FormatLineSpacing"
+                           OnClick="() => _isOpenQuantityAtStorages = _isOpenQuantityAtStorages != true"></MudIconButton>
+        </MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Категория">
-            @if (context.Category != null)
+            @if (context.CategoryName != null)
             {
-                @context.Category.Name
+                @context.CategoryName
             }
         </MudTd>
-        <MudTd DataLabel="Email">@context.PartNumber</MudTd>
         <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Email">@context.PartNumber</MudTd>
         <MudTd DataLabel="Brand">
-            @if (context.Brand != null)
+            @if (context.BrandName != null)
             {
-                @context.Brand.Name
+                @context.BrandName
             }
         </MudTd>
+        <MudTd Style="max-width: 4rem; text-align: center" DataLabel="Quntity">
+            @if (context.ProductsInStorage != null)
+            {
 
+                @if (_isOpenQuantityAtStorages)
+                {
+                    @foreach (var item in context.ProductsInStorage)
+                    {
+                        <div>@item.Storage!.Name <b>@item.Quantity</b></div>
+                    }
+                }
+                else
+                {
+                    <b>@context.ProductsInStorage.Select(s=>s.Quantity).Sum()</b>
+                }
+            }
+        </MudTd>
+        <MudTd Style="max-width: 2rem; text-align: center" DataLabel="Edit">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenUpdateProductDialog(context.Id)"></MudIconButton>
+        </MudTd>
     </RowTemplate>
-    <RowEditingTemplate>
-        <MudTd DataLabel="Категория">
-            @if(Categories!=null){
-                <MudSelect T="Category" ToStringFunc="category => category.Name " Label="Категория" @bind-Value="@context.Category">
-                    @foreach (var category in Categories)
-                    {
-
-                        <MudSelectItem T="Category" Value="@category">@category.Name</MudSelectItem>
-
-                    }
-                </MudSelect>
-            }
-        </MudTd>
-        <MudTd DataLabel="P/N">
-            <MudTextField @bind-Value="@context.PartNumber" Required />
-        </MudTd>
-        <MudTd DataLabel="Name">
-            <MudTextField @bind-Value="@context.Name" Required />
-        </MudTd>
-        <MudTd DataLabel="Brand">
-            <MudForm >
-                <MudTextField @bind-Value="value" T="string" Label="Username" Required="true" RequiredError="Brand name is required!" />
-            </MudForm>
-            <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => AddBrand()" Color="Color.Tertiary">Создать</MudButton>
-            @if(Brands!=null){
-                <MudSelect T="Brand" ToStringFunc="brand => brand.Name " Label="Производитель" @bind-Value="@context.Brand">
-                    @foreach (var state in Brands)
-                    {
-                     
-                        <MudSelectItem T="Brand" Value="@state">@state.Name</MudSelectItem>
-
-                    }
-                </MudSelect>
-            }
-        </MudTd>
-
-    </RowEditingTemplate>
+    <NoRecordsContent>
+        <MudText>Нет данных в списке</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Загрузка...</MudText>
+    </LoadingContent>
     <PagerContent>
-        <MudTablePager HidePageNumber="true" RowsPerPageString="Строк на странице" />
+        <MudTablePager PageSizeOptions="new int[] { 2, 4, 10, 100, int.MaxValue }" HidePageNumber="true" RowsPerPageString="Строк на странице" />
     </PagerContent>
-
-    <EditButtonContent Context="button">
-        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
-    </EditButtonContent>
 </MudTable>
 
 
@@ -139,12 +111,75 @@
     </MudDrawerHeader>
     <ProductFilterComponent/>
 </MudDrawer>
+<CreateProductDialog VisibleDialog="_visibleCreatedProductDialog"
+                     RefreshProductList="OnParametersSetAsync"
+                     Close="() => _visibleCreatedProductDialog=false" />
+<EditProductDialog VisibleDialog="_visibleEditProductDialog"
+                   ProductId="ProductId"
+                   RefreshProductList="OnParametersSetAsync"
+                   Close="() => _visibleEditProductDialog=false"/>
 
+<ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
+                   ProductId="ProductId"
+                   Close="() => _visibleDetailProductDialog=false" />
 
 <StorageSettings @ref="_storageSettings"/>
 
 
 
 @code {
+    [Parameter] public string? Chapter { get; set; }
+    IEnumerable<Product> data;
+    bool _visibleCreatedProductDialog; 
+    bool _visibleEditProductDialog;
+    bool _isOpenQuantityAtStorages; 
+    bool _visibleDetailProductDialog;
+   
 
+    private IEnumerable<ProductsDto> pagedData;
+    private MudTable<ProductsDto>? table;
+
+    private int totalItems;
+    private string searchString = null;
+
+    /// <summary>
+    /// Here we simulate getting the paged, filtered and ordered data from the server
+    /// </summary>
+    private async Task<TableData<ProductsDto>> ServerReload(TableState state)
+    {
+        var response = await ProductManager.GetProductsBySortAsync(new SortPagedRequest()
+            {
+                PageIndex = state.Page,
+                PageSize = state.PageSize,
+                SearchString = searchString,
+                SortLabel = state.SortLabel,
+                Chapter = Chapter,
+                ChapterId = ChapterId,
+                SortDirection = (OrderByDirection?)(state.SortDirection)
+                    
+            });
+            return new TableData<ProductsDto>() { TotalItems = response.TotalItems, Items = response.Items };
+    }
+    private void OpenUpdateProductDialog(Guid id)
+    {
+        ProductId = id;
+        _visibleEditProductDialog = true;
+    }
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table!.ReloadServerData();
+    }
+    private void RowClickEvent(TableRowClickEventArgs<ProductsDto> tableRowClickEventArgs)
+    {
+        ProductId = tableRowClickEventArgs.Item.Id;
+        _visibleDetailProductDialog = true;
+    }
 }
+<style>
+    .mud-table-header {
+        background-color: #cbf0ee;
+        color: white !important;
+        font-weight: bold;
+    }
+</style>

@@ -8,9 +8,8 @@ using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Shared.Models.OrderModels
 {
-    public class PurchaseAtStorage: IIdentifiable
+    public class PurchaseAtStorage
     {
-        public Guid Id { get; set; }
         public int Quantity { get; set; }
 
         public Guid StorageId { get; set; }

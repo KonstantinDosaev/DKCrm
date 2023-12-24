@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Client.Services.ProductServices
@@ -17,9 +18,20 @@ namespace DKCrm.Client.Services.ProductServices
            return await _httpClient.GetFromJsonAsync<List<Product>>("api/product") ?? throw new InvalidOperationException();
         }
 
-        public async Task<List<Product>> GetProductsByCategoryAsync(Guid categoryId)
+        //public async Task<List<Product>> GetProductsByCategoryAsync(Guid? categoryId)
+        //{
+        //    return await _httpClient.GetFromJsonAsync<List<Product>>($"api/Product/category/{categoryId}") ?? throw new InvalidOperationException();
+        //}
+        public async Task<SortPagedResponse<ProductsDto>> GetProductsBySortAsync(SortPagedRequest request)
         {
-            return await _httpClient.GetFromJsonAsync<List<Product>>($"api/Product/category/{categoryId}") ?? throw new InvalidOperationException();
+            var response = await _httpClient.PostAsJsonAsync($"api/Product/category/",request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<SortPagedResponse<ProductsDto>>() ?? throw new InvalidOperationException();
+
+        }
+
+        public async Task<List<Product>> GetSearchProductAsync(string searchString)
+        {
+            return await _httpClient.GetFromJsonAsync<List<Product>>($"api/Product/{searchString}") ?? throw new InvalidOperationException();
         }
 
         public async Task<Product> GetProductDetailsAsync(Guid userId)
@@ -36,6 +48,10 @@ namespace DKCrm.Client.Services.ProductServices
         public async Task<bool> UpdateRangeProductsAsync(IEnumerable<Product> products)
         {
            return (await _httpClient.PutAsJsonAsync("api/product/range", products)).StatusCode== HttpStatusCode.OK;
+        }    
+        public async Task<bool> RemoveAsync(Guid id)
+        {
+           return (await _httpClient.DeleteAsync($"api/product/{id}")).StatusCode== HttpStatusCode.OK;
         }
 
         public async Task AddProductAsync(Product product)

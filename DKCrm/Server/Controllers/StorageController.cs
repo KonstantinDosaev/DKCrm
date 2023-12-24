@@ -21,13 +21,13 @@ namespace DKCrm.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _context.Storages.Include(i=>i.Address).ToListAsync());
+            return Ok(await _context.Storages.Include(i => i.Address).Include(i=>i.Products).AsNoTracking().ToListAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.Storages.FirstOrDefaultAsync(a => a.Id == id);
+            var dev = await _context.Storages.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
 

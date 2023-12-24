@@ -1,0 +1,43 @@
+﻿@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared.Models.OrderModels
+<MudDialog @bind-IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="Close" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <FormImportedProduct OnValidSubmit="Create"
+                               ImportedProduct="ImportedProduct"
+                               ButtonText="Сохранить"
+                               TitleText="Создание единицы на поставку" 
+                               />
+
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public ImportedOrder? Order { get; set; }
+    public ImportedProduct ImportedProduct { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        ImportedProduct.ImportedOrder = Order;
+        if (Order != null) ImportedProduct.ImportedOrderId = Order.Id;
+    }
+
+    async Task Create()
+    {
+       
+        await ImportedProductManager.AddAsync(ImportedProduct);
+        await RefreshProductList.InvokeAsync();
+        await Close.InvokeAsync();
+        _snackBar.Add("Элемент заказа создан");
+    }
+}
