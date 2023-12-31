@@ -5,7 +5,57 @@
 
 
 <MudTabs @bind-ActivePanelIndex="activeIndex" Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
-         
+    <MudTabPanel OnClick="LoadingData">
+        <ChildContent>
+            <div class="flex-column">
+                @if (InternalCompanyData != null)
+                {
+                    <MudText>Редактирование внутренних данных</MudText>
+                    <MudCard>
+                        <MudForm @ref="_editInternalDataForm" Model="@InternalCompanyData">
+                            <MudCardContent>
+                                <MudNumericField  Label="Процент на курс валюты" @bind-Value="InternalCompanyData.CurrencyPercent"
+                                                  For="@(() => InternalCompanyData.CurrencyPercent)"
+                                                  Variant="Variant.Outlined"
+                                                  Required="true"
+                                                  RequiredError="Введите процент"
+                                                  Class="mb-3"
+                                                  Format="0.##"
+                                                  Step="0.1F"
+                                                  Min="0" Max="100"
+                                                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" />
+                                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="InternalCompanyData.LocalCurrency"
+                                           Label="Локальная валюта"
+                                           T="string" ToStringFunc="c => c.ToString()"
+                                           CloseIcon="@Icons.Material.Filled.Flag"
+                                           AdornmentColor="Color.Tertiary"
+                                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                    @if (CurrencyCharCodes != null)
+                                    {
+                                        @foreach (var item in CurrencyCharCodes)
+                                        {
+                                            <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                                        }
+                                    }
+                                </MudSelect>
+                                <MudTextField @bind-Value="InternalCompanyData.KeyFns"
+                                          T="string" Label="Ключ API ЕГРНЮЛ"
+                                              Required="true" Variant="Variant.Outlined"
+                                              RequiredError="Введите ключ API ЕГРНЮЛ!" Lines="1"/>
+                            </MudCardContent>
+                        </MudForm>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateInternalData())">Применить</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                }
+
+            </div >
+        </ChildContent>
+        <TabContent>
+            <MudText>Типы компании</MudText>
+        </TabContent>
+    </MudTabPanel> 
     <MudTabPanel OnClick="LoadingData">
         <ChildContent>
             <div class="flex-column">
@@ -151,6 +201,11 @@
     private int activeIndex = 0;
     private string _valueString;
 
+    private InternalCompanyData? InternalCompanyData { get; set; }
+    MudForm? _editInternalDataForm;
+    public List<(string charCode, string name)>? CurrencyCharCodes { get; set; }
+    private async Task<List<(string charCode, string name)>> GetCurrencyCharCodes() => await CurrencyManager.GetCurrencyCharCode();
+
     private List<CompanyType>? CompanyTypes { get; set; }
     private CompanyType? CurrentCompanyType { get; set; }
     private bool _visibleCompanyTypeUpdateDialog;
@@ -158,16 +213,9 @@
 
     private List<TagsCompany>? TagsCompanies { get; set; }
     private TagsCompany? CurrentTagCompany { get; set; }
+
     private bool _visibleCompanyTagUpdateDialog;
     private bool _visibleCompanyTagRemoveDialog;
-
-
-    
-
-
-   
-
-    
 
     MudForm? _updateCompanyTypeForm;
     MudForm? _updateCompanyTagForm;
@@ -180,12 +228,15 @@
     {
         switch (activeIndex)
         {
-           
             case 0:
+                if (CompanyTypes == null)
+                    await GetInternalCompanyData();
+                break;
+            case 1:
                 if (CompanyTypes==null)
                     await GetCompanyTypes();
                 break;
-            case 1:
+            case 2:
                 if (TagsCompanies==null)
                     await GetCompanyTags();
                 break;
@@ -194,7 +245,11 @@
     }
 
 
-
+    private async Task GetInternalCompanyData()
+    {
+        InternalCompanyData = await InternalCompanyDataManager.GetAsync();
+        StateHasChanged();
+    }
     private async Task GetCompanyTypes()
     {
         CompanyTypes = await CompanyTypeManager.GetAsync();
@@ -302,6 +357,19 @@
         else
         {
             _snackBar.Add("Ошибка при удалении!");
+        }
+    }
+    private async Task UpdateInternalData()
+    {
+        await _editInternalDataForm!.Validate();
+        if (!_editInternalDataForm.IsValid) return;
+        if (await InternalCompanyDataManager.UpdateAsync(InternalCompanyData!))
+        {
+            _snackBar.Add("Внутренние данные компании обновлен!");
+        }
+        else
+        {
+            _snackBar.Add("Ошибка при обновлении!");
         }
     }
 }

@@ -1,10 +1,10 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Shared.Models.OrderModels
 
-<MudDialog @bind-IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+<MudDialog  IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
     <TitleContent>
         <div style="text-align: right">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="Close" Color="Color.Info">Закрыть</MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
         </div>
     </TitleContent>
     <DialogContent>
@@ -19,7 +19,9 @@
 
 
 @code {
-    [Parameter] public bool VisibleDialog { get; set; }
+
+  
+
     [Parameter] public ImportedOrder? Order { get; set; }
     [Parameter] public Guid? Id { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
@@ -38,11 +40,18 @@
             Order.SellersCompanyId = Order.SellersCompany!.Id;
             _snackBar.Add("Данные обновлены");
             await RefreshProductList.InvokeAsync();
-            await Close.InvokeAsync();
+            await CloseClick();
             VisibleDialog = false;
         }
 
 
     }
 
+    [Parameter]public bool VisibleDialog { get; set; }
+    [Parameter]public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
 }

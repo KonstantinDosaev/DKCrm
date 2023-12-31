@@ -3,8 +3,7 @@
 @using Microsoft.AspNetCore.Components
 @using DKCrm.Client.Components.ProductFilter
 @using Microsoft.OData.UriParser
-@inject ISnackbar Snackbar
-@*    SortLabel="Sort By"*@  @*   Filter="new Func<Product, bool>(FilterFunc)"*@    @*Items="@Elements"*@
+
 <MudTable ServerData="@(new Func<TableState, Task<TableData<ProductsDto>>>(ServerReload))"
           Dense="false"
           Hover="true"
@@ -39,7 +38,7 @@
         }
 
         <MudSpacer />
-        <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
@@ -99,7 +98,7 @@
         <MudText>Загрузка...</MudText>
     </LoadingContent>
     <PagerContent>
-        <MudTablePager PageSizeOptions="new int[] { 2, 4, 10, 100, int.MaxValue }" HidePageNumber="true" RowsPerPageString="Строк на странице" />
+        <MudTablePager PageSizeOptions="new int[] { 4, 10, 100, int.MaxValue }" HidePageNumber="true" RowsPerPageString="Строк на странице" />
     </PagerContent>
 </MudTable>
 
@@ -109,19 +108,19 @@
     <MudDrawerHeader>
         <MudText Typo="Typo.h6">Фильтр</MudText>
     </MudDrawerHeader>
-    <ProductFilterComponent/>
+    <ProductFilterComponent @ref="filter" Chapter="@Chapter"
+                            ChapterId="@ChapterId"
+                            IsSetOption="OnFilter"/>
 </MudDrawer>
-<CreateProductDialog VisibleDialog="_visibleCreatedProductDialog"
-                     RefreshProductList="OnParametersSetAsync"
-                     Close="() => _visibleCreatedProductDialog=false" />
-<EditProductDialog VisibleDialog="_visibleEditProductDialog"
+<CreateProductDialog @bind-VisibleDialog="_visibleCreatedProductDialog"
+                     RefreshProductList="OnParametersSetAsync"/>
+               
+<EditProductDialog @bind-VisibleDialog="_visibleEditProductDialog"
                    ProductId="ProductId"
-                   RefreshProductList="OnParametersSetAsync"
-                   Close="() => _visibleEditProductDialog=false"/>
+                   RefreshProductList="OnParametersSetAsync"/>
 
-<ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
-                   ProductId="ProductId"
-                   Close="() => _visibleDetailProductDialog=false" />
+<ProductDetailDialog @bind-VisibleDialog="_visibleDetailProductDialog"
+                   ProductId="ProductId"/>
 
 <StorageSettings @ref="_storageSettings"/>
 
@@ -134,20 +133,18 @@
     bool _visibleEditProductDialog;
     bool _isOpenQuantityAtStorages; 
     bool _visibleDetailProductDialog;
-   
+    ProductFilterComponent? filter;
 
-    private IEnumerable<ProductsDto> pagedData;
+    private IEnumerable<ProductsDto>? pagedData;
     private MudTable<ProductsDto>? table;
 
     private int totalItems;
     private string searchString = null;
-
-    /// <summary>
-    /// Here we simulate getting the paged, filtered and ordered data from the server
-    /// </summary>
+    private FilterProductTuple? _filterProductTuple;
     private async Task<TableData<ProductsDto>> ServerReload(TableState state)
     {
-        var response = await ProductManager.GetProductsBySortAsync(new SortPagedRequest()
+       
+            var response = await ProductManager.GetProductsBySortAsync(new SortPagedRequest()
             {
                 PageIndex = state.Page,
                 PageSize = state.PageSize,
@@ -155,10 +152,16 @@
                 SortLabel = state.SortLabel,
                 Chapter = Chapter,
                 ChapterId = ChapterId,
-                SortDirection = (OrderByDirection?)(state.SortDirection)
+                SortDirection = (OrderByDirection?)(state.SortDirection),
+             
+                FilterTuple = _filterProductTuple
+                
+
                     
             });
+            pagedData = response.Items;
             return new TableData<ProductsDto>() { TotalItems = response.TotalItems, Items = response.Items };
+        
     }
     private void OpenUpdateProductDialog(Guid id)
     {
@@ -175,6 +178,13 @@
         ProductId = tableRowClickEventArgs.Item.Id;
         _visibleDetailProductDialog = true;
     }
+    private void OnFilter(FilterProductTuple filterProductTuple)
+    {
+        _filterProductTuple = filterProductTuple;
+        table!.ReloadServerData();
+    }
+    
+
 }
 <style>
     .mud-table-header {

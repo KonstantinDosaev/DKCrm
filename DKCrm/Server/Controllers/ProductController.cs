@@ -52,6 +52,8 @@ namespace DKCrm.Server.Controllers
                 s.Storage,
                 s.Brand,
                 s.Category,
+                s.Category!.CategoryOptions,
+                s.ProductOption,
                 s.PartNumber,
                 s.Description,
                 s.CategoryId,
@@ -73,6 +75,7 @@ namespace DKCrm.Server.Controllers
                 PartNumber = s.PartNumber,
                 CategoryId = s.CategoryId,
                 BrandId = s.BrandId,
+                ProductOption = s.ProductOption,
             }).Select(s => s);
             if (request.Chapter != null && request.ChapterId != null)
             {
@@ -87,6 +90,25 @@ namespace DKCrm.Server.Controllers
                     case ProductFromChapterNames.Storage:
                         data = data.Where(o => o.Storage!.Select(s=>s.Id).Contains((Guid)request.ChapterId));
                         break;
+                }
+            }
+
+            if (request.FilterTuple!=null)
+            {
+                if (request.FilterTuple.CategoryId!=null && request.FilterTuple.CategoryId!= Guid.Empty && request.Chapter != ProductFromChapterNames.Category)
+                {
+                    data = data.Where(o => o.CategoryId == request.FilterTuple.CategoryId);
+                }
+                if (request.FilterTuple.BrandIdList != null&& request.FilterTuple.BrandIdList.Any() && request.Chapter != ProductFromChapterNames.Brand)
+                {
+                    data = data.Where(o => request.FilterTuple.BrandIdList.Contains((Guid)o.BrandId!));
+                }
+                if (request.FilterTuple.ProductOptions != null && request.FilterTuple.ProductOptions.Any())
+                {
+                    var productsId = _context.ProductOptions
+                        .Where(w => request.FilterTuple.ProductOptions.Contains(w.Id))
+                        .Select(o => o.ProductId).Distinct();
+                    data = data.Where(w => productsId.Contains(w.Id));
                 }
             }
             if (!string.IsNullOrEmpty(request.SearchString))
@@ -169,7 +191,14 @@ namespace DKCrm.Server.Controllers
                     _context.Entry(item).State = pr.Contains(item.StorageId) ? EntityState.Modified : EntityState.Added;
                 }
             }
-
+            if (product.ProductOption != null)
+            {
+                var pr = await _context.ProductOptions.Where(w => w.ProductId == product.Id).Select(s => s.Id).ToListAsync();
+                foreach (var item in product.ProductOption)
+                {
+                    _context.Entry(item).State = pr.Contains(item.Id) ? EntityState.Modified : EntityState.Added;
+                }
+            }
             await _context.SaveChangesAsync();
             return Ok(product);
         }

@@ -8,7 +8,7 @@
 <MudText Typo="Typo.h5">@TitleText</MudText>
 @if (Product != null)
 {
-    <MudForm @ref="ImportedOrderForm" @bind-IsValid="@_success">
+    <MudForm @ref="ProductFormRef" @bind-IsValid="@_success">
         <MudCard>
             <MudCardContent>
 
@@ -109,6 +109,43 @@
                     </MudExpansionPanels>
                     
                 </div>
+
+                <MudPaper Style="margin: 1rem 0; padding: 1rem" Outlined="true">
+                    <MudText>Характеристики</MudText>
+                    @if (Product.ProductOption != null && Product.ProductOption.Any())
+                    {
+                        foreach (var item in Product.ProductOption)
+                        {
+                            <div class="d-flex align-items-center">
+                                <MudText Class="mr-2" Typo="Typo.body1"><b>@item.CategoryOption!.Name :</b></MudText>
+                                <MudTextField Variant="Variant.Outlined"
+                                  @bind-Value="item.Value"
+                                  For="@(() => item.Value)"
+                                  Immediate="true"
+                                  Label="Значение" />
+                                <MudText Class="ml-2" Typo="Typo.body1"><b>@item.CategoryOption!.Measure</b></MudText>
+                                <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                   Color="Color.Warning"
+                                   OnClick="() => Product.ProductOption.Remove(item)" />
+                            </div>
+                        }
+                    }
+                    <MudMenu Style="margin : 1rem 0;" Variant="Variant.Filled"
+                         Color="Color.Tertiary" Label="Добавиь характеристику">
+                        @if (Product.Category is {CategoryOptions: { } })
+                        {
+                            @foreach (var item in Product.Category.CategoryOptions)
+                            {
+                                <MudMenuItem
+                                 OnClick="() => AddProductOption(item) ">
+                                    @item.Name <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
+                                </MudMenuItem>
+                            }
+
+                        }
+
+                    </MudMenu>
+                </MudPaper>
                
             </MudCardContent>
 
@@ -154,15 +191,15 @@
     }
 
     [Parameter]
-    public MudForm? ImportedOrderForm { get; set; }
+    public MudForm? ProductFormRef { get; set; }
 
     private async Task Validation()
     {
-        if (ImportedOrderForm!.IsValid)
+        if (ProductFormRef!.IsValid)
             await OnValidSubmit.InvokeAsync();
 
         else
-            await ImportedOrderForm.Validate();
+            await ProductFormRef.Validate();
 
     }
     private void ApplyCategory()
@@ -176,6 +213,12 @@
         Product.Storage ??= new List<Storage>();
         Product.Storage.Add(storage);
         Product.ProductsInStorage.Add(new ProductsInStorage { Storage = storage, StorageId = storage.Id, Product = Product, ProductId = Product.Id});
+        await InvokeAsync(StateHasChanged);
+    }
+    private async void AddProductOption(CategoryOption categoryOption)
+    {
+        Product.ProductOption ??= new List<ProductOption>();
+        Product.ProductOption.Add(new ProductOption() { CategoryOptionId = categoryOption.Id, CategoryOption = categoryOption, Product = Product, ProductId = Product.Id});
         await InvokeAsync(StateHasChanged);
     }
 }

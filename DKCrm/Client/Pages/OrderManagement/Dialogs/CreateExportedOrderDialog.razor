@@ -1,9 +1,9 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Shared.Models.OrderModels
-<MudDialog @bind-IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
     <TitleContent>
         <div style="text-align: right">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="Close" Color="Color.Info">Закрыть</MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
         </div>
     </TitleContent>
     <DialogContent>
@@ -32,6 +32,14 @@
         await ExportedOrderManager.AddAsync(Order);
         await RefreshProductList.InvokeAsync();
         _snackBar.Add("Заказ создан");
-        await Close.InvokeAsync();
+        await CloseClick();
+    }
+
+    
+    [Parameter]public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
     }
 }

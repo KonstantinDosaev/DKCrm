@@ -1,13 +1,14 @@
 ﻿<MudPaper Width="100%">
-    <MudList Style="" Clickable="true" @bind-SelectedItem="_selectedItem"  @bind-SelectedValue="_selectedValue" Color="Color.Primary">
-        @if (CategoriesUpLevel != null)
+    <MudList  Style="" Clickable="true" @bind-SelectedItem="SelectedItem" @bind-SelectedValue="SelectedValue" Color="Color.Primary">
+        @if (Categories != null)
         {
-            foreach (var category in CategoriesUpLevel)
+            foreach (var category in Categories!.Where(w => w.ParentId == null).ToList())
             {
                 <SelectedCategoriesListReqursion CloseCategoryDrawerCallback="CloseCategory"
                                            Category="category"
                                            RefreshCategoryListCallback="GetCategories"
                                            ChangeValue="ChangeValue"
+                                           SelectedItem="SelectedItem"
                                            />
             }
         }
@@ -15,36 +16,61 @@
 </MudPaper>
 
 @code {
-    MudListItem? _selectedItem;
-    public object? _selectedValue = 1;
-    string _value;
 
-    private List<Category>? Categories { get; set; }
+    public MudListItem? _selectedItem;
+    [Parameter]
+    public MudListItem? SelectedItem
+    {
+        get => _selectedItem;
+        set => _selectedItem = value;
+    }
+    [Parameter]
+    public EventCallback<MudListItem> SelectedItemChanged { get; set; }
+    [Parameter]
+    public object? SelectedValue { get; set; } = 1;
+
+    [Parameter]
+    public List<Category>? Categories { get; set; }
 
     private List<Category>? CategoriesUpLevel { get; set; }
     [Parameter]
     public Category? SelectedCategory {
-        get => (Category?)_selectedValue;
-        set => _selectedValue = value;
+        get => (Category?)SelectedValue;
+        set => SelectedValue = value;
     }
     [Parameter]
     public EventCallback<Category> SelectedCategoryChanged { get; set; }
+    [Parameter]
+    public EventCallback<Category> IsSetCategory { get; set; }
+
+  
+
     protected override async Task OnInitializedAsync()
     {
-        await GetCategories();
+
+        if (Categories==null)
+        {
+          await GetCategories();
+        }
+        
+      
     }
 
     async Task ChangeValue()
     {
-        SelectedCategory = (Category?)_selectedValue;
-       await SelectedCategoryChanged.InvokeAsync((Category?)_selectedValue);
+        SelectedCategory = (Category?)SelectedValue;
+        SelectedItem = _selectedItem;
+        await SelectedCategoryChanged.InvokeAsync((Category?)SelectedValue);
+        await IsSetCategory.InvokeAsync((Category?)SelectedValue);
+        await SelectedItemChanged.InvokeAsync(SelectedItem);
     }
 
     private async Task GetCategories()
     {
-        Categories = await CategoryManager.GetAsync();
-        Categories = Categories.OrderBy(o => o.Name).ToList();
-        CategoriesUpLevel = Categories.Where(w => w.ParentId == null).ToList();
+        Categories ??= await CategoryManager.GetAsync();
+        CategoriesUpLevel ??= Categories.Where(w => w.ParentId == null).ToList();
+        Categories = Categories!.OrderBy(o => o.Name).ToList();
+
     }
     private void CloseCategory()
     {

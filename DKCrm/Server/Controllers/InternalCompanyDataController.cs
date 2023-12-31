@@ -1,6 +1,8 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
+using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +22,15 @@ namespace DKCrm.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _context.InternalCompanyData.SingleOrDefaultAsync());
+           var data = await _context.InternalCompanyData.FirstOrDefaultAsync();
+            if (data == null )
+            {
+                if (Initialize())
+                    data = await _context.InternalCompanyData.FirstOrDefaultAsync();
+                else
+                    throw new InvalidOperationException();
+            }
+            return Ok(data);
         }
 
 
@@ -39,6 +49,13 @@ namespace DKCrm.Server.Controllers
             //_context.Update(entityToBeUpdated);
             await _context.SaveChangesAsync();
             return Ok(data);
+        }
+        public bool Initialize()
+        {
+            _context.InternalCompanyData.Add(
+                new InternalCompanyData(){Id = Guid.NewGuid(),CurrencyPercent = 0, KeyFns = "", LocalCurrency = "RUB"}
+            );
+            return _context.SaveChangesAsync().IsCompletedSuccessfully;
         }
 
     }

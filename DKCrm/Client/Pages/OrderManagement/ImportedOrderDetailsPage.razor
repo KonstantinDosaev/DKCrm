@@ -147,8 +147,7 @@
 
 
 
-    <CreateImportedProductDialog VisibleDialog="_visibleAddImportedProductDialog"
-                            Close="() => _visibleAddImportedProductDialog=false"
+    <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
                             RefreshProductList="OnInitializedAsync"
                             Order="Order"/>
 @*    <EditImportedProductDialog VisibleDialog="_visibleEditImportedProductDialog"

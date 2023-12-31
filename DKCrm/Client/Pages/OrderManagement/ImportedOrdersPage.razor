@@ -86,12 +86,10 @@
 </MudDialog>
 
 <CreateImportedOrderDialog
-    VisibleDialog="_visibleAddOrderDialog"
-    Close="() => _visibleAddOrderDialog=false"
+    @bind-VisibleDialog="_visibleAddOrderDialog"
      RefreshProductList="GetAllOrders"/>
 <EditImportedOrderDialog
-    VisibleDialog="_visibleUpdateOrderDialog"
-    Close="() => _visibleUpdateOrderDialog=false"
+    @bind-VisibleDialog="_visibleUpdateOrderDialog"
     RefreshProductList="GetAllOrders"
     Id="Order.Id"/>
 

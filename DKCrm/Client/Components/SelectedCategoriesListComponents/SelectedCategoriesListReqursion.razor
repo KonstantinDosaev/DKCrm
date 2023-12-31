@@ -10,7 +10,6 @@
 }
 else
 {
-
     <MudListItem Text="">
         <ChildContent>
             @Category.Name
@@ -20,8 +19,9 @@ else
             {
                 <SelectedCategoriesListReqursion CloseCategoryDrawerCallback="@CloseCategoryDrawerCallback"
                                                  Category="@subCategory"
-                                                 RefreshCategoryListCallback="RefreshCategoryListCallback"
-                                                 ChangeValue = "ChangeValue"/>
+                                                 
+                                                 ChangeValue = "ChangeValue"
+                                         SelectedItem="SelectedItem" />
             }
         </NestedList>
 
@@ -35,6 +35,14 @@ else
     public EventCallback CloseCategoryDrawerCallback { get; set; }
     [Parameter]
     public EventCallback ChangeValue { get; set; }
+
+    public MudListItem? _selectedItem;
+    [Parameter]
+    public MudListItem? SelectedItem
+    {
+        get => _selectedItem;
+        set => _selectedItem = value;
+    }
     
 
     [Parameter]

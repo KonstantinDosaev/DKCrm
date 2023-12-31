@@ -1,4 +1,5 @@
-﻿using Microsoft.OData.UriParser;
+﻿using DKCrm.Shared.Models.Products;
+using Microsoft.OData.UriParser;
 
 namespace DKCrm.Shared.Models
 {
@@ -11,5 +12,6 @@ namespace DKCrm.Shared.Models
         public int PageSize { get; set;}
         public string? Chapter { get; set; }
         public Guid? ChapterId { get; set; }
+        public FilterProductTuple? FilterTuple{ get; set; }
     }
 }

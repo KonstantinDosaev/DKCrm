@@ -1,6 +1,7 @@
 ﻿using DKCrm.Shared.Models.CompanyModels;
 using System.Net.Http.Json;
 using System.Text.Json;
+using DKCrm.Client.Services.InternalCompanyDataService;
 using static DKCrm.Client.Services.FnsRequesting.FnsModels;
 
 namespace DKCrm.Client.Services.FnsRequesting
@@ -15,9 +16,10 @@ namespace DKCrm.Client.Services.FnsRequesting
         }
         public async Task<IEnumerable<FnsRequest>> GetCompanyByInn(string inn)
         {
+            var internalData = await new InternalCompanyDataManager(_httpClient).GetAsync();
             IEnumerable<FnsRequest> result;
             var request = new HttpRequestMessage(HttpMethod.Get,
-                $"https://api-fns.ru/api/egr?req={inn}&key=818f803787bccb7aaefd1c6098d10f0713571d92");
+                $"https://api-fns.ru/api/egr?req={inn}&key={internalData.KeyFns}");
             //request.Headers.Add("Accept", "/");
             //request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
 

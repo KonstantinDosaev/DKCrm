@@ -1,13 +1,4 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
-using static DKCrm.Client.Services.FnsRequesting.FnsModels;
-using System.Text.Json;
-using MudBlazor.Charts;
-using MudBlazor;
-using static MudBlazor.CategoryTypes;
-using System.Security.Cryptography;
-using System.Data;
-using System.Xml;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using System.Globalization;
 using System.Text;
 

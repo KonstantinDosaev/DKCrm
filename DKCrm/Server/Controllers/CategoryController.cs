@@ -22,6 +22,7 @@ namespace DKCrm.Server.Controllers
                 .Include(i=>i.Parent)
                 .Include(i=>i.Children)
                 .Include(i=>i.Products)
+                .Include(i=>i.CategoryOptions!).ThenInclude(t=>t.ProductOption)
                 .ToListAsync());
         }
 
@@ -32,6 +33,7 @@ namespace DKCrm.Server.Controllers
                 .Include(i => i.Parent)
                 .Include(i => i.Children)
                 .Include(i => i.Products)
+                .Include(i => i.CategoryOptions!).ThenInclude(t => t.ProductOption)
                 .FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }

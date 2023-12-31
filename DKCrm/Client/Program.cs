@@ -37,6 +37,7 @@ builder.Services.AddTransient<ICompanyTagsManager, CompanyTagsManager>();
 builder.Services.AddTransient<IRequestingFromFnsService, RequestingFromFnsService>();
 builder.Services.AddTransient<IEmployeeManager, EmployeeManager>();
 builder.Services.AddTransient<IStorageManager, StorageManager>();
+builder.Services.AddTransient<ICategoryOptionsManager, CategoryOptionsManager>();
 
 builder.Services.AddTransient<IExportedOrderManager, ExportedOrderManager>();
 builder.Services.AddTransient<IExportedProductManager, ExportedProductManager>();

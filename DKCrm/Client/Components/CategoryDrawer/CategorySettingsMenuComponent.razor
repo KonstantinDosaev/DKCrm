@@ -68,8 +68,50 @@
         <MudCard>
             <MudForm @ref="_updateCategoryForm" Model="@CurrentCategory">
                 <MudCardContent>
-                    <MudTextField @bind-Value="CurrentCategory.Name" T="string" Label="Название категории" Required="true" RequiredError="Введите название категории!" />
+                    <MudTextField @bind-Value="CurrentCategory.Name" 
+                                  T="string" Label="Название категории" 
+                                  Required="true" RequiredError="Введите название категории!" />
+                    
+                    @if (CurrentCategory.Children == null || !CurrentCategory.Children.Any())
+                    {
+                        <p class="mt-6 fs-5">Характеристики продуктов категории</p>
+                        @if (CurrentCategory.CategoryOptions != null)
+                        {
+                            @foreach (var option in CurrentCategory.CategoryOptions)
+                            {
+                                <div class="d-flex align-items-center mb-3">
+                                    <MudIconButton Icon="@Icons.Material.Sharp.DeleteOutline" Color="Color.Warning" OnClick="() => DeleteCategoryOption(option)"></MudIconButton>
+                                    <MudTextField @bind-Value="@option.Name"
+                                                  For="@(() => @option.Name)"
+                                                  Immediate="true"
+                                                  Label="Название"/>
+                                    <MudTextField @bind-Value="@option.Measure"
+                                                  For="@(() => @option.Measure)"
+                                                  Immediate="true"
+                                                  Label="Мера измерения"/>
+                                    <MudIconButton Icon="@Icons.Material.Sharp.Check" Color="Color.Success" OnClick="() => SaveCategoryOption(option)"></MudIconButton>
+                                </div>
+                            }
+                            <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Small"
+                                       OnClick="() => CurrentCategory.CategoryOptions.Add(new CategoryOption() { CategoryId = CurrentCategory.Id })"
+                                       Style="margin-top: 4rem;" Color="Color.Primary">
+                                Добавить характеристику
+                                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Small"
+                                       OnClick="() => CurrentCategory.CategoryOptions = new List<CategoryOption>() { new CategoryOption() { CategoryId = CurrentCategory.Id } }"
+                                       Style="margin-top: 4rem;" Color="Color.Primary">
+                                Добавить характеристику
+                                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+                            </MudButton>
+                            <br/>
+                        }
+                    }
                 </MudCardContent>
+                
             </MudForm>
             <MudCardActions>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateCategory())">Применить</MudButton>
@@ -162,4 +204,28 @@
         }
     }
 
+    private async Task DeleteCategoryOption(CategoryOption option)
+    {
+        if (await CategoryOptionsManager.RemoveAsync(option.Id))
+        {
+            CurrentCategory.CategoryOptions?.Remove(option);
+            _snackBar.Add("Опция удалена!");
+        }
+        else
+        {
+            _snackBar.Add("Ошибка при удалении!");
+        }
+    }
+    private async Task SaveCategoryOption(CategoryOption option)
+    {
+        if (await CategoryOptionsManager.UpdateAsync(option))
+        {
+            await InvokeAsync(StateHasChanged);
+            _snackBar.Add("Опция добавлена!");
+        }
+        else
+        {
+            _snackBar.Add("Ошибка!");
+        }
+    }
 }

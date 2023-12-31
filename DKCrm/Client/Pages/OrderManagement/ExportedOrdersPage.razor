@@ -131,14 +131,14 @@
 
     </DialogContent>
 </MudDialog>
-<CreateExportedOrderDialog VisibleDialog="_visibleAddOrderDialog"
-                     RefreshProductList="GetAllOrders"
-                     Close="() => _visibleAddOrderDialog=false" />
+<CreateExportedOrderDialog 
+    RefreshProductList="GetAllOrders"
+    @bind-VisibleDialog="_visibleAddOrderDialog" />
 
-<EditExportedOrderDialog VisibleDialog="_visibleUpdateOrderDialog"
+<EditExportedOrderDialog 
                    Id="Order.Id"
                    RefreshProductList="GetAllOrders"
-                   Close="() => _visibleUpdateOrderDialog=false"/>
+                   @bind-VisibleDialog="_visibleUpdateOrderDialog"/>
 
 @code {
 

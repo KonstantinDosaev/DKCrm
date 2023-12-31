@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Iterfaces;
+﻿using System.Text.Json.Serialization;
+using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.Products
 {
@@ -8,7 +9,7 @@ namespace DKCrm.Shared.Models.Products
         public string Value { get; set; } = null!;
         public Guid ProductId { get; set; }
         public Guid CategoryOptionId { get; set; }
-
+        [JsonIgnore]
         public virtual Product? Product { get; set; }
         public virtual CategoryOption? CategoryOption { get; set; }
 
