@@ -125,7 +125,7 @@
                              Step="0.1M"
                              T="decimal?" Min="0"
                              Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.SupplierCurrency" />
-            <MudIconButton Icon="@Icons.Material.Filled.Loop" />
+                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.SupplierCurrency,ImportedProduct.PriceInSupplierCurrency)" />
             </div>
             <MudNumericField Disabled="!_isSetCurrency" Label="Цена в валюте сделки" @bind-Value="ImportedProduct.PriceInTransactionCurrency"
                           For="@(() => ImportedProduct.PriceInTransactionCurrency)"
@@ -253,16 +253,35 @@
         }
         await InvokeAsync(StateHasChanged);
     }
-    private async void ConvertedCurrency(string charCode)
+    private async void ConvertedCurrency(string charCode, decimal? price)
     {
+       var supplierCharCode = ImportedProduct!.ImportedOrder!.SupplierCurrency!;
+        var transactionCharCode = ImportedProduct!.ImportedOrder!.TransactionCurrency!;
+        var localCharCode = ImportedProduct!.ImportedOrder!.LocalCurrency!;
         var curArr = new List<string>
         {
-            ImportedProduct!.ImportedOrder!.SupplierCurrency!,
-            ImportedProduct.ImportedOrder!.LocalCurrency!,
-            ImportedProduct.ImportedOrder!.TransactionCurrency!
+            supplierCharCode,
+            transactionCharCode!,
+            localCharCode!
         };
         curArr.Remove(charCode);
-
+        var convertResult = await CurrencyManager.CurrencyConverter(charCode, price, 0, curArr);
+        foreach (var item in convertResult)
+        {
+            if (item.charCod==supplierCharCode)
+            {
+                ImportedProduct.PriceInSupplierCurrency=item.Item2;
+            }
+            else if (item.charCod==transactionCharCode)
+            {
+                ImportedProduct.PriceInTransactionCurrency=item.Item2;
+            }
+            else if (item.charCod==localCharCode)
+            {
+                ImportedProduct.PriceLocal=item.Item2;
+            }
+        }
+        
         await InvokeAsync(StateHasChanged);
     }
 }
