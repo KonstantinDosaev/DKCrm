@@ -45,6 +45,7 @@
 
                  </MudSelect>
              }
+                
                 <MudSelect Variant="Variant.Outlined" Placeholder="Выберите компанию поставщика" @bind-Value="ImportedOrder.SellersCompany"
                        Label="Компания поставщик"
                        T="Company" ToStringFunc="company => company.Name.ToString()"
@@ -74,8 +75,17 @@
                      }
                  </MudSelect>
              }
+                <MudNumericField TextChanged="() => _currencyEdited=true" Label="Процент на курс валюты" @bind-Value="ImportedOrder.CurrencyPercent"
+                                   Variant="Variant.Outlined"
+                                  RequiredError="Введите процент"
+                                  Class="mb-3"
+                                  Format="0.##"
+                                  Step="0.1F"
+                                   T="double?" Min="0" Max="100"
+                                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" />
+        
                 <MudItem  Class="py-0 px-3">
-                    <MudSelect  Variant="Variant.Outlined" Placeholder="Выберите валюту поставщика" @bind-Value="ImportedOrder.SupplierCurrency"
+                    <MudSelect TextChanged="() => _currencyEdited=true"  Variant="Variant.Outlined" Placeholder="Выберите валюту поставщика" @bind-Value="ImportedOrder.SupplierCurrency"
                            Label="Валюта поставщика"
                            T="string" ToStringFunc="c => c.ToString()"
                            CloseIcon="@Icons.Material.Filled.Flag"
@@ -91,7 +101,7 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem Class="py-0 px-3">
-                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ImportedOrder.TransactionCurrency"
+                    <MudSelect TextChanged="() => _currencyEdited=true" Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ImportedOrder.TransactionCurrency"
                            Label="Валюта сделки"
                            T="string" ToStringFunc="c => c.ToString()"
                            CloseIcon="@Icons.Material.Filled.Flag"
@@ -107,7 +117,7 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem Class="py-0 px-3">
-                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ImportedOrder.LocalCurrency"
+                    <MudSelect Disabled="true"Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ImportedOrder.LocalCurrency"
                            Label="Локальная валюта"
                            T="string" ToStringFunc="c => c.ToString()"
                            CloseIcon="@Icons.Material.Filled.Flag"
@@ -139,6 +149,7 @@
     [Parameter] public string TitleText { get; set; } = "";
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter]public MudForm? ImportedOrderForm { get; set; }
+    [Parameter]public bool IsEditForm { get; set; }
     public List<Company>? Companies { get; set; } = null!;
 
     public List<Company>? OurCompanies { get; set; }
@@ -151,6 +162,8 @@
 
 
     bool _success;
+  
+    bool _currencyEdited;
     protected override async Task OnInitializedAsync()
     {
         ImportedOrderStatusList = await ImportedOrderStatusManager.GetAsync();
@@ -162,11 +175,41 @@
     private async Task Validation()
     {
         if (ImportedOrderForm!.IsValid)
+        {
+            if (IsEditForm && _currencyEdited)
+                await UpdatePricesInImportedProducts();
+            
             await OnValidSubmit.InvokeAsync();
+        }
 
         else
             await ImportedOrderForm.Validate();
 
     }
 
+    private async Task UpdatePricesInImportedProducts()
+    {
+        if (!IsEditForm)return;
+        var productList = ImportedOrder.ImportedProducts;
+        if (productList == null || !productList.Any()) return;
+        foreach (var importedProduct in productList)
+        {
+            var supplierCharCode = ImportedOrder!.SupplierCurrency!;
+            var transactionCharCode = ImportedOrder!.TransactionCurrency!;
+            var convertResult = await CurrencyManager.CurrencyConverter(currencyToConvert: ImportedOrder.LocalCurrency!,
+                firstPrice: importedProduct.PriceLocal, currencyPercent: (double)ImportedOrder.CurrencyPercent!, currencyCharCodesToConvert: new List<string>() { importedProduct.SupplierCurrency!, importedProduct.TransactionCurrency! });
+            foreach (var item in convertResult)
+            {
+                if (item.charCod==supplierCharCode)
+                {
+                    importedProduct.PriceInSupplierCurrency=item.Item2;
+                }
+                else if (item.charCod==transactionCharCode)
+                {
+                    importedProduct.PriceInTransactionCurrency=item.Item2;
+                }
+            }
+            await ImportedProductManager.UpdateAsync(importedProduct);
+        }
+    }
  }

@@ -34,11 +34,11 @@
                               IconSize="Size.Medium" Class="mt-0"></MudTextField>
             </ToolBarContent>
             <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x => x.Id)">Номер заказа</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x => x.Name)">Наименование</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<Company, object>(x => x.Name!)">Наша компания</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.Name)">Компания поставщик</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<ImportedOrderStatus, object>(x => x.Value)">Статус</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ImportedOrder, object>(x => x.Id)">Номер заказа</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ImportedOrder, object>(x => x.Name!)">Наименование</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedOrder, object>(x => x.OurCompany?.Name!)">Наша компания</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedOrder, object>(x => x.SellersCompany?.Name!)">Компания поставщик</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedOrder, object>(x => x.ImportedOrderStatus?.Value!)">Статус</MudTableSortLabel></MudTh>
 
             </HeaderContent>
             <RowTemplate>
@@ -132,7 +132,7 @@
     {
         if (string.IsNullOrWhiteSpace(searchString))
             return true;
-        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (element.Name != null && element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         if (element.OurCompany != null && element.OurCompany.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;

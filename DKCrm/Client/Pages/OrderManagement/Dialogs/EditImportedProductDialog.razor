@@ -34,15 +34,18 @@
     
     async Task EditProduct()
     {
-        if (ImportedProduct != null && await ImportedProductManager.UpdateAsync(ImportedProduct))
+        if (ImportedProduct != null)
         {
-            _snackBar.Add("Продукт обновлен");
-            await RefreshProductList.InvokeAsync();
-            await CloseClick();
-            VisibleDialog = false;
+            ImportedProduct.ProductId = ImportedProduct.Product?.Id;
+           
+            if (await ImportedProductManager.UpdateAsync(ImportedProduct))
+            {
+                _snackBar.Add("Продукт обновлен");
+                await RefreshProductList.InvokeAsync();
+                await CloseClick();
+                VisibleDialog = false;
+            }
         }
-        
-
     }
    
     

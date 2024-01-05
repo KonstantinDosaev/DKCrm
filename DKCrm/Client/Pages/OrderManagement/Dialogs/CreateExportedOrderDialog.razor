@@ -23,8 +23,13 @@
     [Parameter] public bool VisibleDialog { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
-    public ExportedOrder Order { get; set; }= new();
-
+    public ExportedOrder Order { get; set; } = null!;
+    private InternalCompanyData? InternalData { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        InternalData ??= await InternalCompanyDataManager.GetAsync();
+        Order = new ExportedOrder { LocalCurrency = InternalData.LocalCurrency, CurrencyPercent = InternalData.CurrencyPercent};
+    }
     async Task Create()
     {
         Order.OurCompanyId = Order.OurCompany!.Id;

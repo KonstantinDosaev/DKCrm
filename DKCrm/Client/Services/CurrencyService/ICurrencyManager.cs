@@ -6,7 +6,7 @@ namespace DKCrm.Client.Services.CurrencyService
     {
         Task<List<(string charCode, string name)>> GetCurrencyCharCode();
 
-        Task<List<(string charCod, decimal?)>> CurrencyConverter(string firstCurrency, decimal? firstPrice,
+        Task<List<(string charCod, decimal?)>> CurrencyConverter(string currencyToConvert, decimal? firstPrice,
             double currencyPercent, IEnumerable<string> currencyCharCodesToConvert);
     }
 }

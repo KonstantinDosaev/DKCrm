@@ -21,13 +21,17 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _context.ImportedProducts.ToListAsync());
+            return Ok(await _context.ImportedProducts.Include(i => i.ImportedOrder)
+                .Include(i => i.Product).ToListAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.ImportedProducts.Include(i=>i.ImportedOrder).FirstOrDefaultAsync(a => a.Id == id);
+            var dev = await _context.ImportedProducts
+                .Include(i=>i.ImportedOrder)
+                .Include(i=>i.Product).ThenInclude(t=>t!.Brand).AsSingleQuery()
+                .FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
 
@@ -57,7 +61,26 @@ namespace DKCrm.Server.Controllers.OrderControllers
         public async Task<IActionResult> Put(ImportedProduct importedProduct)
         {
             _context.Entry(importedProduct).State = EntityState.Modified;
-            //_context.Update(entityToBeUpdated);
+          
+            if (importedProduct.PurchaseAtStorageList != null)
+            {
+                var pas = await _context.PurchaseAtStorages.Where(w => w.ImportedProductId == importedProduct.Id).Select(s => s.StorageId).ToListAsync();
+             
+                foreach (var item in importedProduct.PurchaseAtStorageList)
+                {
+                    _context.Entry(item).State = pas.Contains(item.StorageId) ? EntityState.Modified : EntityState.Added;
+                }
+            }
+            if (importedProduct.PurchaseAtExportList != null)
+            {
+                var pae = await _context.PurchaseAtExports.Where(w => w.ImportedProductId == importedProduct.Id).Select(s => s.ExportedProductId).ToListAsync();
+
+                foreach (var item in importedProduct.PurchaseAtExportList)
+                {
+                    _context.Entry(item).State = pae.Contains(item.ExportedProductId) ? EntityState.Modified : EntityState.Added;
+                }
+            }
+           
             await _context.SaveChangesAsync();
             return Ok(importedProduct);
         }

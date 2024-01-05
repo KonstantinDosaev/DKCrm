@@ -18,7 +18,7 @@ namespace DKCrm.Client.Services.OrderServices
 
         public async Task<ImportedProduct> GetDetailsAsync(Guid id)
         {
-            return await _httpClient.GetFromJsonAsync<ImportedProduct>($"api/ImportedOrder/Get/{id}") ?? throw new InvalidOperationException();
+            return await _httpClient.GetFromJsonAsync<ImportedProduct>($"api/ImportedProduct/Get/{id}") ?? throw new InvalidOperationException();
         }
 
         public async Task<bool> UpdateAsync(ImportedProduct item)

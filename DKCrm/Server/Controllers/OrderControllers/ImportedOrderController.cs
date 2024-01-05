@@ -35,17 +35,16 @@ namespace DKCrm.Server.Controllers.OrderControllers
         public async Task<IActionResult> Get(Guid id)
         {
 
-            //var dev = await _context.ImportedOrders
-            //    .Include(f=>f.OurCompany)
-            //    .Include(i=>i.OurEmployee)
-            //    .Include(i=>i.SellersCompany)
-            //    .Include(i=>i.EmployeeSeller)
-            //    .FirstOrDefaultAsync(a => a.Id == id);
-            var dev = await _context.ImportedOrders.FindAsync(id);
-            await _context.Entry(dev!).Reference(u => u.SellersCompany).LoadAsync();
-            await _context.Entry(dev!).Reference(u => u.EmployeeSeller).LoadAsync();
-            await _context.Entry(dev!).Reference(u => u.OurCompany).LoadAsync();
-            await _context.Entry(dev!).Reference(u => u.OurEmployee).LoadAsync();
+            var dev = await _context.ImportedOrders
+                .Include(i=>i.ImportedProducts!).ThenInclude(t=>t.Product).ThenInclude(t=>t!.Brand)
+                .Include(f => f.OurCompany)
+                .Include(i=>i.SellersCompany)
+                .Include(i => i.OurEmployee)
+                .Include(i => i.EmployeeSeller).AsSingleQuery()
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+
+
             return Ok(dev);
         }
 

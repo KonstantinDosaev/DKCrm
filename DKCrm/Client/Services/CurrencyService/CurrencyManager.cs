@@ -34,9 +34,9 @@ namespace DKCrm.Client.Services.CurrencyService
             return result.OrderBy(o => o.charCode).ToList();
         }
 
-        public async Task<List<(string charCod, decimal?)>> CurrencyConverter(string firstCurrency, decimal? firstPrice,
+        public async Task<List<(string charCod, decimal?)>> CurrencyConverter(string currencyToConvert, decimal? firstPrice,
             double currencyPercent,
-            IEnumerable<string> currencyCharCodesToConvert)
+            IEnumerable<string> currencyCharCodesInConvert)
         {
             var result = new List<(string charCod, decimal? value)>() { };
             var elements = await GetCurrencyXml();
@@ -45,27 +45,27 @@ namespace DKCrm.Client.Services.CurrencyService
             
                 charCode=s.Element("CharCode")!.Value,
                 value =Convert.ToDecimal(s.Element("Value")!.Value)
-            }).Where(w=>currencyCharCodesToConvert.Contains(w.charCode)||w.charCode==firstCurrency).ToList();
-            foreach (var charCod in currencyCharCodesToConvert)
+            }).Where(w=>currencyCharCodesInConvert.Contains(w.charCode)||w.charCode==currencyToConvert).ToList();
+            foreach (var charCodIn in currencyCharCodesInConvert)
             {
-                if (firstCurrency=="RUB")
+                if (currencyToConvert=="RUB")
                 {
-                    var cource = 1/cbCharValue.FirstOrDefault(f=>f.charCode==charCod)!.value;
-                    result.Add((charCod, firstPrice*(cource+(decimal)currencyPercent)));
+                    var course = 1/cbCharValue.FirstOrDefault(f=>f.charCode== charCodIn)!.value;
+                    result.Add((charCodIn, firstPrice*(course + (course/100*(decimal)currencyPercent))));
                 }
                 else
                 {
-                    decimal cource;
-                    if (charCod=="RUB")
+                    decimal course;
+                    if (charCodIn =="RUB")
                     {
-                         cource =  cbCharValue.FirstOrDefault(f => f.charCode == firstCurrency)!.value;
+                        course =  cbCharValue.FirstOrDefault(f => f.charCode == currencyToConvert)!.value;
                     }
                     else
                     {
-                        cource = cbCharValue.FirstOrDefault(f => f.charCode == firstCurrency)!.value /
-                            cbCharValue.FirstOrDefault(f => f.charCode == charCod)!.value;
+                        course = cbCharValue.FirstOrDefault(f => f.charCode == currencyToConvert)!.value /
+                            cbCharValue.FirstOrDefault(f => f.charCode == charCodIn)!.value;
                     }
-                    result.Add((charCod, firstPrice*(cource + (decimal)currencyPercent)));
+                    result.Add((charCodIn, firstPrice*(course + (course / 100 * (decimal)currencyPercent))));
                 }
             }
 

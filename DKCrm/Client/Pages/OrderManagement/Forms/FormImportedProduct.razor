@@ -13,31 +13,41 @@
         
            
         <MudPaper Elevation="12" Class="p-4">
-            <MudAutocomplete T="Product" Label="Введите партномер или название продукта" 
+            <MudAutocomplete T="Product" Placeholder="Введите партномер или название продукта" 
+                             Label="Продукт"
                              @bind-Value="ImportedProduct.Product" 
                              SearchFuncWithCancel="@Search" 
                              Variant="Variant.Outlined" 
                              ShowProgressIndicator="true"
-                             ToStringFunc="@(e=> e==null?null : $"Парт-номер: {e.PartNumber} /  Наименование: {e.Name}  /  Производитель: {e.Brand?.Name}")"
+                             ToStringFunc="@(e=> e==null?null : $"{e.PartNumber} / {e.Name} / {e.Brand?.Name}")"
                              MinCharacters="1"
                              Class="mb-3" />
             @if (ImportedProduct.Product != null)
             {
-                <MudButton Variant="Variant.Outlined" Size="Size.Medium" OnClick="()=>_visibleDetailProductDialog=true" Color="Color.Tertiary">Подробности о продукте</MudButton>
+                <MudButton Class="mb-2" Variant="Variant.Outlined" Size="Size.Medium" 
+                           OnClick="()=>_visibleDetailProductDialog=true" 
+                           Color="Color.Tertiary">Подробности о продукте</MudButton>
                 <ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
                                      ProductId="ImportedProduct.Product.Id"
                                      Close="() => _visibleDetailProductDialog=false" />
             }
-                       
-            <span>Если товар не найден вы можете </span><MudButton Variant="Variant.Outlined" Size="Size.Medium" OnClick="()=>_visibleCreatedProductDialog=true" Color="Color.Tertiary">Создать новый продукт</MudButton>
+                 <div class="mb-2">  
+                     <span>Если товар не найден вы можете </span>
+                     <MudButton Variant="Variant.Outlined" 
+                                Size="Size.Medium" 
+                                OnClick="()=>_visibleCreatedProductDialog=true"
+                                Color="Color.Tertiary">Создать новый продукт</MudButton>
+                 </div>
+                    
+            
+        </MudPaper>
+
+        <MudPaper Elevation="12" Class="p-4 my-1">
             <MudTextField Label="Количество" @bind-Value="ImportedProduct.Quantity"
                           For="@(() => ImportedProduct.Quantity)"
                           Variant="Variant.Outlined"
                           RequiredError="Введите количество"
                           Class="mb-3"/>
-        </MudPaper>
-
-        <MudPaper Elevation="12" Class="p-4 my-1">
             @if (StorageList != null)
             {
                 <MudText Typo="Typo.h5">Направление:</MudText>
@@ -82,7 +92,7 @@
                     {
                         <MudMenuItem T="Guid?"
                                      OnClick="() => AddPurchaseAtExport(item)">
-                            @item.ExportedOrder?.Name @item.ExportedOrder?.Id @item.ExportedOrder?.DateTimeCreated  <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
+                            @item.ExportedOrder?.Name @item.ExportedOrder?.Id @item.ExportedOrder?.DateTimeCreated <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
                         </MudMenuItem>
                     }
 
@@ -116,36 +126,41 @@
                 <MudText Color="Color.Warning">Установите валюты в настройках основного заказа</MudText>
             }
             <div class="d-flex align-items-center">
-            <MudNumericField Disabled="!_isSetCurrency" Label="Цена поставщика" @bind-Value="ImportedProduct.PriceInSupplierCurrency"
-                             For="@(() => ImportedProduct.PriceInSupplierCurrency)"
-                             Variant="Variant.Outlined"
-                             RequiredError="Введите количество"
-                             Class="mb-3"
-                             Format="0.##"
-                             Step="0.1M"
-                             T="decimal?" Min="0"
-                             Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.SupplierCurrency" />
-                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.SupplierCurrency,ImportedProduct.PriceInSupplierCurrency)" />
+                <MudNumericField Disabled="!_isSetCurrency" Label="Цена поставщика" @bind-Value="ImportedProduct.PriceInSupplierCurrency"
+                                 For="@(() => ImportedProduct.PriceInSupplierCurrency)"
+                                 Variant="Variant.Outlined"
+                                 RequiredError="Введите количество"
+                                 Class="mb-3"
+                                 Format="0.##"
+                                 Step="0.1M"
+                                 T="decimal?" Min="0"
+                                 Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.SupplierCurrency" />
+                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.SupplierCurrency!,ImportedProduct.PriceInSupplierCurrency)" />
             </div>
-            <MudNumericField Disabled="!_isSetCurrency" Label="Цена в валюте сделки" @bind-Value="ImportedProduct.PriceInTransactionCurrency"
-                          For="@(() => ImportedProduct.PriceInTransactionCurrency)"
-                          Variant="Variant.Outlined"
-                          RequiredError="Введите количество"
-                          Class="mb-3"
-                          Format="0.##"
-                          Step="0.1M"
-                         T="decimal?" Min="0"
-                         Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.TransactionCurrency"/>
-      
-            <MudNumericField Disabled="!_isSetCurrency" Label="Цена в локальной валюте" @bind-Value="ImportedProduct.PriceLocal"
-                          For="@(() => ImportedProduct.PriceLocal)"
-                          Variant="Variant.Outlined"
-                          RequiredError="Введите количество"
-                          Class="mb-3"
-                          Format="0.##"
-                          Step="0.1M"
-                          T="decimal?" Min="0"
-                         Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.LocalCurrency"/>
+            <div class="d-flex align-items-center">
+                <MudNumericField Disabled="!_isSetCurrency" Label="Цена в валюте сделки" @bind-Value="ImportedProduct.PriceInTransactionCurrency"
+                                 For="@(() => ImportedProduct.PriceInTransactionCurrency)"
+                                 Variant="Variant.Outlined"
+                                 RequiredError="Введите количество"
+                                 Class="mb-3"
+                                 Format="0.##"
+                                 Step="0.1M"
+                                 T="decimal?" Min="0"
+                                 Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.TransactionCurrency"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.TransactionCurrency!,ImportedProduct.PriceInTransactionCurrency)" />
+            </div>
+            <div class="d-flex align-items-center">
+                <MudNumericField Disabled="!_isSetCurrency" Label="Цена в локальной валюте" @bind-Value="ImportedProduct.PriceLocal"
+                                 For="@(() => ImportedProduct.PriceLocal)"
+                                 Variant="Variant.Outlined"
+                                 RequiredError="Введите количество"
+                                 Class="mb-3"
+                                 Format="0.##"
+                                 Step="0.1M"
+                                 T="decimal?" Min="0"
+                                 Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.LocalCurrency"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.LocalCurrency!,ImportedProduct.PriceLocal)" />
+            </div>
         </MudPaper>
 
             <MudCardActions>

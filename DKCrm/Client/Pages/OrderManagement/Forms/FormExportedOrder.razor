@@ -68,6 +68,54 @@
                         }
                     </MudSelect>
                 }
+                <MudItem Class="py-0 px-3">
+                    <MudSelect TextChanged="() => _currencyEdited=true" Variant="Variant.Outlined" Placeholder="Выберите валюту покупателя" @bind-Value="ExportedOrder.BuyerCurrency"
+                           Label="Валюта покупателя"
+                           T="string" ToStringFunc="c => c.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag"
+                           AdornmentColor="Color.Tertiary"
+                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                        @if (CurrencyCharCodes != null)
+                        {
+                            @foreach (var item in CurrencyCharCodes)
+                            {
+                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem Class="py-0 px-3">
+                    <MudSelect TextChanged="() => _currencyEdited=true" Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ExportedOrder.TransactionCurrency"
+                           Label="Валюта сделки"
+                           T="string" ToStringFunc="c => c.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag"
+                           AdornmentColor="Color.Tertiary"
+                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                        @if (CurrencyCharCodes != null)
+                        {
+                            @foreach (var item in CurrencyCharCodes)
+                            {
+                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem Class="py-0 px-3">
+                    <MudSelect Disabled="true" Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ExportedOrder.LocalCurrency"
+                           Label="Локальная валюта"
+                           T="string" ToStringFunc="c => c.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag"
+                           AdornmentColor="Color.Tertiary"
+                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                        @if (CurrencyCharCodes != null)
+                        {
+                            @foreach (var item in CurrencyCharCodes)
+                            {
+                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
             </MudCardContent>
             <MudCardActions>
                 <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="Validation" Color="Color.Tertiary">@ButtonText</MudButton>
@@ -83,14 +131,16 @@
     [Parameter] public string ButtonText { get; set; } = "Save";
     [Parameter] public string TitleText { get; set; } = "";
     [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter]public bool IsEditForm { get; set; }
     public List<Company>? Companies { get; set; } = null!;
 
     public List<Company>? OurCompanies { get; set; }
     public List<Company>? BuyerCompanies { get; set; }
     public List<ExportedOrderStatus>? ExportedOrderStatus { get; set; }
-    //private List<Employee> OurEmployees { get; set; }
-    //private List<Employee> SellerEmployees { get; set; }
-
+ 
+    public List<(string charCode, string name)>? CurrencyCharCodes { get; set; }
+    private async Task<List<(string charCode, string name)>> GetCurrencyCharCodes() => await CurrencyManager.GetCurrencyCharCode();
+    bool _currencyEdited;
     bool _success;
     protected override async Task OnInitializedAsync()
     {
@@ -103,10 +153,40 @@
     private async Task Validation()
     {
         if (OrderForm!.IsValid)
+        {
+            if (IsEditForm && _currencyEdited)
+                await UpdatePricesInExportrdProducts();
+            
             await OnValidSubmit.InvokeAsync();
+        }
 
         else
             await OrderForm.Validate();
 
+    }
+    private async Task UpdatePricesInExportrdProducts()
+    {
+        if (!IsEditForm)return;
+        var productList = ExportedOrder!.ExportedProducts;
+        if (productList == null || !productList.Any()) return;
+        foreach (var product in productList)
+        {
+            var supplierCharCode = ExportedOrder!.BuyerCurrency!;
+            var transactionCharCode = ExportedOrder!.TransactionCurrency!;
+            var convertResult = await CurrencyManager.CurrencyConverter(currencyToConvert: ExportedOrder.LocalCurrency!,
+                firstPrice: product.PriceLocal, currencyPercent: (double)ExportedOrder.CurrencyPercent!, currencyCharCodesToConvert: new List<string>() { product.BuyerCurrency!, product.TransactionCurrency! });
+            foreach (var item in convertResult)
+            {
+                if (item.charCod==supplierCharCode)
+                {
+                    product.PriceInBuyerCurrency=item.Item2;
+                }
+                else if (item.charCod==transactionCharCode)
+                {
+                    product.PriceInTransactionCurrency=item.Item2;
+                }
+            }
+            await ExportedProductManager.UpdateAsync(product);
+        }
     }
 }
