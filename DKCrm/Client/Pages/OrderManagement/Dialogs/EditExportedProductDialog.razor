@@ -1,0 +1,58 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Client.Pages.OrderManagement.Forms
+
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog"
+           Options="new DialogOptions() { FullWidth = true }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <FormExportedProduct OnValidSubmit="EditProduct"
+                                 ExportedProduct="ExportedProduct"
+                                 ButtonText="Сохранить"
+                                 TitleText="Изменение единицы на продажу" />
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public ExportedProduct? ExportedProduct { get; set; }
+    [Parameter] public Guid? Id { get; set; }
+    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != null && Id != Guid.Empty) ExportedProduct = await ExportedProductManager.GetDetailsAsync((Guid)Id);
+    }
+
+    async Task EditProduct()
+    {
+        if (ExportedProduct != null)
+        {
+            ExportedProduct.ProductId = ExportedProduct.Product?.Id;
+
+            if (await ExportedProductManager.UpdateAsync(ExportedProduct))
+            {
+                _snackBar.Add("Продукт обновлен");
+                await RefreshProductList.InvokeAsync();
+                await CloseClick();
+                VisibleDialog = false;
+            }
+        }
+    }
+
+
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+
+}

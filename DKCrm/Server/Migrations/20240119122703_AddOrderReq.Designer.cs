@@ -3,6 +3,7 @@ using System;
 using DKCrm.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DKCrm.Server.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240119122703_AddOrderReq")]
+    partial class AddOrderReq
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -299,20 +301,8 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("CompanyName")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("DateTimeUpdate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFullDeleted")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UpdatedUser")
                         .HasColumnType("text");
 
                     b.Property<Guid?>("UserId")
@@ -760,9 +750,6 @@ namespace DKCrm.Server.Migrations
                     b.Property<DateTime?>("DateTimeCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DateTimeUpdate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime?>("DateTimeUpdated")
                         .HasColumnType("timestamp with time zone");
 
@@ -774,12 +761,6 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<string>("Image")
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFullDeleted")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -793,9 +774,6 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<decimal?>("SalePrice")
                         .HasColumnType("numeric");
-
-                    b.Property<string>("UpdatedUser")
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -860,20 +838,8 @@ namespace DKCrm.Server.Migrations
                     b.Property<Guid?>("AddressId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("DateTimeUpdate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFullDeleted")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UpdatedUser")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

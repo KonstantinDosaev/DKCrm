@@ -3,10 +3,11 @@ using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations.Schema;
+using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser,ISoftDelete
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
@@ -22,5 +23,10 @@ namespace DKCrm.Shared.Models
             ChatMessagesFromUsers = new HashSet<ChatMessage>();
             ChatMessagesToUsers = new HashSet<ChatMessage>();
         }
+
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

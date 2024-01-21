@@ -1,4 +1,6 @@
-﻿using DKCrm.Shared.Models.OrderModels;
+﻿using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.OrderModels;
+using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.OrderServices
@@ -19,6 +21,11 @@ namespace DKCrm.Client.Services.OrderServices
         public async Task<ImportedProduct> GetDetailsAsync(Guid id)
         {
             return await _httpClient.GetFromJsonAsync<ImportedProduct>($"api/ImportedProduct/Get/{id}") ?? throw new InvalidOperationException();
+        }
+
+        public async Task<List<ImportedProduct>> GetNotEquippedAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<ImportedProduct>>("api/ExportedProduct/GetNotEquipped") ?? throw new InvalidOperationException();
         }
 
         public async Task<bool> UpdateAsync(ImportedProduct item)

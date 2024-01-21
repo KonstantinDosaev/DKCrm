@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DKCrm.Shared.Models.Products
 {
-    public class Product: IIdentifiable
+    public class Product: IIdentifiable, ISoftDelete
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
@@ -31,5 +31,11 @@ namespace DKCrm.Shared.Models.Products
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
 
 
+
+        public virtual ICollection<ApplicationOrderingProducts>? ApplicationOrderingList { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

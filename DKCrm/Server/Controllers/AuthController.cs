@@ -59,8 +59,8 @@ namespace DKCrm.Server.Controllers
         {
             return new CurrentUser
             {
-                IsAuthenticated = User.Identity.IsAuthenticated,
-                UserName = User.Identity.Name,
+                IsAuthenticated = User.Identity!.IsAuthenticated,
+                UserName = User.Identity.Name!,
                 Claims = User.Claims
                     .ToDictionary(c => c.Type, c => c.Value)
             };

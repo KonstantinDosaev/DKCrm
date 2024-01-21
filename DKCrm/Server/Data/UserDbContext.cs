@@ -2,7 +2,6 @@
 using DKCrm.Shared.Models.Chat;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace DKCrm.Server.Data
 {
@@ -16,6 +15,8 @@ namespace DKCrm.Server.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<ApplicationUser>().HasQueryFilter(x => x.IsDeleted == false);
+
             builder.Entity<ChatMessage>(entity =>
             {
                 entity.HasOne(d => d.FromUser)

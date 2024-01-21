@@ -6,7 +6,7 @@
 
 @if (Order != null)
 {
-    <MudText Class="m-2" Typo="Typo.h4">Заказ № @Order.Id</MudText>
+   @* <MudText Class="m-2" Typo="Typo.h4">Заказ № @Order.Id</MudText>
     @if (Order.OurCompany != null)
     {
         <MudPaper Elevation="12" Class="p-2 m-1 d-flex justify-content-between align-items-center">
@@ -58,40 +58,46 @@
             </MudButton>
 
         </MudPaper>
-    }
+    }*@
    
    
-    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddImportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
-        Добавить продукт
-        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
-    </MudButton>
-
-    <MudTable Class="m-2" Items="@ImportedProducts" Hover="true" SortLabel="Sort By" T="ImportedProduct"
-          OnRowClick="RowClickEvent" Filter="new Func<ImportedProduct, bool>(FilterFunc1)"
-          Striped="true"
-          Bordered="true"
-          HeaderClass="mud-table-header table-head-bordered"
-          CustomHeader="true">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
-            <MudSpacer />
-            <MudTextField @bind-Value="_searchString1"
+   <div class="d-flex px-3"> <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
+       <MudSpacer />
+       @*<MudTextField @bind-Value="_searchString1"
                       Placeholder="Поиск"
                       Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem"
                       Clearable="true"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
-                      IconSize="Size.Medium" Class="mt-0"></MudTextField>
-        </ToolBarContent>
+                      IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
+       <div class="d-flex justify-content-center align-items-center">
+           <span class="mr-2 fs-6">за ед.</span><MudSwitch T="bool" CheckedChanged="() =>  _allOrOnePrice = _allOrOnePrice != true" Label="все кол.-во"
+                                                           Color="Color.Success" UnCheckedColor="Color.Info" />
+       </div>
+       <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddImportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+           Добавить продукт
+           <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+       </MudButton></div>
+
+    <MudTable Class="m-2" Items="@ImportedProducts" Hover="true" SortLabel="Sort By" T="ImportedProduct"
+          OnRowClick="RowClickEvent"
+          Striped="true"
+          Bordered="true"
+          HeaderClass="mud-table-orderD-header table-head-bordered"
+          CustomHeader="true"
+          Dense="true">
+       @* <ToolBarContent>
+           
+        </ToolBarContent>*@
         <HeaderContent>
            
            
             <MudTHeadRow Class="header-centered">
       
-                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.Name)">Наименование</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Brand, object>(x => x.Name)">Производитель</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<int, object>(x => x!)">Количество</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ImportedProduct, object>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ImportedProduct, object>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ImportedProduct, object>(x => x.Product!.Brand?.Name!)">Производитель</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedProduct, object>(x => x.Quantity)">Количество</MudTableSortLabel></MudTh>
                 
                     <MudTh Style="text-align: center">
                         <MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.Name)">Цена в валюте поставщика </MudTableSortLabel>
@@ -101,10 +107,7 @@
                     <MudTh Style="text-align: center">
                         <MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.Name)">Цена в валюте сделки</MudTableSortLabel>
                         <div class="text-center fw-bold">@Order.TransactionCurrency</div>
-                    <div class="d-flex justify-content-center align-items-center">
-                        <span class="mr-2 fs-6">за ед.</span><MudSwitch T="bool" CheckedChanged="() =>  _allOrOnePrice = _allOrOnePrice != true" Label="все кол.-во"
-                                                                    Color="Color.Success" UnCheckedColor="Color.Info" />
-                    </div>
+
                     </MudTh>
                     <MudTh Style="text-align: center">
                         <MudTableSortLabel Enabled="false" SortBy="new Func<ImportedOrderStatus, object>(x => x.Value)">Цена в локальной валюте</MudTableSortLabel>
@@ -171,13 +174,13 @@
             <MudTd DataLabel="Редактировать">
                 <MudIconButton Size="@Size.Medium"
                            OnClick="() => OpenEditImportProductDialog(context)"
-                           Color="Color.Default" 
+                           Style=" background-color: rgba(217, 214, 81, 0.431);"
                            Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
             </MudTd>
         </RowTemplate>
-        <PagerContent>
+       @* <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
-        </PagerContent>
+        </PagerContent>*@
     </MudTable>
 
 
@@ -222,22 +225,7 @@
         if (Order.ImportedProducts != null) ImportedProducts = Order.ImportedProducts.ToList();
     }
 
-    private bool FilterFunc1(ImportedProduct element) => FilterFunc(element, _searchString1);
 
-    private bool FilterFunc(ImportedProduct element, string searchString)
-    {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
-        //if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-        //    return true;
-        //if (element.OurCompany != null && element.OurCompany.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-        //    return true;
-        //if (element.SellersCompany != null && element.SellersCompany.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-        //    return true;
-
-
-        return false;
-    }
 
     private void OpenEditImportProductDialog(ImportedProduct importedProduct)
     {
@@ -246,15 +234,15 @@
     }
     private void RowClickEvent(TableRowClickEventArgs<ImportedProduct> tableRowClickEventArgs)
     {
-        _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");
+       // _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");
     }
 
    
     
 }
 <style>
-    .mud-table-header {
-        background-color: #cbf0ee;
+    .mud-table-orderD-header {
+        background-color: rgba(217, 214, 81, 0.431);
         color: white !important;
         font-weight: bold;
     }

@@ -1,0 +1,52 @@
+﻿@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared.Models.OrderModels
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog"
+           Options="new DialogOptions() { FullWidth = true }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <FormExportedProduct OnValidSubmit="Create"
+                                 ExportedProduct="ExportedProduct"
+                                 ButtonText="Сохранить"
+                                 TitleText="Создание единицы на продажу" 
+            />
+
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public ExportedOrder? Order { get; set; }
+    public ExportedProduct ExportedProduct { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        ExportedProduct.ExportedOrder = Order;
+        if (Order != null) ExportedProduct.ExportedOrderId = Order.Id;
+    }
+
+    async Task Create()
+    {
+       
+        await ExportedProductManager.AddAsync(ExportedProduct);
+        await RefreshProductList.InvokeAsync();
+        await CloseClick();
+        _snackBar.Add("Элемент заказа создан");
+    }
+    
+
+    [Parameter]public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+}

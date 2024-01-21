@@ -2,6 +2,8 @@
 @using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
+@using DKCrm.Shared.Constants
+@using Microsoft.OData.UriParser
 @page "/imported_orders"
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
@@ -17,62 +19,121 @@
 </MudButton>
 
     
-        <MudTable Height="" Class="m-2" Items="@Orders" Hover="true" SortLabel="Sort By" T="ImportedOrder" 
-                  OnRowClick="RowClickEvent" Filter="new Func<ImportedOrder,bool>(FilterFunc1)"
-                  Striped="true" 
-                  Bordered="true" 
-                  HeaderClass="mud-table-header table-head-bordered">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Список заказов</MudText>
-                <MudSpacer />
-                <MudTextField @bind-Value="_searchString1" 
-                              Placeholder="Поиск" 
-                              Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;border-radius: 6px;padding: 0.5rem; margin-bottom: 0.5rem"
-                              Clearable=" true"
-                              Adornment="Adornment.Start" 
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              IconSize="Size.Medium" Class="mt-0"></MudTextField>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<ImportedOrder, object>(x => x.Id)">Номер заказа</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<ImportedOrder, object>(x => x.Name!)">Наименование</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedOrder, object>(x => x.OurCompany?.Name!)">Наша компания</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedOrder, object>(x => x.SellersCompany?.Name!)">Компания поставщик</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedOrder, object>(x => x.ImportedOrderStatus?.Value!)">Статус</MudTableSortLabel></MudTh>
+<MudTable ServerData="@(new Func<TableState, Task<TableData<ImportedOrder>>>(ServerReload))"
+          Dense="false"
+          Hover="true"
+          ReadOnly="false"
+          SelectOnRowClick="false"
+          Striped="true"
+          Bordered="true"
+          HeaderClass="mud-table-header table-head-bordered"
+          OnRowClick="RowClickEvent" T="ImportedOrder"
+          @ref="_table">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Список заказов</MudText>
+        <MudSpacer />
+      
 
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Номер заказа">@context.Id</MudTd>
-                <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
-             
+            <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
+                          Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem;"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
 
-                <MudTd DataLabel="Наша компания">
-                    @if (context.OurCompany != null)
+            <div>
+                <MudSelect Style="min-width:14rem" Class="ml-2" T="string" @bind-Value="SelectedOption">
+                    <MudSelectItem Value="@(SearchChapterNames.CompanyName)">по компании</MudSelectItem>
+                    <MudSelectItem Value="@(SearchChapterNames.ProductPartNumber)">по парт-номеру</MudSelectItem>
+                </MudSelect>
+            </div>
+       
+     
+        
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="number_field" T="ImportedOrder">Номер заказа</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="name_field" T="ImportedOrder">Название</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="ourCompany_field" T="ImportedOrder">Наша компания</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel Enabled="true" SortLabel="conterCompany_field" T="ImportedOrder">Компания поставщик</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="status_field" T="ImportedOrder">Статус</MudTableSortLabel></MudTh>
+
+    </HeaderContent>
+    <RowTemplate>
+
+        @if (ProductId == context.Id && _showDetails)
+        {
+         <MudTd Style="background-color: gainsboro;" DataLabel="Номер заказа">@context.Id</MudTd>
+        }
+        else
+        {
+            <MudTd DataLabel="Номер заказа">@context.Id</MudTd>
+        }
+        <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
+
+
+        <MudTd DataLabel="Наша компания">
+            @if (context.OurCompany != null)
+            {
+                <MudText Typo="Typo.button"> @context.OurCompany.Name </MudText>
+                <MudText Typo="Typo.body2">
+                    @if (context.OurEmployee != null)
                     {
-                        @context.OurCompany.Name
+                        @context.OurEmployee.FirstName
+                        @context.OurEmployee.MiddleName
+                        @context.OurEmployee.LastName
                     }
-                </MudTd>
-                <MudTd DataLabel="Компания поставщик">
-                    @if (context.SellersCompany != null)
+                </MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Компания поставщик">
+            @if (context.SellersCompany != null)
+            {
+                <MudText Typo="Typo.button"> @context.SellersCompany.Name </MudText>
+                <MudText Typo="Typo.body2">
+                    @if (context.EmployeeSeller != null)
                     {
-                        @context.SellersCompany.Name
+                        @context.EmployeeSeller.FirstName
+                        @context.EmployeeSeller.MiddleName
+                        @context.EmployeeSeller.LastName
                     }
-                </MudTd>
-                <MudTd DataLabel="Тип контрагента">
-                    @if (context.ImportedOrderStatus != null)
-                    {
-                        @context.ImportedOrderStatus.Value
-                    }
-                </MudTd>
-                <MudTd DataLabel="Тип контрагента">
-                   
-                        <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
-               
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
-            </PagerContent>
+                </MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Статус">
+            @if (context.ImportedOrderStatus != null)
+            {
+                @context.ImportedOrderStatus.Value
+            }
+        </MudTd>
+        <MudTd DataLabel="">
+
+            <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
+
+        </MudTd>
+    </RowTemplate>
+    
+    <ChildRowContent>
+        @if (ProductId==context.Id && _showDetails)
+        {
+            <MudTr>
+                <td colspan="6">
+                    <MudCard Style="background: gainsboro;" Elevation="25">
+@*                                <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1">Address Details for <strong>@context.Name</strong></MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>*@
+                        <MudCardContent Class="pa-1">
+                            <ImportedOrderDetailsPage Id="ProductId"/>
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
+    </PagerContent>
         </MudTable>
   
     
@@ -87,17 +148,19 @@
 
 <CreateImportedOrderDialog
     @bind-VisibleDialog="_visibleAddOrderDialog"
-     RefreshProductList="GetAllOrders"/>
+                           RefreshProductList="() => _table!.ReloadServerData()" />
 <EditImportedOrderDialog
     @bind-VisibleDialog="_visibleUpdateOrderDialog"
-    RefreshProductList="GetAllOrders"
+    RefreshProductList="() => _table!.ReloadServerData()"
     Id="Order.Id"/>
 
 
 @code {
+  
+    [Parameter] public string? Chapter { get; set; }
+    [Parameter] public Guid ChapterId { get; set; }
 
-    [Parameter] public Guid TagId { get; set; }
-
+    private Guid ProductId { get; set; }
 
     private List<ImportedOrder>? Orders { get; set; }
     private List<ImportedOrder>? AllOrders { get; set; }
@@ -106,52 +169,72 @@
 
     public ImportedOrder Order { get; set; } = new ();
 
-    private string _searchString1 = "";
+    private MudTable<ImportedOrder>? _table;
+    private string? _searchString = null;
+    public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
+    private FilterOrderTuple? _filterOrderTuple;
     FormImportedOrder? _importOrderForm = null!;
 
     MudListItem? _selectedItem;
     object _selectedValue = 1;
-
+    private bool _showDetails;
     private bool _visibleAddOrderDialog;
     private bool _visibleUpdateOrderDialog;
     private bool _visibleSettingsOrderDialog;
-
-    protected override async Task OnInitializedAsync()
+    private string _backgroundActivOrder;
+  
+    private async Task<TableData<ImportedOrder>> ServerReload(TableState state)
     {
-        await GetAllOrders();
-
-    }
-    private async Task GetAllOrders()
-    {
-        Orders = await ImportedOrderManager.GetAsync();
-
-    }
-    private bool FilterFunc1(ImportedOrder element) => FilterFunc(element, _searchString1);
-
-    private bool FilterFunc(ImportedOrder element, string searchString)
-    {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
-        if (element.Name != null && element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if (element.OurCompany != null && element.OurCompany.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if (element.SellersCompany != null && element.SellersCompany.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        
        
-        return false;
+        var response = await ImportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
+        {
+            PageIndex = state.Page,
+            PageSize = state.PageSize,
+            SearchString = _searchString,
+            SortLabel = state.SortLabel,
+            Chapter = Chapter,
+            ChapterId = ChapterId,
+            SortDirection = (OrderByDirection?)(state.SortDirection),
+             SearchInChapter = SelectedOption,
+                FilterTuple = _filterOrderTuple
+                
+
+                    
+        });
+       
+        return new TableData<ImportedOrder>() { TotalItems = response.TotalItems, Items = response.Items };
+        
     }
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        SelectedOption = SelectedOption != "null" ? SelectedOption : null;
+        _table!.ReloadServerData();
+    }
+    private void SelectSearchOption(string text)
+    {
+        SelectedOption = text!="null"? text : null;
+    }
+    private void OnFilter(FilterOrderTuple filterTuple)
+    {
+        _filterOrderTuple = filterTuple;
+        _table!.ReloadServerData();
+    }
+
+            
    
     private void OpenUpdateOrderDialog(ImportedOrder order)
     {
         Order = order;
         _visibleUpdateOrderDialog = true;
     }
+   
     
     private void RowClickEvent(TableRowClickEventArgs<ImportedOrder> tableRowClickEventArgs)
     {
-        _navigationManager.NavigateTo($"/imported_order/{tableRowClickEventArgs.Item.Id}");
+        //_navigationManager.NavigateTo($"/imported_order/{tableRowClickEventArgs.Item.Id}");
+        ProductId = tableRowClickEventArgs.Item.Id;
+        _showDetails = !_showDetails;
     }
 
     private async Task OpenSettingsDialog()

@@ -1,9 +1,7 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
-using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.Products;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
@@ -61,8 +59,8 @@ namespace DKCrm.Server.Controllers
             }).FirstOrDefaultAsync(f=>f.Id==id));
         }
 
-        [HttpPost("category")]
-        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest request)
+        [HttpPost("get-sort-filtered")]
+        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterProductTuple> request)
         {
             var data = _context.Products.Select(s => new ProductsDto()
             {
@@ -114,8 +112,8 @@ namespace DKCrm.Server.Controllers
             if (!string.IsNullOrEmpty(request.SearchString))
             {
                 data = data.Where(w =>
-                    w.BrandName!= null && w.BrandName.Contains(request.SearchString) ||
-                    w.Name.Contains(request.SearchString) || w.PartNumber!.Contains(request.SearchString));
+                    w.BrandName!= null && w.BrandName.Contains(request.SearchString, StringComparison.InvariantCultureIgnoreCase) ||
+                    w.Name.Contains(request.SearchString) || w.PartNumber!.Contains(request.SearchString, StringComparison.InvariantCultureIgnoreCase));
             }
            
             var totalItems = data.Count();

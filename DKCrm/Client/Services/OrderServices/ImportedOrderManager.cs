@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Client.Services.OrderServices
@@ -20,7 +21,12 @@ namespace DKCrm.Client.Services.OrderServices
         {
             return await _httpClient.GetFromJsonAsync<ImportedOrder>($"api/ImportedOrder/Get/{id}") ?? throw new InvalidOperationException();
         }
+        public async Task<SortPagedResponse<ImportedOrder>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterOrderTuple> request)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/ImportedOrder/GetBySortPagedSearchChapter", request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<SortPagedResponse<ImportedOrder>>() ?? throw new InvalidOperationException();
 
+        }
         public async Task<bool> UpdateAsync(ImportedOrder item)
         {
             var result = await _httpClient.PutAsJsonAsync("api/ImportedOrder/Put", item);

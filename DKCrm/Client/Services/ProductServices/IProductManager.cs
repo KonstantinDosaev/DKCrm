@@ -7,7 +7,7 @@ namespace DKCrm.Client.Services.ProductServices
     {
         Task<List<Product>> GetProductsAsync();
        // Task<List<Product>> GetProductsByCategoryAsync(Guid? categoryId);
-        Task<SortPagedResponse<ProductsDto>> GetProductsBySortAsync(SortPagedRequest request);
+        Task<SortPagedResponse<ProductsDto>> GetProductsBySortAsync(SortPagedRequest<FilterProductTuple> request);
         Task<List<Product>> GetSearchProductAsync(string searchString);
         Task<Product> GetProductDetailsAsync(Guid id);
         Task<bool> UpdateProductAsync(Product user);

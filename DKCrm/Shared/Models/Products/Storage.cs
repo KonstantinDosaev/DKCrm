@@ -5,7 +5,7 @@ using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Shared.Models.Products
 {
-    public class Storage : IIdentifiable
+    public class Storage : IIdentifiable, ISoftDelete
     {
         public Guid Id { get; set; }
         //[Required]
@@ -24,5 +24,9 @@ namespace DKCrm.Shared.Models.Products
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
         public virtual ICollection<PurchaseAtStorage>? PurchaseAtStorageList { get; set; }
 
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

@@ -18,13 +18,9 @@ namespace DKCrm.Client.Services.ProductServices
            return await _httpClient.GetFromJsonAsync<List<Product>>("api/product") ?? throw new InvalidOperationException();
         }
 
-        //public async Task<List<Product>> GetProductsByCategoryAsync(Guid? categoryId)
-        //{
-        //    return await _httpClient.GetFromJsonAsync<List<Product>>($"api/Product/category/{categoryId}") ?? throw new InvalidOperationException();
-        //}
-        public async Task<SortPagedResponse<ProductsDto>> GetProductsBySortAsync(SortPagedRequest request)
+        public async Task<SortPagedResponse<ProductsDto>> GetProductsBySortAsync(SortPagedRequest<FilterProductTuple> request)
         {
-            var response = await _httpClient.PostAsJsonAsync($"api/Product/category/",request) ?? throw new InvalidOperationException();
+            var response = await _httpClient.PostAsJsonAsync($"api/Product/get-sort-filtered/",request) ?? throw new InvalidOperationException();
             return await response.Content.ReadFromJsonAsync<SortPagedResponse<ProductsDto>>() ?? throw new InvalidOperationException();
 
         }

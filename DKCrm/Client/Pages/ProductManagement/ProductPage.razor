@@ -2,13 +2,14 @@
 @page "/product/{chapter}/{chapterid:guid}"
 @using Microsoft.AspNetCore.Components
 @using DKCrm.Client.Components.ProductFilter
+@using DKCrm.Shared.Constants
 @using Microsoft.OData.UriParser
 
 <MudTable ServerData="@(new Func<TableState, Task<TableData<ProductsDto>>>(ServerReload))"
           Dense="false"
           Hover="true"
           ReadOnly="false"
-          @bind-SelectedItems="selectedItems"
+          @bind-SelectedItems="_selectedItems"
           ApplyButtonPosition="@applyButtonPosition"
           MultiSelection="true"
           SelectOnRowClick="false"
@@ -16,7 +17,7 @@
           Bordered="true" 
           HeaderClass="mud-table-header table-head-bordered"
           OnRowClick="RowClickEvent" T="ProductsDto"
-          @ref="table">
+          @ref="_table">
 
     <ToolBarContent>
         <MudText Typo="Typo.h4">@(_currentCategoryName ?? "Список продуктов")</MudText>
@@ -32,18 +33,19 @@
             Склады
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
         </MudButton>
-        @if (selectedItems.Any())
+        @if (_selectedItems.Any())
         {
             <MudButton Variant="Variant.Filled"  StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnButtonDeleteClicked" Style="margin-left: 1rem;">Удалить</MudButton>
         }
 
         <MudSpacer />
-        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
+        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
+                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;border-radius: 6px;padding: 0.5rem; margin-bottom: 0.5rem"
+                      Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
-       
-        
+
     </ColGroup>
     <HeaderContent>
         <MudTh><MudTableSortLabel SortLabel="category_field" T="ProductsDto">Категория</MudTableSortLabel></MudTh>
@@ -73,7 +75,6 @@
         <MudTd Style="max-width: 4rem; text-align: center" DataLabel="Quntity">
             @if (context.ProductsInStorage != null)
             {
-
                 @if (_isOpenQuantityAtStorages)
                 {
                     @foreach (var item in context.ProductsInStorage)
@@ -102,13 +103,11 @@
     </PagerContent>
 </MudTable>
 
-
-
 <MudDrawer @bind-Open="@_visibleProductFilter" Anchor="@Anchor.Start" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100VH" Width="50VW">
     <MudDrawerHeader>
         <MudText Typo="Typo.h6">Фильтр</MudText>
     </MudDrawerHeader>
-    <ProductFilterComponent @ref="filter" Chapter="@Chapter"
+    <ProductFilterComponent  Chapter="@Chapter"
                             ChapterId="@ChapterId"
                             IsSetOption="OnFilter"/>
 </MudDrawer>
@@ -127,63 +126,104 @@
 
 
 @code {
+    [Parameter] public Guid? ChapterId { get; set; }
     [Parameter] public string? Chapter { get; set; }
-    IEnumerable<Product> data;
+    public Guid ProductId;
+    private string? _currentCategoryName;
     bool _visibleCreatedProductDialog; 
     bool _visibleEditProductDialog;
-    bool _isOpenQuantityAtStorages; 
     bool _visibleDetailProductDialog;
-    ProductFilterComponent? filter;
+    private bool _visibleProductFilter;
 
-    private IEnumerable<ProductsDto>? pagedData;
-    private MudTable<ProductsDto>? table;
+    bool _isOpenQuantityAtStorages;
 
-    private int totalItems;
-    private string searchString = null;
+    private HashSet<ProductsDto> _selectedItems = new();
+    private MudTable<ProductsDto>? _table;
+    private StorageSettings? _storageSettings;
+    private int _totalItems;
+    private string? _searchString = null;
     private FilterProductTuple? _filterProductTuple;
+
+    private TableApplyButtonPosition applyButtonPosition = TableApplyButtonPosition.Start;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_table != null) await _table.ReloadServerData();
+    }
+
     private async Task<TableData<ProductsDto>> ServerReload(TableState state)
     {
-       
-            var response = await ProductManager.GetProductsBySortAsync(new SortPagedRequest()
+        var response = await ProductManager.GetProductsBySortAsync(new SortPagedRequest<FilterProductTuple>()
             {
                 PageIndex = state.Page,
                 PageSize = state.PageSize,
-                SearchString = searchString,
+                SearchString = _searchString,
                 SortLabel = state.SortLabel,
                 Chapter = Chapter,
                 ChapterId = ChapterId,
                 SortDirection = (OrderByDirection?)(state.SortDirection),
-             
                 FilterTuple = _filterProductTuple
-                
 
-                    
             });
-            pagedData = response.Items;
+          //  pagedData = response.Items;
+        if (response.Items != null && Chapter== ProductFromChapterNames.Category && response.Items.Any())
+        {
+            _currentCategoryName = response.Items.FirstOrDefault()!.CategoryName;
+        }
+        else
+        {
+            _currentCategoryName = null;
+        }
+       
             return new TableData<ProductsDto>() { TotalItems = response.TotalItems, Items = response.Items };
-        
     }
+
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        _table!.ReloadServerData();
+    }
+    private void OnFilter(FilterProductTuple filterProductTuple)
+    {
+        _filterProductTuple = filterProductTuple;
+        _table!.ReloadServerData();
+    }
+
     private void OpenUpdateProductDialog(Guid id)
     {
         ProductId = id;
         _visibleEditProductDialog = true;
     }
-    private void OnSearch(string text)
-    {
-        searchString = text;
-        table!.ReloadServerData();
-    }
+  
     private void RowClickEvent(TableRowClickEventArgs<ProductsDto> tableRowClickEventArgs)
     {
         ProductId = tableRowClickEventArgs.Item.Id;
         _visibleDetailProductDialog = true;
     }
-    private void OnFilter(FilterProductTuple filterProductTuple)
+
+    [Inject] private IDialogService DialogService { get; set; }
+    private async void OnButtonDeleteClicked()
     {
-        _filterProductTuple = filterProductTuple;
-        table!.ReloadServerData();
+        bool? result = await DialogService.ShowMessageBox(
+            "Внимание",
+            "Подтвердите удаление!",
+            yesText: "Удалить!  ", cancelText: "  Отменить");
+
+        if (result != null && (bool)result)
+        {
+            RemoveElement(_selectedItems);
+        }
+        StateHasChanged();
     }
-    
+    private async void RemoveElement(IEnumerable<ProductsDto> selectedItems)
+    {
+        var tempList = new List<ProductsDto>(selectedItems);
+        foreach (var item in tempList)
+        {
+            await ProductManager.RemoveAsync(item.Id);
+        }
+        await _table!.ReloadServerData();
+    }
 
 }
 <style>

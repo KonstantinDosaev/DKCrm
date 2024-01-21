@@ -1,8 +1,12 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Shared.Constants;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
+using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace DKCrm.Server.Controllers.OrderControllers
@@ -22,7 +26,8 @@ namespace DKCrm.Server.Controllers.OrderControllers
         public async Task<IActionResult> Get()
         {
             await _context.Companies
-                .Where(w => w.ImportedOrdersOurCompany!.Any() || w.ImportedOrdersSellersCompany!.Any()).LoadAsync();
+                .Where(w => w.ImportedOrdersOurCompany!.Any() || w.ImportedOrdersSellersCompany!.Any())
+                .Include(i=>i.Employees).LoadAsync();
 
 
             return Ok(await _context.ImportedOrders
@@ -36,7 +41,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
         {
 
             var dev = await _context.ImportedOrders
-                .Include(i=>i.ImportedProducts!).ThenInclude(t=>t.Product).ThenInclude(t=>t!.Brand)
+                .Include(i=>i.ImportedProducts!).ThenInclude(t=>t.Product).ThenInclude(t=>t!.Brand).IgnoreQueryFilters()
                 .Include(f => f.OurCompany)
                 .Include(i=>i.SellersCompany)
                 .Include(i => i.OurEmployee)
@@ -46,6 +51,82 @@ namespace DKCrm.Server.Controllers.OrderControllers
 
 
             return Ok(dev);
+        }
+        [HttpPost]
+        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request)
+        {
+            var data = _context.ImportedOrders.Select(s => new ImportedOrder()
+            {
+                Id = s.Id,
+                Name = s.Name,
+                ImportedProducts = s.ImportedProducts,
+                OurCompany = s.OurCompany,
+                SellersCompany = s.SellersCompany,
+                OurEmployee = s.OurEmployee,
+                EmployeeSeller = s.EmployeeSeller,
+                ImportedOrderStatusId = s.ImportedOrderStatusId,
+            }).Select(s => s);
+            if (request.Chapter != null && request.ChapterId != null)
+            {
+                data = data.Where(o => o.ImportedOrderStatusId == request.ChapterId);
+            }
+
+            if (request.FilterTuple != null)
+            {
+                if (request.FilterTuple.OurCompanies != null && request.FilterTuple.OurCompanies.Any())
+                {
+                    data = data.Where(o => request.FilterTuple.OurCompanies.Contains((Guid)o.OurCompanyId!));
+                }
+                if (request.FilterTuple.ContragentsCompanies != null && request.FilterTuple.ContragentsCompanies.Any())
+                {
+                    data = data.Where(o => request.FilterTuple.ContragentsCompanies.Contains((Guid)o.SellersCompanyId!));
+                }
+            }
+            if (!string.IsNullOrEmpty(request.SearchString))
+            {
+                if (request.SearchInChapter!=null)
+                {
+                    switch (request.SearchInChapter)
+                    {
+                        case SearchChapterNames.ProductPartNumber:
+                        {
+                            var searchedOrdersId = await _context.ImportedProducts.Where(w => w.Product!.PartNumber!.Contains(request.SearchString))
+                                .Select(s => s.ImportedOrderId).ToListAsync();
+                            data = data.Where(w => searchedOrdersId.Contains(w.Id));
+                            break;
+                        }
+                        case SearchChapterNames.CompanyName:
+                            data = data.Where(w =>
+                                w.OurCompany != null && w.OurCompany.Name.ToLower().Contains(request.SearchString.ToLower()) ||
+                                w.SellersCompany != null && w.SellersCompany.Name.ToLower().Contains(request.SearchString.ToLower()));
+                            break;
+                    }
+                }
+                
+                
+            }
+
+            var totalItems = data.Count();
+           
+            switch (request.SortLabel)
+            {
+                case "ourCompany_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.OurCompany);
+                    break;
+                case "conterCompany_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.SellersCompany);
+                    break;
+                case "name_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Name);
+                    break;
+                case "number_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Id);
+                    break;
+            }
+            data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+
+            return Ok(new SortPagedResponse<ImportedOrder>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() });
+
         }
 
         [HttpPost]

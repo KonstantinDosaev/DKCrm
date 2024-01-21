@@ -13,9 +13,9 @@ var connectionStringUser = builder.Configuration.GetConnectionString("UserContex
 
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseNpgsql(connectionStringProduct));
+    options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
 builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseNpgsql(connectionStringUser));
+    options.UseNpgsql(connectionStringUser).AddInterceptors(new SoftDeleteInterceptor()));
 
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<UserDbContext>();

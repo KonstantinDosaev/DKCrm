@@ -1,13 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using DKCrm.Shared.Models.OrderModels
-@using DKCrm.Shared.Models.CompanyModels
-@using DKCrm.Shared.Constants
 @using DKCrm.Client.Pages.ProductManagement
-@using System.Formats.Asn1
-@using System.Globalization
-
 <MudText Typo="Typo.h5">@TitleText</MudText>
-@if (ImportedProduct != null)
+@if (ExportedProduct != null)
 {
     <MudForm @ref="ImportedOrderForm" @bind-IsValid="@_success">
         
@@ -15,20 +10,20 @@
         <MudPaper Elevation="12" Class="p-4">
             <MudAutocomplete T="Product" Placeholder="Введите партномер или название продукта" 
                              Label="Продукт"
-                             @bind-Value="ImportedProduct.Product" 
-                             SearchFuncWithCancel="@Search" 
+                         @bind-Value="ExportedProduct.Product"
+                         SearchFuncWithCancel="@Search" 
                              Variant="Variant.Outlined" 
                              ShowProgressIndicator="true"
                              ToStringFunc="@(e=> e==null?null : $"{e.PartNumber} / {e.Name} / {e.Brand?.Name}")"
                              MinCharacters="1"
                              Class="mb-3" />
-            @if (ImportedProduct.Product != null && !ImportedProduct.Product.IsDeleted)
+            @if (ExportedProduct.Product != null)
             {
                 <MudButton Class="mb-2" Variant="Variant.Outlined" Size="Size.Medium" 
                            OnClick="()=>_visibleDetailProductDialog=true" 
                            Color="Color.Tertiary">Подробности о продукте</MudButton>
                 <ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
-                                     ProductId="ImportedProduct.Product.Id"
+                                     ProductId="ExportedProduct.Product.Id"
                                      Close="() => _visibleDetailProductDialog=false" />
             }
                  <div class="mb-2">  
@@ -43,29 +38,29 @@
         </MudPaper>
 
         <MudPaper Elevation="12" Class="p-4 my-1">
-            <MudTextField Label="Количество" @bind-Value="ImportedProduct.Quantity"
-                          For="@(() => ImportedProduct.Quantity)"
+            <MudTextField Label="Количество" @bind-Value="ExportedProduct.Quantity"
+                      For="@(() => ExportedProduct.Quantity)"
                           Variant="Variant.Outlined"
                           RequiredError="Введите количество"
                           Class="mb-3"/>
             @if (StorageList != null)
             {
                 <MudText Typo="Typo.h5">Направление:</MudText>
-                <MudText Typo="Typo.h6">На склад:</MudText>
+                <MudText Typo="Typo.h6">Со склада:</MudText>
                 <MudMenu Style="margin: 1rem 0;" Variant="Variant.Filled"
-                         Color="Color.Tertiary"Label="Добавить на склад">
+                         Color="Color.Tertiary"Label="Забрать со склада">
 
                     @foreach (var item in StorageList)
                     {
                         <MudMenuItem T="Guid?"
-                                     OnClick="() => AddPurchaseAtStorage(item)">
+                         OnClick="() => AddSoldFromStorage(item)">
                             @item.Name <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
                         </MudMenuItem>
                     }
                 </MudMenu>
-                @if (ImportedProduct.PurchaseAtStorageList != null && ImportedProduct.PurchaseAtStorageList.Any())
+                @if (ExportedProduct.SoldFromStorage != null && ExportedProduct.SoldFromStorage.Any())
                 {
-                    foreach (var item in ImportedProduct.PurchaseAtStorageList)
+                    foreach (var item in ExportedProduct.SoldFromStorage)
                     {
                         <div class="d-flex align-items-center">
                             <MudText Class="mr-2" Typo="Typo.body1"><b>@item.Storage!.Name :</b></MudText>
@@ -77,31 +72,31 @@
 
                             <MudIconButton Icon="@Icons.Material.Filled.Clear"
                                            Color="Color.Warning"
-                                           OnClick="() => RemovePurchaseAtStorage(item)"/>
+                           OnClick="() => RemoveSoldFromStorage(item)" />
                         </div>
                     }
                 }
             }
-            @if (NotEquippedExportedProducts != null)
+            @if (NotEquippedImportedProducts != null)
             {
-                <MudText Typo="Typo.h6">На реализацию:</MudText>
+                <MudText Typo="Typo.h6">Из импорта:</MudText>
                 <MudMenu Style="margin: 1rem 0;" Variant="Variant.Filled"
-                         Color="Color.Tertiary"Label="Добавить на экспорт">
+                         Color="Color.Tertiary"Label="Забрать из импорта">
 
-                    @foreach (var item in NotEquippedExportedProducts)
+                    @foreach (var item in NotEquippedImportedProducts)
                     {
                         <MudMenuItem T="Guid?"
                                      OnClick="() => AddPurchaseAtExport(item)">
-                            @item.ExportedOrder?.Name @item.ExportedOrder?.Id @item.ExportedOrder?.DateTimeCreated <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
+                            @item.ImportedOrder?.Name @item.ImportedOrder?.Id @item.ImportedOrder?.DateTimeCreated <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
                         </MudMenuItem>
                     }
 
 
 
                 </MudMenu>
-                @if (ImportedProduct.PurchaseAtExportList != null && ImportedProduct.PurchaseAtExportList.Any())
+                @if (ExportedProduct.PurchaseAtExports != null && ExportedProduct.PurchaseAtExports.Any())
                 {
-                    foreach (var item in ImportedProduct.PurchaseAtExportList)
+                    foreach (var item in ExportedProduct.PurchaseAtExports)
                     {
                         <div class="d-flex align-items-center">
                             <MudText Class="mr-2" Typo="Typo.body1"><b>@item.ExportedProduct!.ExportedOrder!.Name @item.ExportedProduct!.ExportedOrder!.DateTimeCreated:</b></MudText>
@@ -126,40 +121,40 @@
                 <MudText Color="Color.Warning">Установите валюты в настройках основного заказа</MudText>
             }
             <div class="d-flex align-items-center">
-                <MudNumericField Disabled="!_isSetCurrency" Label="Цена поставщика" @bind-Value="ImportedProduct.PriceInSupplierCurrency"
-                                 For="@(() => ImportedProduct.PriceInSupplierCurrency)"
+                <MudNumericField Disabled="!_isSetCurrency" Label="Цена покупателя" @bind-Value="ExportedProduct.PriceInBuyerCurrency"
+                             For="@(() => ExportedProduct.PriceInBuyerCurrency)"
                                  Variant="Variant.Outlined"
-                                 RequiredError="Введите количество"
+                                 RequiredError="Введите цену"
                                  Class="mb-3"
                                  Format="0.##"
                                  Step="0.1M"
                                  T="decimal?" Min="0"
-                                 Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.SupplierCurrency" />
-                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.SupplierCurrency!,ImportedProduct.PriceInSupplierCurrency)" />
+                                 Adornment="Adornment.End" AdornmentText="@ExportedProduct.ExportedOrder!.BuyerCurrency" />
+                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ExportedProduct.ExportedOrder.BuyerCurrency!,ExportedProduct.PriceInBuyerCurrency)" />
             </div>
             <div class="d-flex align-items-center">
-                <MudNumericField Disabled="!_isSetCurrency" Label="Цена в валюте сделки" @bind-Value="ImportedProduct.PriceInTransactionCurrency"
-                                 For="@(() => ImportedProduct.PriceInTransactionCurrency)"
+                <MudNumericField Disabled="!_isSetCurrency" Label="Цена в валюте сделки" @bind-Value="ExportedProduct.PriceInTransactionCurrency"
+                                 For="@(() => ExportedProduct.PriceInTransactionCurrency)"
                                  Variant="Variant.Outlined"
-                                 RequiredError="Введите количество"
+                             RequiredError="Введите цену"
                                  Class="mb-3"
                                  Format="0.##"
                                  Step="0.1M"
                                  T="decimal?" Min="0"
-                                 Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.TransactionCurrency"/>
-                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.TransactionCurrency!,ImportedProduct.PriceInTransactionCurrency)" />
+                             Adornment="Adornment.End" AdornmentText="@ExportedProduct.ExportedOrder!.TransactionCurrency" />
+                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ExportedProduct.ExportedOrder.TransactionCurrency!,ExportedProduct.PriceInTransactionCurrency)" />
             </div>
             <div class="d-flex align-items-center">
-                <MudNumericField Disabled="!_isSetCurrency" Label="Цена в локальной валюте" @bind-Value="ImportedProduct.PriceLocal"
-                                 For="@(() => ImportedProduct.PriceLocal)"
+                <MudNumericField Disabled="!_isSetCurrency" Label="Цена в локальной валюте" @bind-Value="ExportedProduct.PriceLocal"
+                             For="@(() => ExportedProduct.PriceLocal)"
                                  Variant="Variant.Outlined"
-                                 RequiredError="Введите количество"
+                             RequiredError="Введите цену"
                                  Class="mb-3"
                                  Format="0.##"
                                  Step="0.1M"
                                  T="decimal?" Min="0"
-                                 Adornment="Adornment.End" AdornmentText="@ImportedProduct.ImportedOrder!.LocalCurrency"/>
-                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ImportedProduct.ImportedOrder.LocalCurrency!,ImportedProduct.PriceLocal)" />
+                                 Adornment="Adornment.End" AdornmentText="@ExportedProduct.ExportedOrder!.LocalCurrency"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ExportedProduct.ExportedOrder.LocalCurrency!,ExportedProduct.PriceLocal)" />
             </div>
         </MudPaper>
 
@@ -179,12 +174,12 @@
 
 @code {
     [Parameter]public MudForm? ImportedOrderForm { get; set; }
-    [Parameter] public ImportedProduct? ImportedProduct { get; set; }
+    [Parameter] public ExportedProduct? ExportedProduct { get; set; }
     [Parameter] public string ButtonText { get; set; } = "Save";
     [Parameter] public string TitleText { get; set; } = "";
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     public List<Storage>? StorageList { get; set; }
-    public List<ExportedProduct>? NotEquippedExportedProducts { get; set; }
+    public List<ImportedProduct>? NotEquippedImportedProducts { get; set; }
 
     private Product? _product;
     bool _success;
@@ -196,10 +191,8 @@
     protected override async Task OnInitializedAsync()
     {
         StorageList = await StorageManager.GetAsync();
-        NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync();
-        if (ImportedProduct!.ImportedOrder.LocalCurrency != null && 
-            ImportedProduct!.ImportedOrder.SupplierCurrency != null && 
-            ImportedProduct!.ImportedOrder.TransactionCurrency != null)
+        NotEquippedImportedProducts = await ImportedProductManager.GetNotEquippedAsync();
+        if (ExportedProduct!.ExportedOrder is { LocalCurrency: { },BuyerCurrency: { },TransactionCurrency: { } })
         {
             _isSetCurrency = true;
         }
@@ -220,59 +213,61 @@
         var result = await ProductManager.GetSearchProductAsync(value);
         return result;
     }
-    private async void AddPurchaseAtStorage(Storage storage)
+    private async void AddSoldFromStorage(Storage storage)
     {
-        if (ImportedProduct != null)
+        if (ExportedProduct != null)
         {
-            ImportedProduct.PurchaseAtStorageList ??= new List<PurchaseAtStorage>();
-            ImportedProduct.StorageList ??= new List<Storage>();
-            ImportedProduct.StorageList.Add(storage);
-            ImportedProduct.PurchaseAtStorageList.Add(new PurchaseAtStorage
+            ExportedProduct.SoldFromStorage ??= new List<SoldFromStorage>();
+            ExportedProduct.StorageList ??= new List<Storage>();
+            ExportedProduct.StorageList.Add(storage);
+            ExportedProduct.SoldFromStorage.Add(new SoldFromStorage
             {
                 Storage = storage, StorageId = storage.Id,
-                ImportedProduct = ImportedProduct, ImportedProductId = ImportedProduct.Id
+                ExportedProduct = ExportedProduct, ExportedProductId = ExportedProduct.Id
             });
         }
         await InvokeAsync(StateHasChanged);
     }
-    private async void RemovePurchaseAtStorage(PurchaseAtStorage purchaseAtStorage)
+
+    private async void RemoveSoldFromStorage(SoldFromStorage soldFromStorage)
     {
-        if (ImportedProduct != null)
+        if (ExportedProduct != null)
         {
-            ImportedProduct.StorageList!.Remove(purchaseAtStorage.Storage!);
-            ImportedProduct.PurchaseAtStorageList!.Remove(purchaseAtStorage);
+            ExportedProduct.StorageList!.Remove(soldFromStorage.Storage!);
+            ExportedProduct.SoldFromStorage!.Remove(soldFromStorage);
         }
         await InvokeAsync(StateHasChanged);
     }
-    private async void AddPurchaseAtExport(ExportedProduct export)
+
+    private async void AddPurchaseAtExport(ImportedProduct importedProduct)
     {
-        if (ImportedProduct != null)
+        if (ExportedProduct != null)
         {
-            ImportedProduct.PurchaseAtExportList ??= new List<PurchaseAtExport>();
-            ImportedProduct.ExportedProducts ??= new List<ExportedProduct>();
-            ImportedProduct.ExportedProducts.Add(export);
-            ImportedProduct.PurchaseAtExportList.Add(new PurchaseAtExport()
+            ExportedProduct.PurchaseAtExports ??= new List<PurchaseAtExport>();
+            ExportedProduct.ImportedProducts ??= new List<ImportedProduct>();
+            ExportedProduct.ImportedProducts.Add(importedProduct);
+            ExportedProduct.PurchaseAtExports.Add(new PurchaseAtExport()
             {
-                ExportedProduct = export, ExportedProductId = export.Id,
-                ImportedProduct = ImportedProduct, ImportedProductId = ImportedProduct.Id
+                ExportedProduct = ExportedProduct, ExportedProductId = ExportedProduct.Id,
+                ImportedProduct = importedProduct, ImportedProductId = importedProduct.Id
             });
         }
         await InvokeAsync(StateHasChanged);
     }
     private async void RemovePurchaseAtExport(PurchaseAtExport purchaseAtExport)
     {
-        if (ImportedProduct != null)
+        if (ExportedProduct != null)
         {
-            ImportedProduct.ExportedProducts!.Remove(purchaseAtExport.ExportedProduct!);
-            ImportedProduct.PurchaseAtExportList!.Remove(purchaseAtExport);
+            ExportedProduct.ImportedProducts!.Remove(purchaseAtExport.ImportedProduct!);
+            ExportedProduct.PurchaseAtExports!.Remove(purchaseAtExport);
         }
         await InvokeAsync(StateHasChanged);
     }
     private async void ConvertedCurrency(string charCode, decimal? price)
     {
-       var supplierCharCode = ImportedProduct!.ImportedOrder!.SupplierCurrency!;
-        var transactionCharCode = ImportedProduct!.ImportedOrder!.TransactionCurrency!;
-        var localCharCode = ImportedProduct!.ImportedOrder!.LocalCurrency!;
+        var supplierCharCode = ExportedProduct!.ExportedOrder!.BuyerCurrency!;
+        var transactionCharCode = ExportedProduct!.ExportedOrder!.TransactionCurrency!;
+        var localCharCode = ExportedProduct!.ExportedOrder!.LocalCurrency!;
         var curArr = new List<string>
         {
             supplierCharCode,
@@ -285,15 +280,15 @@
         {
             if (item.charCod==supplierCharCode)
             {
-                ImportedProduct.PriceInSupplierCurrency=item.Item2;
+                ExportedProduct.PriceInBuyerCurrency = item.Item2;
             }
             else if (item.charCod==transactionCharCode)
             {
-                ImportedProduct.PriceInTransactionCurrency=item.Item2;
+                ExportedProduct.PriceInTransactionCurrency = item.Item2;
             }
             else if (item.charCod==localCharCode)
             {
-                ImportedProduct.PriceLocal=item.Item2;
+                ExportedProduct.PriceLocal = item.Item2;
             }
         }
         

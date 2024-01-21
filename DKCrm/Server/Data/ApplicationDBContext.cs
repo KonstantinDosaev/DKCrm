@@ -48,12 +48,19 @@ namespace DKCrm.Server.Data
         public DbSet<SoldFromStorage> SoldFromStorages { get; set; } = null!;
         public DbSet<InternalCompanyData> InternalCompanyData { get; set; } = null!;
 
-
+        public DbSet<ApplicationOrderingProducts> ApplicationOrderingProducts { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<Product>()
+                .HasQueryFilter(x => x.IsDeleted == false);
+            builder.Entity<Storage>()
+                .HasQueryFilter(x => x.IsDeleted == false);
+            builder.Entity<ApplicationOrderingProducts>()
+                .HasQueryFilter(x => x.IsDeleted == false);
+
             builder.Entity<Category>(entity =>
             {
                 entity.HasOne(d => d.Parent)
@@ -95,26 +102,7 @@ namespace DKCrm.Server.Data
                 j.ToTable("ProductsInStorages");
             });
 
-            //builder
-            //    .Entity<Product>()
-            //    .HasMany(c => c.Storage)
-            //    .WithMany(s => s.Products)
-            //    .UsingEntity<ProductsInStorage>(
-            //        j => j
-            //            .HasOne(pt => pt.Storage)
-            //            .WithMany(t => t.ProductsInStorage)
-            //            .HasForeignKey(pt => pt.StorageId),
-            //        j => j
-            //            .HasOne(pt => pt.Product)
-            //            .WithMany(p => p.ProductsInStorage)
-            //            .HasForeignKey(pt => pt.ProductId),
-            //        j =>
-            //        {
-            //            j.Property(pt => pt.Quantity).HasDefaultValue(0);
-            //            j.HasKey(t => new { t.ProductId, t.StorageId });
-            //            j.ToTable("ProductsInStorages");
-            //        }
-            //        );
+           
 
 
 

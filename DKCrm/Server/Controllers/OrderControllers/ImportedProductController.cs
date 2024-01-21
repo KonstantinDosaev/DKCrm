@@ -1,4 +1,5 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
@@ -22,7 +23,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
         public async Task<IActionResult> Get()
         {
             return Ok(await _context.ImportedProducts.Include(i => i.ImportedOrder)
-                .Include(i => i.Product).ToListAsync());
+                .Include(i => i.Product).IgnoreQueryFilters().AsSplitQuery().ToListAsync());
         }
 
         [HttpGet("{id:guid}")]
@@ -30,9 +31,29 @@ namespace DKCrm.Server.Controllers.OrderControllers
         {
             var dev = await _context.ImportedProducts
                 .Include(i=>i.ImportedOrder)
-                .Include(i=>i.Product).ThenInclude(t=>t!.Brand).AsSingleQuery()
+                .Include(i=>i.Product).ThenInclude(t=>t!.Brand).IgnoreQueryFilters().AsSingleQuery()
                 .FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetNotEquipped()
+        {
+            var status = _context.ExportedOrderStatus.FirstOrDefault(f => f.Value == ImportOrderStatusNames.Delivery)!.Position;
+            return Ok(await _context.ImportedProducts.Select(s => new
+                {
+                    s.Product,
+                    s.Quantity,
+                    s.ImportedOrder,
+                    s.ImportedOrderId,
+                    s.ProductId,
+                    s.ExportedProducts,
+                    s.PurchaseAtExportList,
+                    s.PurchaseAtStorageList,
+                    s.StorageList
+                }).Where(w => w.ImportedOrder!.ImportedOrderStatus!.Position < status)
+                .Where(w => w.Quantity < w.PurchaseAtStorageList!.Select(s => s.Quantity).Sum() 
+                    + w.PurchaseAtExportList!.Select(s => s.Quantity).Sum())
+                .ToListAsync());
         }
 
         [HttpPost]
@@ -99,7 +120,8 @@ namespace DKCrm.Server.Controllers.OrderControllers
         {
             var dev = await _context.ImportedProducts.FirstOrDefaultAsync(a => a.Id == id);
             if (dev == null) return NoContent();
-
+            var t = User.Identity!.Name;
+            
             _context.Remove(dev);
             await _context.SaveChangesAsync();
             return Ok(dev);

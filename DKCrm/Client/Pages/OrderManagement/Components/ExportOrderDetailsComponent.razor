@@ -1,0 +1,185 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+@if (Order != null)
+{
+    <div class="d-flex px-3"> <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
+        <MudSpacer />
+
+       <div class="d-flex justify-content-center align-items-center">
+           <span class="mr-2 fs-6">за ед.</span><MudSwitch T="bool" CheckedChanged="() =>  _allOrOnePrice = _allOrOnePrice != true" Label="все кол.-во"
+                                                           Color="Color.Success" UnCheckedColor="Color.Info" />
+       </div>
+       <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddImportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+           Добавить продукт
+           <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+       </MudButton></div>
+
+    <MudTable Class="m-2" Items="@ExportedProducts" Hover="true" SortLabel="Sort By" T="ExportedProduct"
+          OnRowClick="RowClickEvent"
+          Striped="true"
+          Bordered="true"
+          HeaderClass="mud-table-orderD-header table-head-bordered"
+          CustomHeader="true"
+          Dense="true">
+       @* <ToolBarContent>
+           
+        </ToolBarContent>*@
+        <HeaderContent>
+           
+           
+            <MudTHeadRow Class="header-centered">
+
+                <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Brand?.Name!)">Производитель</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.Quantity)">Количество</MudTableSortLabel></MudTh>
+                
+                    <MudTh Style="text-align: center">
+                    <MudTableSortLabel Enabled="false" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInBuyerCurrency)">Цена в валюте поставщика </MudTableSortLabel>
+                        <div class="text-center fw-bold">@Order.BuyerCurrency</div>
+                    
+                    </MudTh>
+                    <MudTh Style="text-align: center">
+                    <MudTableSortLabel Enabled="false" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInTransactionCurrency)">Цена в валюте сделки</MudTableSortLabel>
+                        <div class="text-center fw-bold">@Order.TransactionCurrency</div>
+
+                    </MudTh>
+                    <MudTh Style="text-align: center">
+                        <MudTableSortLabel Enabled="false" SortBy="new Func<ImportedOrderStatus, object?>(x => x.Value)">Цена в локальной валюте</MudTableSortLabel>
+                        <div class="text-center fw-bold">@Order.LocalCurrency</div>
+                    </MudTh>
+            </MudTHeadRow>
+           
+
+
+        </HeaderContent>
+        <RowTemplate>
+            
+                <MudTd DataLabel="Парт-номер">
+                    @if (context.Product != null)
+                    { @context.Product.PartNumber }
+                </MudTd>
+            <MudTd DataLabel="Наименование">
+                @if (context.Product != null){ @context.Product.Name }
+            </MudTd>
+            <MudTd DataLabel="Наименование">
+                @if (context.Product?.Brand != null){ @context.Product.Brand.Name }
+            </MudTd>
+
+            
+            <MudTd DataLabel="Количество">@context.Quantity</MudTd>
+            <MudTd DataLabel="Цена в валюте покупателя">
+                @if (context.PriceInBuyerCurrency != null)
+                {
+                    if (_allOrOnePrice)
+                    {
+                         @(decimal.Round((decimal)context.PriceInBuyerCurrency, 2) * context.Quantity)
+                    }
+                    else
+                    {
+                        @decimal.Round((decimal)context.PriceInBuyerCurrency, 2)
+                    }
+                }
+            </MudTd>
+            <MudTd DataLabel="Цена в валюте сделки">
+                @if (context.PriceInTransactionCurrency != null)
+                { if (_allOrOnePrice)
+                {
+                    @(decimal.Round((decimal)context.PriceInTransactionCurrency, 2) * context.Quantity)
+                }
+                else
+                {
+                    @decimal.Round((decimal)context.PriceInTransactionCurrency, 2)
+                } }
+            </MudTd>
+            <MudTd DataLabel="Цена в локальной валюте">
+                @if (context.PriceLocal != null)
+                    {if (_allOrOnePrice)
+                    {
+                        @(decimal.Round((decimal)context.PriceLocal, 2) * context.Quantity)
+                    }
+                    else
+                    {
+                        @decimal.Round((decimal)context.PriceLocal, 2)
+                    }
+                }
+            </MudTd>
+                               
+                
+            <MudTd DataLabel="Редактировать">
+                <MudIconButton Size="@Size.Medium"
+                           OnClick="() => OpenEditExportedProductDialog(context)"
+                           Style=" background-color: rgba(217, 214, 81, 0.431);"
+                           Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
+            </MudTd>
+        </RowTemplate>
+       @* <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
+        </PagerContent>*@
+    </MudTable>
+
+
+
+
+@*
+    <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
+                            RefreshProductList="OnInitializedAsync"
+                            Order="Order"/>
+
+    <EditImportedProductDialog @bind-VisibleDialog="@_visibleEditImportedProductDialog"
+                                   RefreshProductList="@OnInitializedAsync"
+                                   Id="@ExportedProductId"/>*@
+    
+}
+@code {
+
+    [Parameter] public Guid Id { get; set; }
+    public ExportedOrder? Order { get; set; }
+
+    private List<ExportedProduct>? ExportedProducts { get; set; }
+
+    public ExportedProduct? ExportedProduct { get; set; }
+    public Guid ExportedProductId { get; set; }
+
+    //FormImportedProduct? _importProductForm = null!;
+
+    private string _searchString1 = "";
+
+    public bool VisibleCompanySettingsDrawer { get; set; }
+    MudListItem? _selectedItem;
+    object _selectedValue = 1;
+
+    private bool _visibleAddImportedProductDialog;
+    private bool _visibleEditImportedProductDialog;
+    private bool _visibleUpdateOrderDialog;
+    private bool _allOrOnePrice;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Order = await ExportedOrderManager.GetDetailsAsync(Id);
+        if (Order.ExportedProducts != null) ExportedProducts = Order.ExportedProducts.ToList();
+    }
+
+
+
+    private void OpenEditExportedProductDialog(ExportedProduct exportedProduct)
+    {
+        ExportedProductId = exportedProduct.Id;
+        _visibleEditImportedProductDialog = true;
+    }
+    private void RowClickEvent(TableRowClickEventArgs<ExportedProduct> tableRowClickEventArgs)
+    {
+      //  _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");
+    }
+
+   
+    
+}
+<style>
+    .mud-table-orderD-header {
+        background-color: rgba(217, 214, 81, 0.431);
+        color: white !important;
+        font-weight: bold;
+    }
+</style>
+
+
