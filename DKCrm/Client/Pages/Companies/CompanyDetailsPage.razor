@@ -189,11 +189,11 @@
             </MudCard>
         </MudItem>
     </MudGrid>
-    <CompanyForm CurrentCompany="Company"
-                 OnValidSubmit="UpdateCompany"
-                 CompanyTypes="CompanyTypes"
-                 ButtonText="Применить"
-                 @ref="_companyForm"/>
+    <EditCompanyDialog 
+        Id="Company.Id"
+        RefreshProductList="GetCompany"
+        @bind-VisibleDialog="_visibleEditCompanyDialog" />
+
 
 
 }
@@ -222,7 +222,9 @@
             ButtonText="Сохранить" 
             OnValidSubmit="AddEmployee" 
             Employee="Employee"
-            TitleText="Добавление сотрудника"
+            TitleText="Добавление сотрудника" 
+            OurEmployees="OurEmployees"
+            @ref="_empForm"
         />
     </DialogContent>
 </MudDialog>
@@ -268,6 +270,7 @@
     public Company? Company { get; set; }
     public Employee Employee { get; set; } = new();
     CompanyForm? _companyForm = null!;
+    public List<Employee>? OurEmployees { get; set; }
 
     private bool _checkSizeEmployeeInfo { get; set; } = false;
     private int _sizeEmployeeInfo = 5;
@@ -276,8 +279,9 @@
     private bool _visibleRemoveEmployeeDialog;
     private bool _visibleAddToTagDialog;
     private bool _visibleRemoveCompanyDialog;
+    private bool _visibleEditCompanyDialog;
     public bool Checked;
-
+    EmployeeForm? _empForm;
     protected override async Task OnInitializedAsync()
     {
         await GetCompany();
@@ -289,29 +293,26 @@
     }
     private async Task OpenUpdateCompanyDialog()
     {
-        CompanyTypes = await CompanyTypeManager.GetAsync();
-        _companyForm!._visibleAddCompanyDialog = true;
+       
+        _visibleEditCompanyDialog = true;
 
     }
 
-    private async Task UpdateCompany()
+
+    private async Task OpenAddEmployeeDialog()
     {
-        if (await CompanyManager.UpdateAsync(Company!))
-        {
-            _companyForm!._visibleAddCompanyDialog = false;
-            _snackBar.Add("Данные компании обновлены!");
-            await GetCompany();
-        }
-    }
-    private void OpenAddEmployeeDialog()
-    {
-        Employee = new Employee() { CompanyId = CompanyId };
+        Employee = new Employee() { Companies = new List<Company>(){Company!}};
+        OurEmployees ??= await EmployeeManager.GetAsync();
+        OurEmployees = OurEmployees.Where(w => w.IsOurEmployee).ToList();
         _visibleAddEmployeeDialog = true;
 
     }
     private async Task AddEmployee()
     {
-        if (await EmployeeManager.AddAsync(Employee!))
+        Employee = _empForm.Employee;
+        Company!.Employees ??= new List<Employee>();
+        Company.Employees.Add(Employee);
+        if (await CompanyManager.UpdateAsync(Company!))
         {
             _visibleAddEmployeeDialog = false;
             _snackBar.Add("Сотрудник добавлен!");
@@ -338,17 +339,30 @@
         Employee = employee;
         _visibleRemoveEmployeeDialog = true;
     }
-    private async void RemoveEmployee()
+    private async Task RemoveEmployee()
     {
-        if (await EmployeeManager.RemoveAsync(Employee.Id))
+        if (Employee.IsOurEmployee)
         {
-            await GetCompany();
-            _snackBar.Add("Сотрудник удален");
+            Company!.Employees!.Remove(Employee!);
+            if (await CompanyManager.UpdateAsync(Company))
+            {
+                await GetCompany();
+                _snackBar.Add("Сотрудник откреплен");
+            }
             
         }
+        else
+        {
+            if (await EmployeeManager.RemoveAsync(Employee.Id))
+            {
+                await GetCompany();
+                _snackBar.Add("Сотрудник удален");
+            }
+        }
+        
         _visibleRemoveEmployeeDialog = false;
     }
-    private async void SaveEmployeeInfo(Employee employee)
+    private async Task SaveEmployeeInfo(Employee employee)
     {
         Employee = employee;
         await UpdateEmployee();
@@ -384,7 +398,7 @@
         _visibleAddToTagDialog = false;
         _snackBar.Add("Теги обновлены");
     }
-    private async void RemoveCompany()
+    private async Task RemoveCompany()
     {
         if (await CompanyManager.RemoveAsync(CompanyId))
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using DKCrm.Shared.Iterfaces;
 using DKCrm.Shared.Models.OrderModels;
@@ -19,9 +20,10 @@ namespace DKCrm.Shared.Models.CompanyModels
         public string? Phone { get; set; }
         public string? Email { get; set;}
         public string? Description { get; set; }
-
-        public virtual Company? Company { get; set; }
-        public Guid CompanyId { get; set; }
+        public bool IsOurEmployee { get; set; }
+      
+        public virtual ICollection<Company>? Companies { get; set; }
+        public string? UserId { get; set; }
 
         //[InverseProperty(nameof(ExportedOrder.OurEmployee))] public virtual ICollection<ExportedOrder>? ExportedOrdersOur { get; set; }
         //[InverseProperty(nameof(ExportedOrder.EmployeeBuyer))] public virtual ICollection<ExportedOrder>? ExportedOrdersBuyer { get; set; }

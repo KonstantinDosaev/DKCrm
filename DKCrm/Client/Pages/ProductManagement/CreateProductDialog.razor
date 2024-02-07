@@ -1,4 +1,5 @@
-﻿<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+﻿@using DKCrm.Shared.Models.OrderModels
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
     <TitleContent>
         <div style="text-align: right">
             <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
@@ -7,11 +8,13 @@
     <DialogContent>
         <MudCard>
             <ProductForm
+                @ref="_productForm"
                 OnValidSubmit="CreateProduct"
                 Product="Product"
                 ButtonText="Сохранить"
-                TitleText="Создание продукта"/>
-
+                TitleText="Создание продукта"
+                MissingProductInCatalog = "MissingProductInCatalog"/>
+           
         </MudCard>
     </DialogContent>
 </MudDialog>
@@ -21,11 +24,16 @@
     [Parameter] public bool VisibleDialog { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
-    public Product Product { get; set; }= new Product(){Id = Guid.NewGuid()};
-
+    [Parameter] public Product? Product { get; set; } = new Product();
+    [Parameter] public MissingProductInCatalog? MissingProductInCatalog { get; set; }
+    private ProductForm? _productForm;
+    protected override  void OnParametersSet()
+    {
+      
+    }
     async Task CreateProduct()
     {
-        await ProductManager.AddProductAsync(Product);
+        await ProductManager.AddProductAsync(_productForm!.Product!);
         await RefreshProductList.InvokeAsync();
         _snackBar.Add("Продукт добавлен");
     }

@@ -3,6 +3,7 @@ using System;
 using DKCrm.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DKCrm.Server.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240124182620_UserIdString")]
+    partial class UserIdString
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +23,6 @@ namespace DKCrm.Server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("CompanyEmployee", b =>
-                {
-                    b.Property<Guid>("CompaniesId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("EmployeesId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("CompaniesId", "EmployeesId");
-
-                    b.HasIndex("EmployeesId");
-
-                    b.ToTable("CompanyEmployee");
-                });
 
             modelBuilder.Entity("CompanyTagsCompany", b =>
                 {
@@ -144,9 +131,6 @@ namespace DKCrm.Server.Migrations
                     b.Property<Guid?>("FnsRequestId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Inn")
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -181,6 +165,9 @@ namespace DKCrm.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
@@ -189,9 +176,6 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<string>("FirstName")
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsOurEmployee")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .HasColumnType("text");
@@ -205,10 +189,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("Position")
                         .HasColumnType("text");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
 
                     b.ToTable("Employees");
                 });
@@ -304,16 +287,13 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("DateTimeCreated")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateTimeUpdate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasColumnType("text");
-
-                    b.Property<Guid?>("ExportedOrderId")
-                        .HasColumnType("uuid");
 
                     b.Property<bool?>("InWork")
                         .HasColumnType("boolean");
@@ -323,9 +303,6 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<bool>("IsFullDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("MissingProductsInCatalog")
-                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -344,9 +321,6 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ExportedOrderId")
-                        .IsUnique();
 
                     b.ToTable("ApplicationOrderingProducts");
                 });
@@ -427,10 +401,10 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<DateTime?>("DateTimeCreated")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateTimeUpdated")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("EmployeeBuyerId")
                         .HasColumnType("uuid");
@@ -544,10 +518,10 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<DateTime?>("DateTimeCreated")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateTimeUpdated")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("EmployeeSellerId")
                         .HasColumnType("uuid");
@@ -803,13 +777,13 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("date");
 
                     b.Property<DateTime?>("DateTimeCreated")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateTimeUpdate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateTimeUpdated")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("DayToDelivery")
                         .HasColumnType("integer");
@@ -906,7 +880,7 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("DateTimeUpdate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -926,21 +900,6 @@ namespace DKCrm.Server.Migrations
                     b.HasIndex("AddressId");
 
                     b.ToTable("Storages");
-                });
-
-            modelBuilder.Entity("CompanyEmployee", b =>
-                {
-                    b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", null)
-                        .WithMany()
-                        .HasForeignKey("CompaniesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DKCrm.Shared.Models.CompanyModels.Employee", null)
-                        .WithMany()
-                        .HasForeignKey("EmployeesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("CompanyTagsCompany", b =>
@@ -984,6 +943,17 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("CompanyType");
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.Employee", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "Company")
+                        .WithMany("Employees")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.FnsRequest", b =>
                 {
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "Company")
@@ -992,15 +962,6 @@ namespace DKCrm.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ApplicationOrderingProducts", b =>
-                {
-                    b.HasOne("DKCrm.Shared.Models.OrderModels.ExportedOrder", "ExportedOrder")
-                        .WithOne("ApplicationOrderingProducts")
-                        .HasForeignKey("DKCrm.Shared.Models.OrderModels.ApplicationOrderingProducts", "ExportedOrderId");
-
-                    b.Navigation("ExportedOrder");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ApplicationOrderingProductsProduct", b =>
@@ -1293,6 +1254,8 @@ namespace DKCrm.Server.Migrations
                 {
                     b.Navigation("BankDetails");
 
+                    b.Navigation("Employees");
+
                     b.Navigation("ExportedOrdersBuyerCompany");
 
                     b.Navigation("ExportedOrdersOurCompany");
@@ -1327,8 +1290,6 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ExportedOrder", b =>
                 {
-                    b.Navigation("ApplicationOrderingProducts");
-
                     b.Navigation("Comments");
 
                     b.Navigation("ExportedProducts");

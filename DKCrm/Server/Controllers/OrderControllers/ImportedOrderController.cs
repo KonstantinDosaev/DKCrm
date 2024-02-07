@@ -102,10 +102,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
                             break;
                     }
                 }
-                
-                
             }
-
             var totalItems = data.Count();
            
             switch (request.SortLabel)
@@ -133,7 +130,9 @@ namespace DKCrm.Server.Controllers.OrderControllers
         public async Task<IActionResult> Post(ImportedOrder importedOrder)
         {
 
-            // _context.ImportedOrders.Add(importedOrder);
+            importedOrder.DateTimeCreated = DateTime.Now;
+            var count = _context.ImportedOrders.Count(w => w.DateTimeCreated!.Value.Date == importedOrder.DateTimeCreated!.Value.Date);
+            importedOrder.Name = (importedOrder.DateTimeCreated!.Value.ToShortDateString()).Replace(".", "") + (count + 1);
             _context.Entry(importedOrder).State = EntityState.Added;
             await _context.SaveChangesAsync();
             return Ok(importedOrder.Id);

@@ -1,0 +1,56 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog"
+           Options="new DialogOptions() { FullWidth = true }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+         
+            <CompanyForm OnValidSubmit="Edit" 
+                         CurrentCompany="Company"
+                         ButtonText="Сохранить"
+                         TitleText="Создание профиля компании"/>
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public Company? Company { get; set; }
+    [Parameter] public Guid? Id { get; set; }
+    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != null && Id != Guid.Empty) Company = await CompanyManager.GetDetailsAsync((Guid)Id);
+    }
+
+    async Task Edit()
+    {
+        if (Company != null)
+        {
+
+            if (await CompanyManager.UpdateAsync(Company))
+            {
+                _snackBar.Add("Профиль компании обновлен");
+                await RefreshProductList.InvokeAsync();
+                await CloseClick();
+                VisibleDialog = false;
+            }
+        }
+    }
+
+
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+
+}

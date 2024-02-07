@@ -111,9 +111,10 @@ namespace DKCrm.Server.Controllers
             }
             if (!string.IsNullOrEmpty(request.SearchString))
             {
+                request.SearchString = request.SearchString.Trim().ToLower();
                 data = data.Where(w =>
-                    w.BrandName!= null && w.BrandName.Contains(request.SearchString, StringComparison.InvariantCultureIgnoreCase) ||
-                    w.Name.Contains(request.SearchString) || w.PartNumber!.Contains(request.SearchString, StringComparison.InvariantCultureIgnoreCase));
+                    w.BrandName!= null && w.BrandName.ToLower().Contains(request.SearchString) ||
+                    w.Name.ToLower().Contains(request.SearchString) || w.PartNumber!.ToLower().Contains(request.SearchString));
             }
            
             var totalItems = data.Count();
@@ -165,6 +166,7 @@ namespace DKCrm.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(Product product)
         {
+            product.DateTimeCreated = DateTime.Now;
             _context.Entry(product).State = EntityState.Added;
             if (product.ProductsInStorage != null)
             {
@@ -173,6 +175,7 @@ namespace DKCrm.Server.Controllers
                     _context.Entry(item).State = EntityState.Added;
                 }
             }
+            
             await _context.SaveChangesAsync();
             return Ok(product.Id);
         }

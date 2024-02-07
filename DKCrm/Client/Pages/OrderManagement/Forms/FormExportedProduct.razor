@@ -5,8 +5,6 @@
 @if (ExportedProduct != null)
 {
     <MudForm @ref="ImportedOrderForm" @bind-IsValid="@_success">
-        
-           
         <MudPaper Elevation="12" Class="p-4">
             <MudAutocomplete T="Product" Placeholder="Введите партномер или название продукта" 
                              Label="Продукт"

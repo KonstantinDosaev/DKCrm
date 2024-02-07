@@ -18,6 +18,7 @@ namespace DKCrm.Shared.Models.CompanyModels
         public string Name { get; set; }
         public string? Description { get; set; }
         public string? Director { get; set; }
+        public string? Inn { get; set; }
         public virtual Address? ActualAddress { get; set; }
         public  Guid? ActualAddressId { get; set; }
         public virtual CompanyType? CompanyType { get; set; }

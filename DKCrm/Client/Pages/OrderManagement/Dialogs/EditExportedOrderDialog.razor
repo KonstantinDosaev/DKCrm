@@ -1,7 +1,7 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Shared.Models.OrderModels
 
-<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
     <TitleContent>
         <div style="text-align: right">
             <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
@@ -13,7 +13,9 @@
                 OnValidSubmit="Edit"
                 ExportedOrder="Order"
                 ButtonText="Сохранить"
-                TitleText="Изменение заказа на продажу"/>
+                TitleText="Изменение заказа на продажу"
+                ApplicationOrderingProduct="ApplicationOrderingProduct"
+                IsEditForm="true"/>
         </MudCard>
     </DialogContent>
 </MudDialog>
@@ -25,6 +27,7 @@
     [Parameter]public Guid? Id { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public ApplicationOrderingProducts? ApplicationOrderingProduct { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {

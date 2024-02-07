@@ -1,7 +1,10 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
+using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace DKCrm.Server.Controllers
 {
@@ -32,7 +35,16 @@ namespace DKCrm.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(Employee employee)
         {
-            _context.Add(employee);
+            _context.Entry(employee).State = EntityState.Added;
+
+            if (employee.Companies != null)
+            {
+               foreach (var item in employee.Companies)
+               {
+                    _context.Entry(item).State = EntityState.Modified;
+               }
+            }
+            
             await _context.SaveChangesAsync();
             return Ok(employee.Id);
         }
@@ -41,6 +53,45 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> Put(Employee employee)
         {
             _context.Entry(employee).State = EntityState.Modified;
+
+            //if (employee.Companies != null)
+            //{
+            //    if (!employee.IsOurEmployee)
+            //    {
+            //        foreach (var item in employee.Companies)
+            //        {
+            //            _context.Entry(item).State =  EntityState.Modified;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        var employeeInCompaniesDb = _context.Employees.AsNoTracking().FirstOrDefault(f => f.Id == employee.Id)!.Companies!.ToList();
+            //        var employeeInCompanies = employee.Companies;
+            //        foreach (var item in employeeInCompanies)
+            //        {
+            //            if (employeeInCompaniesDb.Select(s => s.Id).Contains(item.Id))
+            //            {
+            //                _context.Entry(item).State = EntityState.Modified;
+            //            }
+            //            else
+            //            {
+            //                _context.Entry(item).State = EntityState.Added;
+            //            }
+
+            //        }
+                    
+
+            //        foreach (var employee in companyDb.Employees!)
+            //        {
+            //            if (!company.Employees.Select(s => s.Id).Contains(employee.Id))
+            //            {
+            //                employee.Companies!.Remove(company);
+            //                _context.Entry(employee).State = EntityState.Modified;
+            //            }
+            //        }
+            //    }
+            //}
+
             await _context.SaveChangesAsync();
             return Ok(employee);
         }

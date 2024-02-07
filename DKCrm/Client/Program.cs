@@ -47,6 +47,8 @@ builder.Services.AddTransient<IImportedProductManager, ImportedProductManager>()
 builder.Services.AddTransient<IImportedOrderStatusManager, ImportedOrderStatusManager>();
 builder.Services.AddTransient<IInternalCompanyDataManager, InternalCompanyDataManager>();
 builder.Services.AddTransient<ICurrencyManager, CurrencyManager>();
+builder.Services.AddTransient<IApplicationOrderingManager, ApplicationOrderingManager>();
+builder.Services.AddTransient<IMissingProductConverter, MissingProductConverter>();
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

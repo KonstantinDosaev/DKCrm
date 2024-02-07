@@ -16,7 +16,7 @@
           Striped="true" 
           Bordered="true" 
           HeaderClass="mud-table-header table-head-bordered"
-          OnRowClick="RowClickEvent" T="ProductsDto"
+          OnRowClick="RowClickEvent" T="ProductsDto" 
           @ref="_table">
 
     <ToolBarContent>
@@ -161,7 +161,7 @@
                 SortLabel = state.SortLabel,
                 Chapter = Chapter,
                 ChapterId = ChapterId,
-                SortDirection = (OrderByDirection?)(state.SortDirection),
+                SortDirection = state.SortDirection,
                 FilterTuple = _filterProductTuple
 
             });

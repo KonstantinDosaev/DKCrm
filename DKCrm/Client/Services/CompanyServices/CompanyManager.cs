@@ -1,6 +1,7 @@
 ﻿using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 using DKCrm.Shared.Models.CompanyModels;
+using System.Text.Json;
 
 namespace DKCrm.Client.Services.CompanyServices
 {
@@ -24,7 +25,11 @@ namespace DKCrm.Client.Services.CompanyServices
 
         public async Task<bool> UpdateAsync(Company company)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/company", company);
+            var result = await _httpClient.PutAsJsonAsync("api/company", company, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
             return result.IsSuccessStatusCode;
         }
 

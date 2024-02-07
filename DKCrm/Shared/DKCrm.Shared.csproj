@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.22" />
     <PackageReference Include="Microsoft.OData.Core" Version="7.20.0" />
+    <PackageReference Include="MudBlazor" Version="6.10.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
 

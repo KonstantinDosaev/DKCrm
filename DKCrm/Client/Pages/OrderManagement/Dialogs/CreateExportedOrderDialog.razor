@@ -1,6 +1,6 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Shared.Models.OrderModels
-<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
     <TitleContent>
         <div style="text-align: right">
             <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
@@ -12,8 +12,9 @@
                 OnValidSubmit="Create"
                 ExportedOrder="Order"
                 ButtonText="Сохранить"
-                TitleText="Создание заказа на продажу"/>
-
+                TitleText="Создание заказа на продажу" 
+                ApplicationOrderingProduct="ApplicationOrderingProduct"/>
+                
         </MudCard>
     </DialogContent>
 </MudDialog>
@@ -23,6 +24,7 @@
     [Parameter] public bool VisibleDialog { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public ApplicationOrderingProducts? ApplicationOrderingProduct { get; set; }
     public ExportedOrder Order { get; set; } = null!;
     private InternalCompanyData? InternalData { get; set; }
     protected override async Task OnInitializedAsync()
@@ -34,10 +36,27 @@
     {
         Order.OurCompanyId = Order.OurCompany!.Id;
         Order.CompanyBuyerId = Order.CompanyBuyer!.Id;
-        await ExportedOrderManager.AddAsync(Order);
-        await RefreshProductList.InvokeAsync();
-        _snackBar.Add("Заказ создан");
-        await CloseClick();
+        if (Order.ApplicationOrderingProducts is {ApplicationOrderingProductProduct: { } } && Order.ApplicationOrderingProducts.ApplicationOrderingProductProduct.Any())
+        {
+            Order.ExportedProducts ??= new List<ExportedProduct>();
+            foreach (var item in Order.ApplicationOrderingProducts.ApplicationOrderingProductProduct)
+            {
+                var newExportedProduct = new ExportedProduct()
+                {
+                    Product = item.Product,
+                    Quantity = item.Quantity,
+                    ExportedOrderId = Order.Id
+                };
+                Order.ExportedProducts.Add(newExportedProduct);
+            }
+            
+        }
+        if(await ExportedOrderManager.AddAsync(Order))
+        {
+            await RefreshProductList.InvokeAsync();
+            _snackBar.Add("Заказ создан");
+            await CloseClick();
+        }
     }
 
     

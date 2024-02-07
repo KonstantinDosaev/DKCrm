@@ -1,4 +1,5 @@
 ﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Constants
 
 
     <MudText Typo="Typo.h5" >@TitleText</MudText>
@@ -7,34 +8,60 @@
         <EditForm Model="Employee" OnValidSubmit="OnValidSubmit">
         <DataAnnotationsValidator />
         <MudCard>
-        <MudCardContent>
+            <MudCardContent>
+                @if (CurrentCompany?.CompanyType?.Name == TypeCompanyNames.OurCompanies)
+                {
+                    <div class="d-flex align-items-end ">
+                        <MudSelect Variant="Variant.Outlined" Placeholder="Выберите сотрудника" ValueChanged="@(s => OnChangedEmployee(s))"
+                                   T="Employee" ToStringFunc="companyType => companyType.LastName!.ToString()" CloseIcon="@Icons.Material.Filled.Flag"
+                                   AdornmentColor="Color.Tertiary">
+                            @if (OurEmployees != null)
+                            {
+                                @foreach (var item in OurEmployees)
+                                {
+                                    <MudSelectItem T="Employee" Value="@item">@item.LastName</MudSelectItem>
+                                }
 
+                            }
+                        </MudSelect>
+                        @if (_isDisable)
+                        {
+                            <MudButton Style="height: 100%" Size="Size.Large" Variant="Variant.Outlined" OnClick="ResetEmployee">Ввести вручную</MudButton>
+                        }
+                    </div>
+                }
                 <MudTextField @bind-Value="@Employee.Position"
-                      For="@(() => Employee.Position)"
-                      Immediate="true"
-                      Label="Должность" />
-            <MudTextField @bind-Value="@Employee.LastName"
-                      For="@(() => Employee.LastName)"
-                      Immediate="true"
-                      Label="Фамилия" />
-            <MudTextField @bind-Value="@Employee.FirstName"
-                      For="@(() => Employee.FirstName)"
-                      Immediate="true"
-                      Label="Имя" />
-            <MudTextField @bind-Value="@Employee.MiddleName"
-                      For="@(() => Employee.MiddleName)"
-                      Immediate="true"
-                      Label="Отчество" />
-            <MudTextField @bind-Value="@Employee.Phone"
-                      For="@(() => Employee.Phone)"
-                      Immediate="true"
-                      Label="Телефон" />
-            <MudTextField @bind-Value="@Employee.Email"
-                      For="@(() => Employee.Email)"
-                      Immediate="true"
-                      Label="E-mail" />
-        
-        </MudCardContent>
+                              For="@(() => Employee.Position)"
+                              Immediate="true"
+                              Label="Должность"
+                              Disabled="_isDisable"/>
+                <MudTextField @bind-Value="@Employee.LastName"
+                              For="@(() => Employee.LastName)"
+                              Immediate="true"
+                              Label="Фамилия"
+                              Disabled="_isDisable"/>
+                <MudTextField @bind-Value="@Employee.FirstName"
+                              For="@(() => Employee.FirstName)"
+                              Immediate="true"
+                              Label="Имя"
+                              Disabled="_isDisable"/>
+                <MudTextField @bind-Value="@Employee.MiddleName"
+                              For="@(() => Employee.MiddleName)"
+                              Immediate="true"
+                              Label="Отчество"
+                              Disabled="_isDisable"/>
+                <MudTextField @bind-Value="@Employee.Phone"
+                              For="@(() => Employee.Phone)"
+                              Immediate="true"
+                              Label="Телефон"
+                              Disabled="_isDisable"/>
+                <MudTextField @bind-Value="@Employee.Email"
+                              For="@(() => Employee.Email)"
+                              Immediate="true"
+                              Label="E-mail"
+                              Disabled="_isDisable"/>
+
+            </MudCardContent>
             <MudCardActions>
                 <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="OnValidSubmit" Color="Color.Tertiary">@ButtonText</MudButton>
             </MudCardActions>
@@ -49,5 +76,38 @@
     [Parameter] public string ButtonText { get; set; } = "Save";
     [Parameter] public string TitleText { get; set; } = "";
     [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public List<Employee>? OurEmployees { get; set; }
+    [Parameter] public Company? CurrentCompany { get; set; }
+    private bool _isDisable;
+    protected override void OnParametersSet()
+    {
+        if (Employee.Companies != null) CurrentCompany = Employee.Companies.FirstOrDefault();
+        if (CurrentCompany is {CompanyType.Name: TypeCompanyNames.OurCompanies })
+        {
+            Employee.IsOurEmployee = true;
+        }
+        if (CurrentCompany != null)
+        {
+            Employee.Companies = new List<Company>() { CurrentCompany! };
+        }
+    }
 
+    private void ResetEmployee()
+    {
+        if (CurrentCompany != null)
+        {
+            Employee = new Employee() { Companies = new List<Company>() { CurrentCompany } };
+            if (CurrentCompany is {CompanyType.Name: TypeCompanyNames.OurCompanies })
+            {
+                Employee.IsOurEmployee = true;
+            }
+            _isDisable = false;
+        }
+    }
+    private void OnChangedEmployee(Employee employee)
+    {
+        Employee = employee;
+        Employee.Companies = new List<Company>() { CurrentCompany! };
+        _isDisable = true;
+    }
 }

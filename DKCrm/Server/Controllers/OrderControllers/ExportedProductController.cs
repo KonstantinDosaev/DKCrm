@@ -45,7 +45,10 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.ExportedProducts.FirstOrDefaultAsync(a => a.Id == id);
+            var dev = await _context.ExportedProducts
+                .Include(i => i.ExportedOrder)
+                .Include(i => i.Product).ThenInclude(t => t!.Brand).IgnoreQueryFilters().AsSingleQuery()
+                .FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
 

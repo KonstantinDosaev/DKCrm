@@ -167,31 +167,40 @@
 
 
 @code {
-    [Parameter] public Product Product { get; set; } = null!;
+    [Parameter] public Product? Product { get; set; } = null!;
     [Parameter] public string ButtonText { get; set; } = "Save";
     [Parameter] public string TitleText { get; set; } = "";
     [Parameter] public EventCallback OnValidSubmit { get; set; }
-
-
+    [Parameter] public MissingProductInCatalog? MissingProductInCatalog { get; set; }
+    [Parameter]public MudForm? ProductFormRef { get; set; }
 
     public List<Brand>? Brands { get; set; }
     public List<Storage>? Storages { get; set; } = null!;
 
-   
     private bool _checkSizeTextArea { get; set; } = false;
     private int _sizeTextArea = 5;
     private bool _visibleCategorySelectedList;
-
 
     bool _success;
     protected override async Task OnInitializedAsync()
     {
         Storages = await StorageManager.GetAsync();
         Brands = await BrandManager.GetAsync();
+        if (MissingProductInCatalog != null)
+        {
+            Product = new Product()
+            {
+                Name = string.IsNullOrEmpty(MissingProductInCatalog.Name) ? MissingProductInCatalog.PartNumber : MissingProductInCatalog.Name,
+                PartNumber = MissingProductInCatalog.PartNumber,
+            };
+            if (Brands != null && string.IsNullOrEmpty(MissingProductInCatalog.BrandName))
+            {
+                var brand = Brands.FirstOrDefault(f => f.Name.Contains(MissingProductInCatalog.BrandName));
+                Product.Brand = brand;
+                if (brand != null) Product.BrandId = brand.Id;
+            }
+        }
     }
-
-    [Parameter]
-    public MudForm? ProductFormRef { get; set; }
 
     private async Task Validation()
     {
@@ -204,12 +213,12 @@
     }
     private void ApplyCategory()
     {
-        if (Product.Category != null) Product.CategoryId = Product.Category.Id;
+        if (Product!.Category != null) Product.CategoryId = Product.Category.Id;
         _visibleCategorySelectedList = false;
     }
     private async void AddProductInStorage(Storage storage)
     {
-        Product.ProductsInStorage ??= new List<ProductsInStorage>(); 
+        Product!.ProductsInStorage ??= new List<ProductsInStorage>(); 
         Product.Storage ??= new List<Storage>();
         Product.Storage.Add(storage);
         Product.ProductsInStorage.Add(new ProductsInStorage { Storage = storage, StorageId = storage.Id, Product = Product, ProductId = Product.Id});
@@ -217,7 +226,7 @@
     }
     private async void AddProductOption(CategoryOption categoryOption)
     {
-        Product.ProductOption ??= new List<ProductOption>();
+        Product!.ProductOption ??= new List<ProductOption>();
         Product.ProductOption.Add(new ProductOption() { CategoryOptionId = categoryOption.Id, CategoryOption = categoryOption, Product = Product, ProductId = Product.Id});
         await InvokeAsync(StateHasChanged);
     }

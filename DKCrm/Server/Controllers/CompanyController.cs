@@ -1,4 +1,5 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
@@ -25,20 +26,20 @@ namespace DKCrm.Server.Controllers
             //    .Include(i=>i.CompanyType)
             //    .Include(i=>i.Employees)
             //    .Include(i=>i.TagsCompanies).ToListAsync());
-            return Ok(await _context.Companies.Select(s=>new
+            return Ok(await _context.Companies.AsNoTracking().Select(s=>new
             {
-                s.Id,s.ActualAddress,s.ActualAddressId,s.Name,s.Director,s.TagsCompanies,s.CompanyType,s.Employees
+                s.Id,s.ActualAddress,s.ActualAddressId,s.Name,s.Director,s.TagsCompanies,s.CompanyTypeId,s.FnsRequestId,s.CompanyType,s.Employees,s.Inn,
             }).ToListAsync());
         }
         
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.Companies.Include(i => i.ActualAddress).
+            var dev = await _context.Companies.AsNoTracking().Include(i => i.ActualAddress).
                 Include(i => i.CompanyType).
                 Include(i => i.BankDetails).Include(i => i.FnsRequest).
                 Include(i => i.Employees).
-                Include(i => i.TagsCompanies)
+                Include(i => i.TagsCompanies).AsSingleQuery()
                 .FirstOrDefaultAsync(a => a.Id == id);
             return Ok(dev);
         }
@@ -54,10 +55,45 @@ namespace DKCrm.Server.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(Company company)
         {
+            
 
             _context.Entry(company).State = EntityState.Modified;
+            if (company.Employees!=null)
+            {
+                if (company.CompanyType!.Name != TypeCompanyNames.OurCompanies)
+                {
+                    foreach (var item in company.Employees)
+                    {
+                        if (item.Id == Guid.Empty)
+                            _context.Entry(item).State = EntityState.Added;
+                    }
+                }
+                else
+                {
+                    var companyDb = _context.Companies.AsNoTracking().
+                        Include(i => i.Employees).
+                        FirstOrDefault(i => i.Id == company.Id)!.Employees!.ToList();
+                    foreach (var item in company.Employees)
+                    {
+                        if (companyDb.Select(s => s.Id).Contains(item.Id)) continue;
+                        _context.Entry(item).State = item.Id != Guid.Empty ? EntityState.Modified : EntityState.Added;
+                        companyDb.Add(item);
+                    }
+                    var exception = companyDb.Where(w=> !company.Employees.Select(s=>s.Id).Contains(w.Id)).ToList();
+                    if (exception.Any())
+                    {
+                        foreach (var employee in exception)
+                        {
+                            var emp = _context.Employees.Include(i => i.Companies)
+                                .FirstOrDefault(s => s.Id == employee.Id);
+                            if (emp == null) continue;
+                            emp.Companies?.Remove(emp.Companies.FirstOrDefault(w => w.Id == company.Id)!);
+                            _context.Entry((object)emp).State = EntityState.Modified;
+                        }
+                    }
+                }
+            }
 
-            
             if (company.BankDetails != null)
             {
                 foreach (var item in company.BankDetails)
@@ -65,8 +101,8 @@ namespace DKCrm.Server.Controllers
                     _context.Entry(item).State = item.Id != Guid.Empty ? EntityState.Modified : EntityState.Added;
                 }
             }
-            
-            if (company.FnsRequest!=null)
+
+            if (company.FnsRequest != null)
             {
                 _context.Entry(company.FnsRequest).State = company.FnsRequest.Id != Guid.Empty ? EntityState.Modified : EntityState.Added;
             }
@@ -74,7 +110,7 @@ namespace DKCrm.Server.Controllers
             {
                 _context.Entry(company.ActualAddress).State = company.ActualAddress.Id != Guid.Empty ? EntityState.Modified : EntityState.Added;
             }
- 
+
             await _context.SaveChangesAsync();
             return Ok(company);
         }
@@ -145,6 +181,24 @@ namespace DKCrm.Server.Controllers
                 
                 await _context.SaveChangesAsync();
             return Ok();
+        }
+        [HttpPut("addemployee")]
+        public async Task<IActionResult> AddEmployee(Company company)
+        {
+
+            _context.Entry(company).State = EntityState.Modified;
+
+            if (company.Employees != null)
+            {
+                var empGuid = _context.Employees.Select(s => s.Id)
+                    .Where(w => company.Employees.Select(s => s.Id).Contains(w));
+                foreach (var item in company.Employees)
+                {
+                    _context.Entry(item).State = empGuid.Contains(item.Id) ? EntityState.Modified : EntityState.Added;
+                }
+            }
+            await _context.SaveChangesAsync();
+            return Ok(company);
         }
     }
 }

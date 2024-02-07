@@ -10,5 +10,6 @@ namespace DKCrm.Shared.Models.OrderModels
     {
         public List<Guid>? OurCompanies { get; set; }
         public List<Guid>? ContragentsCompanies { get; set; }
+
     }
 }

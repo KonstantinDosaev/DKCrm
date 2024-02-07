@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
 
@@ -37,7 +38,11 @@ namespace DKCrm.Client.Services.ProductServices
 
         public async Task<bool> UpdateProductAsync(Product product)
         {
-           var result = await _httpClient.PutAsJsonAsync("api/product", product);
+           var result = await _httpClient.PutAsJsonAsync("api/product", product, new JsonSerializerOptions
+           {
+               ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+               PropertyNamingPolicy = null
+           });
             return result.StatusCode== HttpStatusCode.OK; 
         }
 
@@ -52,7 +57,11 @@ namespace DKCrm.Client.Services.ProductServices
 
         public async Task AddProductAsync(Product product)
         {
-            await _httpClient.PostAsJsonAsync($"api/product", product);
+            await _httpClient.PostAsJsonAsync($"api/product", product, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
         }
 
         public async Task RemoveRangeProductsAsync(IEnumerable<Product> products)

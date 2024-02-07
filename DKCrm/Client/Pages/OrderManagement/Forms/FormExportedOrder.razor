@@ -2,22 +2,21 @@
 @using Microsoft.AspNetCore.Components
 @using DKCrm.Shared.Models.CompanyModels
 @using DKCrm.Shared.Constants
+@using Microsoft.EntityFrameworkCore
+@using DKCrm.Client.Pages.ProductManagement
+@using DKCrm.Client.Pages.Companies
+
 <MudText Typo="Typo.h5">@TitleText</MudText>
 @if (ExportedOrder != null)
 {
     <MudForm @ref="OrderForm" @bind-IsValid="@_success">
         <MudCard>
             <MudCardContent>
-
-                <MudTextField @bind-Value="@ExportedOrder.Name"
-                          For="@(() => ExportedOrder.Name)"
-                          Immediate="true"
-                          Label="Название заказа" />
                 <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашу компанию" @bind-Value="ExportedOrder.OurCompany"
-                       Label="Наша компания"
-                       T="Company" ToStringFunc="companyType => companyType.Name.ToString()"
-                       CloseIcon="@Icons.Material.Filled.Flag"
-                       AdornmentColor="Color.Tertiary">
+                           Label="Наша компания"
+                           T="Company" ToStringFunc="companyType => companyType.Name.ToString()"
+                           CloseIcon="@Icons.Material.Filled.Flag"
+                           AdornmentColor="Color.Tertiary">
                     @if (OurCompanies != null)
                     {
                         @foreach (var item in OurCompanies)
@@ -30,98 +29,185 @@
                 {
                     <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашего сотрудника" @bind-Value="ExportedOrder.OurEmployee"
                                Label="Наш сотрудник"
-                       T="Employee" ToStringFunc="eml => eml.FirstName.ToString() + eml.MiddleName + eml.LastName"
-                       CloseIcon="@Icons.Material.Filled.Flag"
-                       AdornmentColor="Color.Tertiary">
+                               T="Employee" ToStringFunc="eml => eml.FirstName?.ToString() + eml.MiddleName + eml.LastName"
+                               CloseIcon="@Icons.Material.Filled.Flag"
+                               AdornmentColor="Color.Tertiary">
 
                         @foreach (var item in ExportedOrder.OurCompany.Employees)
                         {
-                            <MudSelectItem T="Employee" Value="@item">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+                            <MudSelectItem T="Employee" Value="@item">@item.LastName @item.FirstName @item.MiddleName</MudSelectItem>
                         }
                     </MudSelect>
                 }
-                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите компанию покупателя" @bind-Value="ExportedOrder.CompanyBuyer"
-                           Label="Компания покупатель"
-                       T="Company" ToStringFunc="company => company.Name.ToString()"
-                       CloseIcon="@Icons.Material.Filled.Flag"
-                       AdornmentColor="Color.Tertiary"
-                       OnClose="() => ExportedOrder.CompanyBuyer=null">
-                    @if (BuyerCompanies != null)
-                    {
-                        @foreach (var item in BuyerCompanies)
+                <MudPaper  class="d-flex p-2 my-2 flex-wrap">
+                    <div class="mr-4 flex-grow-1">
+                        <MudSelect Variant="Variant.Outlined" Placeholder="Выберите компанию покупателя" @bind-Value="ExportedOrder.CompanyBuyer"
+                                   Label="Компания покупатель"
+                                   T="Company" ToStringFunc="company => company.Name.ToString()"
+                                   CloseIcon="@Icons.Material.Filled.Flag"
+                                   AdornmentColor="Color.Tertiary"
+                                   OnClose="() => ExportedOrder.CompanyBuyer = null">
+                            @if (BuyerCompanies != null)
+                            {
+                                @foreach (var item in BuyerCompanies)
+                                {
+                                    <MudSelectItem T="Company" OnClick="() => ExportedOrder.EmployeeBuyerId = null" Value="@item">@item.Name</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                        @if (ExportedOrder.CompanyBuyer is { Employees: { } })
                         {
-                            <MudSelectItem T="Company" OnClick="() => ExportedOrder.EmployeeBuyerId=null" Value="@item">@item.Name</MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-                @if (ExportedOrder.CompanyBuyer is { Employees: { } })
-                {
-                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите сотрудника покупателя" @bind-Value="ExportedOrder.EmployeeBuyerId"
-                               Label="Сотрудник компании покупателя"
-                       T="Guid?" ToStringFunc="eml => eml.ToString()"
-                       CloseIcon="@Icons.Material.Filled.Flag"
-                       AdornmentColor="Color.Tertiary">
+                            <MudSelect Variant="Variant.Outlined" Placeholder="Выберите сотрудника покупателя" @bind-Value="ExportedOrder.EmployeeBuyerId"
+                                       Label="Сотрудник компании покупателя"
+                                       T="Guid?" ToStringFunc="eml => eml.ToString()"
+                                       CloseIcon="@Icons.Material.Filled.Flag"
+                                       AdornmentColor="Color.Tertiary">
 
-                        @foreach (var item in ExportedOrder.CompanyBuyer.Employees)
-                        {
-                            <MudSelectItem T="Guid?" Value="@item.Id">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+                                @foreach (var item in ExportedOrder.CompanyBuyer.Employees)
+                                {
+                                    <MudSelectItem T="Guid?" Value="@item.Id">@item.LastName @item.FirstName @item.MiddleName / @item.Email</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="OpenCreateEmployeeDialog">Добавить сотрудника</MudButton>
                         }
-                    </MudSelect>
+                    </div>
+                    <div>
+                        @if (ExportedOrder.ApplicationOrderingProducts != null && BuyerCompanies!= null)
+                        {
+                            <MudText Typo="Typo.h6">Данные о компании из заявки</MudText>
+                            <MudText><span style="color: darkgrey; margin-right: 1rem">Компания:</span>@ExportedOrder.ApplicationOrderingProducts.CompanyName</MudText>
+                            <MudText><span style="color: darkgrey; margin-right: 1rem">Сотрудник:</span>@ExportedOrder.ApplicationOrderingProducts.UserName</MudText>
+                            <MudText><span style="color: darkgrey; margin-right: 1rem">INN компании:</span>@ExportedOrder.ApplicationOrderingProducts.CompanyInn</MudText>
+                            <MudText><span style="color: darkgrey; margin-right: 1rem">E-mail:</span>@ExportedOrder.ApplicationOrderingProducts.Email</MudText>
+                            <MudText><span style="color: darkgrey; margin-right: 1rem">Телефон:</span>@ExportedOrder.ApplicationOrderingProducts.Phone</MudText>
+                            @if (CompanySearchByInn == null)
+                            {
+                                <MudText Color="Color.Error">В списке компаний не найдена компания с ИНН: @ExportedOrder.ApplicationOrderingProducts.CompanyInn</MudText>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => _visibleCreatedCompanyDialog = true">Добавить компанию</MudButton>
+                            }
+                            else
+                            {
+                                <MudText Color="Color.Success">Совпадение по ИНН : <span style="color: black">@CompanySearchByInn.Name</span></MudText>
+                            }
+                        }
+                    </div>
+                </MudPaper>
+                <MudPaper Class="p-2 my-2">
+                    <MudText Typo="Typo.h6">Настройка валют</MudText>
+                    <div class ="d-flex flex-wrap">
+                        <MudItem Class="py-0 px-3">
+                            <MudSelect TextChanged="() => _currencyEdited = true" Variant="Variant.Outlined" Placeholder="Выберите валюту покупателя" @bind-Value="ExportedOrder.BuyerCurrency"
+                                       Label="Валюта покупателя"
+                                       T="string" ToStringFunc="c => c.ToString()"
+                                       CloseIcon="@Icons.Material.Filled.Flag"
+                                       AdornmentColor="Color.Tertiary"
+                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                @if (CurrencyCharCodes != null)
+                                {
+                                    @foreach (var item in CurrencyCharCodes)
+                                    {
+                                        <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem Class="py-0 px-3">
+                            <MudSelect TextChanged="() => _currencyEdited = true" Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ExportedOrder.TransactionCurrency"
+                                       Label="Валюта сделки"
+                                       T="string" ToStringFunc="c => c.ToString()"
+                                       CloseIcon="@Icons.Material.Filled.Flag"
+                                       AdornmentColor="Color.Tertiary"
+                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                @if (CurrencyCharCodes != null)
+                                {
+                                    @foreach (var item in CurrencyCharCodes)
+                                    {
+                                        <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem Class="py-0 px-3">
+                            <MudSelect Disabled="true" Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ExportedOrder.LocalCurrency"
+                                       Label="Локальная валюта"
+                                       T="string" ToStringFunc="c => c.ToString()"
+                                       CloseIcon="@Icons.Material.Filled.Flag"
+                                       AdornmentColor="Color.Tertiary"
+                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                @if (CurrencyCharCodes != null)
+                                {
+                                    @foreach (var item in CurrencyCharCodes)
+                                    {
+                                        <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </div>
+                </MudPaper>
+                @if (ExportedOrder.ApplicationOrderingProducts != null)
+                {
+                    <table class="table table-bordered table-striped table-sm">
+                        <thead>
+                        <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                            <th>Парт-номер</th>
+                            <th>Наименование</th>
+                            <th>Производитель</th>
+                            <th>Количество</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @if (ExportedOrder.ApplicationOrderingProducts.ApplicationOrderingProductProduct != null)
+                        {
+                            @foreach (var item in ExportedOrder.ApplicationOrderingProducts.ApplicationOrderingProductProduct)
+                            {
+                                <tr>
+                                    <td>@item.Product?.PartNumber</td>
+                                    <td>@item.Product?.Name</td>
+                                    <td>@item.Product?.Brand?.Name</td>
+                                    <td>@item.Quantity</td>
+                                    <td></td>
+                                </tr>
+                            }
+                        }
+                        @if (MissingProductInCatalogList != null)
+                        {
+                            <tr style="background-color: rgba(100, 255, 0, 0.388)">
+                                <th colspan="5" style="text-align: center">Добавлено пользователем</th>
+                            </tr>
+                                foreach (var itemMissingProductInCatalog in MissingProductInCatalogList)
+                            {
+                                <tr>
+                                    <td>@itemMissingProductInCatalog.PartNumber</td>
+                                    <td>@itemMissingProductInCatalog.Name</td>
+                                    <td>@itemMissingProductInCatalog.BrandName</td>
+                                    <td>@itemMissingProductInCatalog.Quantity</td>
+                                    <td> <button type="button" class="btn btn-link" @onclick="() => OpenCreateProductDialog(itemMissingProductInCatalog)">Добавить в каталог</button></td>
+                                </tr>
+                            }
+                        }
+                        </tbody>
+                    </table>
                 }
-                <MudItem Class="py-0 px-3">
-                    <MudSelect TextChanged="() => _currencyEdited=true" Variant="Variant.Outlined" Placeholder="Выберите валюту покупателя" @bind-Value="ExportedOrder.BuyerCurrency"
-                           Label="Валюта покупателя"
-                           T="string" ToStringFunc="c => c.ToString()"
-                           CloseIcon="@Icons.Material.Filled.Flag"
-                           AdornmentColor="Color.Tertiary"
-                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
-                        @if (CurrencyCharCodes != null)
-                        {
-                            @foreach (var item in CurrencyCharCodes)
-                            {
-                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
-                            }
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem Class="py-0 px-3">
-                    <MudSelect TextChanged="() => _currencyEdited=true" Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ExportedOrder.TransactionCurrency"
-                           Label="Валюта сделки"
-                           T="string" ToStringFunc="c => c.ToString()"
-                           CloseIcon="@Icons.Material.Filled.Flag"
-                           AdornmentColor="Color.Tertiary"
-                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
-                        @if (CurrencyCharCodes != null)
-                        {
-                            @foreach (var item in CurrencyCharCodes)
-                            {
-                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
-                            }
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem Class="py-0 px-3">
-                    <MudSelect Disabled="true" Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ExportedOrder.LocalCurrency"
-                           Label="Локальная валюта"
-                           T="string" ToStringFunc="c => c.ToString()"
-                           CloseIcon="@Icons.Material.Filled.Flag"
-                           AdornmentColor="Color.Tertiary"
-                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
-                        @if (CurrencyCharCodes != null)
-                        {
-                            @foreach (var item in CurrencyCharCodes)
-                            {
-                                <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
-                            }
-                        }
-                    </MudSelect>
-                </MudItem>
+
             </MudCardContent>
             <MudCardActions>
                 <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="Validation" Color="Color.Tertiary">@ButtonText</MudButton>
             </MudCardActions>
         </MudCard>
     </MudForm>
+
+    <CreateProductDialog @bind-VisibleDialog="_visibleCreatedProductDialog"
+                         RefreshProductList="AddProductToApplicationOrderingProduct"
+                         MissingProductInCatalog = "CurrentMissingProduct"/>
+    <CreateCompanyDialog @bind-VisibleDialog="_visibleCreatedCompanyDialog"
+                         ApplicationOrdering="ApplicationOrderingProduct"
+                         RefreshParent="GetCompanies"/>
+    <CreateEmployeeDialog @bind-VisibleDialog="_visibleCreatedEmployeeDialog"
+                          Company="ExportedOrder.CompanyBuyer"
+                          Employee="CreatedEmployee"
+                          RefreshParent="GetCompanies"/>
 }
 
 
@@ -132,39 +218,80 @@
     [Parameter] public string TitleText { get; set; } = "";
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter]public bool IsEditForm { get; set; }
+    [Parameter] public ApplicationOrderingProducts? ApplicationOrderingProduct { get; set; }
+    public List<MissingProductInCatalog>? MissingProductInCatalogList { get; set; }
     public List<Company>? Companies { get; set; } = null!;
 
     public List<Company>? OurCompanies { get; set; }
     public List<Company>? BuyerCompanies { get; set; }
     public List<ExportedOrderStatus>? ExportedOrderStatus { get; set; }
- 
+    private Employee? CreatedEmployee { get; set; }
+    private Company? CompanySearchByInn { get; set; }
+
     public List<(string charCode, string name)>? CurrencyCharCodes { get; set; }
     private async Task<List<(string charCode, string name)>> GetCurrencyCharCodes() => await CurrencyManager.GetCurrencyCharCode();
     bool _currencyEdited;
     bool _success;
+
+    public MissingProductInCatalog? CurrentMissingProduct { get; set; }
+    private Product? CheckedProductInCatalog { get; set; }
+    bool _visibleCreatedProductDialog;
+    bool _visibleCreatedCompanyDialog; 
+    bool _visibleCreatedEmployeeDialog;
+    protected override async Task OnParametersSetAsync()
+    {
+       
+        if ( ExportedOrder != null)
+        {
+            if (ApplicationOrderingProduct != null && !IsEditForm)
+            {
+                ExportedOrder.ApplicationOrderingProducts = ApplicationOrderingProduct;
+                ExportedOrder.ApplicationOrderingProducts.ExportedOrder = ExportedOrder;
+            }
+            if (ExportedOrder!.ApplicationOrderingProducts?.MissingProductsInCatalog != null)
+                MissingProductInCatalogList = MissingProductConverterService.ConvertMissingProductStringToList(ExportedOrder!.ApplicationOrderingProducts.MissingProductsInCatalog);
+        }
+        await GetCompanies();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         ExportedOrderStatus = await ExportedOrderStatusManager.GetAsync();
-        Companies ??= await CompanyManager.GetAsync();
+ 
+    }
+
+    private async Task GetCompanies()
+    {
+        Companies = await CompanyManager.GetAsync();
         OurCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.OurCompanies).ToList();
         BuyerCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.Customers).ToList();
-
+        if (ExportedOrder is {ApplicationOrderingProducts: { } })
+        {
+            CompanySearchByInn = BuyerCompanies.FirstOrDefault(f => f.Inn == ExportedOrder.ApplicationOrderingProducts.CompanyInn);
+            if (CompanySearchByInn != null)
+            {
+                ExportedOrder.CompanyBuyer = CompanySearchByInn;
+            }
+        }
+    }
+    private void Refresh ()
+    {
+        StateHasChanged();
     }
     private async Task Validation()
     {
         if (OrderForm!.IsValid)
         {
             if (IsEditForm && _currencyEdited)
-                await UpdatePricesInExportrdProducts();
+                await UpdatePricesInExportedProducts();
             
             await OnValidSubmit.InvokeAsync();
         }
-
         else
             await OrderForm.Validate();
 
     }
-    private async Task UpdatePricesInExportrdProducts()
+    private async Task UpdatePricesInExportedProducts()
     {
         if (!IsEditForm)return;
         var productList = ExportedOrder!.ExportedProducts;
@@ -188,5 +315,94 @@
             }
             await ExportedProductManager.UpdateAsync(product);
         }
+    }
+
+    private async Task OpenCreateProductDialog(MissingProductInCatalog missingProduct)
+    {
+        CurrentMissingProduct = missingProduct;
+        var searchProduct = await ProductManager.GetSearchProductAsync(CurrentMissingProduct!.PartNumber);
+        if (searchProduct.Any())
+        {
+            CheckedProductInCatalog = searchProduct.FirstOrDefault();
+            _snackBar.Add("Продукт найден в каталоге");
+            await AddProductToApplicationOrderingProduct();
+            
+            return;
+        }
+       
+        _visibleCreatedProductDialog = true;
+    }
+    private async Task AddProductToApplicationOrderingProduct()
+    {
+        if (CheckedProductInCatalog == null)
+        {
+            var searchProduct = await ProductManager.GetSearchProductAsync(CurrentMissingProduct!.PartNumber);
+            if (searchProduct.Any())
+            {
+                CheckedProductInCatalog = searchProduct.FirstOrDefault();
+            }
+        }
+
+        if (ExportedOrder is {ApplicationOrderingProducts: { } })
+        {
+            ExportedOrder.ApplicationOrderingProducts.ApplicationOrderingProductProduct ??= new List<ApplicationOrderingProductsProduct>();
+            ExportedOrder.ApplicationOrderingProducts.ApplicationOrderingProductProduct.Add(new ApplicationOrderingProductsProduct()
+            {
+                Product = CheckedProductInCatalog,
+                Quantity = CurrentMissingProduct!.Quantity
+            });
+            if (IsEditForm)
+            {
+                var newExportedProduct = new ExportedProduct()
+                {
+                    Product = CheckedProductInCatalog,
+                    Quantity = CurrentMissingProduct!.Quantity,
+                    ExportedOrderId = ExportedOrder!.Id
+                };
+                ExportedOrder.ExportedProducts ??= new List<ExportedProduct>();
+                ExportedOrder.ExportedProducts.Add(newExportedProduct);
+               await ExportedOrderManager.UpdateAsync(ExportedOrder);
+            }
+            MissingProductInCatalogList!.Remove(CurrentMissingProduct);
+            var missProductToString = MissingProductConverterService.ConvertMissingProductListToString(MissingProductInCatalogList);
+            ExportedOrder.ApplicationOrderingProducts.MissingProductsInCatalog =
+                string.IsNullOrEmpty(missProductToString) || string.IsNullOrWhiteSpace(missProductToString) ? null : missProductToString;
+               
+            if (await ApplicationOrderingManager.UpdateAsync(ExportedOrder.ApplicationOrderingProducts))
+            {
+                _snackBar.Add("Продукт добавлен в заявку");
+            }
+            else
+            {
+                _snackBar.Add("Ошибка при добавлении продукта в заявку");
+            }
+
+        }
+        CheckedProductInCatalog = null;
+    }
+
+    private void OpenCreateEmployeeDialog()
+    {
+        var employeeEmails = ExportedOrder!.CompanyBuyer!.Employees?.Select(s => s.Email);
+        var currentEmail = ExportedOrder!.ApplicationOrderingProducts!.Email!.Trim();
+        if (employeeEmails != null && employeeEmails.Contains(currentEmail))
+        {
+            _snackBar.Add($"Сотрудник с e-mail: {currentEmail} существует!");
+            return;
+        }
+        if (ExportedOrder!.ApplicationOrderingProducts != null)
+        {
+            var userSplit = ExportedOrder.ApplicationOrderingProducts.UserName?.Split(" ");
+            CreatedEmployee = 
+                new Employee()
+                {
+                    LastName = userSplit?[0],
+                    FirstName = userSplit?[1],
+                    MiddleName = userSplit?[2],
+                    Email = ExportedOrder.ApplicationOrderingProducts.Email,
+                    Phone = ExportedOrder.ApplicationOrderingProducts.Phone
+                };
+        }
+        _visibleCreatedEmployeeDialog = true;
     }
 }

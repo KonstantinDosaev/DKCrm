@@ -1,5 +1,6 @@
 ﻿using DKCrm.Shared.Models.Products;
 using Microsoft.OData.UriParser;
+using MudBlazor;
 
 namespace DKCrm.Shared.Models
 {
@@ -7,7 +8,7 @@ namespace DKCrm.Shared.Models
     {
         public string? SearchString { get; set; }
         public string? SortLabel { get; set; }
-        public OrderByDirection? SortDirection { get; set; }
+        public SortDirection? SortDirection { get; set; }
         public string? SearchInChapter { get; set; }
         public int PageIndex { get; set;}
         public int PageSize { get; set;}

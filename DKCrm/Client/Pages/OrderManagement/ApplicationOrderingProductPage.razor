@@ -1,0 +1,441 @@
+﻿@page "/orders-admin"
+@attribute [Authorize(Roles = RoleNames.SuAdmin)]
+@using Microsoft.AspNetCore.Components
+@using Size = MudBlazor.Size
+@using System.Text
+@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Models.OrderModels
+@using Microsoft.AspNetCore.Authorization
+@using DKCrm.Client.Pages.OrderManagement.Dialogs
+@using MudBlazor
+@using Position = MudBlazor.Position
+@using SortDirection = MudBlazor.SortDirection
+@inject IAuthService AuthService
+@using DKCrm.Client.Pages.ProductManagement
+
+<div style="min-width: 720px">
+<MudTabs @bind-ActivePanelIndex="_activeIndex"Position="Position.Top" Class="mt-2 mx-4" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
+    <MudTabPanel OnClick="LoadingData">
+        <ChildContent>
+            <div class=" p-3">
+                @if (ActionOrderList != null)
+                {
+                    <MudPaper Class="m-1 p-1">
+                        <MudExpansionPanels>
+                            <MudPaper class="d-flex flex-wrap justify-content-start align-items-center  m-3 px-4 py-2" style="">
+                                <div class="d-flex align-items-center">
+                                    <MudIconButton 
+                                        Icon="@(_sortDirection==SortDirection.Descending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+                                        OnClick="Sorted"
+                                        Variant="Variant.Filled"
+                                        Class="mr-2"></MudIconButton>
+                                    <MudText Typo="Typo.button" Class=" fs-6">Созданы С</MudText>
+                                    <MudDatePicker Editable="true"
+                                                   @bind-Date="_filterDateFirst"
+                                                   Mask="@(new DateMask("dd/MM/yyyy"))"
+                                                   DateFormat="dd/MM/yyyy"
+                                                   Placeholder="день/месяц/год"
+                                                   Variant="Variant.Outlined"
+                                                   Style="width: 200px; margin: 0 1rem;"/>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <MudText Typo="Typo.button" Class=" fs-6">По</MudText>
+                                    <MudDatePicker Editable="true"
+                                               @bind-Date="_filterDateLast"
+                                               Mask="@(new DateMask("dd/MM/yyyy"))"
+                                               DateFormat="dd/MM/yyyy"
+                                               Placeholder="день/месяц/год"
+                                               Variant="Variant.Outlined"
+                                               Style="width: 200px; margin: 0 1rem" />
+                                </div>
+
+                                <MudButton Variant="Variant.Filled" Class="my-3"
+                                           Color="Color.Primary"
+                                           OnClick="GetActionOrderList"
+                                           Size="Size.Medium"
+                                           Style="margin-top: 4px">Показать</MudButton>
+                                <MudTextField T="string" ValueChanged="@(s => OnSearchAction(s))"
+                                          Placeholder="номер заявки/компания" Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              AdornmentIcon="@Icons.Material.Filled.Search"
+                                              IconSize="Size.Medium" Class="mt-0 mx-2"></MudTextField>
+                            </MudPaper>
+                            <div class="d-flex flex-wrap justify-content-between" style="background-color: lightblue; padding: 1rem 4rem; ">
+                                <MudText Typo="Typo.button" Class="fw-bold">Дата создания</MudText>
+                                <MudText Typo="Typo.button" Class="fw-bold">Название компании/e-mail</MudText>
+                                <div></div>
+                            </div>
+                            @foreach (var application in ActionOrderList)
+                            {
+
+                                <MudExpansionPanel Dense="true">
+                                    <TitleContent>
+                                        <div class="d-flex flex-wrap justify-content-between px-4">
+                                            <MudText Class="fw-bold">@application.DateTimeCreated</MudText>
+                                            <MudText Class="fw-bold">@(application.CompanyName ?? application.Email)</MudText>
+                                            <div></div>
+                                        </div>
+                                        </TitleContent>
+                                    <ChildContent>
+                                        <MudText Class="fw-bold p-1">@($"№: {application.Name} ")</MudText>
+                                        <div>
+                                            <MudText><span style="color: darkgrey; margin-right: 1rem">Компания:</span>@application.CompanyName</MudText>
+                                            <MudText><span style="color: darkgrey; margin-right: 1rem">Сотрудник:</span>@application.UserName</MudText>
+                                            <MudText><span style="color: darkgrey; margin-right: 1rem">INN компании:</span>@application.CompanyInn</MudText>
+                                            <MudText><span style="color: darkgrey; margin-right: 1rem">E-mail:</span>@application.Email</MudText>
+                                            <MudText><span style="color: darkgrey; margin-right: 1rem">Телефон:</span>@application.Phone</MudText>
+                                        </div>
+
+
+                                        <table class="table table-bordered table-striped table-sm">
+                                            <thead>
+                                            <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                                                <th>Парт-номер</th>
+                                                <th>Наименование</th>
+                                                <th>Производитель</th>
+                                                <th>Количество</th>
+                                                <th>Подробнее</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            @if (application.ApplicationOrderingProductProduct != null)
+                                            {
+                                                @foreach (var item in application.ApplicationOrderingProductProduct)
+                                                {
+                                                    <tr>
+                                                        <td>@item.Product?.PartNumber</td>
+                                                        <td>@item.Product?.Name</td>
+                                                        <td>@item.Product?.Brand?.Name</td>
+                                                        <td>@item.Quantity</td>
+                                                        <td> <button class="btn btn-link" @onclick="@(e => GetModalProductCard(item.ProductId))">Подробнее</button></td>
+                                                    </tr>
+                                                }
+                                            }
+                                            @if (application.MissingProductsInCatalog != null)
+                                            {
+                                                <tr style="background-color: rgba(0, 169, 255, 0.388)">
+
+                                                    <th colspan="5" style="text-align: center">Добавлено пользователем</th>
+
+                                                </tr>
+                                                foreach (var itemMissingProductInCatalog in MissingProductConverterService.ConvertMissingProductStringToList(application.MissingProductsInCatalog))
+                                                {
+                                                    <tr>
+                                                        <td>@itemMissingProductInCatalog.PartNumber</td>
+                                                        <td>@itemMissingProductInCatalog.Name</td>
+                                                        <td>@itemMissingProductInCatalog.BrandName</td>
+                                                        <td>@itemMissingProductInCatalog.Quantity</td>
+                                                        <td></td>
+                                                    </tr>
+                                                }
+                                            }
+                                            </tbody>
+                                        </table>
+
+                                        <div class="text-end">
+                                            <MudButton Variant="Variant.Filled" Class="my-3" Color="Color.Primary" OnClick="() => OpenCreateOrderDialog(application)">Настроить заказ</MudButton>
+                                        </div>
+                                    </ChildContent>
+                                </MudExpansionPanel>
+                            }
+                        </MudExpansionPanels>
+                        <MudButton Variant="Variant.Filled" Class="my-3" Color="Color.Primary" OnClick="LoadMoreActionOrder">Загрузить еще</MudButton>
+                    </MudPaper>
+                }
+            </div>
+        </ChildContent>
+        <TabContent>
+            <MudText Typo="Typo.h6">Не обработанные заявки</MudText>
+        </TabContent>
+    </MudTabPanel>
+    <MudTabPanel OnClick="LoadingData">
+        <ChildContent>
+            <div class="p-3">
+                @if (HistoryList != null)
+                {
+                    <MudPaper Class="m-1 p-1">
+                        <MudExpansionPanels Elevation="25">
+                            <MudPaper class="d-flex flex-wrap justify-content-start align-items-center  m-3 px-4 py-2" style="">
+                                <div class="d-flex align-items-center">
+                                    <MudIconButton 
+                                        Icon="@(_sortDirection==SortDirection.Descending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+                                        OnClick="Sorted"
+                                        Variant="Variant.Filled"
+                                        Class="mr-2"></MudIconButton>
+                                    <MudText Typo="Typo.button" Class=" fs-6">Обработаны С</MudText>
+                                    <MudDatePicker Editable="true"
+                                                   @bind-Date="_filterHistoryDateFirst"
+                                                   Mask="@(new DateMask("dd/MM/yyyy"))"
+                                                   DateFormat="dd/MM/yyyy"
+                                                   Placeholder="день/месяц/год"
+                                                   Variant="Variant.Outlined"
+                                                   Style="width: 200px; margin: 0 1rem;"/>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <MudText Typo="Typo.button" Class=" fs-6">По</MudText>
+                                    <MudDatePicker Editable="true"
+                                                   @bind-Date="_filterHistoryDateLast"
+                                                   Mask="@(new DateMask("dd/MM/yyyy"))"
+                                                   DateFormat="dd/MM/yyyy"
+                                                   Placeholder="день/месяц/год"
+                                                   Variant="Variant.Outlined"
+                                                   Style="width: 200px; margin: 0 1rem" />
+                                </div>
+
+                                <MudButton Variant="Variant.Filled" Class="my-3"
+                                           Color="Color.Primary"
+                                           OnClick="GetHistoryList"
+                                           Size="Size.Medium"
+                                           Style="margin-top: 4px">Показать</MudButton>
+                                <MudTextField T="string" ValueChanged="@(s => OnSearchHistory(s))"
+                                          Placeholder="номер заявки/компания" Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              AdornmentIcon="@Icons.Material.Filled.Search"
+                                              IconSize="Size.Medium" Class="mt-0 mx-2"></MudTextField>
+                            </MudPaper>
+                            <div class="d-flex flex-wrap justify-content-between" style="background-color: lightblue; padding: 1rem 4rem; ">
+                                <MudText Typo="Typo.button" Class="fw-bold">Дата завершения</MudText>
+                                <MudText Typo="Typo.button" Class="fw-bold">Название компании/e-mail</MudText>
+                                <MudText Typo="Typo.button" Class="fw-bold">Дата создания</MudText>
+                            </div>
+                            @foreach (var application in HistoryList)
+                            {
+
+                                <MudExpansionPanel Dense="true" >
+                                    <TitleContent>
+                                        <div class="d-flex flex-wrap justify-content-between px-4">
+                                            <MudText Class="fw-bold">@application.DateTimeUpdate</MudText>
+                                            <MudText Class="fw-bold">@(application.CompanyName ?? application.Email)</MudText>
+                                            <MudText Class="fw-bold">@application.DateTimeCreated</MudText>
+                                        </div>
+                                        </TitleContent>
+                                    <ChildContent>
+                                     
+                                            <div class="d-flex justify-content-between px-4 py-1">
+                                                <div>
+                                                    <MudText Class="fw-bold">@($"№: {application.Name} ")</MudText>
+                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">Принял заявку:</span>@application.UpdatedUser</MudText>
+                                                </div>
+                                                <div>
+                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">Компания:</span>@application.CompanyName</MudText>
+                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">Сотрудник:</span>@application.UserName</MudText>
+                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">INN компании:</span>@application.CompanyInn</MudText>
+                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">E-mail:</span>@application.Email</MudText>
+                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">Телефон:</span>@application.Phone</MudText>
+                                                </div>
+                                            </div>
+
+                                            <table class="table table-bordered table-striped table-sm">
+                                                <thead>
+                                                <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                                                    <th>Парт-номер</th>
+                                                    <th>Наименование</th>
+                                                    <th>Производитель</th>
+                                                    <th>Количество</th>
+                                                    <th>Подробнее</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                @if (application.ApplicationOrderingProductProduct != null)
+                                                {
+                                                    @foreach (var item in application.ApplicationOrderingProductProduct)
+                                                    {
+                                                        <tr>
+                                                            <td>@item.Product?.PartNumber</td>
+                                                            <td>@item.Product?.Name</td>
+                                                            <td>@item.Product?.Brand?.Name</td>
+                                                            <td>@item.Quantity</td>
+                                                            <td> <button class="btn btn-link" @onclick="@(e => GetModalProductCard(item.ProductId))">Подробнее</button></td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                @if (application.MissingProductsInCatalog != null)
+                                                {
+                                                    <tr style="background-color: rgba(0, 169, 255, 0.388)">
+
+                                                        <th colspan="5" style="text-align: center">Добавлено пользователем</th>
+
+                                                    </tr>
+                                                    foreach (var itemMissingProductInCatalog in MissingProductConverterService.ConvertMissingProductStringToList(application.MissingProductsInCatalog))
+                                                    {
+                                                        <tr>
+                                                            <td>@itemMissingProductInCatalog.PartNumber</td>
+                                                            <td>@itemMissingProductInCatalog.Name</td>
+                                                            <td>@itemMissingProductInCatalog.BrandName</td>
+                                                            <td>@itemMissingProductInCatalog.Quantity</td>
+                                                            <td></td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                </tbody>
+                                            </table>
+                                    </ChildContent>
+                                </MudExpansionPanel>
+                            }
+                        </MudExpansionPanels>
+                        <MudButton Variant="Variant.Filled" Class="my-3" Color="Color.Primary" OnClick="LoadMoreHistory">Загрузить еще</MudButton>
+                    </MudPaper>
+                }
+            </div>
+        </ChildContent>
+        <TabContent>
+            <MudText Typo="Typo.h6">История заявок</MudText>
+            <MudIcon Class="ml-2" Icon="@Icons.Material.Filled.History"></MudIcon>
+        </TabContent>
+    </MudTabPanel>
+</MudTabs>
+<ProductDetailDialog @bind-VisibleDialog="_visibleDetailProductDialog"
+                     ProductId="IdCurrentProduct" />
+<CreateExportedOrderDialog 
+    RefreshProductList="LoadingData"
+    @bind-VisibleDialog="_visibleAddOrderDialog" ApplicationOrderingProduct="ApplicationOrderingProduct" />
+</div>
+
+@code {
+    private int _activeIndex = 0;
+    List<ApplicationOrderingProducts>? HistoryList { get; set; }
+    List<ApplicationOrderingProducts>? ActionOrderList { get; set; }
+    ApplicationOrderingProducts? ApplicationOrderingProduct { get; set; }
+    CurrentUser? User { get; set; }
+
+    private int _itemInPage = 5;
+    private int _itemInPageIndex=0;
+    private int _totalItems;
+    DateTime? _filterDateFirst = DateTime.Now - new TimeSpan(30, 0, 0, 0);
+    DateTime? _filterDateLast = DateTime.Now;
+    DateTime? _filterHistoryDateFirst = DateTime.Now - new TimeSpan(30, 0, 0, 0);
+    DateTime? _filterHistoryDateLast = DateTime.Now;
+
+    //private Modal? _modalProductCard;
+    private Guid IdCurrentProduct { get; set; }
+    private string? _searchStringActive;
+    private string? _searchStringHistory;
+    private SortDirection _sortDirection = SortDirection.Descending;
+
+    private bool _visibleDetailProductDialog;
+    private bool _visibleAddOrderDialog;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadingData();
+        User ??= await AuthService.CurrentUserInfo();
+    }
+
+    private async Task LoadingData()
+    {
+        switch (_activeIndex)
+        {
+            case 0:
+                _itemInPageIndex = 0;
+                   ActionOrderList = await GetActionOrderList();
+                break;
+            case 1:
+                _itemInPageIndex = 0;
+                HistoryList= await GetHistoryList();
+                break;
+
+        }
+    }
+   
+    private async Task<List<ApplicationOrderingProducts>> GetHistoryList()
+    {
+        var request = new SortPagedRequest<FilterApplicationOrderTuple>()
+        {
+            PageIndex = _itemInPageIndex,
+            PageSize = _itemInPage,
+            SearchString = _searchStringHistory,
+            SortLabel = "update_field",
+            SortDirection = _sortDirection,
+            FilterTuple = new FilterApplicationOrderTuple()
+            {
+                UpdateDateFirst = _filterHistoryDateFirst,
+                UpdateDateLast = _filterHistoryDateLast,
+                InWork = true
+            }
+
+        };
+        var response = await ApplicationOrderingManager.GetBySortFilterPaginationAsync(request);
+        _totalItems = response.TotalItems;
+        return response.Items!.ToList();
+    }
+    private async Task LoadMoreHistory()
+    {
+        if (HistoryList!.Count == _totalItems)
+            return;
+
+        _itemInPageIndex += 1;
+        HistoryList!.AddRange(await GetHistoryList());
+    }
+    
+    private async Task<List<ApplicationOrderingProducts>> GetActionOrderList()
+    {
+        var request = new SortPagedRequest<FilterApplicationOrderTuple>()
+        {
+            PageIndex = _itemInPageIndex,
+            PageSize = _itemInPage,
+            SearchString = _searchStringActive,
+            SortLabel = "create_field",
+            SortDirection = _sortDirection,
+            FilterTuple = new FilterApplicationOrderTuple()
+            {
+                CreateDateFirst = _filterDateFirst,
+                CreateDateLast = _filterDateLast,
+                InWork = false
+            }
+
+        };
+        var response = await ApplicationOrderingManager.GetBySortFilterPaginationAsync(request);
+        return response.Items!.ToList();
+    }
+    private async Task LoadMoreActionOrder()
+    {
+        if (ActionOrderList!.Count == _totalItems)
+            return;
+
+        _itemInPageIndex += 1;
+        ActionOrderList!.AddRange(await GetActionOrderList());
+    } 
+
+    [Inject] private IDialogService? DialogService { get; set; }
+    private async Task OpenCreateOrderDialog(ApplicationOrderingProducts order)
+    {
+        ApplicationOrderingProduct = order;
+        _visibleAddOrderDialog = true;
+    }
+    private async Task SetCompletedOrder(ApplicationOrderingProducts order)
+    {
+        //order.InWork = true;
+        //if (User != null)
+        //{
+        //    order.UpdatedUser = User.FirstName != null ? $"{User.LastName} {User.FirstName} {User.MiddleName}" : User.Email;
+        //}
+        //order.DateTimeUpdate=DateTime.Now;
+        
+        //await OrderService.Update(order);
+        //ImpNavigationManager.NavigateTo(ImpNavigationManager.Uri, true);
+    }
+    private void GetModalProductCard(Guid id)
+    {
+        IdCurrentProduct = id;
+        _visibleDetailProductDialog = true;
+
+    }
+   
+    private async Task OnSearchAction(string text)
+    {
+        _searchStringActive = text;
+        await LoadingData();
+    }
+    private async Task OnSearchHistory(string text)
+    {
+        _searchStringHistory = text;
+        await LoadingData();
+    }
+    private async Task Sorted()
+    {
+        _sortDirection = _sortDirection == SortDirection.Descending ? SortDirection.Ascending : SortDirection.Descending;
+        await LoadingData();
+    }
+    
+}
+

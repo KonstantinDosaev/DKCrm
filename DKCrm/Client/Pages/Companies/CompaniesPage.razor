@@ -3,7 +3,7 @@
 @page "/companies/tag/{tagid:guid}"
 
 <MudText Typo="Typo.h4">Компании</MudText>
-<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _companyForm._visibleAddCompanyDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddCompanyDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
     Добавить компанию
     <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
 </MudButton>
@@ -89,13 +89,9 @@
 </MudGrid>
 
 
-
-<CompanyForm CurrentCompany="CreatedCompany"
-             OnValidSubmit="AddCompany"
-             CompanyTypes="CompanyTypes"
-             ButtonText="Создать"
-             @ref="_companyForm
-"/>
+<CreateCompanyDialog 
+    RefreshParent="GetAllCompanies"
+                     @bind-VisibleDialog="_visibleAddCompanyDialog" />
 
 <MudDrawerContainer Class="mud-height-full">
 
@@ -122,6 +118,8 @@
     public bool VisibleCompanySettingsDrawer { get; set; }
     MudListItem? _selectedItem;
     object _selectedValue = 1;
+
+    private bool _visibleAddCompanyDialog;
 
     protected override async Task OnInitializedAsync()
     {
@@ -164,17 +162,7 @@
        
         return false;
     }
-    private async Task AddCompany()
-    {
-        //await _companyForm._createCompanyForm!.Validate();
-        //if (!_companyForm._createCompanyForm.IsValid) return;
-
-        if (await CompanyManager.AddAsync(CreatedCompany!))
-        {
-            _companyForm!._visibleAddCompanyDialog = false;
-            _snackBar.Add("Компания добавлена!");
-        }
-    }
+  
     private void RowClickEvent(TableRowClickEventArgs<Company> tableRowClickEventArgs)
     {
         _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");

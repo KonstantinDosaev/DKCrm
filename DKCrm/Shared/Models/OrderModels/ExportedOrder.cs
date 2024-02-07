@@ -1,10 +1,4 @@
 ﻿using DKCrm.Shared.Models.CompanyModels;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DKCrm.Shared.Models.OrderModels
 {
@@ -42,6 +36,8 @@ namespace DKCrm.Shared.Models.OrderModels
 
         public virtual ExportedOrderStatus ? ExportedOrderStatus { get; set; }
         public Guid? ExportedOrderStatusId { get; set; }
-      
+        public virtual ApplicationOrderingProducts? ApplicationOrderingProducts { get; set; }
+        
+
     }
 }

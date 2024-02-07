@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.OrderModels;
+﻿using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -6,6 +7,7 @@ namespace DKCrm.Client.Services.OrderServices
     {
         Task<List<ExportedOrder>> GetAsync();
         Task<ExportedOrder> GetDetailsAsync(Guid id);
+        Task<SortPagedResponse<ExportedOrder>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterOrderTuple> request);
         Task<bool> UpdateAsync(ExportedOrder item);
         Task<bool> AddAsync(ExportedOrder item);
         Task<bool> RemoveRangeAsync(IEnumerable<ExportedOrder> items);

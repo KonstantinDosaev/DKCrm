@@ -28,5 +28,6 @@ namespace DKCrm.Shared.Models
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
         public string? UpdatedUser { get; set; }
+        public Guid? EmployeeId { get; set; }
     }
 }
