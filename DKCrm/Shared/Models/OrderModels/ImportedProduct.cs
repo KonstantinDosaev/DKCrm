@@ -3,7 +3,7 @@ using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Shared.Models.OrderModels
 {
-    public class ImportedProduct: IIdentifiable
+    public class ImportedProduct: IIdentifiable, ISoftDelete
     {
         public Guid Id { get; set; }
         public int Quantity { get; set; }
@@ -23,5 +23,9 @@ namespace DKCrm.Shared.Models.OrderModels
         public Guid? ProductId { get; set; }
         public virtual ImportedOrder? ImportedOrder { get; set; }
         public Guid? ImportedOrderId { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

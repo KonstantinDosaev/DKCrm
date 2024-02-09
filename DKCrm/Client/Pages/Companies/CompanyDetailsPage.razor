@@ -244,7 +244,7 @@
 
         @foreach (var tag in TagsCompanies!)
         {
-            @if (Company.TagsCompanies != null && Company.TagsCompanies.Select(s => s.Id).Contains(tag.Id))
+            @if (Company?.TagsCompanies != null && Company.TagsCompanies.Select(s => s.Id).Contains(tag.Id))
                 Checked = true;
             else
                 Checked = false;
@@ -269,7 +269,7 @@
     private List<CompanyType>? CompanyTypes { get; set; }
     public Company? Company { get; set; }
     public Employee Employee { get; set; } = new();
-    CompanyForm? _companyForm = null!;
+
     public List<Employee>? OurEmployees { get; set; }
 
     private bool _checkSizeEmployeeInfo { get; set; } = false;
@@ -291,13 +291,10 @@
     {
         Company = await CompanyManager.GetDetailsAsync(CompanyId);
     }
-    private async Task OpenUpdateCompanyDialog()
+    private void OpenUpdateCompanyDialog()
     {
-       
         _visibleEditCompanyDialog = true;
-
     }
-
 
     private async Task OpenAddEmployeeDialog()
     {
@@ -309,7 +306,7 @@
     }
     private async Task AddEmployee()
     {
-        Employee = _empForm.Employee;
+        Employee = _empForm!.Employee;
         Company!.Employees ??= new List<Employee>();
         Company.Employees.Add(Employee);
         if (await CompanyManager.UpdateAsync(Company!))
@@ -380,30 +377,33 @@
     private void AddRemoveToTag(TagsCompany tag)
     {
 
-        if (Company.TagsCompanies != null && Company.TagsCompanies.Select(s => s.Id).Contains(tag.Id))
+        if (Company?.TagsCompanies != null && Company.TagsCompanies.Select(s => s.Id).Contains(tag.Id))
         {
-            Company.TagsCompanies.Remove(Company.TagsCompanies.FirstOrDefault(w => w.Id == tag.Id));
+            Company.TagsCompanies.Remove(Company?.TagsCompanies.FirstOrDefault(w => w.Id == tag.Id)!);
         }
         else
         {
-            Company.TagsCompanies ??= new List<TagsCompany>();
+            Company!.TagsCompanies ??= new List<TagsCompany>();
             Company.TagsCompanies.Add(tag);
         }
     }
     private async Task UpdateTags()
     {
-        var tagIdList = Company.TagsCompanies!.Select(s => s.Id).ToList();
-        var request = new TagsRequest() { CompanyId = CompanyId, TagCollection = tagIdList };
-        await CompanyManager.UpdateTagsAsync(request);
-        _visibleAddToTagDialog = false;
-        _snackBar.Add("Теги обновлены");
+        var tagIdList = Company?.TagsCompanies!.Select(s => s.Id).ToList();
+        if (tagIdList != null)
+        {
+            var request = new TagsRequest() { CompanyId = CompanyId, TagCollection = tagIdList };
+            await CompanyManager.UpdateTagsAsync(request);
+            _visibleAddToTagDialog = false;
+            _snackBar.Add("Теги обновлены");
+        }
+       
     }
     private async Task RemoveCompany()
     {
         if (await CompanyManager.RemoveAsync(CompanyId))
         {
             _navigationManager.NavigateTo("/companies");
-            
         }
     }
 

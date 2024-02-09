@@ -30,7 +30,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != null && Id != Guid.Empty) Order = await ImportedOrderManager.GetDetailsAsync((Guid)Id);
+        if (Id != null && Id != Guid.Empty && VisibleDialog) Order = await ImportedOrderManager.GetDetailsAsync((Guid)Id);
     }
 
     async Task Edit()

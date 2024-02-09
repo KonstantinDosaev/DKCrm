@@ -27,8 +27,8 @@
           Striped="true"
           Bordered="true"
           HeaderClass="mud-table-header table-head-bordered"
-          OnRowClick="RowClickEvent" T="ExportedOrder"
-          @ref="_table" RowClass="@row" >
+          T="ExportedOrder"
+          @ref="_table" >
     <ToolBarContent>
         <MudText Typo="Typo.h6">Список заказов</MudText>
         <MudSpacer />
@@ -50,20 +50,26 @@
 
     </ToolBarContent>
     <HeaderContent>
+        <MudTh></MudTh>
         <MudTh><MudTableSortLabel SortLabel="number_field" T="ExportedOrder">Номер заказа</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="name_field" T="ExportedOrder">Название</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="ourCompany_field" T="ExportedOrder">Наша компания</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel Enabled="true" SortLabel="conterCompany_field" T="ExportedOrder">Компания поставщик</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel Enabled="true" SortLabel="conterCompany_field" T="ExportedOrder">Компания заказчик</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="create_field" T="ExportedOrder">Дата создания</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="update_field" T="ExportedOrder">Дата обновления</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status_field" T="ExportedOrder">Статус</MudTableSortLabel></MudTh>
 
     </HeaderContent>
     <RowTemplate>
-
-            <MudTd DataLabel="Номер заказа">@context.Id</MudTd>
-        
-        <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
-
-
+        <MudTd
+               Style="@(_showDetails && OrderId == context.Id? "background-color: gainsboro; width: 3rem; margin: 0; padding: 0" : "background-color: none; width: 3rem; margin: 0; padding: 0")"
+               DataLabel="Номер заказа">
+            <MudIconButton Size="@Size.Large" 
+                           OnClick="() => OpenOrderDetails(context.Id)" 
+                           Color="Color.Default"
+                           Icon="@(_showDetails && OrderId == context.Id? Icons.Material.Filled.KeyboardArrowUp : Icons.Material.Filled.KeyboardArrowDown)"
+                           Class="pa-0 ml-2" />
+        </MudTd>
+        <MudTd DataLabel="Номер заказа">@context.Name</MudTd>
         <MudTd DataLabel="Наша компания">
             @if (context.OurCompany != null)
             {
@@ -71,11 +77,9 @@
                 @if (context.OurEmployee != null)
                 {
                     <MudText Typo="Typo.body2">
-
                         @context.OurEmployee.LastName
                         @context.OurEmployee.FirstName
                         @context.OurEmployee.MiddleName
-
                     </MudText>
                 }
             }
@@ -87,26 +91,26 @@
                 @if (context.EmployeeBuyer != null)
                 {
                     <MudText Typo="Typo.body2">
-
-                        @context.EmployeeBuyer.LastName 
-                        @context.EmployeeBuyer.FirstName 
-                        @context.EmployeeBuyer.MiddleName 
-
+                        @context.EmployeeBuyer.LastName
+                        @context.EmployeeBuyer.FirstName
+                        @context.EmployeeBuyer.MiddleName
                     </MudText>
                 }
             }
         </MudTd>
+        <MudTd DataLabel="Дата создания">@context.DateTimeCreated</MudTd>
+        <MudTd DataLabel="Дата обновления">@context.DateTimeUpdate</MudTd>
         <MudTd DataLabel="Статус">
             @if (context.ExportedOrderStatus != null)
             {
-                @context.ExportedOrderStatus.Value
+                @context.ExportedOrderStatus.FirstOrDefault();
             }
         </MudTd>
-        @if (ProductId == context.Id && _showDetails)
+        @if (OrderId == context.Id && _showDetails)
         {
             <MudTd Style="background-color: gainsboro;" DataLabel="">
 
-                <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
+                <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
 
             </MudTd>
         }
@@ -114,29 +118,29 @@
         {
             <MudTd DataLabel="">
 
-                <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
+                <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
 
             </MudTd>
         }
-       
-        
+
+
     </RowTemplate>
 
     <ChildRowContent>
-        @if (ProductId == context.Id && _showDetails)
+        @if (OrderId == context.Id && _showDetails)
         {
             <MudTr>
-                <td colspan="6" style="text-align: center">
+                <td colspan="8" style="text-align: center">
                
                     <MudCard Style="background: gainsboro;" Elevation="25">
-                        <MudIcon Size="Size.Large" Icon="@Icons.Material.Filled.KeyboardArrowDown"></MudIcon>
+                       
                         @*                                <MudCardHeader>
                     <CardHeaderContent>
                     <MudText Typo="Typo.body1">Address Details for <strong>@context.Name</strong></MudText>
                     </CardHeaderContent>
                     </MudCardHeader>*@
                         <MudCardContent Class="pa-1">
-                            <ExportOrderDetailsComponent Id="ProductId"/>
+                            <ExportOrderDetailsComponent Id="OrderId" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -221,22 +225,16 @@
 @code {
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
-    private List<ExportedOrder>? Orders { get; set; }
-    private List<ExportedOrder>? AllOrders { get; set; }
-
+   
     private List<ExportedOrderStatus>? StatusList { get; set; }
-    private ExportedOrderStatus Status { get; set; }
+    private ExportedOrderStatus? Status { get; set; }
     public ExportedOrder Order { get; set; } = new();
 
     private string? _searchString = null;
     public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
     private FilterOrderTuple? _filterOrderTuple;
-    private Guid ProductId { get; set; }
+    private Guid OrderId { get; set; }
     private MudTable<ExportedOrder>? _table;
-
-
-    MudListItem? _selectedItem;
-    object _selectedValue = 1;
 
     private bool _showDetails;
     private bool _visibleAddOrderDialog;
@@ -244,9 +242,7 @@
     private bool _visibleSettingsOrderDialog; 
     private bool _visibleOrderStatusRemoveDialog;
     private bool _visibleOrderStatusEditDialog;
-
-    private string row = "my-table-row-w";
-
+    
     private async Task<TableData<ExportedOrder>> ServerReload(TableState state)
     {
        
@@ -288,10 +284,16 @@
         _visibleUpdateOrderDialog = true;
     }
     
-    private void RowClickEvent(TableRowClickEventArgs<ExportedOrder> tableRowClickEventArgs)
+    //private void RowClickEvent(TableRowClickEventArgs<ExportedOrder> tableRowClickEventArgs)
+    //{
+    ////row = row == "my-table-row-w" ? "my-table-row" : "my-table-row-w";
+    //    ProductId = tableRowClickEventArgs.Item.Id;
+    //    _showDetails = !_showDetails;
+    //}
+    private void OpenOrderDetails(Guid orderId)
     {
     //row = row == "my-table-row-w" ? "my-table-row" : "my-table-row-w";
-        ProductId = tableRowClickEventArgs.Item.Id;
+        OrderId = orderId;
         _showDetails = !_showDetails;
     }
 

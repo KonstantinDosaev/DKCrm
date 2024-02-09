@@ -41,7 +41,7 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> SaveMessageAsync(ChatMessage message)
         {
             var userId = User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
-            message.FromUserId = userId;
+            if (userId != null) message.FromUserId = userId;
             message.CreatedDate = DateTime.UtcNow + new TimeSpan(0, 3, 0, 0);
             message.ToUser = await _context.Users.Where(user => user.Id == message.ToUserId).FirstOrDefaultAsync();
             await _context.ChatMessages.AddAsync(message);

@@ -9,7 +9,7 @@ namespace DKCrm.Shared.Models.Products
     {
         public Guid Id { get; set; }
         //[Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         //[Required]
         public virtual Address? Address { get; set; }

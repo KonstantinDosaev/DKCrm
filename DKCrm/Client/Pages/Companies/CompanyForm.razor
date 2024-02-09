@@ -129,7 +129,7 @@
                                   Variant="Variant.Outlined"
                                   Label="Введите ИНН или ОГРН" />
 
-                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn)" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn!)" Style="margin-top: 2rem;" Color="Color.Tertiary">
                         запрос
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
                     </MudButton>
@@ -142,7 +142,7 @@
                                   Variant="Variant.Outlined"
                                   Label="Введите ИНН или ОГРН" />
 
-                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn)" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn!)" Style="margin-top: 2rem;" Color="Color.Tertiary">
                         запрос
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
                     </MudButton>
@@ -293,6 +293,8 @@
  
     private async Task GetFns(string inn)
     {
+        if (string.IsNullOrEmpty(inn)) return;
+
         try
         {
             FnsRequests = (List<FnsRequest>?)await RequestingFromFnsService.GetCompanyByInn(inn);

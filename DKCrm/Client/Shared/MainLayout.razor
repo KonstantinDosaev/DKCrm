@@ -9,23 +9,24 @@
 <div class="page">
     <main>
         <NavMenu />
-        <CascadingValue Value="hubConnection">
+        <CascadingValue Value="_hubConnection">
         @Body
     </CascadingValue>
 </main>
 </div>
 @functions{
     [CascadingParameter]
-    Task<AuthenticationState> AuthenticationState { get; set; }
+    Task<AuthenticationState> AuthenticationState { get; set; } = null!;
 
-    private HubConnection hubConnection;
-    public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
-    private string CurrentUserId { get; set; }
+    private HubConnection _hubConnection = null!;
+    public bool IsConnected => _hubConnection.State == HubConnectionState.Connected;
+    private string CurrentUserId { get; set; } = null!;
+
     protected override async Task OnInitializedAsync()
     {
-        hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
-        await hubConnection.StartAsync();
-        hubConnection.On<string, string, string>("ReceiveChatNotification", (message, receiverUserId, senderUserId) =>
+        _hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
+        await _hubConnection.StartAsync();
+        _hubConnection.On<string, string, string>("ReceiveChatNotification", (message, receiverUserId, senderUserId) =>
         {
             if (CurrentUserId == receiverUserId)
             {

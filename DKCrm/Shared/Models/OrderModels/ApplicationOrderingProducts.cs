@@ -5,7 +5,7 @@ namespace DKCrm.Shared.Models.OrderModels
     public class ApplicationOrderingProducts: ISoftDelete
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public string? UserId { get; set; }
         public string? UserName { get; set; }
         public string? CompanyName { get; set; }

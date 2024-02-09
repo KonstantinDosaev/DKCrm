@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.OrderModels
 {
-    public class ExportedProduct
+    public class ExportedProduct : ISoftDelete
     {
         public Guid Id { get; set; }
         public int Quantity { get; set; }
@@ -27,7 +28,11 @@ namespace DKCrm.Shared.Models.OrderModels
         public Guid? ProductId { get; set; }
         public virtual ExportedOrder? ExportedOrder { get; set; }
         public Guid? ExportedOrderId { get; set; }
-      
-      
+
+
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

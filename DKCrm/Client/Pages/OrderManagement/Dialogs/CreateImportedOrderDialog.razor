@@ -32,7 +32,7 @@
 
     async Task Create()
     {
-        Order.OurCompanyId = Order.OurCompany!.Id;
+        Order!.OurCompanyId = Order.OurCompany!.Id;
         Order.SellersCompanyId = Order.SellersCompany!.Id;
         await ImportedOrderManager.AddAsync(Order);
         await RefreshProductList.InvokeAsync();

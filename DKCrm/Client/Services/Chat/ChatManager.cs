@@ -14,11 +14,11 @@ namespace DKCrm.Client.Services.Chat
         }
         public async Task<List<ChatMessage>> GetConversationAsync(string contactId)
         {
-            return await _httpClient.GetFromJsonAsync<List<ChatMessage>>($"api/chat/{contactId}");
+            return await _httpClient.GetFromJsonAsync<List<ChatMessage>>($"api/chat/{contactId}") ?? throw new InvalidOperationException();
         }
         public async Task<ApplicationUser> GetUserDetailsAsync(string userId)
         {
-            return await _httpClient.GetFromJsonAsync<ApplicationUser>($"api/chat/users/{userId}");
+            return await _httpClient.GetFromJsonAsync<ApplicationUser>($"api/chat/users/{userId}") ?? throw new InvalidOperationException();
         }
 
         public async Task RemoveMessageAsync(IEnumerable<Guid> listId)
@@ -29,7 +29,7 @@ namespace DKCrm.Client.Services.Chat
         public async Task<List<ApplicationUser>> GetUsersAsync()
         {
             var data = await _httpClient.GetFromJsonAsync<List<ApplicationUser>>("api/chat/users");
-            return data;
+            return data ?? throw new InvalidOperationException();
         }
         public async Task SaveMessageAsync(ChatMessage message)
         {

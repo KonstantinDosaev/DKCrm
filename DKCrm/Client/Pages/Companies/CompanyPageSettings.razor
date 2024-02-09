@@ -4,7 +4,7 @@
         @* <MudText Typo="Typo.h6">Общие настройки компаний</MudText>*@
 
 
-<MudTabs @bind-ActivePanelIndex="activeIndex" Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
+<MudTabs @bind-ActivePanelIndex="_activeIndex" Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
     <MudTabPanel OnClick="LoadingData">
         <ChildContent>
             <div class="flex-column">
@@ -142,7 +142,7 @@
     <DialogContent>
 
 
-        @if (CurrentCompanyType.Companies != null && CurrentCompanyType.Companies.Any())
+        @if (CurrentCompanyType?.Companies != null && CurrentCompanyType.Companies.Any())
         {
             <MudText Class="pb-3 text-decoration-underline text-danger">За данным типом закреплены компании!!!Прикрепите их к другому типу</MudText>
             <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleCompanyTypeRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
@@ -180,7 +180,7 @@
     <DialogContent>
 
 
-        @if (CurrentTagCompany.Companies != null && CurrentTagCompany.Companies.Any())
+        @if (CurrentTagCompany?.Companies != null && CurrentTagCompany.Companies.Any())
         {
             <MudText Class="pb-3 text-decoration-underline text-danger">За данным тегом закреплены компании!!!Прикрепите их к другому тегу</MudText>
             <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleCompanyTagRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
@@ -198,8 +198,8 @@
 </MudDialog>
 
 @code {
-    private int activeIndex = 0;
-    private string _valueString;
+    private int _activeIndex = 0;
+    private string? _valueString;
 
     private InternalCompanyData? InternalCompanyData { get; set; }
     MudForm? _editInternalDataForm;
@@ -226,7 +226,7 @@
 
     private async Task LoadingData()
     {
-        switch (activeIndex)
+        switch (_activeIndex)
         {
             case 0:
                 if (CompanyTypes == null)
@@ -257,6 +257,7 @@
     }
     public async void AddCompanyType()
     {
+        if (_valueString == null) return;
         var tempCompanyType = new CompanyType() { Name = _valueString };
         if (await CompanyTypeManager.AddAsync(tempCompanyType))
         {
@@ -313,6 +314,7 @@
     }
     public async void AddCompanyTag()
     {
+        if (_valueString == null) return;
         var tempCompanyType = new TagsCompany { Name = _valueString };
         if (await CompanyTagsManager.AddAsync(tempCompanyType))
         {

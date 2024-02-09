@@ -10,10 +10,10 @@ namespace DKCrm.Shared.Models.CompanyModels
     public class BankDetails : IIdentifiable
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public string? INN { get; set; }
-        public string BankAccount { get; set; }
-        public string BeneficiaryAccount { get; set; }
+        public string BankAccount { get; set; } = null!;
+        public string BeneficiaryAccount { get; set; } = null!;
         public string? Description { get; set; }
 
         public virtual Company? Company { get; set; }

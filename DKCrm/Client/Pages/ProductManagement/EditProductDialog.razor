@@ -22,15 +22,15 @@
     [Parameter]public Guid? ProductId { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
-    private Product _iii;
+    private Product? _iii;
     protected override async Task OnParametersSetAsync()
     {
-        if (ProductId != null && ProductId!=Guid.Empty) _iii = await ProductManager.GetProductDetailsAsync((Guid)ProductId);
+        if (ProductId != null && ProductId != Guid.Empty && VisibleDialog) _iii = await ProductManager.GetProductDetailsAsync((Guid)ProductId);
     }
     
     async Task EditProduct()
     {
-        if (await ProductManager.UpdateProductAsync(_iii))
+        if (_iii != null && await ProductManager.UpdateProductAsync(_iii))
         {
             _snackBar.Add("Продукт обновлен");
             await RefreshProductList.InvokeAsync();

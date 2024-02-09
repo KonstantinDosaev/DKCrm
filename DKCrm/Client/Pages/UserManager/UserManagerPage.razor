@@ -8,7 +8,7 @@
           ReadOnly="false"
           CanCancelEdit="true"
           Filter="new Func<ApplicationUser, bool>(FilterFunc)"
-          @bind-SelectedItems="selectedItems"
+          @bind-SelectedItems="_selectedItems"
           SortLabel="Sort By"
           CommitEditTooltip="Commit Edit"
           OnCommitEditClick="@(() => Snackbar.Add("Изменения сохранены!"))"
@@ -25,12 +25,12 @@
         <MudText Typo="Typo.h4">Управление пользователями</MudText>
         <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="OpenDialog" Style="margin-left: 1rem;" Color="Color.Tertiary">Создать пользователя  <MudIcon Size="@Size.Large" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" /></MudButton>
 
-        @if (selectedItems.Any())
+        @if (_selectedItems.Any())
         {
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnButtonDeleteClicked" Style="margin-left: 1rem;">Удалить</MudButton>
         }
         <MudSpacer/>
-        <MudTextField @bind-Value="searchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudTextField @bind-Value="_searchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
         @if (applyButtonPosition.DisplayApplyButtonAtStart() || (editButtonPosition.DisplayEditButtonAtStart() && editTrigger == TableEditTrigger.EditButton))

@@ -16,7 +16,8 @@
 
 
      [Parameter]
-     public Category CurrentCategory { get; set; }
+     public Category CurrentCategory { get; set; } = null!;
+
     [Parameter]
     public EventCallback<Category> CheckedParentCategory { get; set; }
     [Parameter]

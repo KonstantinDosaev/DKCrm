@@ -4,7 +4,7 @@
 <MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
     <TitleContent>
         <div style="text-align: right">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
         </div>
     </TitleContent>
     <DialogContent>
@@ -31,7 +31,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != null && Id!=Guid.Empty) Order = await ExportedOrderManager.GetDetailsAsync((Guid)Id);
+        if (Id != null && Id!=Guid.Empty && VisibleDialog) Order = await ExportedOrderManager.GetDetailsAsync((Guid)Id);
     }
     
     async Task Edit()

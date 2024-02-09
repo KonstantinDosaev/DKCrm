@@ -225,6 +225,43 @@ namespace DKCrm.Server.Data
                         j.ToTable("ApplicationOrderingProductsProducts");
                     });
 
+            builder
+                .Entity<ExportedOrder>()
+                .HasMany(c => c.ExportedOrderStatus)
+                .WithMany(s => s.ExportedOrders)
+                .UsingEntity<ExportedOrderStatusExportedOrder>(
+                    j => j
+                        .HasOne(pt => pt.ExportedOrderStatus)
+                        .WithMany(t => t.ExportedOrderStatusExported)
+                        .HasForeignKey(pt => pt.ExportedOrderStatusId),
+                    j => j
+                        .HasOne(pt => pt.ExportedOrder)
+                        .WithMany(p => p.ExportedOrderStatusExported)
+                        .HasForeignKey(pt => pt.ExportedOrderId), j =>
+                    {
+                        j.Property(pt => pt.DateTimeCreate).HasDefaultValue(new DateTime());
+                        j.HasKey(t => new { t.ExportedOrderId, t.ExportedOrderStatusId });
+                        j.ToTable("ExportedOrderStatusExportedOrder");
+                    });
+            builder
+                .Entity<ImportedOrder>()
+                .HasMany(c => c.ImportedOrderStatus)
+                .WithMany(s => s.ImportedOrders)
+                .UsingEntity<ImportedOrderStatusImportedOrder>(
+                    j => j
+                        .HasOne(pt => pt.ImportedOrderStatus)
+                        .WithMany(t => t.ImportedOrderStatusImportedOrders)
+                        .HasForeignKey(pt => pt.ImportedOrderStatusId),
+                    j => j
+                        .HasOne(pt => pt.ImportedOrder)
+                        .WithMany(p => p.ImportedOrderStatusImportedOrders)
+                        .HasForeignKey(pt => pt.ImportedOrderId), j =>
+                    {
+                        j.Property(pt => pt.DateTimeCreate).HasDefaultValue(new DateTime());
+                        j.HasKey(t => new { t.ImportedOrderId, t.ImportedOrderStatusId });
+                        j.ToTable("ImportedOrderStatusImportedOrder");
+                    });
+
         }
 
     }

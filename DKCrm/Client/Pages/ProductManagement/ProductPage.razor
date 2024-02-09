@@ -10,7 +10,7 @@
           Hover="true"
           ReadOnly="false"
           @bind-SelectedItems="_selectedItems"
-          ApplyButtonPosition="@applyButtonPosition"
+          ApplyButtonPosition="@_applyButtonPosition"
           MultiSelection="true"
           SelectOnRowClick="false"
           Striped="true" 
@@ -29,7 +29,7 @@
             Фильтр
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
         </MudButton>
-            <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _storageSettings.OpenStorageDialog()" Style="margin-left: 1rem;" Color="Color.Warning">
+            <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _storageSettings!.OpenStorageDialog()" Style="margin-left: 1rem;" Color="Color.Warning">
             Склады
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
         </MudButton>
@@ -140,11 +140,11 @@
     private HashSet<ProductsDto> _selectedItems = new();
     private MudTable<ProductsDto>? _table;
     private StorageSettings? _storageSettings;
-    private int _totalItems;
+
     private string? _searchString = null;
     private FilterProductTuple? _filterProductTuple;
 
-    private TableApplyButtonPosition applyButtonPosition = TableApplyButtonPosition.Start;
+    private TableApplyButtonPosition _applyButtonPosition = TableApplyButtonPosition.Start;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -201,7 +201,8 @@
         _visibleDetailProductDialog = true;
     }
 
-    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+
     private async void OnButtonDeleteClicked()
     {
         bool? result = await DialogService.ShowMessageBox(

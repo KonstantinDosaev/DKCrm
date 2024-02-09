@@ -8,7 +8,7 @@ namespace DKCrm.Client.Pages.UserManager
     {
        //[Inject] ISnackbar Snackbar { get; set; }
 
-        MudForm UserProfileForm;
+        MudForm? UserProfileForm;
 
         private ApplicationUserModelFluentValidator _applicationUserValidator = new ApplicationUserModelFluentValidator();
 
@@ -26,13 +26,16 @@ namespace DKCrm.Client.Pages.UserManager
 
         private async Task Submit()
         {
-            await UserProfileForm.Validate();
-
-            if (UserProfileForm.IsValid)
+            if (UserProfileForm != null)
             {
-                await UserManagerCustom.UpdateUser(User);
+                await UserProfileForm.Validate();
 
-                _snackBar.Add("Изменения применены!");
+                if (UserProfileForm.IsValid)
+                {
+                    await UserManagerCustom.UpdateUser(User);
+
+                    _snackBar.Add("Изменения применены!");
+                }
             }
         }
     }

@@ -7,20 +7,15 @@ namespace DKCrm.Shared.Models
     public class Address : IIdentifiable
     {
         public Guid Id { get; set; }
-        [Required]
-        public string Country { get; set; }
+        [Required] public string Country { get; set; } = null!;
         public string? Region { get; set; }
-        [Required]
-        public string City { get; set; }
+        [Required] public string City { get; set; } = null!;
 
-        [Required]
-        public string Street { get; set; }
+        [Required] public string Street { get; set; } = null!;
 
-        [Required]
-        public string Home { get; set; }
+        [Required] public string Home { get; set; } = null!;
 
-        [Required]
-        public string Placement { get; set; }
+        [Required] public string Placement { get; set; } = null!;
 
 
         public string? PostalCode { get; set; }

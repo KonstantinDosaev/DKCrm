@@ -397,23 +397,12 @@
     } 
 
     [Inject] private IDialogService? DialogService { get; set; }
-    private async Task OpenCreateOrderDialog(ApplicationOrderingProducts order)
+    private void OpenCreateOrderDialog(ApplicationOrderingProducts order)
     {
         ApplicationOrderingProduct = order;
         _visibleAddOrderDialog = true;
     }
-    private async Task SetCompletedOrder(ApplicationOrderingProducts order)
-    {
-        //order.InWork = true;
-        //if (User != null)
-        //{
-        //    order.UpdatedUser = User.FirstName != null ? $"{User.LastName} {User.FirstName} {User.MiddleName}" : User.Email;
-        //}
-        //order.DateTimeUpdate=DateTime.Now;
-        
-        //await OrderService.Update(order);
-        //ImpNavigationManager.NavigateTo(ImpNavigationManager.Uri, true);
-    }
+
     private void GetModalProductCard(Guid id)
     {
         IdCurrentProduct = id;

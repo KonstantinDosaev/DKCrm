@@ -11,6 +11,7 @@ namespace DKCrm.Shared.Models
     {
         public Guid Id { get; set; }
         public string? LocalCurrency { get; set; }
+        public double? Nds { get; set; }
         public double CurrencyPercent { get; set; }
         public string? KeyFns { get; set; }
     }

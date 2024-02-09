@@ -50,7 +50,8 @@ namespace DKCrm.Server.Controllers.OrderControllers
                     s.PurchaseAtExportList,
                     s.PurchaseAtStorageList,
                     s.StorageList
-                }).Where(w => w.ImportedOrder!.ImportedOrderStatus!.Position < status)
+                }).Where(w=>w.ImportedOrder!.ImportedOrderStatusImportedOrders!
+                    .MaxBy(o => o.DateTimeCreate)!.ImportedOrderStatus!.Position < status)
                 .Where(w => w.Quantity < w.PurchaseAtStorageList!.Select(s => s.Quantity).Sum() 
                     + w.PurchaseAtExportList!.Select(s => s.Quantity).Sum())
                 .ToListAsync());

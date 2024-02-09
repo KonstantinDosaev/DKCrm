@@ -1,4 +1,4 @@
-﻿@page "/product/create"
+﻿@*@page "/product/create"
 @inject HttpClient Http
 @inject NavigationManager UriHelper
 
@@ -12,4 +12,4 @@
         await Http.PostAsJsonAsync("api/product", _product);
         UriHelper.NavigateTo("product");
     }
-}
+}*@

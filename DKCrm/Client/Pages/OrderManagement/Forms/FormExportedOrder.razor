@@ -167,7 +167,14 @@
                                     <td>@item.Product?.Name</td>
                                     <td>@item.Product?.Brand?.Name</td>
                                     <td>@item.Quantity</td>
-                                    <td></td>
+                                    <td>
+                                        @if (ExportedOrder.ExportedProducts != null 
+                                             && !ExportedOrder.ExportedProducts.Select(s => s.ProductId).Contains(item.ProductId)
+                                            && IsEditForm)
+                                        {
+                                                <button type="button" class="btn btn-link" @onclick="() => AddProductToExportedOrder(item!)">Добавить в заказ</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         }
@@ -351,18 +358,7 @@
                 Product = CheckedProductInCatalog,
                 Quantity = CurrentMissingProduct!.Quantity
             });
-            if (IsEditForm)
-            {
-                var newExportedProduct = new ExportedProduct()
-                {
-                    Product = CheckedProductInCatalog,
-                    Quantity = CurrentMissingProduct!.Quantity,
-                    ExportedOrderId = ExportedOrder!.Id
-                };
-                ExportedOrder.ExportedProducts ??= new List<ExportedProduct>();
-                ExportedOrder.ExportedProducts.Add(newExportedProduct);
-               await ExportedOrderManager.UpdateAsync(ExportedOrder);
-            }
+           
             MissingProductInCatalogList!.Remove(CurrentMissingProduct);
             var missProductToString = MissingProductConverterService.ConvertMissingProductListToString(MissingProductInCatalogList);
             ExportedOrder.ApplicationOrderingProducts.MissingProductsInCatalog =
@@ -404,5 +400,24 @@
                 };
         }
         _visibleCreatedEmployeeDialog = true;
+    }
+
+    private async Task AddProductToExportedOrder(ApplicationOrderingProductsProduct appProduct)
+    {
+        if (IsEditForm)
+        {
+            var newExportedProduct = new ExportedProduct()
+            {
+                Product = appProduct.Product,
+                Quantity = appProduct!.Quantity,
+                ExportedOrderId = ExportedOrder!.Id
+            };
+            ExportedOrder.ExportedProducts ??= new List<ExportedProduct>();
+            ExportedOrder.ExportedProducts.Add(newExportedProduct);
+            if (await ExportedProductManager.AddAsync(newExportedProduct))
+            {
+                _snackBar.Add("Продукт добавлен в заказ");
+            }
+        }
     }
 }

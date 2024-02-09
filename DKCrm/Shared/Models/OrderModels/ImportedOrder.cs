@@ -3,20 +3,23 @@ using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Shared.Models.OrderModels
 {
-    public class ImportedOrder : IIdentifiable
+    public class ImportedOrder : IIdentifiable,ISoftDelete
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public DateTime? DateTimeCreated { get; set; }
-        public DateTime? DateTimeUpdated { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
         public string? Images { get; set; }
         public double? CurrencyPercent { get; set; }
         public string? TransactionCurrency { get; set; }
         public string? SupplierCurrency { get; set; }
         public string? LocalCurrency { get; set; }
+        public double? Nds { get; set; }
 
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
         public virtual ICollection<CommentOnImportedOrder>? Comments { get; set; }
+        public virtual ICollection<ImportedOrderStatus>? ImportedOrderStatus { get; set; }
+        public virtual ICollection<ImportedOrderStatusImportedOrder>? ImportedOrderStatusImportedOrders { get; set; }
 
         //public virtual Company? OurCompany { get; set; }
         //[ForeignKey(nameof(OurCompany)), Column(Order = 0)] public Guid? OurCompanyId { get; set; }
@@ -37,8 +40,8 @@ namespace DKCrm.Shared.Models.OrderModels
         public virtual Employee? EmployeeSeller { get; set; }
         public Guid? EmployeeSellerId { get; set; }
 
-
-        public virtual ImportedOrderStatus? ImportedOrderStatus { get; set; }
-        public Guid? ImportedOrderStatusId { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

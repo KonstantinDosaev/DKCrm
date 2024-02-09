@@ -67,17 +67,18 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var dev = _context.Categories.FirstOrDefault(f=>f.Id==id);
-     
-            _context.Categories.Remove(dev);
+
+            if (dev != null) _context.Categories.Remove(dev);
             await _context.SaveChangesAsync();
             return NoContent();
         }
         [HttpPost("removerange")]
         public async Task<IActionResult> DeleteRange(IEnumerable<Category> categories)
         {
-            _context.RemoveRange(categories);
+            var enumerable = categories.ToList();
+            _context.RemoveRange(enumerable);
             await _context.SaveChangesAsync();
-            return Ok(categories.Count());
+            return Ok(enumerable.Count());
         }
     }
 }

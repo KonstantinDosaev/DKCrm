@@ -50,7 +50,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
             var result = await _context.ExportedOrders
                 .Include(i=>i.OurCompany).ThenInclude(i=>i!.Employees)
                 .Include(i => i.CompanyBuyer).ThenInclude(i=>i!.Employees)
-                .Include(i => i.ApplicationOrderingProducts).ThenInclude(t=>t.ProductList)
+                .Include(i => i.ApplicationOrderingProducts).ThenInclude(t=>t!.ProductList)
                 .Include(i => i.ExportedProducts)!.ThenInclude(t=>t.Product).ThenInclude(t=>t!.Brand)
                 .AsSingleQuery().FirstOrDefaultAsync(a => a.Id == id);
             return Ok(result);
@@ -62,17 +62,19 @@ namespace DKCrm.Server.Controllers.OrderControllers
             {
                 Id = s.Id,
                 Name = s.Name,
-                ExportedProducts = s.ExportedProducts,
+              
                 OurCompany = s.OurCompany,
                 CompanyBuyer = s.CompanyBuyer,
                 OurEmployee = s.OurEmployee,
                 EmployeeBuyer = s.EmployeeBuyer,
+                DateTimeCreated = s.DateTimeCreated,
+                DateTimeUpdate = s.DateTimeUpdate,
                 ExportedOrderStatus = s.ExportedOrderStatus,
             }).Select(s => s);
-            if (request.Chapter != null && request.ChapterId != null)
-            {
-                data = data.Where(o => o.ExportedOrderStatusId == request.ChapterId);
-            }
+            //if (request.Chapter != null && request.ChapterId != null)
+            //{
+            //    data = data.Where(o => o.ExportedOrderStatusId == request.ChapterId);
+            //}
 
             if (request.FilterTuple != null)
             {
@@ -119,11 +121,14 @@ namespace DKCrm.Server.Controllers.OrderControllers
                 case "conterCompany_field":
                     data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.CompanyBuyer);
                     break;
-                case "name_field":
+                case "number_field":
                     data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Name);
                     break;
-                case "number_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Id);
+                case "create_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeCreated);
+                    break;
+                case "update_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeUpdate);
                     break;
             }
             data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
@@ -158,7 +163,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpPut]
         public async Task<IActionResult> Put(ExportedOrder exportedOrder)
         {
-            exportedOrder.DateTimeUpdated = DateTime.Now;
+            exportedOrder.DateTimeUpdate = DateTime.Now;
             _context.Entry(exportedOrder).State = EntityState.Modified;
 
             if (exportedOrder.ApplicationOrderingProducts != null)

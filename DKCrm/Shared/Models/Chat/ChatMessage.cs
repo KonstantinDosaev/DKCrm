@@ -6,9 +6,9 @@ namespace DKCrm.Shared.Models.Chat
     public class ChatMessage
     {
         public Guid Id { get; set; }
-        public string FromUserId { get; set; }
-        public string ToUserId { get; set; }
-        public string Message { get; set; }
+        public string FromUserId { get; set; } = null!;
+        public string ToUserId { get; set; } = null!;
+        public string Message { get; set; } = null!;
         public DateTime CreatedDate { get; set; }
 
         public virtual ApplicationUser? FromUser { get; set; }

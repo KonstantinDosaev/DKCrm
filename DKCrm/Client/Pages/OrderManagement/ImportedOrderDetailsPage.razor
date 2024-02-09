@@ -200,23 +200,16 @@
 
     [Parameter] public Guid Id { get; set; }
     public ImportedOrder? Order { get; set; }
-
     private List<ImportedProduct>? ImportedProducts { get; set; }
-
     public ImportedProduct? ImportedProduct { get; set; }
     public Guid ImportedProductId { get; set; }
 
-    //FormImportedProduct? _importProductForm = null!;
-
-    private string _searchString1 = "";
-
     public bool VisibleCompanySettingsDrawer { get; set; }
-    MudListItem? _selectedItem;
     object _selectedValue = 1;
 
     private bool _visibleAddImportedProductDialog;
     private bool _visibleEditImportedProductDialog;
-    private bool _visibleUpdateOrderDialog;
+
     private bool _allOrOnePrice;
 
     protected override async Task OnInitializedAsync()
@@ -224,8 +217,6 @@
         Order = await ImportedOrderManager.GetDetailsAsync(Id);
         if (Order.ImportedProducts != null) ImportedProducts = Order.ImportedProducts.ToList();
     }
-
-
 
     private void OpenEditImportProductDialog(ImportedProduct importedProduct)
     {

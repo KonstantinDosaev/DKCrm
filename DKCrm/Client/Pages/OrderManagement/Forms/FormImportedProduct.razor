@@ -186,7 +186,7 @@
     public List<Storage>? StorageList { get; set; }
     public List<ExportedProduct>? NotEquippedExportedProducts { get; set; }
 
-    private Product? _product;
+
     bool _success;
     private bool _isSetCurrency;
 
@@ -197,7 +197,7 @@
     {
         StorageList = await StorageManager.GetAsync();
         NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync();
-        if (ImportedProduct!.ImportedOrder.LocalCurrency != null && 
+        if (ImportedProduct!.ImportedOrder!.LocalCurrency != null && 
             ImportedProduct!.ImportedOrder.SupplierCurrency != null && 
             ImportedProduct!.ImportedOrder.TransactionCurrency != null)
         {

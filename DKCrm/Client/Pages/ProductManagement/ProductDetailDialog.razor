@@ -113,12 +113,12 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (ProductId != null && ProductId != Guid.Empty) Product = await ProductManager.GetProductDetailsAsync((Guid)ProductId);
+        if (ProductId != null && ProductId != Guid.Empty && VisibleDialog) Product = await ProductManager.GetProductDetailsAsync((Guid)ProductId);
     }
 
     async Task EditProduct()
     {
-        if (await ProductManager.UpdateProductAsync(Product))
+        if (Product != null && await ProductManager.UpdateProductAsync(Product))
         {
             _snackBar.Add("Продукт обновлен");
             await RefreshProductList.InvokeAsync();

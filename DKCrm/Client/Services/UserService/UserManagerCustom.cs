@@ -15,7 +15,7 @@ namespace DKCrm.Client.Services.UserService
        
         public async Task<ApplicationUser> GetUserDetailsAsync(string userId)
         {
-            return await _httpClient.GetFromJsonAsync<ApplicationUser>($"api/user/{userId}");
+            return await _httpClient.GetFromJsonAsync<ApplicationUser>($"api/user/{userId}") ?? throw new InvalidOperationException();
         }
 
         public async Task UpdateUser(ApplicationUser user)
@@ -36,12 +36,12 @@ namespace DKCrm.Client.Services.UserService
 
         public async Task<List<ApplicationUser>> GetUsersAsync()
         {
-            return (await _httpClient.GetFromJsonAsync<List<ApplicationUser>>("api/user")); 
+            return (await _httpClient.GetFromJsonAsync<List<ApplicationUser>>("api/user")) ?? throw new InvalidOperationException(); 
         }
 
         public async Task<List<IdentityRole>> GetAllRolesAsync()
         {
-            return (await _httpClient.GetFromJsonAsync<List<IdentityRole>>("api/user/roleAll"));
+            return (await _httpClient.GetFromJsonAsync<List<IdentityRole>>("api/user/roleAll")) ?? throw new InvalidOperationException();
         }
 
         public Task<IdentityRole> GetRoleAsync(string roleName)
@@ -51,7 +51,7 @@ namespace DKCrm.Client.Services.UserService
 
         public async Task<List<string>> GetRoleFromUser(string userId)
         {
-            return await _httpClient.GetFromJsonAsync<List<string>>($"api/user/rolefromuser/{userId}");
+            return await _httpClient.GetFromJsonAsync<List<string>>($"api/user/rolefromuser/{userId}") ?? throw new InvalidOperationException();
         }
 
         public async Task AddUserToRole(RoleRequest request)

@@ -92,10 +92,6 @@
     private bool _visibleStorageDialog;
     public MudForm? _mudForm { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-       
-    }
     public async Task OpenStorageDialog()
     {
         await GetStorageAll();
@@ -106,11 +102,9 @@
     {
         StorageList ??= await StorageManager.GetAsync();
     }
-       
 
     private async Task AddStorage()
     {
-       
         if (await StorageManager.AddAsync(Storage!))
         {
             StorageList ??= new List<Storage>();
@@ -123,11 +117,9 @@
     {
         Storage = storage;
         _visibleUpdateStorageDialog = true;
-
     }
     private async Task UpdateStorage()
     {
-        
         if (await StorageManager.UpdateAsync(Storage!))
         {
             _visibleUpdateStorageDialog = false;
@@ -138,7 +130,6 @@
     {
         Storage = storage;
         _visibleRemoveStorageDialog = true;
-
     }
     private async void RemoveStorage()
     {

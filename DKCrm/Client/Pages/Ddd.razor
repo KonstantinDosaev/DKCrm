@@ -148,9 +148,9 @@
 </MudCard>
 
 @code {
-    [Inject] ISnackbar Snackbar { get; set; }
+  
 
-    MudForm UserProfileForm;
+    MudForm? UserProfileForm;
 
     ApplicationUserModelFluentValidator _applicationUserValidator = new ApplicationUserModelFluentValidator();
 
@@ -170,13 +170,13 @@
 
     private async Task Submit()
     {
-        await UserProfileForm.Validate();
+        await UserProfileForm!.Validate();
 
         if (UserProfileForm.IsValid)
         {
             await UserManagerCustom.UpdateUser(User);
           
-            Snackbar.Add("Изменения применены!");
+            _snackBar.Add("Изменения применены!");
         }
     }
 

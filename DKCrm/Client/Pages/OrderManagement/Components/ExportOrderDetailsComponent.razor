@@ -140,23 +140,17 @@
 
     [Parameter] public Guid Id { get; set; }
     public ExportedOrder? Order { get; set; }
-
     private List<ExportedProduct>? ExportedProducts { get; set; }
-
     public ExportedProduct? ExportedProduct { get; set; }
     public Guid ExportedProductId { get; set; }
-
-    //FormImportedProduct? _importProductForm = null!;
-
-    private string _searchString1 = "";
-
+    
     public bool VisibleCompanySettingsDrawer { get; set; }
-    MudListItem? _selectedItem;
+
     object _selectedValue = 1;
 
     private bool _visibleAddExportedProductDialog;
     private bool _visibleEditExportedProductDialog;
-    private bool _visibleUpdateOrderDialog;
+
     private bool _allOrOnePrice;
 
     protected override async Task OnInitializedAsync()

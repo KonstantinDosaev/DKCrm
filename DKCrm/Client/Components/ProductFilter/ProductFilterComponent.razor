@@ -180,7 +180,7 @@
                     CategoryOptions = Category.CategoryOptions;
                     break;
                 case ProductFromChapterNames.Brand:
-                    SelectedBrands = new List<Brand>() { Brands.FirstOrDefault(o => o.Id == ChapterId)! };
+                    SelectedBrands = new List<Brand>() { Brands?.FirstOrDefault(o => o.Id == ChapterId)! };
                     break;
 
             }

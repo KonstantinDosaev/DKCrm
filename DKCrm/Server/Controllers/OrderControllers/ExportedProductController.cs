@@ -38,7 +38,8 @@ namespace DKCrm.Server.Controllers.OrderControllers
                 s.PurchaseAtExports,
                 s.SoldFromStorage,
                 s.StorageList
-            }).Where(w=>w.ExportedOrder!.ExportedOrderStatus!.Position < status)
+            }).Where(w=>w.ExportedOrder!.ExportedOrderStatusExported!
+                    .MaxBy(o=>o.DateTimeCreate)!.ExportedOrderStatus!.Position < status)
                 .Where(w=>w.Quantity< w.SoldFromStorage!.Select(s=>s.Quantity).Sum() + w.PurchaseAtExports!.Select(s=>s.Quantity).Sum())
                 .ToListAsync());
         }

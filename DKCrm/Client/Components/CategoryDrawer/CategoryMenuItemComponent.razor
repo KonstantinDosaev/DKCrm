@@ -72,9 +72,8 @@
     public bool VisableButtonRelocation { get; set; }
     [Parameter]
     public EventCallback CloseCategoryDrawerCallback { get; set; }
-    private bool _visibleAddCategoryDialog;
-    private Guid _currentCategory;
-    string value;
+  
+    string? _value;
 
     [Parameter]
     public EventCallback RefreshCategoryListCallback { get; set; }
@@ -99,12 +98,3 @@
 
     //}
 }
-<style>
-    .subcategory__tree{
-        font-weight: bold;
-    }
-
-    .category-tree__link {
-
-    }
-</style>

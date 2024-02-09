@@ -101,7 +101,7 @@
         <MudTd DataLabel="Статус">
             @if (context.ImportedOrderStatus != null)
             {
-                @context.ImportedOrderStatus.Value
+              @*  @context.ImportedOrderStatus.Value*@
             }
         </MudTd>
         <MudTd DataLabel="">
@@ -173,16 +173,12 @@
     private string? _searchString = null;
     public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
     private FilterOrderTuple? _filterOrderTuple;
-    FormImportedOrder? _importOrderForm = null!;
 
-    MudListItem? _selectedItem;
-    object _selectedValue = 1;
     private bool _showDetails;
     private bool _visibleAddOrderDialog;
     private bool _visibleUpdateOrderDialog;
     private bool _visibleSettingsOrderDialog;
-    private string _backgroundActivOrder;
-  
+
     private async Task<TableData<ImportedOrder>> ServerReload(TableState state)
     {
        
@@ -197,9 +193,6 @@
             SortDirection = state.SortDirection,
              SearchInChapter = SelectedOption,
                 FilterTuple = _filterOrderTuple
-                
-
-                    
         });
        
         return new TableData<ImportedOrder>() { TotalItems = response.TotalItems, Items = response.Items };
@@ -220,9 +213,7 @@
         _filterOrderTuple = filterTuple;
         _table!.ReloadServerData();
     }
-
-            
-   
+    
     private void OpenUpdateOrderDialog(ImportedOrder order)
     {
         Order = order;
@@ -232,14 +223,12 @@
     
     private void RowClickEvent(TableRowClickEventArgs<ImportedOrder> tableRowClickEventArgs)
     {
-        //_navigationManager.NavigateTo($"/imported_order/{tableRowClickEventArgs.Item.Id}");
         ProductId = tableRowClickEventArgs.Item.Id;
         _showDetails = !_showDetails;
     }
 
     private async Task OpenSettingsDialog()
     {
-
         if (await ImportedOrderManager.AddAsync(Order!))
         {
             _visibleAddOrderDialog = false;

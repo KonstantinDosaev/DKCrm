@@ -27,7 +27,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != null && Id != Guid.Empty) Company = await CompanyManager.GetDetailsAsync((Guid)Id);
+        if (Id != null && Id != Guid.Empty && VisibleDialog) Company = await CompanyManager.GetDetailsAsync((Guid)Id);
     }
 
     async Task Edit()

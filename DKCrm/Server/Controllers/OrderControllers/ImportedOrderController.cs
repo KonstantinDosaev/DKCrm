@@ -64,12 +64,12 @@ namespace DKCrm.Server.Controllers.OrderControllers
                 SellersCompany = s.SellersCompany,
                 OurEmployee = s.OurEmployee,
                 EmployeeSeller = s.EmployeeSeller,
-                ImportedOrderStatusId = s.ImportedOrderStatusId,
+          
             }).Select(s => s);
-            if (request.Chapter != null && request.ChapterId != null)
-            {
-                data = data.Where(o => o.ImportedOrderStatusId == request.ChapterId);
-            }
+            //if (request.Chapter != null && request.ChapterId != null)
+            //{
+            //    data = data.Where(o => o.ImportedOrderStatusId == request.ChapterId);
+            //}
 
             if (request.FilterTuple != null)
             {

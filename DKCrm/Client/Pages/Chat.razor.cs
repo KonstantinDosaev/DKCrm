@@ -10,32 +10,32 @@ namespace DKCrm.Client.Pages
     partial class Chat
     {
 
-        [CascadingParameter] public HubConnection hubConnection { get; set; }
-        [Parameter] public string CurrentMessage { get; set; }
-        [Parameter] public string CurrentUserId { get; set; }
-        [Parameter] public string CurrentUserEmail { get; set; }
+        [CascadingParameter] public HubConnection? HubConnection { get; set; }
+        [Parameter] public string CurrentMessage { get; set; } = null!;
+        [Parameter] public string CurrentUserId { get; set; } = null!;
+        [Parameter] public string CurrentUserEmail { get; set; } = null!;
         private List<ChatMessage> messages = new List<ChatMessage>();
 
         public List<ApplicationUser> ChatUsers = new List<ApplicationUser>();
-        [Parameter] public string ContactEmail { get; set; }
-        public string ContactName { get; set; }
-        public string CurrentUserName { get; set; }
-        [Parameter] public string ContactId { get; set; }
+        [Parameter] public string ContactEmail { get; set; } = null!;
+        public string ContactName { get; set; } = null!;
+        public string CurrentUserName { get; set; } = null!;
+        [Parameter] public string ContactId { get; set; } = null!;
 
         public List<Guid> SelectedValues = new();
-        private bool _checked;
-        private Guid _value;
+        //private bool _checked;
+        //private Guid _value;
         protected override async Task OnInitializedAsync()
         {
-            if (hubConnection == null)
+            if (HubConnection == null)
             {
-                hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
+                HubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
             }
-            if (hubConnection.State == HubConnectionState.Disconnected)
+            if (HubConnection.State == HubConnectionState.Disconnected)
             {
-                await hubConnection.StartAsync();
+                await HubConnection.StartAsync();
             }
-            hubConnection.On<ChatMessage, string>("ReceiveMessage", async (message, userName) =>
+            HubConnection.On<ChatMessage, string>("ReceiveMessage", async (message, userName) =>
             {
                 if ((ContactId == message.ToUserId && CurrentUserId == message.FromUserId) || (ContactId == message.FromUserId && CurrentUserId == message.ToUserId))
                 {
@@ -43,7 +43,7 @@ namespace DKCrm.Client.Pages
                     if ((ContactId == message.ToUserId && CurrentUserId == message.FromUserId))
                     {
                         messages.Add(new ChatMessage { Message = message.Message, CreatedDate = message.CreatedDate, FromUser = new ApplicationUser() { Email = CurrentUserEmail } });
-                        await hubConnection.SendAsync("ChatNotificationAsync", $"Новое сообщение от {userName}", ContactId, CurrentUserId);
+                        await HubConnection.SendAsync("ChatNotificationAsync", $"Новое сообщение от {userName}", ContactId, CurrentUserId);
                     }
                     else if ((ContactId == message.FromUserId && CurrentUserId == message.ToUserId))
                     {
@@ -84,12 +84,13 @@ namespace DKCrm.Client.Pages
                 };
                 await _chatManager.SaveMessageAsync(chatHistory);
                 chatHistory.FromUserId = CurrentUserId;
-                await hubConnection.SendAsync("SendMessageAsync", chatHistory, CurrentUserEmail);
+                if (HubConnection != null)
+                    await HubConnection.SendAsync("SendMessageAsync", chatHistory, CurrentUserEmail);
                 CurrentMessage = string.Empty;
             }
         }
 
-        async Task LoadUserChat(string userId)
+        private async Task LoadUserChat(string userId)
         {
             var contact = await _chatManager.GetUserDetailsAsync(userId);
             ContactId = contact.Id;
@@ -104,10 +105,10 @@ namespace DKCrm.Client.Pages
             ChatUsers = await _chatManager.GetUsersAsync();
         }
 
-        [Inject] private IDialogService DialogService { get; set; }
+        [Inject] private IDialogService DialogService { get; set; } = null!;
         private async void OnButtonDeleteClicked(IEnumerable<Guid> listId)
         {
-            bool? result = await DialogService.ShowMessageBox(
+            var result = await DialogService.ShowMessageBox(
                 "Внимание",
                 "Подтвердите удаление!",
                 yesText: "Удалить!  ", cancelText: "  Отменить");

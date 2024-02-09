@@ -35,7 +35,7 @@
                 <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<Company, object>(x => x.Director!)">Руководитель</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.Country)">Страна</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.City)">Город</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.CompanyType.Name)">Тип контрагента</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.CompanyType?.Name!)">Тип контрагента</MudTableSortLabel></MudTh>
 
             </HeaderContent>
             <RowTemplate>
@@ -105,13 +105,13 @@
 </MudDrawerContainer>
 @code {
 
-    [Parameter] public Guid TagId { get; set; }
+    [Parameter] public Guid? TagId { get; set; }
 
     private  List<CompanyType>? CompanyTypes { get; set; }
     private  List<TagsCompany>? TagsCompanies { get; set; }
     private List<Company>? Companies { get; set; }
     private List<Company>? AllCompanies { get; set; }
-    CompanyForm? _companyForm = null!;
+ 
     public Company CreatedCompany { get; set; } = new ();
     private string _searchString1 = "";
 
@@ -130,7 +130,7 @@
         if (TagId!= null && TagId!= Guid.Empty)
         {
             //Companies = TagsCompanies.Where(w => w.Id == TagId)!.FirstOrDefault()!.Companies!.ToList();
-            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains(TagId)).ToList();
+            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains((Guid)TagId)).ToList();
             _selectedValue = TagsCompanies!.FirstOrDefault(w => w.Id == TagId)!.Name;
         }
       

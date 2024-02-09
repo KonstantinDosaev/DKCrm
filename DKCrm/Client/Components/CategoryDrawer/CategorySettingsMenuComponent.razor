@@ -33,7 +33,7 @@
     <DialogContent>
         <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
        
-        @if (CurrentCategory.Products != null && CurrentCategory.Products.Any())
+        @if (CurrentCategory is {Products: { } } && CurrentCategory.Products.Any())
         {
             @if(AllCategories!=null && _visibleRelocatedProductDialog){
                 <MudText Class="pb-3 text-decoration-underline text-danger">Выберите категорию в которую переместить содержимое</MudText>
@@ -51,7 +51,7 @@
                 <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="OpenRelocatedProductDialog" Color="Color.Warning">Переместить</MudButton>
             }
         }
-       @if (CurrentCategory.Children.Any())
+       @if (CurrentCategory is {Children: { } } && CurrentCategory.Children.Any())
        {
             <MudText Class="pb-3 text-decoration-underline text-danger">Все под категории по данной категории переместятся в корневой раздел категорий!!!</MudText>
        }
@@ -68,7 +68,7 @@
         <MudCard>
             <MudForm @ref="_updateCategoryForm" Model="@CurrentCategory">
                 <MudCardContent>
-                    <MudTextField @bind-Value="CurrentCategory.Name" 
+                    <MudTextField @bind-Value="CurrentCategory!.Name" 
                                   T="string" Label="Название категории" 
                                   Required="true" RequiredError="Введите название категории!" />
                     
@@ -131,14 +131,13 @@
     private MudForm? _createCategoryForm;    
     private MudForm? _updateCategoryForm;
 
-    MudListItem selectedItem;
     object selectedValue = 1;
     List<Category>? AllCategories { get; set; }
     [Parameter]
-    public Category CurrentCategory { get; set; }
+    public Category? CurrentCategory { get; set; }
 
-    public Category CategoryToRelocateProduct { get; set; }
-    private string _categoryName;
+    public Category? CategoryToRelocateProduct { get; set; }
+    private string? _categoryName;
 
     [Parameter]
     public EventCallback RefreshCategoryListCallback { get; set; }
@@ -148,7 +147,7 @@
         await _createCategoryForm!.Validate();
         if (!_createCategoryForm.IsValid)return;
 
-        if (await CategoryManager.AddAsync(new Category() { Name = _categoryName, ParentId = CurrentCategory.Id }))
+        if (await CategoryManager.AddAsync(new Category() { Name = _categoryName!, ParentId = CurrentCategory!.Id }))
         {
             await RefreshCategoryListCallback.InvokeAsync();
             _visibleAddCategoryDialog = false;
@@ -158,7 +157,7 @@
 
     private async Task DeleteCategory()
     {
-        if (await CategoryManager.RemoveAsync(CurrentCategory.Id))
+        if (await CategoryManager.RemoveAsync(CurrentCategory!.Id))
         {
             _visibleRemoveCategoryDialog = false;
             await RefreshCategoryListCallback.InvokeAsync();
@@ -179,8 +178,8 @@
     }
     private async Task RelocateProductsInOtherCategory()
     {
-        var relocatedId = CategoryToRelocateProduct.Id;
-        var tempListProduct = CurrentCategory.Products;
+        var relocatedId = CategoryToRelocateProduct!.Id;
+        var tempListProduct = CurrentCategory!.Products;
         foreach (var product in tempListProduct!)
         {
             product.CategoryId = relocatedId;
@@ -196,7 +195,7 @@
     {
         await _updateCategoryForm!.Validate();
         if (!_updateCategoryForm.IsValid)return;
-        if (await CategoryManager.UpdateAsync(CurrentCategory))
+        if (await CategoryManager.UpdateAsync(CurrentCategory!))
         {
             await RefreshCategoryListCallback.InvokeAsync();
             _visibleUpdateCategoryDialog = false;
@@ -208,7 +207,7 @@
     {
         if (await CategoryOptionsManager.RemoveAsync(option.Id))
         {
-            CurrentCategory.CategoryOptions?.Remove(option);
+            CurrentCategory!.CategoryOptions?.Remove(option);
             _snackBar.Add("Опция удалена!");
         }
         else

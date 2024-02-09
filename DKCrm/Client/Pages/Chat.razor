@@ -71,7 +71,7 @@
         <div class="d-flex flex-column px-4" style="max-height: 65vh; min-height: 65vh; overflow: scroll;" id="chatContainer">
             @foreach (var message in messages)
             {
-                if (message.FromUser.Email != @CurrentUserEmail)
+                if (message.FromUser != null && message.FromUser.Email != @CurrentUserEmail)
                 {
                     <div class="d-flex flex-row my-4 align-self-end">
                         <div class="mr-4">
@@ -95,7 +95,7 @@
                     <div class="d-flex flex-row my-4 ">
                         <div class="mr-4">
                             <MudAvatar Color="Color.Primary" Style="height: 50px; width: 50px;">
-                                @if (message.FromUser.Email != null)
+                                @if (message.FromUser != null && message.FromUser.Email != null)
                                 {
                                     @message.FromUser.Email.ToUpper().FirstOrDefault()
                                 }
@@ -105,7 +105,7 @@
                             <MudText Typo="Typo.body2" Style="">@message.Message</MudText>
                             <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.CreatedDate.ToString("dd MMM, yyyy hh:mm")</MudText>
                             <input type="checkbox" 
-                       @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs.Value); }" />  
+                       @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs?.Value!); }" />  
                         </div>
                     </div>
                 }
