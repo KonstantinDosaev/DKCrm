@@ -8,15 +8,29 @@
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
 <MudText Class="m-3" Typo="Typo.h4">Заказы на продажу</MudText>
-<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
-    Добавить заказ
-    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
-</MudButton>
+<div class="d-flex align-items-center px-1">
+    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-right: 1rem;" Color="Color.Tertiary">
+        Добавить заказ
+        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+    </MudButton>
 
-<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="OpenSettingsDialog" Style="margin-left: 1rem;" Color="Color.Tertiary">
-    Настройки
-    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
-</MudButton>
+    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="OpenSettingsDialog" Style="margin-right: 1rem;" Color="Color.Tertiary">
+        Настройки
+        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
+    </MudButton>
+    <div style="width: 228px; margin-right: 0.5rem ">
+        <MudSelect
+            T="string"
+            MultiSelection="true"
+            @bind-SelectedValues="_currencyDisplay" Text="Отображаемая цена"
+            Variant="Variant.Outlined" Dense="true" Style=""
+            Class="select-button">
+            <MudSelectItem T="string" Value="@("Покупателя")">Покупателя</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Локальная")">Локальная</MudSelectItem>
+        </MudSelect>
+    </div>
+</div>
 
 
 <MudTable ServerData="@(new Func<TableState, Task<TableData<ExportedOrder>>>(ServerReload))"
@@ -57,6 +71,8 @@
         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="create_field" T="ExportedOrder">Дата создания</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="update_field" T="ExportedOrder">Дата обновления</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status_field" T="ExportedOrder">Статус</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="complete_field" T="ExportedOrder">Укомплектованность</MudTableSortLabel></MudTh>
+        <MudTh></MudTh>
 
     </HeaderContent>
     <RowTemplate>
@@ -69,7 +85,7 @@
                            Icon="@(_showDetails && OrderId == context.Id? Icons.Material.Filled.KeyboardArrowUp : Icons.Material.Filled.KeyboardArrowDown)"
                            Class="pa-0 ml-2" />
         </MudTd>
-        <MudTd DataLabel="Номер заказа">@context.Name</MudTd>
+        <MudTd DataLabel="Номер заказа">@context.Number</MudTd>
         <MudTd DataLabel="Наша компания">
             @if (context.OurCompany != null)
             {
@@ -101,9 +117,22 @@
         <MudTd DataLabel="Дата создания">@context.DateTimeCreated</MudTd>
         <MudTd DataLabel="Дата обновления">@context.DateTimeUpdate</MudTd>
         <MudTd DataLabel="Статус">
-            @if (context.ExportedOrderStatus != null)
+            @if (context.ExportedOrderStatus != null )
             {
-                @context.ExportedOrderStatus.FirstOrDefault();
+                <ExportedOrderStatusListComponent
+                    CurrentOrder="context" 
+                    StatusList="StatusList"/>
+               
+            }
+        </MudTd>
+        <MudTd DataLabel="Укомплектованность">
+            @if (!context.IsAllProductsAreCollected )
+            {
+               <MudText>Ожидаем компоненты</MudText>
+            }
+            else
+            {
+                <MudText>Собран</MudText>
             }
         </MudTd>
         @if (OrderId == context.Id && _showDetails)
@@ -140,7 +169,7 @@
                     </CardHeaderContent>
                     </MudCardHeader>*@
                         <MudCardContent Class="pa-1">
-                            <ExportOrderDetailsComponent Id="OrderId" />
+                            <ExportOrderDetailsComponent Id="OrderId" CurrencyDisplay="_currencyDisplay" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -210,23 +239,25 @@
 
     </DialogContent>
 </MudDialog>
+
 <CreateExportedOrderDialog 
     RefreshProductList="() => _table!.ReloadServerData()"
-    @bind-VisibleDialog="_visibleAddOrderDialog" 
-   />
-
-
+    @bind-VisibleDialog="_visibleAddOrderDialog"/>
+   
 <EditExportedOrderDialog 
-                   Id="Order.Id"
-                   RefreshProductList="() => _table!.ReloadServerData()"
-                   @bind-VisibleDialog="_visibleUpdateOrderDialog"
-                   ApplicationOrderingProduct="Order.ApplicationOrderingProducts" />
+    Id="Order.Id"
+    RefreshProductList="() => _table!.ReloadServerData()"
+    @bind-VisibleDialog="_visibleUpdateOrderDialog"
+    ApplicationOrderingProduct="Order.ApplicationOrderingProducts" />
+
+
 
 @code {
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
    
     private List<ExportedOrderStatus>? StatusList { get; set; }
+
     private ExportedOrderStatus? Status { get; set; }
     public ExportedOrder Order { get; set; } = new();
 
@@ -242,7 +273,14 @@
     private bool _visibleSettingsOrderDialog; 
     private bool _visibleOrderStatusRemoveDialog;
     private bool _visibleOrderStatusEditDialog;
-    
+
+
+    public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
+    protected override async Task OnInitializedAsync()
+    {
+        StatusList ??= await ExportedOrderStatusManager.GetAsync();
+    }
+
     private async Task<TableData<ExportedOrder>> ServerReload(TableState state)
     {
        
@@ -292,7 +330,6 @@
     //}
     private void OpenOrderDetails(Guid orderId)
     {
-    //row = row == "my-table-row-w" ? "my-table-row" : "my-table-row-w";
         OrderId = orderId;
         _showDetails = !_showDetails;
     }
@@ -302,6 +339,7 @@
         StatusList = await ExportedOrderStatusManager.GetAsync();
         _visibleSettingsOrderDialog = true;
     }
+   
     //public async void AddOrderStatus()
     //{
     //    var tempCompanyType = new CompanyType() { Name = _valueString };
@@ -347,6 +385,18 @@
     }
     .my-table-row-w {
         background: white;
+    }
+
+    .select-button {
+        margin: 0 !important;
+  
+        
+    }
+    .select-button .mud-input-slot.mud-input-root-outlined {
+            padding: 0.67rem 0.8rem !important;
+            text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+        
     }
 </style>
 

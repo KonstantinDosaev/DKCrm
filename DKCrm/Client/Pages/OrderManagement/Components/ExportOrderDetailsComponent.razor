@@ -3,175 +3,279 @@
 
 @if (Order != null)
 {
-    <div class="d-flex px-3"> <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
-        <MudSpacer />
-
-       <div class="d-flex justify-content-center align-items-center">
-           <span class="mr-2 fs-6">за ед.</span><MudSwitch T="bool" CheckedChanged="() =>  _allOrOnePrice = _allOrOnePrice != true" Label="все кол.-во"
-                                                           Color="Color.Success" UnCheckedColor="Color.Info" />
-       </div>
-       <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddExportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
-           Добавить продукт
-           <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
-       </MudButton></div>
+    <div class="d-flex px-3 align-items-center">
+        <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
+        <MudSpacer/>
+        <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddExportedProductDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+            Добавить продукт<MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+        </MudButton>
+    </div>
 
     <MudTable Class="m-2" Items="@ExportedProducts" Hover="true" SortLabel="Sort By" T="ExportedProduct"
-              OnRowClick="RowClickEvent"
               Striped="true"
               Bordered="true"
               HeaderClass="mud-table-orderD-header table-head-bordered"
               CustomHeader="true"
-              Dense="true">
-        @* <ToolBarContent>
-           
-        </ToolBarContent>*@
+              Dense="true"
+              ApplyButtonPosition="TableApplyButtonPosition.Start"
+              EditButtonPosition="@TableEditButtonPosition.Start"
+              CanCancelEdit="true">
+        <ToolBarContent>
+
+            @if (Order.ApplicationOrderingProducts != null)
+            {
+                <MudText Class="mr-2">№ связанной заявки: @Order.ApplicationOrderingProducts.Number</MudText>
+            }
+            @if (Order.ApplicationOrderingProducts is {MissingProductsInCatalog: { } } && Order.ApplicationOrderingProducts.MissingProductsInCatalog.Any())
+            {
+                <MudText Color="Color.Warning">Не все продукты добавлены из заявки!!!</MudText>
+            }
+            @if (!Order.IsAllProductsAreCollected && (ImportIsCompleted != null && !ImportIsCompleted.Contains(false) && ImportIsCompleted.Any()))
+            {
+                <MudText Class="mr-2">Недостающие продукты пришли на склад, подтвердите изменение статуса заказа на: "УКОМПЛЕКТОВАН"</MudText>
+            }
+        </ToolBarContent>
         <HeaderContent>
-           
-           
             <MudTHeadRow Class="header-centered">
 
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Brand?.Name!)">Производитель</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.Quantity)">Количество</MudTableSortLabel></MudTh>
-                
-                <MudTh Style="text-align: center">
-                    <MudTableSortLabel Enabled="false" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInBuyerCurrency)">Цена в валюте поставщика </MudTableSortLabel>
-                    <div class="text-center fw-bold">@Order.BuyerCurrency</div>
-                    
-                </MudTh>
-                <MudTh Style="text-align: center">
-                    <MudTableSortLabel Enabled="false" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInTransactionCurrency)">Цена в валюте сделки</MudTableSortLabel>
-                    <div class="text-center fw-bold">@Order.TransactionCurrency</div>
 
-                </MudTh>
                 <MudTh Style="text-align: center">
-                    <MudTableSortLabel Enabled="false" SortBy="new Func<ImportedOrderStatus, object?>(x => x.Value)">Цена в локальной валюте</MudTableSortLabel>
-                    <div class="text-center fw-bold">@Order.LocalCurrency</div>
+                    <MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInBuyerCurrency)">Цена в валюте/ </MudTableSortLabel>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <span class="mr-2 fs-6">ед.</span><MudSwitch T="bool" CheckedChanged="() =>  _oneQuantityPrice = _oneQuantityPrice != true" Size="Size.Medium" Label="все"
+                                                                Color="Color.Success" UnCheckedColor="Color.Info" />
+                    </div>
                 </MudTh>
+                <MudTh Style="text-align: center">Edit</MudTh>
             </MudTHeadRow>
-           
-
-
         </HeaderContent>
         <RowTemplate>
-            
+
             <MudTd DataLabel="Парт-номер">
                 @if (context.Product != null)
-                { @context.Product.PartNumber }
+                {
+                    @context.Product.PartNumber
+                }
             </MudTd>
             <MudTd DataLabel="Наименование">
-                @if (context.Product != null){ @context.Product.Name }
+                @if (context.Product != null)
+                {
+                    @context.Product.Name
+                }
             </MudTd>
             <MudTd DataLabel="Наименование">
-                @if (context.Product?.Brand != null){ @context.Product.Brand.Name }
+                @if (context.Product?.Brand != null)
+                {
+                    @context.Product.Brand.Name
+                }
             </MudTd>
 
-            
-            <MudTd DataLabel="Количество">@context.Quantity</MudTd>
-            <MudTd DataLabel="Цена в валюте покупателя">
-                @if (context.PriceInBuyerCurrency != null)
-                {
-                    if (_allOrOnePrice)
-                    {
-                        @(decimal.Round((decimal)context.PriceInBuyerCurrency, 2) * context.Quantity)
+
+            <MudTd DataLabel="Количество">
+                <div class="d-flex justify-content-between align-items-center">
+                    @{
+                        var allReserve = GetAllReserveQuantity(context);
+                        var quantityColor = context.Quantity == allReserve ? "color: green" : "color: red";
                     }
-                    else
+                    <MudText> @context.Quantity 
+                        <span style="@(quantityColor)">(@allReserve)</span>
+                        </MudText>
+
+                    <div style="margin: 0 -0.5rem 0 1rem">
+                        <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCompletePopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
+                    </div>
+                    @if (ExportedProductId == context.Id && _isOpenCompletePopover)
                     {
-                        @decimal.Round((decimal)context.PriceInBuyerCurrency, 2)
+                        <MudPopover Open="@_isOpenCompletePopover"
+                                    Style="min-width: 550px;"
+                                    AnchorOrigin="Origin.BottomRight"
+                                    TransformOrigin="Origin.BottomRight" Fixed="true" Class="px-4 pt-4">
+                            <CompleteExportedProductComponent ExportedProduct="EditedExportedProduct"
+                                                              CancelEditCallback="() => _isOpenCompletePopover = false"
+                                                              RefreshParentCallback="GetOrder"/>
+                            <div class="text-end mb-2">
+                                <MudButton OnClick="(() => _isOpenCompletePopover = false)" Color="Color.Info">закрыть</MudButton>
+                            </div>
+                        </MudPopover>
                     }
-                }
+                </div>
             </MudTd>
-            <MudTd DataLabel="Цена в валюте сделки">
-                @if (context.PriceInTransactionCurrency != null)
-                { if (_allOrOnePrice)
-                {
-                    @(decimal.Round((decimal)context.PriceInTransactionCurrency, 2) * context.Quantity)
-                }
-                else
-                {
-                    @decimal.Round((decimal)context.PriceInTransactionCurrency, 2)
-                } }
+        
+            <MudTd DataLabel="Цена">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="flex-grow-1">
+                        @if (context.PriceInBuyerCurrency != null && CurrencyDisplay.Contains("Покупателя"))
+                        {
+                            <div class="d-flex justify-content-between">
+                                <span style="color: darkgray">покупателя: </span>
+                                <MudText>
+                                    @(decimal.Round((decimal)context.PriceInBuyerCurrency, 4) * (!_oneQuantityPrice ? context.Quantity : 1))
+                                    <span style="color: darkgray; margin-left: 5px">@Order.BuyerCurrency</span>
+                                </MudText>
+
+                            </div>
+                        }
+                        @if (context.PriceInTransactionCurrency != null && CurrencyDisplay.Contains("Сделки"))
+                        {
+                            <div class="d-flex justify-content-between">
+                                <span style="color: darkgray">сделки:</span>
+                                <MudText>
+                                    @(decimal.Round((decimal)context.PriceInTransactionCurrency, 4) * (!_oneQuantityPrice ? context.Quantity : 1))
+                                    <span style="color: darkgray; margin-left: 5px">@Order.TransactionCurrency</span>
+                                </MudText>
+                            </div>
+                        }
+                        @if (context.PriceLocal != null && CurrencyDisplay.Contains("Локальная"))
+                        {
+                            <div class="d-flex justify-content-between">
+                                <span style="color: darkgray">локальной:</span>
+                                <MudText>
+                                    @(decimal.Round((decimal)context.PriceLocal, 4) * (!_oneQuantityPrice ? context.Quantity : 1))
+                                    <span style="color: darkgray; margin-left: 5px">@Order.LocalCurrency</span>
+                                </MudText>
+                            </div>
+                        }
+
+                    </div>
+                    <div style="margin: 0 -0.5rem 0 1rem">
+                        <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCurrencyPopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary" />
+                    </div>
+                    @if (ExportedProductId == context.Id && _isOpenPricePopover)
+                    {
+                        <MudPopover Open="@_isOpenPricePopover"
+                                    Style="min-width: 320px"
+                                    AnchorOrigin="Origin.BottomLeft"
+                                    TransformOrigin="Origin.BottomLeft" Fixed="true" Class="px-4 pt-4">
+                            <CurrencyExportedProductComponent
+                                ExportedProduct="context"
+                                Order="Order"
+                                CancelEditCallback="() => _isOpenPricePopover = false" />
+                        </MudPopover>
+                    }
+                </div>
             </MudTd>
-            <MudTd DataLabel="Цена в локальной валюте">
-                @if (context.PriceLocal != null)
-                {if (_allOrOnePrice)
-                {
-                    @(decimal.Round((decimal)context.PriceLocal, 2) * context.Quantity)
-                }
-                else
-                {
-                    @decimal.Round((decimal)context.PriceLocal, 2)
-                }
-                }
-            </MudTd>
-                               
-                
+
             <MudTd DataLabel="Редактировать">
-                <MudIconButton Size="@Size.Medium"
+                <MudIconButton Size="@Size.Small"
                                OnClick="() => OpenEditExportedProductDialog(context)"
-                               Style=" background-color: rgba(217, 214, 81, 0.431);"
+                               Style="background-color: rgba(217, 214, 81, 0.431);"
                                Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
             </MudTd>
+            
         </RowTemplate>
+       
+        <EditButtonContent Context="button">
+            <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled"/>
+        </EditButtonContent>
         @* <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
         </PagerContent>*@
     </MudTable>
-    if (Order.ApplicationOrderingProducts is {MissingProductsInCatalog: { } } && Order.ApplicationOrderingProducts.MissingProductsInCatalog.Any())
+
+
+
+
+  
+
+        <CreateExportedProductDialog @bind-VisibleDialog="_visibleAddExportedProductDialog"
+                                     RefreshProductList="OnInitializedAsync"
+                                     Order="Order"/>
+    
+    @if (ExportedProductId!=Guid.Empty && ExportedProductId !=null)
     {
-        <MudText>Не все продукты добавлены из связанной заявки!!!</MudText>
-    }
 
-
-
-
-
-    <CreateExportedProductDialog @bind-VisibleDialog="_visibleAddExportedProductDialog"
-                            RefreshProductList="OnInitializedAsync"
-                            Order="Order"/>
-
-    <EditExportedProductDialog @bind-VisibleDialog="@_visibleEditExportedProductDialog"
+        <EditExportedProductDialog @bind-VisibleDialog="@_visibleEditExportedProductDialog"
                                    RefreshProductList="@OnInitializedAsync"
                                    Id="@ExportedProductId"/>
-    
+
+    }
+
 }
 @code {
 
     [Parameter] public Guid Id { get; set; }
+    [Parameter] public IEnumerable<string> CurrencyDisplay { get; set; } = null!;
     public ExportedOrder? Order { get; set; }
     private List<ExportedProduct>? ExportedProducts { get; set; }
-    public ExportedProduct? ExportedProduct { get; set; }
+    public ExportedProduct? EditedExportedProduct { get; set; }
     public Guid ExportedProductId { get; set; }
-    
-    public bool VisibleCompanySettingsDrawer { get; set; }
+    public IEnumerable<bool>? ImportIsCompleted { get; set; }
 
+    public ExportedProduct? BackupExportedProduct { get; set; }
+    private int MissingQuantity { get; set; }
+    private int QuantityInReserveAll { get; set; }
     object _selectedValue = 1;
+    private int _quantityToPrice;
 
     private bool _visibleAddExportedProductDialog;
     private bool _visibleEditExportedProductDialog;
-
-    private bool _allOrOnePrice;
+    private bool _oneQuantityPrice= true;
+    private bool _isOpenPricePopover;
+    private bool _isOpenCompletePopover;
 
     protected override async Task OnInitializedAsync()
     {
-        Order = await ExportedOrderManager.GetDetailsAsync(Id);
-        if (Order.ExportedProducts != null) ExportedProducts = Order.ExportedProducts.ToList();
+        await GetOrder();
     }
+    public async Task GetOrder()
+    {
+        Order = await ExportedOrderManager.GetDetailsAsync(Id);
+        if (Order.ExportedProducts != null)
+        {
+            ExportedProducts = Order.ExportedProducts.ToList();
+            foreach (var item in ExportedProducts)
+            {
+                item.ExportedOrder = Order;
+            }
+        }
+        if (Order.ExportedProducts != null)
+        {
+            ImportIsCompleted = Order.ExportedProducts.Where(w=>w.ImportedProducts!=null)
+                .Select(s => s.ImportedProducts!.Select(s => s.ImportedOrder!.IsAllProductsAreCollected).FirstOrDefault());
+        }
+    }
+    private int GetAllReserveQuantity(ExportedProduct exportedProduct)
+    {
+        var quantityInReserveAll = 0;
+        if (exportedProduct!.SoldFromStorage != null)
+            quantityInReserveAll += exportedProduct.SoldFromStorage.Select(s => s.Quantity).Sum();
 
+        if (exportedProduct.PurchaseAtExports != null)
+            quantityInReserveAll += exportedProduct.PurchaseAtExports.Select(s => s.Quantity).Sum();
 
+        return quantityInReserveAll;
+    }
 
     private void OpenEditExportedProductDialog(ExportedProduct exportedProduct)
     {
         ExportedProductId = exportedProduct.Id;
         _visibleEditExportedProductDialog = true;
     }
-    private void RowClickEvent(TableRowClickEventArgs<ExportedProduct> tableRowClickEventArgs)
+    private void OpenEditCurrencyPopover(Guid exportedProductId)
     {
-      //  _navigationManager.NavigateTo($"/companies/{tableRowClickEventArgs.Item.Id}");
+        CloseAllPopover();
+        ExportedProductId = exportedProductId;
+        _isOpenPricePopover = true;
     }
 
-   
+    private async Task OpenEditCompletePopover(Guid exportedProductId)
+    {
+        CloseAllPopover();
+        if(EditedExportedProduct == null || EditedExportedProduct.Id != exportedProductId)
+            ExportedProductId = exportedProductId;
+            EditedExportedProduct = await ExportedProductManager.GetDetailsAsync(exportedProductId);
+        
+        _isOpenCompletePopover = true;
+    }
+    private void CloseAllPopover()
+    {
+        _isOpenPricePopover = false;
+        _isOpenCompletePopover = false;
+    }
     
 }
 <style>

@@ -1,0 +1,161 @@
+﻿@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Models.OrderModels
+@if (EditedImportedProduct != null)
+{
+
+    @if (!_isSetCurrency)
+    {
+        <MudText Color="Color.Warning">Установите валюты в настройках основного заказа</MudText>
+    }
+   
+    <MudNumericField @ref="_supplierField" Disabled="!_isSetCurrency" Label="Цена в валюте продовца"
+                 Value="EditedImportedProduct.PriceInSupplierCurrency != null ? Math.Round((decimal)EditedImportedProduct.PriceInSupplierCurrency,4) : null"
+                 For="@(() => EditedImportedProduct.PriceInSupplierCurrency)"
+                 Variant="Variant.Outlined"
+                 RequiredError="Введите цену"
+                 Class="mb-3"
+                 Format="0.####"
+                 Step="0.1M"
+                 T="decimal?" Min="0"
+                 Adornment="Adornment.End" AdornmentText="@Order?.SupplierCurrency"
+                 ValueChanged="@(p=> SetSupplierPrice(((decimal)p!)))"
+                 HideSpinButtons="true"
+                 OnBlur="() => ConvertedCurrency(Order?.SupplierCurrency!, EditedImportedProduct.PriceInSupplierCurrency)"
+                 OnKeyUp="async args => await OnKeyDownCurrencyField(args, _supplierField)" />
+
+    <MudNumericField @ref="_transactionField" Disabled="!_isSetCurrency" Label="Цена в валюте сделки"
+                 Value="EditedImportedProduct.PriceInTransactionCurrency != null ? Math.Round((decimal)EditedImportedProduct.PriceInTransactionCurrency!,4) : null"
+                 For="@(() => EditedImportedProduct.PriceInTransactionCurrency)"
+                 Variant="Variant.Outlined"
+                 RequiredError="Введите цену"
+                 Class="mb-3"
+                 Format="N4"
+                 Step="0.1M"
+                 T="decimal?" Min="0"
+                 Adornment="Adornment.End" AdornmentText="@Order?.TransactionCurrency"
+                 HideSpinButtons="true"
+                 ValueChanged="@(p=> SetTransactionPrice(((decimal)p!)))"
+                 OnBlur="() => ConvertedCurrency(Order?.TransactionCurrency!, EditedImportedProduct.PriceInTransactionCurrency)"
+                 OnKeyDown="args => OnKeyDownCurrencyField(args,_transactionField)" />
+
+    <MudNumericField @ref="_localField" Disabled="!_isSetCurrency" Label="Цена в локальной валюте"
+                 Value="EditedImportedProduct.PriceLocal != null ? Math.Round((decimal)EditedImportedProduct.PriceLocal!,4) : null"
+                 For="@(() => EditedImportedProduct.PriceLocal)"
+                 Variant="Variant.Outlined"
+                 RequiredError="Введите цену"
+                 Class="mb-3"
+                 Format="0.####"
+                 Step="0.1M"
+                 T="decimal?" Min="0"
+                 Adornment="Adornment.End" AdornmentText="@Order?.LocalCurrency"
+                 ValueChanged="@(p=> SetLocalPrice(((decimal)p!)))"
+                 HideSpinButtons="true"
+                 OnBlur="() => ConvertedCurrency(Order?.LocalCurrency!, EditedImportedProduct.PriceLocal)"
+                 OnKeyDown="args => OnKeyDownCurrencyField(args,_localField)" />
+    <div class="d-flex justify-content-end mb-3">
+        @if (_priceIsEdit)
+        {
+            <MudButton OnClick="UpdateExportedProduct" Class="" Color="Color.Success">Сохранить</MudButton>
+        }
+        <MudButton OnClick="(async () => await CancelEditCallback.InvokeAsync())" Class="" Color="Color.Info">Закрыть/Отменить</MudButton>
+    </div>
+}
+@code {
+    MudNumericField<decimal?>? _supplierField;
+    MudNumericField<decimal?>? _transactionField;
+    MudNumericField<decimal?>? _localField;
+
+    [Parameter] public ImportedOrder? Order { get; set; }
+    [Parameter] public ImportedProduct? ImportedProduct { get; set; }
+    [Parameter] public Guid? ImportedProductId { get; set; }
+    [Parameter] public EventCallback CancelEditCallback { get; set; }
+    public ImportedProduct? EditedImportedProduct { get; set; }
+    private bool _isSetCurrency;
+    private bool _textFieldIsChanged;
+    private bool _priceIsEdit;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ImportedProductId != null) ImportedProduct = await ImportedProductManager.GetDetailsAsync((Guid)ImportedProductId);
+        if (ImportedProduct != null) EditedImportedProduct = new ImportedProduct()
+            {
+                PriceInSupplierCurrency = ImportedProduct.PriceInSupplierCurrency,
+                PriceInTransactionCurrency = ImportedProduct.PriceInTransactionCurrency,
+                PriceLocal = ImportedProduct.PriceLocal
+            };
+        if (Order is { LocalCurrency: { }, SupplierCurrency: { }, TransactionCurrency: { } })
+        {
+            _isSetCurrency = true;
+        }
+    }
+
+    private void SetSupplierPrice(decimal price)
+    {
+        EditedImportedProduct!.PriceInSupplierCurrency = price;
+        _textFieldIsChanged = true;
+    }
+    private void SetTransactionPrice(decimal price)
+    {
+        EditedImportedProduct!.PriceInTransactionCurrency = price;
+        _textFieldIsChanged = true;
+    }
+    private void SetLocalPrice(decimal price)
+    {
+        EditedImportedProduct!.PriceLocal = price;
+        _textFieldIsChanged = true;
+    }
+    private async Task OnKeyDownCurrencyField(KeyboardEventArgs args, MudNumericField<decimal?>? field)
+    {
+        if (args.Key == "Enter" && field != null)
+        {
+            await field.BlurAsync();
+        }
+    }
+    private async Task ConvertedCurrency(string charCode, decimal? price)
+    {
+        if (string.IsNullOrEmpty(charCode) || price == null || !_textFieldIsChanged) return;
+
+        var supplierCharCode = ImportedProduct!.ImportedOrder!.SupplierCurrency!;
+        var transactionCharCode = ImportedProduct!.ImportedOrder!.TransactionCurrency!;
+        var localCharCode = ImportedProduct!.ImportedOrder!.LocalCurrency!;
+        var curArr = new List<string>
+        {
+            supplierCharCode,
+            transactionCharCode!,
+            localCharCode!
+        };
+        curArr.Remove(charCode);
+        var convertResult = await CurrencyManager.CurrencyConverter(charCode, price, ImportedProduct.ImportedOrder.CurrencyPercent, curArr);
+        foreach (var item in convertResult)
+        {
+            if (item.charCod == supplierCharCode)
+            {
+                EditedImportedProduct!.PriceInSupplierCurrency = item.Item2;
+            }
+            if (item.charCod == transactionCharCode)
+            {
+                EditedImportedProduct!.PriceInTransactionCurrency = item.Item2;
+            }
+            if (item.charCod == localCharCode)
+            {
+                EditedImportedProduct!.PriceLocal = item.Item2;
+            }
+        }
+        _textFieldIsChanged = false;
+        _priceIsEdit = true;
+    }
+    private async Task UpdateExportedProduct()
+    {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
+        ImportedProduct!.PriceInSupplierCurrency = EditedImportedProduct!.PriceInSupplierCurrency;
+        ImportedProduct!.PriceInTransactionCurrency = EditedImportedProduct!.PriceInTransactionCurrency;
+        ImportedProduct!.PriceLocal = EditedImportedProduct!.PriceLocal;
+        @if (await ImportedProductManager.UpdateAsync(ImportedProduct!))
+        {
+            _snackBar.Add("Цена обновлена");
+            await CancelEditCallback.InvokeAsync();
+        }
+    }
+}

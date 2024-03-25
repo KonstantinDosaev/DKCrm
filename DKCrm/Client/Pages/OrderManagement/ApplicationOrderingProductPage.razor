@@ -77,7 +77,7 @@
                                         </div>
                                         </TitleContent>
                                     <ChildContent>
-                                        <MudText Class="fw-bold p-1">@($"№: {application.Name} ")</MudText>
+                                                <MudText Class="fw-bold p-1">@($"№: {application.Number} ")</MudText>
                                         <div>
                                             <MudText><span style="color: darkgrey; margin-right: 1rem">Компания:</span>@application.CompanyName</MudText>
                                             <MudText><span style="color: darkgrey; margin-right: 1rem">Сотрудник:</span>@application.UserName</MudText>
@@ -194,9 +194,9 @@
                                               IconSize="Size.Medium" Class="mt-0 mx-2"></MudTextField>
                             </MudPaper>
                             <div class="d-flex flex-wrap justify-content-between" style="background-color: lightblue; padding: 1rem 4rem; ">
-                                <MudText Typo="Typo.button" Class="fw-bold">Дата завершения</MudText>
+                                <MudText Typo="Typo.button" Class="fw-bold">Принята</MudText>
                                 <MudText Typo="Typo.button" Class="fw-bold">Название компании/e-mail</MudText>
-                                <MudText Typo="Typo.button" Class="fw-bold">Дата создания</MudText>
+                                <MudText Typo="Typo.button" Class="fw-bold">Создана</MudText>
                             </div>
                             @foreach (var application in HistoryList)
                             {
@@ -204,7 +204,7 @@
                                 <MudExpansionPanel Dense="true" >
                                     <TitleContent>
                                         <div class="d-flex flex-wrap justify-content-between px-4">
-                                            <MudText Class="fw-bold">@application.DateTimeUpdate</MudText>
+                                            <MudText Class="fw-bold">@application.DateTimeTake</MudText>
                                             <MudText Class="fw-bold">@(application.CompanyName ?? application.Email)</MudText>
                                             <MudText Class="fw-bold">@application.DateTimeCreated</MudText>
                                         </div>
@@ -213,8 +213,8 @@
                                      
                                             <div class="d-flex justify-content-between px-4 py-1">
                                                 <div>
-                                                    <MudText Class="fw-bold">@($"№: {application.Name} ")</MudText>
-                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">Принял заявку:</span>@application.UpdatedUser</MudText>
+                                                        <MudText Class="fw-bold">@($"№: {application.Number} ")</MudText>
+                                                    <MudText><span style="color: darkgrey; margin-right: 1rem">Принял заявку:</span>@application.TakerUser</MudText>
                                                 </div>
                                                 <div>
                                                     <MudText><span style="color: darkgrey; margin-right: 1rem">Компания:</span>@application.CompanyName</MudText>
@@ -333,7 +333,6 @@
                 _itemInPageIndex = 0;
                 HistoryList= await GetHistoryList();
                 break;
-
         }
     }
    

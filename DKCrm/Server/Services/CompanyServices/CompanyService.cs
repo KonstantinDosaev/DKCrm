@@ -1,64 +1,59 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
-using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-
-namespace DKCrm.Server.Controllers
+namespace DKCrm.Server.Services.CompanyServices
 {
-
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CompanyController : ControllerBase
+    public class CompanyService : ICompanyService
     {
         private readonly ApplicationDBContext _context;
-        public CompanyController(ApplicationDBContext context)
+        public CompanyService(ApplicationDBContext context)
         {
             _context = context;
         }
-
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IEnumerable<Company>> GetAsync()
         {
-            //return Ok(await _context.Companies.Include(i=>i.ActualAddress)
-            //    .Include(i=>i.CompanyType)
-            //    .Include(i=>i.Employees)
-            //    .Include(i=>i.TagsCompanies).ToListAsync());
-            return Ok(await _context.Companies.AsNoTracking().Select(s=>new
+            return await _context.Companies.AsNoTracking().Select(s => new Company()
             {
-                s.Id,s.ActualAddress,s.ActualAddressId,s.Name,s.Director,s.TagsCompanies,s.CompanyTypeId,s.FnsRequestId,s.CompanyType,s.Employees,s.Inn,
-            }).ToListAsync());
+                Id = s.Id,
+                ActualAddress = s.ActualAddress,
+                ActualAddressId = s.ActualAddressId,
+                Name = s.Name,
+                Director = s.Director,
+                TagsCompanies = s.TagsCompanies,
+                CompanyTypeId = s.CompanyTypeId,
+                FnsRequestId = s.FnsRequestId,
+                CompanyType = s.CompanyType,
+                Employees = s.Employees,
+                Inn = s.Inn,
+            }).ToListAsync();
         }
-        
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+
+        public async Task<Company> GetAsync(Guid id)
         {
-            var dev = await _context.Companies.AsNoTracking().Include(i => i.ActualAddress).
+            var company = await _context.Companies.AsNoTracking().Include(i => i.ActualAddress).
                 Include(i => i.CompanyType).
                 Include(i => i.BankDetails).Include(i => i.FnsRequest).
                 Include(i => i.Employees).
                 Include(i => i.TagsCompanies).AsSingleQuery()
                 .FirstOrDefaultAsync(a => a.Id == id);
-            return Ok(dev);
+            return company ?? throw new InvalidOperationException();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post(Company company)
+        public async Task<Guid> PostAsync(Company company)
         {
             _context.Add(company);
             await _context.SaveChangesAsync();
-            return Ok(company.Id);
+            return company.Id;
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Put(Company company)
+        public async Task<Guid> PutAsync(Company company)
         {
-            
-
             _context.Entry(company).State = EntityState.Modified;
-            if (company.Employees!=null)
+            if (company.Employees != null)
             {
                 if (company.CompanyType!.Name != TypeCompanyNames.OurCompanies)
                 {
@@ -79,7 +74,7 @@ namespace DKCrm.Server.Controllers
                         _context.Entry(item).State = item.Id != Guid.Empty ? EntityState.Modified : EntityState.Added;
                         companyDb.Add(item);
                     }
-                    var exception = companyDb.Where(w=> !company.Employees.Select(s=>s.Id).Contains(w.Id)).ToList();
+                    var exception = companyDb.Where(w => !company.Employees.Select(s => s.Id).Contains(w.Id)).ToList();
                     if (exception.Any())
                     {
                         foreach (var employee in exception)
@@ -112,19 +107,17 @@ namespace DKCrm.Server.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return Ok(company);
+            return company.Id;
         }
-        [HttpPut("range")]
-        public async Task<IActionResult> PutRange(IEnumerable<Company> companies)
+
+        public async Task<int> PutRangeAsync(IEnumerable<Company> companies)
         {
             //_context.Entry(product).State = EntityState.Modified;
             _context.Companies.UpdateRange(companies);
-            await _context.SaveChangesAsync();
-            return Ok(companies.Count());
+            return await _context.SaveChangesAsync();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<int> DeleteAsync(Guid id)
         {
             var dev = await _context.Companies.Include(i => i.ActualAddress).
                 Include(i => i.CompanyType).
@@ -135,57 +128,46 @@ namespace DKCrm.Server.Controllers
                 .FirstOrDefaultAsync(a => a.Id == id);
             if (dev!.ActualAddress != null) _context.Remove((object)dev.ActualAddress);
             _context.Remove(dev!);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            return await _context.SaveChangesAsync();
         }
-        [HttpPost("removerange")]
-        public async Task<IActionResult> DeleteRange(IEnumerable<Company> companies)
+       
+        public async Task<int> DeleteRangeAsync(IEnumerable<Company> companies)
         {
             _context.RemoveRange(companies);
-            await _context.SaveChangesAsync();
-            return Ok(companies.Count());
+            return await _context.SaveChangesAsync();
         }
 
-        [HttpDelete("bank-details/{id}")]
-        public async Task<IActionResult> DeleteBankDetails(Guid id)
+        public async Task<int> DeleteBankDetailsAsync(Guid id)
         {
             _context.Remove(new BankDetails() { Id = id });
-            await _context.SaveChangesAsync();
-            return NoContent();
+            return await _context.SaveChangesAsync();
         }
 
-        [HttpPost("updateTags/{tagRequest}")]
-        public async Task<IActionResult> UpdateTagsCompany(TagsRequest tagRequest)
+        public async Task<int> UpdateTagsCompanyAsync(TagsRequest tagRequest)
         {
-         
-                var changeCompany = await _context.Companies.Include(i=>i.TagsCompanies).FirstOrDefaultAsync(f => f.Id == tagRequest.CompanyId);
-                var tagsList = _context.TagsCompanies.Where(w => tagRequest.TagCollection.Contains(w.Id)).ToList();
-                foreach (var item in tagsList)
+            var changeCompany = await _context.Companies.Include(i => i.TagsCompanies).FirstOrDefaultAsync(f => f.Id == tagRequest.CompanyId);
+            var tagsList = _context.TagsCompanies.Where(w => tagRequest.TagCollection.Contains(w.Id)).ToList();
+            foreach (var item in tagsList)
+            {
+                if (changeCompany is { TagsCompanies: { } } && !changeCompany.TagsCompanies.Contains(item))
                 {
-                    
-                    if (changeCompany is { TagsCompanies: { } } && !changeCompany.TagsCompanies.Contains(item))
-                    {
-                        changeCompany.TagsCompanies.Add(item);
-                   
-                    }
+                    changeCompany.TagsCompanies.Add(item);
                 }
-                var except = changeCompany!.TagsCompanies!.Except(tagsList).ToList();
-                if (except != null && except.Any())
+            }
+            var except = changeCompany!.TagsCompanies!.Except(tagsList).ToList();
+            if (except != null && except.Any())
+            {
+                foreach (var tag in except)
                 {
-                    foreach (var tag in except)
-                    {
-                        changeCompany.TagsCompanies!.Remove(tag);
-                   
-                    }
+                    changeCompany.TagsCompanies!.Remove(tag);
                 }
-                
-                await _context.SaveChangesAsync();
-            return Ok();
-        }
-        [HttpPut("addemployee")]
-        public async Task<IActionResult> AddEmployee(Company company)
-        {
+            }
 
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> AddEmployeeAsync(Company company)
+        {
             _context.Entry(company).State = EntityState.Modified;
 
             if (company.Employees != null)
@@ -197,8 +179,7 @@ namespace DKCrm.Server.Controllers
                     _context.Entry(item).State = empGuid.Contains(item.Id) ? EntityState.Modified : EntityState.Added;
                 }
             }
-            await _context.SaveChangesAsync();
-            return Ok(company);
+            return await _context.SaveChangesAsync();
         }
     }
 }

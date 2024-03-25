@@ -1,8 +1,6 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Models.CompanyModels;
+﻿using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Controllers.OrderControllers
 {
@@ -10,69 +8,37 @@ namespace DKCrm.Server.Controllers.OrderControllers
     [ApiController]
     public class ImportedOrderStatusController:ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly IImportedOrderStatusService _importedOrderStatusService;
 
-        public ImportedOrderStatusController(ApplicationDBContext context)
+        public ImportedOrderStatusController(IImportedOrderStatusService importedOrderStatusService)
         {
-            _context = context;
+            _importedOrderStatusService = importedOrderStatusService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            return Ok(await _context.ImportedOrderStatus.ToListAsync());
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
-        {
-            var dev = await _context.ImportedOrderStatus.FirstOrDefaultAsync(a => a.Id == id);
-            return Ok(dev);
-        }
-
+        public async Task<IActionResult> Get() => Ok(await _importedOrderStatusService.GetAsync());
+  
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> Get(Guid id) => Ok(await _importedOrderStatusService.GetDetailAsync(id));
+     
         [HttpPost]
-        public async Task<IActionResult> Post(ImportedOrderStatus importedOrderStatus)
-        {
-            _context.Add(importedOrderStatus);
-            await _context.SaveChangesAsync();
-            return Ok(importedOrderStatus.Id);
-        }
-
+        public async Task<IActionResult> Post(ImportedOrderStatus importedOrderStatus) 
+            => Ok(await _importedOrderStatusService.PostAsync(importedOrderStatus));
+    
         [HttpPut]
         public async Task<IActionResult> Put(ImportedOrderStatus importedOrderStatus)
-        {
-            _context.Entry(importedOrderStatus).State = EntityState.Modified;
-            //_context.Update(entityToBeUpdated);
-            await _context.SaveChangesAsync();
-            return Ok(importedOrderStatus);
-        }
-
+            => Ok(await _importedOrderStatusService.PostAsync(importedOrderStatus));
+      
         [HttpPut("range")]
         public async Task<IActionResult> PutRange(IEnumerable<ImportedOrderStatus> importedOrderStatus)
-        {
-            //_context.Entry(product).State = EntityState.Modified;
-            _context.ImportedOrderStatus.UpdateRange(importedOrderStatus);
-            await _context.SaveChangesAsync();
-            return Ok(importedOrderStatus.Count());
-        }
+            => Ok(await _importedOrderStatusService.PutRangeAsync(importedOrderStatus));
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
-        {
-            var dev = await _context.ImportedOrderStatus.FirstOrDefaultAsync(a => a.Id == id);
-            if (dev == null) return NoContent();
-
-            _context.Remove(dev);
-            await _context.SaveChangesAsync();
-            return Ok(dev);
-        }
+            => Ok(await _importedOrderStatusService.DeleteAsync(id));
 
         [HttpPost("removerange")]
         public async Task<IActionResult> DeleteRange(IEnumerable<ImportedOrderStatus> importedOrderStatus)
-        {
-            _context.RemoveRange(importedOrderStatus);
-            await _context.SaveChangesAsync();
-            return Ok(importedOrderStatus.Count());
-        }
+            => Ok(await _importedOrderStatusService.DeleteRangeAsync(importedOrderStatus));
     }
 }

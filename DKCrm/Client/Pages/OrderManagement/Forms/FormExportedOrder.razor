@@ -27,15 +27,15 @@
                 </MudSelect>
                 @if (ExportedOrder.OurCompany is { Employees: { } })
                 {
-                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашего сотрудника" @bind-Value="ExportedOrder.OurEmployee"
+                    <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашего сотрудника" @bind-Value="ExportedOrder.OurEmployeeId"
                                Label="Наш сотрудник"
-                               T="Employee" ToStringFunc="eml => eml.FirstName?.ToString() + eml.MiddleName + eml.LastName"
+                               T="Guid?" ToStringFunc="eml => eml.ToString()"
                                CloseIcon="@Icons.Material.Filled.Flag"
                                AdornmentColor="Color.Tertiary">
 
                         @foreach (var item in ExportedOrder.OurCompany.Employees)
                         {
-                            <MudSelectItem T="Employee" Value="@item">@item.LastName @item.FirstName @item.MiddleName</MudSelectItem>
+                            <MudSelectItem T="Guid?" Value="@item.Id">@item.LastName @item.FirstName @item.MiddleName</MudSelectItem>
                         }
                     </MudSelect>
                 }
@@ -95,13 +95,37 @@
                 <MudPaper Class="p-2 my-2">
                     <MudText Typo="Typo.h6">Настройка валют</MudText>
                     <div class ="d-flex flex-wrap">
+                    <MudNumericField  Label="Процент на курс валюты"
+                                      ValueChanged="SetPercent"
+                                      Variant="Variant.Outlined"
+                                      RequiredError="Введите процент"
+                                      Class="mb-3 px-3"
+                                      Format="0.##"
+                                      Step="0.1F"
+                                      T="double?" Min="0" Max="100"
+                                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" 
+                                      Value="ExportedOrder.CurrencyPercent"/>
+                    <MudNumericField Label="НДС"
+                                     ValueChanged="SetNds"
+                                     Variant="Variant.Outlined"
+                                     RequiredError="Введите НДС"
+                                     Class="mb-3 px-3"
+                                     Format="0.##"
+                                     Step="0.1F"
+                                     T="double?" Min="0" Max="100"
+                                     Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" 
+                                     Value="ExportedOrder.Nds"/>
+                    </div>
+                    <div class ="d-flex flex-wrap">
                         <MudItem Class="py-0 px-3">
-                            <MudSelect TextChanged="() => _currencyEdited = true" Variant="Variant.Outlined" Placeholder="Выберите валюту покупателя" @bind-Value="ExportedOrder.BuyerCurrency"
+                            <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту покупателя"
                                        Label="Валюта покупателя"
                                        T="string" ToStringFunc="c => c.ToString()"
                                        CloseIcon="@Icons.Material.Filled.Flag"
                                        AdornmentColor="Color.Tertiary"
-                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()" 
+                                       ValueChanged="SetBuyerCurrency"
+                                       Value="ExportedOrder.BuyerCurrency">
                                 @if (CurrencyCharCodes != null)
                                 {
                                     @foreach (var item in CurrencyCharCodes)
@@ -112,12 +136,14 @@
                             </MudSelect>
                         </MudItem>
                         <MudItem Class="py-0 px-3">
-                            <MudSelect TextChanged="() => _currencyEdited = true" Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ExportedOrder.TransactionCurrency"
+                            <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту сделки"
                                        Label="Валюта сделки"
                                        T="string" ToStringFunc="c => c.ToString()"
                                        CloseIcon="@Icons.Material.Filled.Flag"
                                        AdornmentColor="Color.Tertiary"
-                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()"
+                                       ValueChanged="SetTransactionCurrency"
+                                   Value="ExportedOrder.TransactionCurrency">
                                 @if (CurrencyCharCodes != null)
                                 {
                                     @foreach (var item in CurrencyCharCodes)
@@ -128,12 +154,14 @@
                             </MudSelect>
                         </MudItem>
                         <MudItem Class="py-0 px-3">
-                            <MudSelect Disabled="true" Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ExportedOrder.LocalCurrency"
+                            <MudSelect Disabled="true" Variant="Variant.Outlined" Placeholder="Выберите локальную валюту"
                                        Label="Локальная валюта"
                                        T="string" ToStringFunc="c => c.ToString()"
                                        CloseIcon="@Icons.Material.Filled.Flag"
                                        AdornmentColor="Color.Tertiary"
-                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                       OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()"
+                                       ValueChanged="SetLocalCurrency"
+                                   Value="ExportedOrder.LocalCurrency">
                                 @if (CurrencyCharCodes != null)
                                 {
                                     @foreach (var item in CurrencyCharCodes)
@@ -298,6 +326,31 @@
             await OrderForm.Validate();
 
     }
+    private void SetPercent(double? currency)
+    {
+        ExportedOrder!.CurrencyPercent = currency;
+        _currencyEdited = true;
+    }
+    private void SetNds(double? nds)
+    {
+        ExportedOrder!.Nds = nds;
+        _currencyEdited = true;
+    }
+    private void SetBuyerCurrency(string currency)
+    {
+        ExportedOrder!.BuyerCurrency = currency;
+        _currencyEdited = true;
+    }
+    private void SetTransactionCurrency(string currency)
+    {
+        ExportedOrder!.TransactionCurrency = currency;
+        _currencyEdited = true;
+    }
+    private void SetLocalCurrency(string currency)
+    {
+        ExportedOrder!.LocalCurrency = currency;
+        _currencyEdited = true;
+    }
     private async Task UpdatePricesInExportedProducts()
     {
         if (!IsEditForm)return;
@@ -305,13 +358,16 @@
         if (productList == null || !productList.Any()) return;
         foreach (var product in productList)
         {
-            var supplierCharCode = ExportedOrder!.BuyerCurrency!;
+            if (product.PriceInTransactionCurrency==null || product.PriceLocal==null || product.PriceInBuyerCurrency==null)
+                continue;
+            
+            var buyerCurrency = ExportedOrder!.BuyerCurrency!;
             var transactionCharCode = ExportedOrder!.TransactionCurrency!;
             var convertResult = await CurrencyManager.CurrencyConverter(currencyToConvert: ExportedOrder.LocalCurrency!,
-                firstPrice: product.PriceLocal, currencyPercent: (double)ExportedOrder.CurrencyPercent!, currencyCharCodesToConvert: new List<string>() { product.BuyerCurrency!, product.TransactionCurrency! });
+                firstPrice: product.PriceLocal, currencyPercent: (double)ExportedOrder.CurrencyPercent!, currencyCharCodesToConvert: new List<string>() { buyerCurrency, transactionCharCode });
             foreach (var item in convertResult)
             {
-                if (item.charCod==supplierCharCode)
+                if (item.charCod==buyerCurrency)
                 {
                     product.PriceInBuyerCurrency=item.Item2;
                 }

@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Constants;
+﻿using DKCrm.Server.Interfaces;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Authorization;
@@ -11,59 +12,38 @@ namespace DKCrm.Server.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private readonly IAuthService _authService;
+        public AuthController(IAuthService authService)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
+            _authService = authService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.UserName);
-            if (user == null) return BadRequest("User does not exist");
-            var singInResult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-            if (!singInResult.Succeeded) return BadRequest("Invalid password");
-            await _signInManager.SignInAsync(user, request.RememberMe);
-            return Ok();
+            var message = await _authService.LoginAsync(request);
+            return  message == "Ok" ? Ok(message) : BadRequest(message);
         }
 
         [HttpPost]
         public async Task<IActionResult> Register(RegisterRequest parameters)
         {
-            var user = new ApplicationUser();
-            user.UserName = parameters.UserName;
-            var result = await _userManager.CreateAsync(user, parameters.Password);
-            if (!result.Succeeded) return BadRequest(result.Errors.FirstOrDefault()?.Description);
-            await _userManager.AddToRoleAsync(user, RoleNames.User);
-            //return await Login(new LoginRequest
-            //{
-            //    UserName = parameters.UserName,
-            //    Password = parameters.Password
-            //});
-            return Ok();
+            var message = await _authService.RegisterAsync(parameters);
+            return message == "Ok" ? Ok(message) : BadRequest(message);
         }
 
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await _signInManager.SignOutAsync();
+            await _authService.LogoutAsync();
             return Ok();
         }
 
         [HttpGet]
         public CurrentUser CurrentUserInfo()
         {
-            return new CurrentUser
-            {
-                IsAuthenticated = User.Identity!.IsAuthenticated,
-                UserName = User.Identity.Name!,
-                Claims = User.Claims
-                    .ToDictionary(c => c.Type, c => c.Value)
-            };
+            return _authService.CurrentUserInfo(User);
         }
     }
 }

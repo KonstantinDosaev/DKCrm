@@ -1,56 +1,47 @@
 ﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Constants;
+using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Models.CompanyModels;
-using DKCrm.Shared.Models.Products;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace DKCrm.Server.Controllers
+namespace DKCrm.Server.Services.CompanyServices
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class EmployeeController: ControllerBase
+    public class EmployeeService : IEmployeeService
     {
         private readonly ApplicationDBContext _context;
 
-        public EmployeeController(ApplicationDBContext context)
+        public EmployeeService(ApplicationDBContext context)
         {
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IEnumerable<Employee>> GetAsync()
         {
-            return Ok(await _context.Employees.ToListAsync());
+            return await _context.Employees.ToListAsync();
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<Employee> GetAsync(Guid id)
         {
-            var dev = await _context.Employees.FirstOrDefaultAsync(a => a.Id == id);
-            return Ok(dev);
+            var employee = await _context.Employees.FirstOrDefaultAsync(a => a.Id == id);
+            return employee ?? throw new InvalidOperationException();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post(Employee employee)
+        public async Task<Guid> PostAsync(Employee employee)
         {
             _context.Entry(employee).State = EntityState.Added;
 
             if (employee.Companies != null)
             {
-               foreach (var item in employee.Companies)
-               {
+                foreach (var item in employee.Companies)
+                {
                     _context.Entry(item).State = EntityState.Modified;
-               }
+                }
             }
-            
+
             await _context.SaveChangesAsync();
-            return Ok(employee.Id);
+            return employee.Id;
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Put(Employee employee)
+        public async Task<Guid> PutAsync(Employee employee)
         {
             _context.Entry(employee).State = EntityState.Modified;
 
@@ -79,7 +70,7 @@ namespace DKCrm.Server.Controllers
             //            }
 
             //        }
-                    
+
 
             //        foreach (var employee in companyDb.Employees!)
             //        {
@@ -93,20 +84,15 @@ namespace DKCrm.Server.Controllers
             //}
 
             await _context.SaveChangesAsync();
-            return Ok(employee);
+            return employee.Id;
         }
 
-
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<int> DeleteAsync(Guid id)
         {
-            var dev = new Employee { Id = id };
-            _context.Remove(dev);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var employee = new Employee { Id = id };
+            _context.Remove(employee);
+            return await _context.SaveChangesAsync();
         }
-
 
     }
 }

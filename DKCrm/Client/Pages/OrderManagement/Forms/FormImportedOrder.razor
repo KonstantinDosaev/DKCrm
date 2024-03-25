@@ -11,8 +11,8 @@
         <MudCard>
              <MudCardContent>
 
-                <MudTextField @bind-Value="@ImportedOrder.Name"
-                          For="@(() => ImportedOrder.Name)"
+                <MudTextField @bind-Value="@ImportedOrder.Number"
+                          For="@(() => ImportedOrder.Number)"
                           Immediate="true"
                           Label="Название заказа" />
                 <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашу компанию" @bind-Value="ImportedOrder.OurCompany" 
@@ -75,22 +75,36 @@
                      }
                  </MudSelect>
              }
-                <MudNumericField TextChanged="() => _currencyEdited=true" Label="Процент на курс валюты" @bind-Value="ImportedOrder.CurrencyPercent"
-                                   Variant="Variant.Outlined"
+                <MudNumericField  Label="Процент на курс валюты"
+                                  ValueChanged="SetPercent"
+                                  Variant="Variant.Outlined"
                                   RequiredError="Введите процент"
                                   Class="mb-3"
                                   Format="0.##"
                                   Step="0.1F"
-                                   T="double?" Min="0" Max="100"
-                                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" />
+                                  T="double?" Min="0" Max="100"
+                                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" 
+                                  Value="ImportedOrder.CurrencyPercent"/>
+                <MudNumericField Label="НДС"
+                                 ValueChanged="SetNds"
+                                 Variant="Variant.Outlined"
+                                 RequiredError="Введите НДС"
+                                 Class="mb-3"
+                                 Format="0.##"
+                                 Step="0.1F"
+                                 T="double?" Min="0" Max="100"
+                                 Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" 
+                                 Value="ImportedOrder.Nds"/>
         
                 <MudItem  Class="py-0 px-3">
-                    <MudSelect TextChanged="() => _currencyEdited=true"  Variant="Variant.Outlined" Placeholder="Выберите валюту поставщика" @bind-Value="ImportedOrder.SupplierCurrency"
+                    <MudSelect  Variant="Variant.Outlined" Placeholder="Выберите валюту поставщика"
+                                ValueChanged="SetSupplierCurrency"
                            Label="Валюта поставщика"
                            T="string" ToStringFunc="c => c.ToString()"
                            CloseIcon="@Icons.Material.Filled.Flag"
                            AdornmentColor="Color.Tertiary"
-                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                                OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()" 
+                                Value="ImportedOrder.SupplierCurrency">
                         @if (CurrencyCharCodes != null)
                         {
                             @foreach (var item in CurrencyCharCodes)
@@ -101,12 +115,15 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem Class="py-0 px-3">
-                    <MudSelect TextChanged="() => _currencyEdited=true" Variant="Variant.Outlined" Placeholder="Выберите валюту сделки" @bind-Value="ImportedOrder.TransactionCurrency"
+                    <MudSelect Variant="Variant.Outlined" 
+                               ValueChanged="SetTransactionCurrency"
+                               Placeholder="Выберите валюту сделки"
                            Label="Валюта сделки"
                            T="string" ToStringFunc="c => c.ToString()"
                            CloseIcon="@Icons.Material.Filled.Flag"
                            AdornmentColor="Color.Tertiary"
-                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                               OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()"
+                           Value="ImportedOrder.TransactionCurrency">
                         @if (CurrencyCharCodes != null)
                         {
                             @foreach (var item in CurrencyCharCodes)
@@ -117,12 +134,14 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem Class="py-0 px-3">
-                    <MudSelect Disabled="true"Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="ImportedOrder.LocalCurrency"
-                           Label="Локальная валюта"
+                    <MudSelect Disabled="true"Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" 
+                               ValueChanged="SetLocalCurrency"
+                               Label="Локальная валюта"
                            T="string" ToStringFunc="c => c.ToString()"
                            CloseIcon="@Icons.Material.Filled.Flag"
                            AdornmentColor="Color.Tertiary"
-                           OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()">
+                               OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()"
+                           Value="ImportedOrder.LocalCurrency">
                         @if (CurrencyCharCodes != null)
                         {
                             @foreach (var item in CurrencyCharCodes)
@@ -186,7 +205,31 @@
             await ImportedOrderForm.Validate();
 
     }
-
+    private void SetPercent(double? currency)
+    {
+        ImportedOrder!.CurrencyPercent = currency;
+        _currencyEdited = true;
+    }
+    private void SetNds(double? nds)
+    {
+        ImportedOrder!.Nds = nds;
+        _currencyEdited = true;
+    }
+    private void SetSupplierCurrency(string currency)
+    {
+        ImportedOrder!.SupplierCurrency = currency;
+        _currencyEdited = true;
+    }
+    private void SetTransactionCurrency(string currency)
+    {
+        ImportedOrder!.TransactionCurrency = currency;
+        _currencyEdited = true;
+    }
+    private void SetLocalCurrency(string currency)
+    {
+        ImportedOrder!.LocalCurrency = currency;
+        _currencyEdited = true;
+    }
     private async Task UpdatePricesInImportedProducts()
     {
         if (!IsEditForm)return;
@@ -194,10 +237,13 @@
         if (productList == null || !productList.Any()) return;
         foreach (var importedProduct in productList)
         {
+            if (importedProduct.PriceInTransactionCurrency == null || importedProduct.PriceLocal == null || importedProduct.PriceInSupplierCurrency == null)
+                continue;
+
             var supplierCharCode = ImportedOrder!.SupplierCurrency!;
             var transactionCharCode = ImportedOrder!.TransactionCurrency!;
             var convertResult = await CurrencyManager.CurrencyConverter(currencyToConvert: ImportedOrder.LocalCurrency!,
-                firstPrice: importedProduct.PriceLocal, currencyPercent: (double)ImportedOrder.CurrencyPercent!, currencyCharCodesToConvert: new List<string>() { importedProduct.SupplierCurrency!, importedProduct.TransactionCurrency! });
+                firstPrice: importedProduct.PriceLocal, currencyPercent: (double)ImportedOrder.CurrencyPercent!, currencyCharCodesToConvert: new List<string>() { supplierCharCode!, transactionCharCode });
             foreach (var item in convertResult)
             {
                 if (item.charCod==supplierCharCode)

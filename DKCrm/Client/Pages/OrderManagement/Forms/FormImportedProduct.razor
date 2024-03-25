@@ -21,7 +21,7 @@
                              ShowProgressIndicator="true"
                              ToStringFunc="@(e=> e==null?null : $"{e.PartNumber} / {e.Name} / {e.Brand?.Name}")"
                              MinCharacters="1"
-                             Class="mb-3" />
+                             Class="mb-3"  Required="true"/>
             @if (ImportedProduct.Product != null && !ImportedProduct.Product.IsDeleted)
             {
                 <MudButton Class="mb-2" Variant="Variant.Outlined" Size="Size.Medium" 
@@ -92,7 +92,7 @@
                     {
                         <MudMenuItem T="Guid?"
                                      OnClick="() => AddPurchaseAtExport(item)">
-                            @item.ExportedOrder?.Name @item.ExportedOrder?.Id @item.ExportedOrder?.DateTimeCreated <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
+                            @item.ExportedOrder?.Number @item.ExportedOrder?.Id @item.ExportedOrder?.DateTimeCreated <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
                         </MudMenuItem>
                     }
 
@@ -104,7 +104,7 @@
                     foreach (var item in ImportedProduct.PurchaseAtExportList)
                     {
                         <div class="d-flex align-items-center">
-                            <MudText Class="mr-2" Typo="Typo.body1"><b>@item.ExportedProduct!.ExportedOrder!.Name @item.ExportedProduct!.ExportedOrder!.DateTimeCreated:</b></MudText>
+                            <MudText Class="mr-2" Typo="Typo.body1"><b>@item.ExportedProduct!.ExportedOrder!.Number @item.ExportedProduct!.ExportedOrder!.DateTimeCreated:</b></MudText>
                             <MudTextField Variant="Variant.Outlined"
                                           @bind-Value="item.Quantity"
                                           For="@(() => item.Quantity)"
@@ -208,7 +208,10 @@
     private async Task Validation()
     {
         if (ImportedOrderForm!.IsValid)
+        {
+            ImportedProduct!.ProductId = ImportedProduct!.Product!.Id;
             await OnValidSubmit.InvokeAsync();
+        }
 
         else
             await ImportedOrderForm.Validate();

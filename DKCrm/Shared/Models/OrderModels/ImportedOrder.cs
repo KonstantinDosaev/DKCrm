@@ -6,10 +6,12 @@ namespace DKCrm.Shared.Models.OrderModels
     public class ImportedOrder : IIdentifiable,ISoftDelete
     {
         public Guid Id { get; set; }
-        public string? Name { get; set; }
+        public string? Number { get; set; }
         public DateTime? DateTimeCreated { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
         public string? Images { get; set; }
+        public bool OrderIsOver { get; set; }
+        public bool IsAllProductsAreCollected { get; set; }
         public double? CurrencyPercent { get; set; }
         public string? TransactionCurrency { get; set; }
         public string? SupplierCurrency { get; set; }

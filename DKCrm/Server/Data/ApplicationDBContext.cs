@@ -239,7 +239,6 @@ namespace DKCrm.Server.Data
                         .WithMany(p => p.ExportedOrderStatusExported)
                         .HasForeignKey(pt => pt.ExportedOrderId), j =>
                     {
-                        j.Property(pt => pt.DateTimeCreate).HasDefaultValue(new DateTime());
                         j.HasKey(t => new { t.ExportedOrderId, t.ExportedOrderStatusId });
                         j.ToTable("ExportedOrderStatusExportedOrder");
                     });
@@ -257,11 +256,23 @@ namespace DKCrm.Server.Data
                         .WithMany(p => p.ImportedOrderStatusImportedOrders)
                         .HasForeignKey(pt => pt.ImportedOrderId), j =>
                     {
-                        j.Property(pt => pt.DateTimeCreate).HasDefaultValue(new DateTime());
                         j.HasKey(t => new { t.ImportedOrderId, t.ImportedOrderStatusId });
                         j.ToTable("ImportedOrderStatusImportedOrder");
                     });
-
+            builder.Entity<ExportedOrderStatus>(entity =>
+            {
+                entity.HasOne(d => d.Parent)
+                    .WithMany(p => p.Children)
+                    .HasForeignKey(d => d.ParentId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+            builder.Entity<ImportedOrderStatus>(entity =>
+            {
+                entity.HasOne(d => d.Parent)
+                    .WithMany(p => p.Children)
+                    .HasForeignKey(d => d.ParentId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
         }
 
     }

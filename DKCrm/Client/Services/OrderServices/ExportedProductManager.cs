@@ -1,5 +1,6 @@
 ﻿using DKCrm.Shared.Models.OrderModels;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -28,13 +29,17 @@ namespace DKCrm.Client.Services.OrderServices
 
         public async Task<bool> UpdateAsync(ExportedProduct item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ExportedProduct/Put", item);
+            var result = await _httpClient.PutAsJsonAsync("api/ExportedProduct/Put", item, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ExportedProduct item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ExportedProduct/Post", item);
+            var result = await _httpClient.PostAsJsonAsync($"api/ExportedProduct/Post", item, new JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve, PropertyNamingPolicy = null });
             return result.IsSuccessStatusCode;
         }
 
@@ -46,6 +51,16 @@ namespace DKCrm.Client.Services.OrderServices
         public async Task<bool> RemoveAsync(Guid id)
         {
             var result = await _httpClient.DeleteAsync($"api/ExportedProduct/Delete/{id}");
+            return result.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> UpdateSourcesOrderItems(ExportedProduct item)
+        {
+            var result = await _httpClient.PostAsJsonAsync("api/ExportedProduct/UpdateSourcesOrderItems", item, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
             return result.IsSuccessStatusCode;
         }
     }

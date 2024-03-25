@@ -1,9 +1,6 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models.CompanyModels;
+﻿using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Controllers.OrderControllers
 {
@@ -11,93 +8,37 @@ namespace DKCrm.Server.Controllers.OrderControllers
     [ApiController]
     public class ExportedOrderStatusController : ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly IExportedOrderStatusServices _exportedOrderStatusServices;
 
-        public ExportedOrderStatusController(ApplicationDBContext context)
+        public ExportedOrderStatusController(IExportedOrderStatusServices exportedOrderStatusServices)
         {
-            _context = context;
+            _exportedOrderStatusServices = exportedOrderStatusServices;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            var statusList = await _context.ExportedOrderStatus.Include(i=>i.ExportedOrders).ToListAsync();
-            if (statusList==null || !statusList.Any())
-            {
-                if (Initialize())
-                    statusList = await _context.ExportedOrderStatus.Include(i => i.ExportedOrders).ToListAsync();
-                else
-                    throw new InvalidOperationException();
-            }
-            return Ok(statusList);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
-        {
-            var status = await _context.ExportedOrderStatus.FirstOrDefaultAsync(a => a.Id == id);
-            
-            return Ok(status);
-        }
-
+        public async Task<IActionResult> Get() => Ok(await _exportedOrderStatusServices.GetAsync());
+       
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> Get(Guid id) => Ok(await _exportedOrderStatusServices.GetDetailAsync(id));
+      
         [HttpPost]
         public async Task<IActionResult> Post(ExportedOrderStatus exportedOrderStatus)
-        {
-            _context.Add(exportedOrderStatus);
-            await _context.SaveChangesAsync();
-            return Ok(exportedOrderStatus.Id);
-        }
+            => Ok(await _exportedOrderStatusServices.PostAsync(exportedOrderStatus));
 
         [HttpPut]
         public async Task<IActionResult> Put(ExportedOrderStatus exportedOrderStatus)
-        {
-            _context.Entry(exportedOrderStatus).State = EntityState.Modified;
-            //_context.Update(entityToBeUpdated);
-            await _context.SaveChangesAsync();
-            return Ok(exportedOrderStatus);
-        }
+            => Ok(await _exportedOrderStatusServices.PostAsync(exportedOrderStatus));
 
         [HttpPut("range")]
         public async Task<IActionResult> PutRange(IEnumerable<ExportedOrderStatus> exportedOrderStatus)
-        {
-            //_context.Entry(product).State = EntityState.Modified;
-            _context.ExportedOrderStatus.UpdateRange(exportedOrderStatus);
-            await _context.SaveChangesAsync();
-            return Ok(exportedOrderStatus.Count());
-        }
+            => Ok(await _exportedOrderStatusServices.PutRangeAsync(exportedOrderStatus));
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
-        {
-            var dev = await _context.ExportedOrderStatus.FirstOrDefaultAsync(a => a.Id == id);
-            if (dev == null) return NoContent();
-
-            _context.ExportedOrderStatus.Remove(dev);
-            await _context.SaveChangesAsync();
-            return Ok(dev);
-        }
+            => Ok(await _exportedOrderStatusServices.DeleteAsync(id));
 
         [HttpPost("removerange")]
-        public async Task<IActionResult> DeleteRange(IEnumerable<TagsCompany> tagsCompanies)
-        {
-            _context.RemoveRange(tagsCompanies);
-            await _context.SaveChangesAsync();
-            return Ok(tagsCompanies.Count());
-        }
-
-        public  bool Initialize()
-        {
-            _context.ExportedOrderStatus.AddRange(new []
-            {
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,Value = ExportOrderStatusNames.BeginFormed,IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ExportOrderStatusNames.ExpectComponents,IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ExportOrderStatusNames.Formed, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,Value = ExportOrderStatusNames.OfferSentClient, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,Value = ExportOrderStatusNames.OfferСonfirmedClient, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,Value = ExportOrderStatusNames.Delivery, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 6,Value = ExportOrderStatusNames.Completed, IsValueConstant = true}
-            });
-            return _context.SaveChangesAsync().IsCompletedSuccessfully;
-        }
+        public async Task<IActionResult> DeleteRange(IEnumerable<ExportedOrderStatus> status)
+            => Ok(await _exportedOrderStatusServices.DeleteRangeAsync(status));
     }
 }

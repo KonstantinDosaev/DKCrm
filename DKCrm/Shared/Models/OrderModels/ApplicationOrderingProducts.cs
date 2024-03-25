@@ -5,7 +5,7 @@ namespace DKCrm.Shared.Models.OrderModels
     public class ApplicationOrderingProducts: ISoftDelete
     {
         public Guid Id { get; set; }
-        public string Name { get; set; } = null!;
+        public string Number { get; set; } = null!;
         public string? UserId { get; set; }
         public string? UserName { get; set; }
         public string? CompanyName { get; set; }
@@ -20,7 +20,9 @@ namespace DKCrm.Shared.Models.OrderModels
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
         public string? UpdatedUser { get; set; }
-
+        public string? TakerUser { get; set; }
+        public string? TakerUserId { get; set; }
+        public DateTime? DateTimeTake{ get; set; }
         public string? MissingProductsInCatalog { get; set; }
 
         public virtual ExportedOrder? ExportedOrder { get; set; }

@@ -27,7 +27,7 @@
     protected override async Task OnInitializedAsync()
     {
         InternalData ??= await InternalCompanyDataManager.GetAsync();
-        Order = new ImportedOrder { LocalCurrency = InternalData.LocalCurrency, CurrencyPercent = InternalData.CurrencyPercent};
+        Order = new ImportedOrder { LocalCurrency = InternalData.LocalCurrency, CurrencyPercent = InternalData.CurrencyPercent, Nds = InternalData.Nds};
     }
 
     async Task Create()

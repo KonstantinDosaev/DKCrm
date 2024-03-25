@@ -1,66 +1,59 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Server.Interfaces.ProductInterfaces;
 using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
-using Microsoft.AspNetCore.Mvc;
+using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace DKCrm.Server.Controllers
+namespace DKCrm.Server.Services.ProductServices
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductController : ControllerBase
+    public class ProductService : IProductService
     {
         private readonly ApplicationDBContext _context;
-        public ProductController(ApplicationDBContext context)
+        public ProductService(ApplicationDBContext context)
         {
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IEnumerable<Product>> GetAsync()
         {
-            var t = await _context.Products.Select(s => new
+            return await _context.Products.Select(s => new Product()
             {
-                s.Id,
-                s.Name,
-                s.ProductsInStorage,
-                s.Storage,
-                s.Brand,
-                s.Category,
-                s.PartNumber,
-                s.CategoryId,
-                s.BrandId,
+                Id = s.Id,
+                Name = s.Name,
+                ProductsInStorage = s.ProductsInStorage,
+                Storage = s.Storage,
+                Brand = s.Brand,
+                Category = s.Category,
+                PartNumber = s.PartNumber,
+                CategoryId = s.CategoryId,
+                BrandId = s.BrandId,
             }).ToListAsync();
-
-            return Ok(t);
-
         }
 
-        [HttpGet("{id:guid}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<Product> GetDetailAsync(Guid id)
         {
-            return Ok(await _context.Products.Select(s => new
+            var product = await _context.Products.Select(s => new Product()
             {
-                s.Id,
-                s.Name,
-                s.ProductsInStorage,
-                s.Storage,
-                s.Brand,
-                s.Category,
-                s.Category!.CategoryOptions,
-                s.ProductOption,
-                s.PartNumber,
-                s.Description,
-                s.CategoryId,
-                s.BrandId,
-            }).FirstOrDefaultAsync(f=>f.Id==id));
+                Id = s.Id,
+                Name = s.Name,
+                ProductsInStorage = s.ProductsInStorage,
+                Storage = s.Storage,
+                Brand = s.Brand,
+                Category = s.Category,
+                ProductOption = s.ProductOption,
+                PartNumber = s.PartNumber,
+                Description = s.Description,
+                CategoryId = s.CategoryId,
+                BrandId = s.BrandId,
+            }).FirstOrDefaultAsync(f => f.Id == id);
+            if (product?.Category != null)
+                await _context.Entry(product.Category).Collection(c => c.CategoryOptions!).LoadAsync();
+            return product ?? throw new InvalidOperationException();
         }
 
-        [HttpPost("get-sort-filtered")]
-        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterProductTuple> request)
+        public async Task<SortPagedResponse<ProductsDto>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterProductTuple> request)
         {
             var data = _context.Products.Select(s => new ProductsDto()
             {
@@ -80,24 +73,31 @@ namespace DKCrm.Server.Controllers
                 switch (request.Chapter)
                 {
                     case ProductFromChapterNames.Category:
-                        data = data.Where(o => o.CategoryId==request.ChapterId);
+                        data = data.Where(o => o.CategoryId == request.ChapterId);
                         break;
                     case ProductFromChapterNames.Brand:
                         data = data.Where(o => o.BrandId == request.ChapterId);
                         break;
                     case ProductFromChapterNames.Storage:
-                        data = data.Where(o => o.Storage!.Select(s=>s.Id).Contains((Guid)request.ChapterId));
+                        data = data.Where(o => o.Storage!.Select(s => s.Id).Contains((Guid)request.ChapterId));
                         break;
                 }
             }
-
-            if (request.FilterTuple!=null)
+            if (!string.IsNullOrEmpty(request.SearchString))
             {
-                if (request.FilterTuple.CategoryId!=null && request.FilterTuple.CategoryId!= Guid.Empty && request.Chapter != ProductFromChapterNames.Category)
+                request.SearchString = request.SearchString.Trim().ToLower();
+                data = data.Where(w =>
+                    w.BrandName != null && w.BrandName.ToLower().Contains(request.SearchString) ||
+                    w.Name.ToLower().Contains(request.SearchString) || w.PartNumber!.ToLower().Contains(request.SearchString));
+            }
+
+            if (request.FilterTuple != null)
+            {
+                if (request.FilterTuple.CategoryId != null && request.FilterTuple.CategoryId != Guid.Empty && request.Chapter != ProductFromChapterNames.Category)
                 {
                     data = data.Where(o => o.CategoryId == request.FilterTuple.CategoryId);
                 }
-                if (request.FilterTuple.BrandIdList != null&& request.FilterTuple.BrandIdList.Any() && request.Chapter != ProductFromChapterNames.Brand)
+                if (request.FilterTuple.BrandIdList != null && request.FilterTuple.BrandIdList.Any() && request.Chapter != ProductFromChapterNames.Brand)
                 {
                     data = data.Where(o => request.FilterTuple.BrandIdList.Contains((Guid)o.BrandId!));
                 }
@@ -109,16 +109,9 @@ namespace DKCrm.Server.Controllers
                     data = data.Where(w => productsId.Contains(w.Id));
                 }
             }
-            if (!string.IsNullOrEmpty(request.SearchString))
-            {
-                request.SearchString = request.SearchString.Trim().ToLower();
-                data = data.Where(w =>
-                    w.BrandName!= null && w.BrandName.ToLower().Contains(request.SearchString) ||
-                    w.Name.ToLower().Contains(request.SearchString) || w.PartNumber!.ToLower().Contains(request.SearchString));
-            }
-           
+
             var totalItems = data.Count();
-            var sd = request.SortDirection;
+
             switch (request.SortLabel)
             {
                 case "category_field":
@@ -136,35 +129,29 @@ namespace DKCrm.Server.Controllers
             }
             data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
 
-            return Ok(new SortPagedResponse<ProductsDto>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync()});
+            return new SortPagedResponse<ProductsDto>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() };
 
         }
-        
-        [HttpGet("{searchString}")]
-        public  async Task<IActionResult> GetSearch(string searchString)
+
+        public async Task<IEnumerable<Product>> GetSearchAsync(string searchString)
         {
-            return Ok(await _context.Products.Select(s => new
+            return await _context.Products.Select(s => new Product()
             {
-                s.Id,
-                s.Name,
-                s.ProductsInStorage,
-                s.Storage,
-                s.Brand,
-                s.Category,
-                s.CategoryId,
-                s.BrandId,
-                s.PartNumber,
-                s.Description
+                Id = s.Id,
+                Name = s.Name,
+                ProductsInStorage = s.ProductsInStorage,
+                Storage = s.Storage,
+                Brand = s.Brand,
+                Category = s.Category,
+                CategoryId = s.CategoryId,
+                BrandId = s.BrandId,
+                PartNumber = s.PartNumber,
+                Description = s.Description
             }).Where(x => x.Name.ToLower().Contains(searchString.ToLower())
-                          || (x.PartNumber != null && x.PartNumber.ToLower().Contains(searchString.ToLower()))).ToListAsync());
-            //return Ok(await _context.Products
-            //    .Include(i => i.Brand)
-            //    .Include(i => i.ProductsInStorage)
-            //    .Where(x => x.Name.Contains(searchString) || (x.PartNumber != null && x.PartNumber.Contains(searchString))).ToListAsync());
+                          || (x.PartNumber != null && x.PartNumber.ToLower().Contains(searchString.ToLower()))).ToListAsync();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post(Product product)
+        public async Task<Guid> PostAsync(Product product)
         {
             product.DateTimeCreated = DateTime.Now;
             _context.Entry(product).State = EntityState.Added;
@@ -175,13 +162,11 @@ namespace DKCrm.Server.Controllers
                     _context.Entry(item).State = EntityState.Added;
                 }
             }
-            
             await _context.SaveChangesAsync();
-            return Ok(product.Id);
+            return product.Id;
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Put(Product product)
+        public async Task<Guid> PutAsync(Product product)
         {
             _context.Entry(product).State = EntityState.Modified;
             if (product.ProductsInStorage != null)
@@ -201,19 +186,17 @@ namespace DKCrm.Server.Controllers
                 }
             }
             await _context.SaveChangesAsync();
-            return Ok(product);
+            return product.Id;
         }
-        [HttpPut("range")]
-        public async Task<IActionResult> PutRange(IEnumerable<Product> products)
+   
+        public async Task<int> PutRangeAsync(IEnumerable<Product> products)
         {
             //_context.Entry(product).State = EntityState.Modified;
             _context.Products.UpdateRange(products);
-            await _context.SaveChangesAsync();
-            return Ok(products.Count());
+            return await _context.SaveChangesAsync();
         }
 
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<int> DeleteAsync(Guid id)
         {
             var product = await _context.Products
                 .Include(i => i.ProductsInStorage).AsNoTracking()
@@ -223,19 +206,16 @@ namespace DKCrm.Server.Controllers
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             _context.Entry(product!).State = EntityState.Deleted;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            return await _context.SaveChangesAsync();
         }
-        [HttpPost("removerange")]
-        public async Task<IActionResult> DeleteRange(IEnumerable<Guid> products)
+
+        public async Task<int> DeleteRangeAsync(IEnumerable<Guid> products)
         {
             foreach (var product in products)
             {
                 _context.Entry(product!).State = EntityState.Deleted;
             }
-            
-            await _context.SaveChangesAsync();
-            return Ok(products.Count());
+            return await _context.SaveChangesAsync();
         }
     }
 }

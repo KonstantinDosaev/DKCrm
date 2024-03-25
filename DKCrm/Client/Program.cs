@@ -4,6 +4,7 @@ using DKCrm.Client.Services.BrandService;
 using DKCrm.Client.Services.CategoryService;
 using DKCrm.Client.Services.Chat;
 using DKCrm.Client.Services.CompanyServices;
+using DKCrm.Client.Services.ConfirmationAction;
 using DKCrm.Client.Services.CurrencyService;
 using DKCrm.Client.Services.FnsRequesting;
 using DKCrm.Client.Services.InternalCompanyDataService;
@@ -49,6 +50,7 @@ builder.Services.AddTransient<IInternalCompanyDataManager, InternalCompanyDataMa
 builder.Services.AddTransient<ICurrencyManager, CurrencyManager>();
 builder.Services.AddTransient<IApplicationOrderingManager, ApplicationOrderingManager>();
 builder.Services.AddTransient<IMissingProductConverter, MissingProductConverter>();
+builder.Services.AddTransient<IConfirmationActionService, ConfirmationActionService>();
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

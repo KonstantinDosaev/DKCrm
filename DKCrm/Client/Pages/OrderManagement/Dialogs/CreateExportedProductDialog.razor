@@ -1,21 +1,18 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Shared.Models.OrderModels
-<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog"
-           Options="new DialogOptions() { FullWidth = true }">
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" DisableSidePadding="true"
+           Options="new DialogOptions() { FullWidth = true , MaxWidth = MaxWidth.Medium, NoHeader = true}">
     <TitleContent>
-        <div style="text-align: right">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
-        </div>
     </TitleContent>
     <DialogContent>
-        <MudCard>
-            <FormExportedProduct OnValidSubmit="Create"
-                                 ExportedProduct="ExportedProduct"
-                                 ButtonText="Сохранить"
-                                 TitleText="Создание единицы на продажу" 
-            />
-
-        </MudCard>
+        <div style="height: 3rem"></div>
+        <div style="text-align: right; position:absolute; top: 1rem; right: 1rem">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+        <FormExportedProduct OnValidSubmit="Create"
+                             ExportedProduct="ExportedProduct"
+                             ButtonText="Сохранить"
+                             TitleText="Создание единицы на продажу"/>
     </DialogContent>
 </MudDialog>
 

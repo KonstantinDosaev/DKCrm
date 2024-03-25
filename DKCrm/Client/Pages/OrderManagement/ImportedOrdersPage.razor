@@ -1,6 +1,6 @@
 ﻿@using DKCrm.Shared.Models.CompanyModels
 @using DKCrm.Shared.Models.OrderModels
-@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Client.Pages.OrderManagement.Components
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 @using DKCrm.Shared.Constants
 @using Microsoft.OData.UriParser
@@ -8,16 +8,29 @@
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
 <MudText Class="m-3" Typo="Typo.h4">Заказы от поставщиков</MudText>
-<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
-    Добавить заказ
-    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
-</MudButton>
+<div class="d-flex align-items-center px-1">
+    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-right: 1rem;" Color="Color.Tertiary">
+        Добавить заказ
+        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+    </MudButton>
 
-<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleSettingsOrderDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
-    Настройки
-    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
-</MudButton>
-
+    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleSettingsOrderDialog = true" Style="margin-right: 1rem;" Color="Color.Tertiary">
+        Настройки
+        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
+    </MudButton>
+    <div style="width: 228px; margin-right: 0.5rem ">
+        <MudSelect
+            T="string"
+            MultiSelection="true"
+            @bind-SelectedValues="_currencyDisplay" Text="Отображаемая цена"
+            Variant="Variant.Outlined" Dense="true" Style=""
+            Class="select-button">
+            <MudSelectItem T="string" Value="@("Продавца")">Продавца</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Локальная")">Локальная</MudSelectItem>
+        </MudSelect>
+    </div>
+</div>
     
 <MudTable ServerData="@(new Func<TableState, Task<TableData<ImportedOrder>>>(ServerReload))"
           Dense="false"
@@ -27,7 +40,7 @@
           Striped="true"
           Bordered="true"
           HeaderClass="mud-table-header table-head-bordered"
-          OnRowClick="RowClickEvent" T="ImportedOrder"
+         T="ImportedOrder"
           @ref="_table">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Список заказов</MudText>
@@ -50,26 +63,25 @@
         
     </ToolBarContent>
     <HeaderContent>
+        <MudTh></MudTh>
         <MudTh><MudTableSortLabel SortLabel="number_field" T="ImportedOrder">Номер заказа</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="name_field" T="ImportedOrder">Название</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="ourCompany_field" T="ImportedOrder">Наша компания</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel Enabled="true" SortLabel="conterCompany_field" T="ImportedOrder">Компания поставщик</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status_field" T="ImportedOrder">Статус</MudTableSortLabel></MudTh>
 
     </HeaderContent>
     <RowTemplate>
-
-        @if (ProductId == context.Id && _showDetails)
-        {
-         <MudTd Style="background-color: gainsboro;" DataLabel="Номер заказа">@context.Id</MudTd>
-        }
-        else
-        {
-            <MudTd DataLabel="Номер заказа">@context.Id</MudTd>
-        }
-        <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
-
-
+        <MudTd
+            Style="@(_showDetails && OrderId == context.Id? "background-color: gainsboro; width: 3rem; margin: 0; padding: 0" : "background-color: none; width: 3rem; margin: 0; padding: 0")"
+            DataLabel="Номер заказа">
+            <MudIconButton Size="@Size.Large" 
+                           OnClick="() => OpenOrderDetails(context.Id)" 
+                           Color="Color.Default"
+                           Icon="@(_showDetails && OrderId == context.Id? Icons.Material.Filled.KeyboardArrowUp : Icons.Material.Filled.KeyboardArrowDown)"
+                           Class="pa-0 ml-2" />
+        </MudTd>
+      
+        <MudTd DataLabel="Номер заказа">@context.Number</MudTd>
         <MudTd DataLabel="Наша компания">
             @if (context.OurCompany != null)
             {
@@ -112,10 +124,10 @@
     </RowTemplate>
     
     <ChildRowContent>
-        @if (ProductId==context.Id && _showDetails)
+        @if (OrderId==context.Id && _showDetails)
         {
             <MudTr>
-                <td colspan="6">
+                <td colspan="6" style="text-align: center">
                     <MudCard Style="background: gainsboro;" Elevation="25">
 @*                                <MudCardHeader>
                             <CardHeaderContent>
@@ -123,7 +135,7 @@
                             </CardHeaderContent>
                         </MudCardHeader>*@
                         <MudCardContent Class="pa-1">
-                            <ImportedOrderDetailsPage Id="ProductId"/>
+                            <ImportedOrderDetailsComponent Id="OrderId" CurrencyDisplay="_currencyDisplay" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -160,8 +172,8 @@
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
 
-    private Guid ProductId { get; set; }
-
+    private Guid OrderId { get; set; }
+    public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
     private List<ImportedOrder>? Orders { get; set; }
     private List<ImportedOrder>? AllOrders { get; set; }
 
@@ -221,9 +233,9 @@
     }
    
     
-    private void RowClickEvent(TableRowClickEventArgs<ImportedOrder> tableRowClickEventArgs)
+    private void OpenOrderDetails(Guid orderId)
     {
-        ProductId = tableRowClickEventArgs.Item.Id;
+        OrderId = orderId;
         _showDetails = !_showDetails;
     }
 
@@ -242,6 +254,16 @@
         color: white !important;
         font-weight: bold;
     }
-    
+    .select-button {
+        margin: 0 !important;
+  
+        
+    }
+    .select-button .mud-input-slot.mud-input-root-outlined {
+        padding: 0.67rem 0.8rem !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+        
+    }
 </style>
 

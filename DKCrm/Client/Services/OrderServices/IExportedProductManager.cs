@@ -11,5 +11,6 @@ namespace DKCrm.Client.Services.OrderServices
         Task<bool> AddAsync(ExportedProduct item);
         Task<bool> RemoveRangeAsync(IEnumerable<ExportedProduct> items);
         Task<bool> RemoveAsync(Guid id);
+        Task<bool> UpdateSourcesOrderItems(ExportedProduct item);
     }
 }

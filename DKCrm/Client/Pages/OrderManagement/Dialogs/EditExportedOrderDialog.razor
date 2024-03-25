@@ -36,10 +36,12 @@
     
     async Task Edit()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
+        Order!.OurCompanyId = Order.OurCompany!.Id;
+        Order.CompanyBuyerId = Order.CompanyBuyer!.Id;
         if (await ExportedOrderManager.UpdateAsync(Order!))
         {
-            Order!.OurCompanyId = Order.OurCompany!.Id;
-            Order.CompanyBuyerId = Order.CompanyBuyer!.Id;
             _snackBar.Add("Данные обновлены");
             await RefreshProductList.InvokeAsync();
             await CloseClick();

@@ -1,38 +1,55 @@
 ﻿@using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Client.Pages.OrderManagement.Forms
 
-<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog"
-           Options="new DialogOptions() { FullWidth = true }">
-    <TitleContent>
-        <div style="text-align: right">
+
+<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" DisableSidePadding="true"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, NoHeader = true}" OnBackdropClick="HandleBackdropClick">
+        <TitleContent>
+           
+        </TitleContent>
+    <DialogContent>
+        <div style="height: 3rem"></div>
+        <div style="text-align: right; position:absolute; top: 1rem; right: 1rem">
             <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
         </div>
-    </TitleContent>
-    <DialogContent>
-        <MudCard>
-            <FormExportedProduct OnValidSubmit="EditProduct"
-                                 ExportedProduct="ExportedProduct"
-                                 ButtonText="Сохранить"
-                                 TitleText="Изменение единицы на продажу" />
-        </MudCard>
+        
+        <FormExportedProduct OnValidSubmit="EditProduct"
+                             ExportedProduct="ExportedProduct"
+                             ButtonText="Сохранить"
+                             TitleText="Изменение единицы на продажу"
+                             IsEditForm="true"/>
+
     </DialogContent>
-</MudDialog>
+    </MudDialog>
 
 
 @code {
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
     [Parameter] public bool VisibleDialog { get; set; }
-    [Parameter] public ExportedProduct? ExportedProduct { get; set; }
+    public ExportedProduct? ExportedProduct { get; set; }
     [Parameter] public Guid? Id { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
 
+    }
+
+    async Task HandleBackdropClick(MouseEventArgs eArgs)
+    {
+        await CloseClick();
+        StateHasChanged();
+    }
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != null && Id != Guid.Empty && VisibleDialog) ExportedProduct = await ExportedProductManager.GetDetailsAsync((Guid)Id);
+        if (VisibleDialog && Id != null && Id != Guid.Empty)
+            ExportedProduct = await ExportedProductManager.GetDetailsAsync((Guid)Id);
     }
 
     async Task EditProduct()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         if (ExportedProduct != null)
         {
             ExportedProduct.ProductId = ExportedProduct.Product?.Id;
@@ -42,17 +59,18 @@
                 _snackBar.Add("Продукт обновлен");
                 await RefreshProductList.InvokeAsync();
                 await CloseClick();
-                VisibleDialog = false;
             }
         }
     }
 
 
-    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+
     async Task CloseClick()
     {
+        ExportedProduct = null;
         VisibleDialog = false;
         await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+        
     }
 
 }

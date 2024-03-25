@@ -1,10 +1,6 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Constants;
+﻿using DKCrm.Server.Interfaces;
 using DKCrm.Shared.Models;
-using DKCrm.Shared.Models.CompanyModels;
-using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Controllers
 {
@@ -12,51 +8,30 @@ namespace DKCrm.Server.Controllers
     [ApiController]
     public class InternalCompanyDataController: ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly IInternalCompanyDataService _internalCompanyDataService;
 
-        public InternalCompanyDataController(ApplicationDBContext context)
+        public InternalCompanyDataController(IInternalCompanyDataService internalCompanyDataService)
         {
-            _context = context;
+            _internalCompanyDataService = internalCompanyDataService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-           var data = await _context.InternalCompanyData.FirstOrDefaultAsync();
-            if (data == null )
-            {
-                if (Initialize())
-                    data = await _context.InternalCompanyData.FirstOrDefaultAsync();
-                else
-                    throw new InvalidOperationException();
-            }
-            return Ok(data);
+            return Ok(await _internalCompanyDataService.GetAsync());
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Post(InternalCompanyData data)
         {
-            _context.Add(data);
-            await _context.SaveChangesAsync();
-            return Ok(data.Id);
+            return Ok(await _internalCompanyDataService.PostAsync(data));
         }
 
         [HttpPut]
         public async Task<IActionResult> Put(InternalCompanyData data)
         {
-            _context.Entry(data).State = EntityState.Modified;
-            //_context.Update(entityToBeUpdated);
-            await _context.SaveChangesAsync();
-            return Ok(data);
+            return Ok(await _internalCompanyDataService.PutAsync(data));
         }
-        public bool Initialize()
-        {
-            _context.InternalCompanyData.Add(
-                new InternalCompanyData(){Id = Guid.NewGuid(),CurrencyPercent = 0, KeyFns = "", LocalCurrency = "RUB"}
-            );
-            return _context.SaveChangesAsync().IsCompletedSuccessfully;
-        }
-
+   
     }
 }

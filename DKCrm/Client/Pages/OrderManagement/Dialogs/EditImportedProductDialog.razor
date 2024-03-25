@@ -34,6 +34,8 @@
     
     async Task EditProduct()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         if (ImportedProduct != null)
         {
             ImportedProduct.ProductId = ImportedProduct.Product?.Id;

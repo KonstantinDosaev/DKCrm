@@ -59,5 +59,26 @@ namespace DKCrm.Client.Services.OrderServices
             var result = await _httpClient.DeleteAsync($"api/ExportedOrder/Delete/{id}");
             return result.IsSuccessStatusCode;
         }
+
+
+        public async Task<bool> AddStatusToOrderAsync(ExportedOrderStatusExportedOrder status)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/AddStatusToOrder/add-status", status, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
+            return result.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> RemoveStatusFromOrderAsync(ExportedOrderStatusExportedOrder status)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/RemoveStatusFromOrder/remove-status", status, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
+            return result.IsSuccessStatusCode;
+        }
     }
 }

@@ -30,12 +30,13 @@
     protected override async Task OnInitializedAsync()
     {
         InternalData ??= await InternalCompanyDataManager.GetAsync();
-        Order = new ExportedOrder { LocalCurrency = InternalData.LocalCurrency, CurrencyPercent = InternalData.CurrencyPercent};
+        Order = new ExportedOrder { LocalCurrency = InternalData.LocalCurrency, CurrencyPercent = InternalData.CurrencyPercent, Nds = InternalData.Nds};
     }
     async Task Create()
     {
         Order.OurCompanyId = Order.OurCompany!.Id;
         Order.CompanyBuyerId = Order.CompanyBuyer!.Id;
+       
         if (Order.ApplicationOrderingProducts is {ApplicationOrderingProductProduct: { } } && Order.ApplicationOrderingProducts.ApplicationOrderingProductProduct.Any())
         {
             Order.ExportedProducts ??= new List<ExportedProduct>();
@@ -49,7 +50,8 @@
                 };
                 Order.ExportedProducts.Add(newExportedProduct);
             }
-            
+            Order.ApplicationOrderingProducts.InWork = true;
+            await ApplicationOrderingManager.UpdateAsync(Order.ApplicationOrderingProducts);
         }
         if(await ExportedOrderManager.AddAsync(Order))
         {

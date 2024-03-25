@@ -1,4 +1,5 @@
 ﻿using DKCrm.Server.Data;
+using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
@@ -12,128 +13,86 @@ namespace DKCrm.Server.Controllers.OrderControllers
     [ApiController]
     public class ImportedProductController : ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly IImportedProductService _importedProductService;
 
-        public ImportedProductController(ApplicationDBContext context)
+        public ImportedProductController(IImportedProductService importedProductService)
         {
-            _context = context;
+            _importedProductService = importedProductService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            return Ok(await _context.ImportedProducts.Include(i => i.ImportedOrder)
-                .Include(i => i.Product).IgnoreQueryFilters().AsSplitQuery().ToListAsync());
-        }
+        public async Task<IActionResult> Get() => Ok(await _importedProductService.GetAsync());
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> Get(Guid id)
-        {
-            var dev = await _context.ImportedProducts
-                .Include(i=>i.ImportedOrder)
-                .Include(i=>i.Product).ThenInclude(t=>t!.Brand).IgnoreQueryFilters().AsSingleQuery()
-                .FirstOrDefaultAsync(a => a.Id == id);
-            return Ok(dev);
-        }
-        [HttpGet]
-        public async Task<IActionResult> GetNotEquipped()
-        {
-            var status = _context.ExportedOrderStatus.FirstOrDefault(f => f.Value == ImportOrderStatusNames.Delivery)!.Position;
-            return Ok(await _context.ImportedProducts.Select(s => new
-                {
-                    s.Product,
-                    s.Quantity,
-                    s.ImportedOrder,
-                    s.ImportedOrderId,
-                    s.ProductId,
-                    s.ExportedProducts,
-                    s.PurchaseAtExportList,
-                    s.PurchaseAtStorageList,
-                    s.StorageList
-                }).Where(w=>w.ImportedOrder!.ImportedOrderStatusImportedOrders!
-                    .MaxBy(o => o.DateTimeCreate)!.ImportedOrderStatus!.Position < status)
-                .Where(w => w.Quantity < w.PurchaseAtStorageList!.Select(s => s.Quantity).Sum() 
-                    + w.PurchaseAtExportList!.Select(s => s.Quantity).Sum())
-                .ToListAsync());
-        }
+        public async Task<IActionResult> Get(Guid id) => Ok(await _importedProductService.GetOneAsync(id));
+
+        [HttpGet("{productId:guid}")]
+        public async Task<IActionResult> GetNotEquipped(Guid productId) => Ok(await _importedProductService.GetNotEquippedAsync(productId));
 
         [HttpPost]
-        public async Task<IActionResult> Post(ImportedProduct importedProduct)
-        {
-            _context.Entry(importedProduct).State = EntityState.Added;
-            if (importedProduct.PurchaseAtStorageList != null)
-            {
-                foreach (var item in importedProduct.PurchaseAtStorageList)
-                {
-                    _context.Entry(item).State = EntityState.Added;
-                }
-            }
-            if (importedProduct.PurchaseAtExportList != null)
-            {
-                foreach (var item in importedProduct.PurchaseAtExportList)
-                {
-                    _context.Entry(item).State = EntityState.Added;
-                }
-            }
-            await _context.SaveChangesAsync();
-            return Ok(importedProduct.Id);
-        }
-
+        public async Task<IActionResult> Post(ImportedProduct importedProduct) => Ok(await _importedProductService.PostAsync(importedProduct));
+       
         [HttpPut]
-        public async Task<IActionResult> Put(ImportedProduct importedProduct)
-        {
-            _context.Entry(importedProduct).State = EntityState.Modified;
-          
-            if (importedProduct.PurchaseAtStorageList != null)
-            {
-                var pas = await _context.PurchaseAtStorages.Where(w => w.ImportedProductId == importedProduct.Id).Select(s => s.StorageId).ToListAsync();
-             
-                foreach (var item in importedProduct.PurchaseAtStorageList)
-                {
-                    _context.Entry(item).State = pas.Contains(item.StorageId) ? EntityState.Modified : EntityState.Added;
-                }
-            }
-            if (importedProduct.PurchaseAtExportList != null)
-            {
-                var pae = await _context.PurchaseAtExports.Where(w => w.ImportedProductId == importedProduct.Id).Select(s => s.ExportedProductId).ToListAsync();
-
-                foreach (var item in importedProduct.PurchaseAtExportList)
-                {
-                    _context.Entry(item).State = pae.Contains(item.ExportedProductId) ? EntityState.Modified : EntityState.Added;
-                }
-            }
-           
-            await _context.SaveChangesAsync();
-            return Ok(importedProduct);
-        }
+        public async Task<IActionResult> Put(ImportedProduct importedProduct) => Ok(await _importedProductService.PutAsync(importedProduct));
 
         [HttpPut("range")]
-        public async Task<IActionResult> PutRange(IEnumerable<ImportedProduct> importedProducts)
-        {
-            //_context.Entry(product).State = EntityState.Modified;
-            _context.ImportedProducts.UpdateRange(importedProducts);
-            await _context.SaveChangesAsync();
-            return Ok(importedProducts.Count());
-        }
+        public async Task<IActionResult> PutRange(IEnumerable<ImportedProduct> importedProducts) => Ok(await _importedProductService.PutRangeAsync(importedProducts));
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var dev = await _context.ImportedProducts.FirstOrDefaultAsync(a => a.Id == id);
-            if (dev == null) return NoContent();
-            var t = User.Identity!.Name;
-            
-            _context.Remove(dev);
-            await _context.SaveChangesAsync();
-            return Ok(dev);
-        }
+        public async Task<IActionResult> Delete(Guid id) => Ok(await _importedProductService.DeleteAsync(id));
 
         [HttpPost("removerange")]
-        public async Task<IActionResult> DeleteRange(IEnumerable<ImportedProduct> importedProducts)
-        {
-            _context.RemoveRange(importedProducts);
-            await _context.SaveChangesAsync();
-            return Ok(importedProducts.Count());
-        }
+        public async Task<IActionResult> DeleteRange(IEnumerable<ImportedProduct> importedProducts) => Ok(await _importedProductService.DeleteRangeAsync(importedProducts));
+
+        //[HttpPost("UpdatePurchaseAtExport")]
+        //public async Task<IActionResult> UpdatePurchaseAtExport(PurchaseAtExport purchaseAtExport)
+        //{
+        //    var importedProduct = _context.ImportedProducts
+        //        .Include(i=>i.PurchaseAtExportList)
+        //        .Include(i=>i.PurchaseAtStorageList)
+        //        .FirstOrDefault(i => i.Id == purchaseAtExport.ImportedProductId);
+
+        //    var purchaseAtExportInDb = importedProduct.PurchaseAtExportList.FirstOrDefault(f =>
+        //            f.ExportedProductId == purchaseAtExport.ExportedProductId && f.ImportedProductId == purchaseAtExport.ImportedProductId);
+        //    var purchaseAtStorageInDb = importedProduct.PurchaseAtStorageList.FirstOrDefault(f =>
+        //         f.ImportedProductId == purchaseAtExport.ImportedProductId);
+        //    if (importedProduct != null)
+        //    {
+        //        if (purchaseAtExportInDb != null)
+        //        {
+        //            if (purchaseAtExportInDb.Quantity == purchaseAtExport.Quantity)
+        //                return BadRequest();
+
+        //            int modQuantity;
+        //            if (purchaseAtExportInDb.Quantity < purchaseAtExport.Quantity)
+        //            {
+        //                modQuantity = purchaseAtExport.Quantity - purchaseAtExportInDb.Quantity;
+        //                importedProduct.Quantity -= modQuantity;
+        //            }
+        //            else
+        //            {
+        //                modQuantity = purchaseAtExportInDb.Quantity - purchaseAtExport.Quantity;
+        //                importedProduct.Quantity += modQuantity;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            importedProduct.Quantity -= soldFromStorage.Quantity;
+        //        }
+
+        //        if (importedProduct.Quantity < 0)
+        //            return BadRequest();
+
+        //        _context.Entry(importedProduct).State = EntityState.Modified;
+        //    }
+        //    else
+        //    {
+        //        return BadRequest();
+        //    }
+        //    _context.Entry(soldFromStorage).State = purchaseAtExportInDb != null ? EntityState.Modified : EntityState.Added;
+
+        //    await _context.SaveChangesAsync();
+        //    return Ok(soldFromStorage.ExportedProductId);
+        //}
     }
 }

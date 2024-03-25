@@ -1,5 +1,12 @@
 using DKCrm.Server.Data;
+using DKCrm.Server.Interfaces;
+using DKCrm.Server.Interfaces.CompanyInterfaces;
+using DKCrm.Server.Interfaces.OrderInterfaces;
+using DKCrm.Server.Interfaces.ProductInterfaces;
 using DKCrm.Server.Services;
+using DKCrm.Server.Services.CompanyServices;
+using DKCrm.Server.Services.OrderServices;
+using DKCrm.Server.Services.ProductServices;
 using DKCrm.Shared.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +18,28 @@ var connectionStringProduct = builder.Configuration.GetConnectionString("Product
 var connectionStringUser = builder.Configuration.GetConnectionString("UserContextConnection") ??
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
 
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IChatService, ChatService>();
+builder.Services.AddTransient<IInternalCompanyDataService, InternalCompanyDataService>();
+builder.Services.AddTransient<IStorageService, StorageService>();
+
+builder.Services.AddTransient<IProductService, ProductService>();
+builder.Services.AddTransient<IBrandService, BrandService>();
+builder.Services.AddTransient<ICategoryService, CategoryService>();
+builder.Services.AddTransient<ICategoryOptionsService, CategoryOptionsService>();
+
+builder.Services.AddTransient<ICompanyService, CompanyService>();
+builder.Services.AddTransient<ICompanyTagsService, CompanyTagsService>();
+builder.Services.AddTransient<ICompanyTypeService, CompanyTypeService>();
+
+builder.Services.AddTransient<IExportedProductService, ExportedProductService>();
+builder.Services.AddTransient<IImportedProductService, ImportedProductService>();
+builder.Services.AddTransient<IExportedOrderService, ExportedOrderService>();
+builder.Services.AddTransient<IImportedOrderService, ImportedOrderService>();
+builder.Services.AddTransient<IExportedOrderStatusServices, ExportedOrderStatusService>();
+builder.Services.AddTransient<IImportedOrderStatusService, ImportedOrderStatusService>();
+builder.Services.AddTransient<IApplicationOrderingService, ApplicationOrderingService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
@@ -34,6 +63,8 @@ builder.Services.AddControllers().AddNewtonsoftJson(opt=>opt.SerializerSettings.
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+
 
 var app = builder.Build();
 

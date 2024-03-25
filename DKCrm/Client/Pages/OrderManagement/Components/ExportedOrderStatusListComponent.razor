@@ -1,0 +1,101 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+@using Microsoft.AspNetCore.Components
+
+
+<div class="flex-column">
+    @if (ParentStatusList != null && CurrentOrder.ExportedOrderStatus != null && CurrentOrder.ExportedOrderStatusExported!.Any())
+    {
+      
+
+        <MudMenu Label="@CurrentStatus.Value">
+            
+                @foreach (var status in ParentStatusList)
+                {
+                    if (status.Position == CurrentStatus.Position)
+                    {
+                    <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                    <MudPaper Class="pa-3 d-flex" Style="background: green">
+                    <MudText>@status.Value @status.Position</MudText>
+                    </MudPaper>
+                    </MudMenuItem>
+                    }
+                    if (status.Position > CurrentStatus.Position)
+                    {
+                    <MudMenuItem Disabled="false" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                    <MudPaper Class="pa-3 d-flex" Style="background: none">
+                    <MudText>@status.Value @status.Position</MudText>
+                    </MudPaper>
+                    </MudMenuItem>
+                    }
+                    if (status.Position < CurrentStatus.Position)
+                    {
+                    <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                    <MudPaper Class="pa-3 d-flex" Style="background:lightblue">
+                    <MudText>@status.Value @status.Position</MudText>
+                    </MudPaper>
+                    </MudMenuItem>
+                    }
+
+
+                }
+          
+        </MudMenu>
+    }
+</div>
+
+@code {
+
+    [Parameter] public List<ExportedOrderStatus>? StatusList { get; set; }
+    [Parameter] public List<ExportedOrderStatus>? ParentStatusList { get; set; }
+    [Parameter] public ExportedOrder CurrentOrder { get; set; } = null!;
+    private ExportedOrderStatus CurrentStatus { get; set; } = null!;
+    private ExportedOrderStatus CurrentChildStatus { get; set; } = null!;
+
+    private string _statusBackground = "green";
+    private string _statusBackgroundNone = "blue";
+    private bool _IsDisableStatus;
+    MudListItem selectedItem;
+    ExportedOrderStatus selectedValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StatusList ??= await ExportedOrderStatusManager.GetAsync();
+        ParentStatusList = StatusList.Where(w => w.ParentId == null || w.ParentId == Guid.Empty).ToList();
+        StatusList = StatusList.Where(w => w.Children == null || !w.Children.Any()).ToList();
+        if (CurrentOrder.ExportedOrderStatusExported != null && CurrentOrder.ExportedOrderStatusExported.Any())
+            CurrentStatus = CurrentOrder.ExportedOrderStatusExported.MaxBy(o => o.DateTimeCreate)!.ExportedOrderStatus!;
+       
+    }
+
+    private async Task UpdateStatusInOrder(ExportedOrder order, ExportedOrderStatus status)
+    {
+        var statusToOrder = new ExportedOrderStatusExportedOrder()
+        {
+            ExportedOrderId = order.Id,
+            ExportedOrderStatusId = status.Id,
+            DateTimeCreate = DateTime.Now
+        };
+        if (await ExportedOrderManager.AddStatusToOrderAsync(statusToOrder))
+        {
+            _snackBar.Add("Статус заказа изменен");
+            //await _table!.ReloadServerData();
+            CurrentStatus = status;
+        }
+        
+    }
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+
+    private async void UpdateStatusInOrderClicked(ExportedOrder order, ExportedOrderStatus status)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Внимание",
+            "Подтвердите изменение статуса заказа!",
+            yesText: "Подтвердить!  ", cancelText: "  Отменить");
+
+        if (result != null && (bool)result)
+        {
+            await UpdateStatusInOrder(order,status);
+        }
+        StateHasChanged();
+    }
+}

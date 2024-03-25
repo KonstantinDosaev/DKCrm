@@ -309,6 +309,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<DateTime?>("DateTimeCreated")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<DateTime?>("DateTimeTake")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<DateTime?>("DateTimeUpdate")
                         .HasColumnType("timestamp without time zone");
 
@@ -330,11 +333,17 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("MissingProductsInCatalog")
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Number")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Phone")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TakerUser")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TakerUserId")
                         .HasColumnType("text");
 
                     b.Property<string>("UpdatedUser")
@@ -441,6 +450,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("Images")
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsAllProductsAreCollected")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -450,11 +462,14 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("LocalCurrency")
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
                     b.Property<double?>("Nds")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("Number")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("OrderIsOver")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("OurCompanyId")
                         .HasColumnType("uuid");
@@ -499,8 +514,11 @@ namespace DKCrm.Server.Migrations
                     b.Property<bool>("IsValueConstant")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Position")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("UpdatedUser")
                         .HasColumnType("text");
@@ -510,6 +528,8 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("ExportedOrderStatus");
                 });
@@ -523,9 +543,7 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("DateTimeCreate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp without time zone")
-                        .HasDefaultValue(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DateTimeUpdate")
                         .HasColumnType("timestamp without time zone");
@@ -621,6 +639,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("Images")
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsAllProductsAreCollected")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -630,11 +651,14 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("LocalCurrency")
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
                     b.Property<double?>("Nds")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("Number")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("OrderIsOver")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("OurCompanyId")
                         .HasColumnType("uuid");
@@ -685,8 +709,11 @@ namespace DKCrm.Server.Migrations
                     b.Property<bool>("IsValueConstant")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Position")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("UpdatedUser")
                         .HasColumnType("text");
@@ -696,6 +723,8 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("ImportedOrderStatus");
                 });
@@ -709,9 +738,7 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("DateTimeCreate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp without time zone")
-                        .HasDefaultValue(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DateTimeUpdate")
                         .HasColumnType("timestamp without time zone");
@@ -1204,6 +1231,16 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("OurEmployee");
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ExportedOrderStatus", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.OrderModels.ExportedOrderStatus", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ExportedOrderStatusExportedOrder", b =>
                 {
                     b.HasOne("DKCrm.Shared.Models.OrderModels.ExportedOrder", "ExportedOrder")
@@ -1267,6 +1304,16 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("OurEmployee");
 
                     b.Navigation("SellersCompany");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ImportedOrderStatus", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.OrderModels.ImportedOrderStatus", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ImportedOrderStatusImportedOrder", b =>
@@ -1493,6 +1540,8 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ExportedOrderStatus", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("ExportedOrderStatusExported");
                 });
 
@@ -1514,6 +1563,8 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ImportedOrderStatus", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("ImportedOrderStatusImportedOrders");
                 });
 

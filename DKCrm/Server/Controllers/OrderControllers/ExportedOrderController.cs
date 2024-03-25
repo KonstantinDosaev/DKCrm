@@ -1,12 +1,8 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Constants;
+﻿using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models;
-using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MudBlazor;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+
 
 namespace DKCrm.Server.Controllers.OrderControllers
 {
@@ -14,198 +10,74 @@ namespace DKCrm.Server.Controllers.OrderControllers
     [ApiController]
     public class ExportedOrderController:ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly IExportedOrderService _exportedOrderService;
 
-        public ExportedOrderController(ApplicationDBContext context)
+        public ExportedOrderController(IExportedOrderService exportedOrderService)
         {
-            _context = context;
+            _exportedOrderService = exportedOrderService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            return Ok(await _context.ExportedOrders.Select(s=>new
-            {
-               s.Id, s.Name,s.OurCompany,s.CompanyBuyer,s.EmployeeBuyer,s.OurEmployee
-            }).ToListAsync());
-        }
+        public async Task<IActionResult> Get() => Ok(await _exportedOrderService.GetAsync());
+        
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
-        {
-            //var dev = await _context.ExportedOrders.Select(s => new
-            //{
-            //    s.Id,
-            //    s.Name,
-            //    s.OurCompany,
-            //    s.CompanyBuyer,
-            //    s.EmployeeBuyer,
-            //    s.OurEmployee,
-            //    s.EmployeeBuyerId,
-            //    s.OurEmployeeId,
-            //    s.ApplicationOrderingProducts,
-            //    s.ExportedProducts,
-            //}).FirstOrDefaultAsync(a => a.Id == id);
-            //return Ok(dev);
-            var result = await _context.ExportedOrders
-                .Include(i=>i.OurCompany).ThenInclude(i=>i!.Employees)
-                .Include(i => i.CompanyBuyer).ThenInclude(i=>i!.Employees)
-                .Include(i => i.ApplicationOrderingProducts).ThenInclude(t=>t!.ProductList)
-                .Include(i => i.ExportedProducts)!.ThenInclude(t=>t.Product).ThenInclude(t=>t!.Brand)
-                .AsSingleQuery().FirstOrDefaultAsync(a => a.Id == id);
-            return Ok(result);
-        }
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> Get(Guid id) => Ok(await _exportedOrderService.GetDetailAsync(id));
+
+        //[HttpGet("{id}")]
+        //public async Task<IActionResult> GetOrder(Guid id)
+        //{
+        //    //var dev = await _context.ExportedOrders.Select(s => new
+        //    //{
+        //    //    s.Id,
+        //    //    s.Name,
+        //    //    s.OurCompany,
+        //    //    s.CompanyBuyer,
+        //    //    s.EmployeeBuyer,
+        //    //    s.OurEmployee,
+        //    //    s.EmployeeBuyerId,
+        //    //    s.OurEmployeeId,
+        //    //    s.ApplicationOrderingProducts,
+        //    //    s.ExportedProducts,
+        //    //}).FirstOrDefaultAsync(a => a.Id == id);
+        //    //return Ok(dev);
+        //    var result = await _context.ExportedOrders
+        //        .Include(i => i.OurCompany).ThenInclude(i => i!.Employees)
+        //        .Include(i => i.CompanyBuyer).ThenInclude(i => i!.Employees)
+        //        .Include(i => i.ApplicationOrderingProducts).ThenInclude(t => t!.ProductList)
+        //        .Include(i => i.ExportedProducts)!.ThenInclude(t => t.Product).ThenInclude(t => t!.Brand)
+        //        .AsSingleQuery().FirstOrDefaultAsync(a => a.Id == id);
+        //    return Ok(result);
+        //}
         [HttpPost]
-        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request)
-        {
-            var data = _context.ExportedOrders.Select(s => new ExportedOrder()
-            {
-                Id = s.Id,
-                Name = s.Name,
-              
-                OurCompany = s.OurCompany,
-                CompanyBuyer = s.CompanyBuyer,
-                OurEmployee = s.OurEmployee,
-                EmployeeBuyer = s.EmployeeBuyer,
-                DateTimeCreated = s.DateTimeCreated,
-                DateTimeUpdate = s.DateTimeUpdate,
-                ExportedOrderStatus = s.ExportedOrderStatus,
-            }).Select(s => s);
-            //if (request.Chapter != null && request.ChapterId != null)
-            //{
-            //    data = data.Where(o => o.ExportedOrderStatusId == request.ChapterId);
-            //}
-
-            if (request.FilterTuple != null)
-            {
-                if (request.FilterTuple.OurCompanies != null && request.FilterTuple.OurCompanies.Any())
-                {
-                    data = data.Where(o => request.FilterTuple.OurCompanies.Contains((Guid)o.OurCompanyId!));
-                }
-                if (request.FilterTuple.ContragentsCompanies != null && request.FilterTuple.ContragentsCompanies.Any())
-                {
-                    data = data.Where(o => request.FilterTuple.ContragentsCompanies.Contains((Guid)o.CompanyBuyerId!));
-                }
-            }
-            if (!string.IsNullOrEmpty(request.SearchString))
-            {
-                if (request.SearchInChapter != null)
-                {
-                    switch (request.SearchInChapter)
-                    {
-                        case SearchChapterNames.ProductPartNumber:
-                            {
-                                var searchedOrdersId = await _context.ImportedProducts.Where(w => w.Product!.PartNumber!.Contains(request.SearchString))
-                                    .Select(s => s.ImportedOrderId).ToListAsync();
-                                data = data.Where(w => searchedOrdersId.Contains(w.Id));
-                                break;
-                            }
-                        case SearchChapterNames.CompanyName:
-                            data = data.Where(w =>
-                                w.OurCompany != null && w.OurCompany.Name.ToLower().Contains(request.SearchString.ToLower()) ||
-                                w.CompanyBuyer != null && w.CompanyBuyer.Name.ToLower().Contains(request.SearchString.ToLower()));
-                            break;
-                    }
-                }
-
-
-            }
-
-            var totalItems = data.Count();
-
-            switch (request.SortLabel)
-            {
-                case "ourCompany_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.OurCompany);
-                    break;
-                case "conterCompany_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.CompanyBuyer);
-                    break;
-                case "number_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Name);
-                    break;
-                case "create_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeCreated);
-                    break;
-                case "update_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeUpdate);
-                    break;
-            }
-            data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
-
-            return Ok(new SortPagedResponse<ExportedOrder>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() });
-
-        }
+        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request) 
+            => Ok(await _exportedOrderService.GetBySortPagedSearchChapterAsync(request));
 
         [HttpPost]
-        public async Task<IActionResult> Post(ExportedOrder exportedOrder)
-        {
-            exportedOrder.DateTimeCreated = DateTime.Now;
-            var count = _context.ExportedOrders.Count(w => w.DateTimeCreated!.Value.Date == exportedOrder.DateTimeCreated!.Value.Date);
-            exportedOrder.Name = (exportedOrder.DateTimeCreated!.Value.ToShortDateString()).Replace(".", "") + (count + 1);
-            _context.Entry(exportedOrder).State = EntityState.Added;
-            if (exportedOrder.ApplicationOrderingProducts != null)
-            {
-                _context.Entry(exportedOrder.ApplicationOrderingProducts).State = EntityState.Modified;
-            }
-
-            if (exportedOrder.ExportedProducts != null)
-            {
-                foreach (var item in exportedOrder.ExportedProducts)
-                {
-                    _context.Entry(item).State = item.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
-                }
-            }
-            await _context.SaveChangesAsync();
-            return Ok(exportedOrder.Id);
-        }
+        public async Task<IActionResult> Post(ExportedOrder exportedOrder) 
+            => Ok(await _exportedOrderService.PostAsync(exportedOrder, User.Identity?.Name!));
 
         [HttpPut]
-        public async Task<IActionResult> Put(ExportedOrder exportedOrder)
-        {
-            exportedOrder.DateTimeUpdate = DateTime.Now;
-            _context.Entry(exportedOrder).State = EntityState.Modified;
-
-            if (exportedOrder.ApplicationOrderingProducts != null)
-            {
-                _context.Entry(exportedOrder.ApplicationOrderingProducts).State = EntityState.Modified;
-            }
-
-            if (exportedOrder.ExportedProducts != null)
-            {
-                foreach (var item in exportedOrder.ExportedProducts)
-                {
-                    _context.Entry(item).State = item.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
-                }
-            }
-            await _context.SaveChangesAsync();
-            return Ok(exportedOrder);
-        }
+        public async Task<IActionResult> Put(ExportedOrder exportedOrder) 
+            => Ok(await _exportedOrderService.PutAsync(exportedOrder, User.Identity?.Name!));
 
         [HttpPut("range")]
-        public async Task<IActionResult> PutRange(IEnumerable<ExportedOrder> exportedOrders)
-        {
-            //_context.Entry(product).State = EntityState.Modified;
-            _context.ExportedOrders.UpdateRange(exportedOrders);
-            await _context.SaveChangesAsync();
-            return Ok(exportedOrders.Count());
-        }
+        public async Task<IActionResult> PutRange(IEnumerable<ExportedOrder> exportedOrders) 
+            => Ok(await _exportedOrderService.PutRangeAsync(exportedOrders));
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var dev = new ExportedOrder { Id = id };
-            _context.Remove(dev);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id) => Ok(await _exportedOrderService.DeleteAsync(id));
 
         [HttpPost("removerange")]
-        public async Task<IActionResult> DeleteRange(IEnumerable<ExportedOrder> exportedOrders)
-        {
-            _context.RemoveRange(exportedOrders);
-            await _context.SaveChangesAsync();
-            return Ok(exportedOrders.Count());
-        }
+        public async Task<IActionResult> DeleteRange(IEnumerable<ExportedOrder> exportedOrders) 
+            => Ok(await _exportedOrderService.DeleteRangeAsync(exportedOrders));
+
+        [HttpPost("add-status")]
+        public async Task<IActionResult> AddStatusToOrder(ExportedOrderStatusExportedOrder exportedOrderStatus) 
+            => Ok(await _exportedOrderService.AddStatusToOrderAsync(exportedOrderStatus));
+
+        [HttpPost("remove-status")]
+        public async Task<IActionResult> RemoveStatusFromOrder(ExportedOrderStatusExportedOrder exportedOrderStatus) 
+            => Ok(await _exportedOrderService.RemoveStatusFromOrderAsync(exportedOrderStatus));
     }
 }

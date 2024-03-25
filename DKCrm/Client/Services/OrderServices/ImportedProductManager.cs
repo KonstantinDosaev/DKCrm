@@ -2,6 +2,7 @@
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -23,20 +24,28 @@ namespace DKCrm.Client.Services.OrderServices
             return await _httpClient.GetFromJsonAsync<ImportedProduct>($"api/ImportedProduct/Get/{id}") ?? throw new InvalidOperationException();
         }
 
-        public async Task<List<ImportedProduct>> GetNotEquippedAsync()
+        public async Task<List<ImportedProduct>> GetNotEquippedAsync(Guid productId)
         {
-            return await _httpClient.GetFromJsonAsync<List<ImportedProduct>>("api/ExportedProduct/GetNotEquipped") ?? throw new InvalidOperationException();
+            return await _httpClient.GetFromJsonAsync<List<ImportedProduct>>($"api/ImportedProduct/GetNotEquipped/{productId}") ?? throw new InvalidOperationException();
         }
 
         public async Task<bool> UpdateAsync(ImportedProduct item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ImportedProduct/Put", item);
+            var result = await _httpClient.PutAsJsonAsync("api/ImportedProduct/Put", item, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ImportedProduct item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ImportedProduct/Post", item);
+            var result = await _httpClient.PostAsJsonAsync($"api/ImportedProduct/Post", item, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+                PropertyNamingPolicy = null
+            });
             return result.IsSuccessStatusCode;
         }
 

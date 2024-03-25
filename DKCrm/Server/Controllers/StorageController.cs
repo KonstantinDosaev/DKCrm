@@ -1,9 +1,7 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Models.CompanyModels;
+﻿using DKCrm.Server.Interfaces;
+using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace DKCrm.Server.Controllers
 {
@@ -11,56 +9,57 @@ namespace DKCrm.Server.Controllers
     [ApiController]
     public class StorageController : ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly IStorageService _storageService;
 
-        public StorageController(ApplicationDBContext context)
+        public StorageController(IStorageService storageService)
         {
-            _context = context;
+            _storageService = storageService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _context.Storages.Include(i => i.Address).Include(i=>i.Products).AsNoTracking().ToListAsync());
+            return Ok(await _storageService.GetAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var dev = await _context.Storages.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
-            return Ok(dev);
+            return Ok(await _storageService.GetAsync(id));
         }
 
+        [HttpGet("productInStorageList/{productId:guid}")]
+        public async Task<IActionResult> GetProductInStorageListAsync(Guid productId)
+        {
+            return Ok(await _storageService.GetProductInStorageListAsync(productId));
+        }
         [HttpPost]
         public async Task<IActionResult> Post(Storage storage)
         {
-            _context.Add(storage);
-            await _context.SaveChangesAsync();
-            return Ok(storage.Id);
+            return Ok(await _storageService.PostAsync(storage));
         }
 
         [HttpPut]
         public async Task<IActionResult> Put(Storage storage)
         {
-            _context.Entry(storage).State = EntityState.Modified;
-            if (storage.Address != null)
-            {
-                _context.Entry(storage.Address).State = storage.Address.Id != Guid.Empty ? EntityState.Modified : EntityState.Added;
-            }
-            //_context.Update(entityToBeUpdated);
-            await _context.SaveChangesAsync();
-            return Ok(storage);
+            return Ok(await _storageService.PutAsync(storage));
         }
-
-
-        [HttpDelete("{id}")]
+        
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var dev = await _context.Storages.Include(i=>i.Address).FirstOrDefaultAsync(a => a.Id == id);
-            _context.Remove(dev!);
-            _context.Remove(dev!.Address!);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(await _storageService.DeleteAsync(id));
+        }
+
+        [HttpPost("ReserveAProduct")]
+        public async Task<IActionResult> ReserveAProduct(SoldFromStorage soldFromStorage)
+        {
+            return Ok(await _storageService.ReserveAProductAsync(soldFromStorage));
+        }
+        [HttpPost("CancelReserveAProduct")]
+        public async Task<IActionResult> CancelReserveAProduct(SoldFromStorage soldFromStorage)
+        {
+            return Ok(await _storageService.CancelReserveAProductAsync(soldFromStorage));
         }
     }
 }

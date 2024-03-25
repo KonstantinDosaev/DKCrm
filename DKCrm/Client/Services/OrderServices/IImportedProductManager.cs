@@ -6,7 +6,7 @@ namespace DKCrm.Client.Services.OrderServices
     {
         Task<List<ImportedProduct>> GetAsync();
         Task<ImportedProduct> GetDetailsAsync(Guid id);
-        Task<List<ImportedProduct>> GetNotEquippedAsync();
+        Task<List<ImportedProduct>> GetNotEquippedAsync(Guid productId);
         Task<bool> UpdateAsync(ImportedProduct item);
         Task<bool> AddAsync(ImportedProduct item);
         Task<bool> RemoveRangeAsync(IEnumerable<ImportedProduct> items);

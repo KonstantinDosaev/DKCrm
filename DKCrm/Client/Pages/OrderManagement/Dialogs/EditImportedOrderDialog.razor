@@ -35,6 +35,8 @@
 
     async Task Edit()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         if (await ImportedOrderManager.UpdateAsync(Order!))
         {
             Order!.OurCompanyId = Order.OurCompany!.Id;
