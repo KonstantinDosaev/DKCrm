@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 using DKCrm.Shared.Models.CompanyModels;
 using System.Text.Json;
+using DKCrm.Client.Constants;
 
 namespace DKCrm.Client.Services.CompanyServices
 {
@@ -17,7 +18,10 @@ namespace DKCrm.Client.Services.CompanyServices
         {
             return await _httpClient.GetFromJsonAsync<List<Company>>("api/company") ?? throw new InvalidOperationException();
         }
-
+        public async Task<List<Company>> GetCompaniesByTypeAsync(string type)
+        {
+            return await _httpClient.GetFromJsonAsync<List<Company>>($"api/Company/byType/{type}") ?? throw new InvalidOperationException();
+        }
         public async Task<Company> GetDetailsAsync(Guid id)
         {
             return await _httpClient.GetFromJsonAsync<Company>($"api/company/{id}") ?? throw new InvalidOperationException();
@@ -25,17 +29,13 @@ namespace DKCrm.Client.Services.CompanyServices
 
         public async Task<bool> UpdateAsync(Company company)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/company", company, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PutAsJsonAsync("api/company", company, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(Company company)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Company", company);
+            var result = await _httpClient.PostAsJsonAsync($"api/Company", company, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
@@ -56,7 +56,7 @@ namespace DKCrm.Client.Services.CompanyServices
         }
         public async Task<bool> UpdateTagsAsync(TagsRequest tagRequest)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Company/updateTags/{tagRequest}", tagRequest);
+            var result = await _httpClient.PostAsJsonAsync($"api/Company/updateTags/{tagRequest}", tagRequest, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
     }

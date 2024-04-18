@@ -7,7 +7,7 @@
     <DialogContent>
         <MudCard>
             <ProductForm
-                OnValidSubmit="EditProduct"
+                OnValidSubmit="(async () => await EditProduct())"
                 Product="_iii"
                 ButtonText="Сохранить"
                 TitleText="Изменение продукта"/>
@@ -30,6 +30,8 @@
     
     async Task EditProduct()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         if (_iii != null && await ProductManager.UpdateProductAsync(_iii))
         {
             _snackBar.Add("Продукт обновлен");

@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Client.Pages.OrderManagement.Dialogs
 @inject IConfirmationActionService ConfirmationActionService
 @if (ExportedProduct != null)
 {
@@ -131,7 +132,28 @@
                     {
                         var notEquippedQuantity = @importedProduct.Quantity - (@importedProduct.PurchaseAtExportList?.Select(s => s.Quantity).Sum() + @importedProduct.PurchaseAtStorageList?.Select(s => s.Quantity).Sum())?? 0;
                             <tr>
-                                <td>@importedProduct.ImportedOrder?.Number</td>
+                                <td>@importedProduct.ImportedOrder?.Number
+                            @if (@importedProduct.ImportedOrderId != null && !IsDoubleNested)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small' OnClick="() => OpenImportedOrderPopover((Guid)importedProduct.ImportedOrderId)"></MudIconButton>
+                                @if (@importedProduct.ImportedOrderId == ShowingImportOrderId && _visibleImportOrder )
+                                {
+                                    <MudPopover Open="@_visibleImportOrder"
+                                                Style="min-width: 550px;"
+                                                Class="px-4 pt-4"
+                                                OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                                        <MudText>@importedProduct.ImportedOrder?.SellersCompany?.Name</MudText>
+                                        <ImportedOrderDetailsComponent Id="(Guid)importedProduct.ImportedOrderId" 
+                                                                       CurrencyDisplay="@(new[] { "Сделки" })" 
+                                                                       ShowCompanyInfo="true"
+                                                                       IsDoubleNested="true"/>
+                                        <div class="text-end mb-2">
+                                            <MudButton OnClick="(() => _visibleImportOrder = false)" Color="Color.Info">закрыть</MudButton>
+                                        </div>
+                                    </MudPopover>
+                                }
+                            }
+                                    </td>
                                 <td>@notEquippedQuantity</td>
                                 <td class="d-flex align-items-center">
                                     @if (ExportedProduct.PurchaseAtExports != null && ExportedProduct.PurchaseAtExports.Select(s => s.ImportedProductId).Contains(importedProduct.Id))
@@ -180,7 +202,12 @@
     else
     {
         <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
+        
     }
+    <MudButton OnClick="CreateImportedProduct">Создать заказ на импорт</MudButton>
+    <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
+                                 RefreshProductList="OnInitializedAsync"
+                                  />
 }
 <div class="d-flex justify-content-end mb-3">
     @if (_errorUpdate)
@@ -200,6 +227,7 @@
 </div>
 @code
 {
+    [Parameter] public bool IsDoubleNested { get; set; }
     [Parameter] public EventCallback CancelEditCallback { get; set; }
     [Parameter] public EventCallback RefreshParentCallback { get; set; }
     [Parameter] public ExportedProduct? ExportedProduct { get; set; }
@@ -207,6 +235,8 @@
     private List<PurchaseAtExport>? BackupPurchaseAtExport { get; set; }
     public List<ProductsInStorage>? StorageList { get; set; }
     private List<ImportedProduct>? NotEquippedImportedProducts { get; set; }
+    private ImportedProduct? CreatedImportedProduct { get; set; }
+    private Guid ShowingImportOrderId { get; set; }
     private int MissingQuantity { get; set; }
     private int QuantityInReserveAll { get; set; }
     private List<Guid> EditedQuantity { get; set; } = new();
@@ -214,13 +244,32 @@
     private bool _soldFromStorageIsEdit;
     private bool _loadProduct;
     private bool _editTotalQuantity;
-    private int _backupTotalQuantity;
+    private int _backupTotalQuantity; 
+    private bool _visibleAddImportedProductDialog;
+
+    private bool _visibleImportOrder;
 
     protected override async Task OnInitializedAsync()
     {
         SetBackup();
     }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender  && !_loadProduct && ExportedProduct != null)
+        {
+            _loadProduct = true;
+            CalculateQuantity();
+        }
+        return base.OnAfterRenderAsync(firstRender);
+    }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_loadProduct && ExportedProduct is { Product.ProductsInStorage: { } })
+            StorageList = ExportedProduct.Product.ProductsInStorage.ToList();
+
+        NotEquippedImportedProducts ??= await ImportedProductManager.GetNotEquippedAsync((Guid)ExportedProduct?.ProductId!);
+    }
 
     private void SetBackup()
     {
@@ -272,29 +321,12 @@
         SetBackup();
         await InvokeAsync(StateHasChanged);
     }
-    protected override Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender  && !_loadProduct && ExportedProduct != null)
-        {
-            _loadProduct = true;
-            CalculateQuantity();
-        }
-        return base.OnAfterRenderAsync(firstRender);
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (!_loadProduct && ExportedProduct is { Product.ProductsInStorage: { } })
-            StorageList = ExportedProduct.Product.ProductsInStorage.ToList();
-
-        NotEquippedImportedProducts ??= await ImportedProductManager.GetNotEquippedAsync((Guid)ExportedProduct?.ProductId!);
-    }
+   
     private void SetFromStorageQuantity(int quantity, Guid storageId)
     {
-
         var soldInDb = ExportedProduct!.SoldFromStorage?.FirstOrDefault(f => f.StorageId == storageId);
         var productInStorage = StorageList?.FirstOrDefault(f => f.StorageId == storageId);
-        int quantityInBackup = 0;
+        var quantityInBackup = 0;
         if (BackupSoldFromStorage != null && BackupSoldFromStorage.Any())
         {
             var backupSold = BackupSoldFromStorage.FirstOrDefault(f => f.StorageId == storageId);
@@ -323,7 +355,6 @@
                 }
                
                 soldInDb.Quantity = quantity;
-                
             }
             else
             {
@@ -352,8 +383,6 @@
     private void SetPurchaseAtExportQuantity(int quantity, Guid importedProductId)
     {
         var importedProduct = NotEquippedImportedProducts?.FirstOrDefault(f => f.Id == importedProductId);
-
-
         var quantityInBackup = 0;
         if (BackupPurchaseAtExport != null)
         {
@@ -365,8 +394,6 @@
             var purchaseInDb = ExportedProduct!.PurchaseAtExports?.FirstOrDefault(f => f.ImportedProductId == importedProductId);
             var notReservedQuantity = importedProduct.Quantity - (importedProduct.PurchaseAtExportList?.Select(s => s.Quantity).Sum()
                                                                   + importedProduct.PurchaseAtStorageList?.Select(s => s.Quantity).Sum());
-
-            
             if (purchaseInDb != null)
             {
                 if (purchaseInDb.Quantity == quantity)
@@ -399,25 +426,6 @@
             EditedQuantity.Remove(importedProductId);
         StateHasChanged();
     }
-    //private async Task UpdateSoldFromStorage()
-    //{
-    //    var soldFromStorageList = ExportedProduct!.SoldFromStorage!.Where(w => EditedQuantity.Contains(w.StorageId)).ToList();
-    //    foreach (var soldFromStorage in soldFromStorageList)
-    //    {
-    //        soldFromStorage!.ExportedProduct = ExportedProduct;
-    //        if (await StorageManager.ReserveAProductAsync(soldFromStorage!))
-    //        {
-    //            _snackBar.Add($"Зарезервировано {soldFromStorage!.Quantity} шт.");
-    //            EditedQuantity.Remove(soldFromStorage.StorageId);
-          
-    //        }
-    //        else
-    //            _errorUpdate = true;
-
-    //    }
-
-
-    //}
     private async Task UpdateSources()
     {
         var confirm = await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение");
@@ -455,24 +463,59 @@
         MissingQuantity = ExportedProduct.Quantity - QuantityInReserveAll;
     }
   
-    //private async void AddSoldFromStorage(ProductsInStorage productsInStorage)
-    //{
-    //    if (ExportedProduct == null) return;
+    private async Task OpenCreateImportedProductDialog(ProductsInStorage productsInStorage)
+    {
+        CreatedImportedProduct = new ImportedProduct()
+        {
+            Product = ExportedProduct!.Product,
+            ProductId = ExportedProduct.ProductId,
+            ExportedProducts = new List<ExportedProduct>(){ExportedProduct!},
+            Quantity = MissingQuantity
+        };
+        CreatedImportedProduct.PurchaseAtExportList = new List<PurchaseAtExport>()
+        {
+            new PurchaseAtExport()
+            {
+                ExportedProduct = ExportedProduct,
+                ExportedProductId = ExportedProduct!.Id,
+                Quantity = MissingQuantity,
+                ImportedProduct = CreatedImportedProduct,
+                ImportedProductId = CreatedImportedProduct.Id
+            }
+        };
+        if (await ImportedProductManager.AddAsync(CreatedImportedProduct))
+        {
+            _snackBar.Add($"Шаблон на импорт создан");
+        }
 
-    //    ExportedProduct.SoldFromStorage ??= new List<SoldFromStorage>();
-    //    ExportedProduct.StorageList ??= new List<Storage>();
-    //    ExportedProduct.StorageList.Add(productsInStorage.Storage!);
-    //    ExportedProduct.SoldFromStorage.Add(new SoldFromStorage
-    //        {
-    //            Storage = productsInStorage.Storage,
-    //            StorageId = (Guid)productsInStorage.StorageId!,
-    //            ExportedProduct = ExportedProduct,
-    //            ExportedProductId = ExportedProduct.Id,
-    //            Quantity = ExportedProduct.Quantity <= productsInStorage.Quantity ? ExportedProduct.Quantity - QuantityInReserveAll : productsInStorage.Quantity - QuantityInReserveAll
-    //        });
-
-    //    await InvokeAsync(StateHasChanged);
-    //}
+    }
+    private async void CreateImportedProduct()
+    {
+        CreatedImportedProduct = new ImportedProduct()
+            {
+                Product = ExportedProduct!.Product,
+                ProductId = ExportedProduct.ProductId,
+                ExportedProducts = new List<ExportedProduct>() { ExportedProduct! },
+                Quantity = MissingQuantity
+            };
+        CreatedImportedProduct.PurchaseAtExportList = new List<PurchaseAtExport>()
+        {
+            new()
+            {
+                ExportedProduct = ExportedProduct,
+                ExportedProductId = ExportedProduct!.Id,
+                Quantity = MissingQuantity,
+                ImportedProduct = CreatedImportedProduct,
+                ImportedProductId = CreatedImportedProduct.Id
+            }
+        };
+        if (await ImportedProductManager.AddAsync(CreatedImportedProduct))
+        {
+            _snackBar.Add($"Шаблон на импорт создан");
+            await ReloadExportedProduct();
+            CalculateQuantity();
+        }
+    }
 
     private async void RemoveSoldFromStorage(SoldFromStorage soldFromStorage)
     {
@@ -512,5 +555,12 @@
             ExportedProduct.PurchaseAtExports!.Remove(purchaseAtExport);
         }
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenImportedOrderPopover(Guid importedOrderId)
+    {
+        //CloseAllPopover();
+        ShowingImportOrderId = importedOrderId;
+        _visibleImportOrder = true;
     }
 }

@@ -31,8 +31,9 @@
     }
 
     async Task Create()
-    {
-       
+    {       
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         await ExportedProductManager.AddAsync(ExportedProduct);
         await RefreshProductList.InvokeAsync();
         await CloseClick();

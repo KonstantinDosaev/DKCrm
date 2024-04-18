@@ -25,18 +25,26 @@
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
     [Parameter] public ImportedOrder? Order { get; set; }
-    public ImportedProduct ImportedProduct { get; set; } = new();
+    [Parameter] public Product? Product { get; set; }
+    [Parameter] public PurchaseAtExport? PurchaseAtExport { get; set; }
+    [Parameter] public ImportedProduct? ImportedProduct { get; set; }
 
     protected override void OnParametersSet()
     {
-        ImportedProduct.ImportedOrder = Order;
-        if (Order != null) ImportedProduct.ImportedOrderId = Order.Id;
+        ImportedProduct ??= new ImportedProduct();
+
+        if (Order != null)
+        {
+            ImportedProduct.ImportedOrder = Order;
+            ImportedProduct.ImportedOrderId = Order.Id;
+        }
     }
 
     async Task Create()
     {
-       
-        await ImportedProductManager.AddAsync(ImportedProduct);
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
+        await ImportedProductManager.AddAsync(ImportedProduct!);
         await RefreshProductList.InvokeAsync();
        await CloseClick();
         _snackBar.Add("Элемент заказа создан");

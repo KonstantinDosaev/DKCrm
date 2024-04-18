@@ -3,6 +3,27 @@
 
 @if (Order != null)
 {
+    if (ShowCompanyInfo)
+    {
+        <div class="p-3">
+            <MudText Typo="Typo.body1">
+                <span class="mr-2 fw-bold">№:</span>
+                @Order.Number
+            </MudText>
+            <MudText Typo="Typo.body1">
+                <span class="mr-2 fw-bold">Дата создания:</span>
+                @Order.DateTimeCreated
+            </MudText>
+            <MudText Typo="Typo.body1">
+                <span class="mr-2 fw-bold">Компания покупатель:</span>
+                @Order.CompanyBuyer?.Name
+            </MudText>
+            <MudText Typo="Typo.body1">
+                <span class="mr-2 fw-bold">Агент:</span>
+                @Order.EmployeeBuyer?.LastName @Order.EmployeeBuyer?.FirstName @Order.EmployeeBuyer?.MiddleName
+            </MudText>
+        </div>
+    }
     <div class="d-flex px-3 align-items-center">
         <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
         <MudSpacer/>
@@ -37,12 +58,10 @@
         </ToolBarContent>
         <HeaderContent>
             <MudTHeadRow Class="header-centered">
-
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Brand?.Name!)">Производитель</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.Quantity)">Количество</MudTableSortLabel></MudTh>
-
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.Quantity)">Количество</MudTableSortLabel>/ требуется</MudTh>
                 <MudTh Style="text-align: center">
                     <MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInBuyerCurrency)">Цена в валюте/ </MudTableSortLabel>
                     <div class="d-flex justify-content-center align-items-center">
@@ -73,16 +92,14 @@
                     @context.Product.Brand.Name
                 }
             </MudTd>
-
-
             <MudTd DataLabel="Количество">
                 <div class="d-flex justify-content-between align-items-center">
                     @{
                         var allReserve = GetAllReserveQuantity(context);
                         var quantityColor = context.Quantity == allReserve ? "color: green" : "color: red";
                     }
-                    <MudText> @context.Quantity 
-                        <span style="@(quantityColor)">(@allReserve)</span>
+                    <MudText> @context.Quantity
+                        <span style="@(context.Quantity == allReserve ? "color: green" : "color: red")">/ @(context.Quantity - allReserve)</span>
                         </MudText>
 
                     <div style="margin: 0 -0.5rem 0 1rem">
@@ -93,10 +110,11 @@
                         <MudPopover Open="@_isOpenCompletePopover"
                                     Style="min-width: 550px;"
                                     AnchorOrigin="Origin.BottomRight"
-                                    TransformOrigin="Origin.BottomRight" Fixed="true" Class="px-4 pt-4">
+                            TransformOrigin="Origin.BottomRight" Fixed="true" Class="px-4 pt-4" OverflowBehavior="OverflowBehavior.FlipAlways">
                             <CompleteExportedProductComponent ExportedProduct="EditedExportedProduct"
                                                               CancelEditCallback="() => _isOpenCompletePopover = false"
-                                                              RefreshParentCallback="GetOrder"/>
+                                                              RefreshParentCallback="GetOrder"
+                                                              IsDoubleNested="IsDoubleNested"/>
                             <div class="text-end mb-2">
                                 <MudButton OnClick="(() => _isOpenCompletePopover = false)" Color="Color.Info">закрыть</MudButton>
                             </div>
@@ -116,7 +134,6 @@
                                     @(decimal.Round((decimal)context.PriceInBuyerCurrency, 4) * (!_oneQuantityPrice ? context.Quantity : 1))
                                     <span style="color: darkgray; margin-left: 5px">@Order.BuyerCurrency</span>
                                 </MudText>
-
                             </div>
                         }
                         @if (context.PriceInTransactionCurrency != null && CurrencyDisplay.Contains("Сделки"))
@@ -139,7 +156,6 @@
                                 </MudText>
                             </div>
                         }
-
                     </div>
                     <div style="margin: 0 -0.5rem 0 1rem">
                         <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCurrencyPopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary" />
@@ -149,7 +165,7 @@
                         <MudPopover Open="@_isOpenPricePopover"
                                     Style="min-width: 320px"
                                     AnchorOrigin="Origin.BottomLeft"
-                                    TransformOrigin="Origin.BottomLeft" Fixed="true" Class="px-4 pt-4">
+                            TransformOrigin="Origin.BottomLeft" Fixed="true" Class="px-4 pt-4" OverflowBehavior="OverflowBehavior.FlipAlways">
                             <CurrencyExportedProductComponent
                                 ExportedProduct="context"
                                 Order="Order"
@@ -158,28 +174,18 @@
                     }
                 </div>
             </MudTd>
-
             <MudTd DataLabel="Редактировать">
                 <MudIconButton Size="@Size.Small"
                                OnClick="() => OpenEditExportedProductDialog(context)"
                                Style="background-color: rgba(217, 214, 81, 0.431);"
                                Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
             </MudTd>
-            
         </RowTemplate>
        
         <EditButtonContent Context="button">
             <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled"/>
         </EditButtonContent>
-        @* <PagerContent>
-            <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
-        </PagerContent>*@
     </MudTable>
-
-
-
-
-  
 
         <CreateExportedProductDialog @bind-VisibleDialog="_visibleAddExportedProductDialog"
                                      RefreshProductList="OnInitializedAsync"
@@ -187,17 +193,15 @@
     
     @if (ExportedProductId!=Guid.Empty && ExportedProductId !=null)
     {
-
         <EditExportedProductDialog @bind-VisibleDialog="@_visibleEditExportedProductDialog"
                                    RefreshProductList="@OnInitializedAsync"
                                    Id="@ExportedProductId"/>
-
     }
-
 }
 @code {
-
+    [Parameter] public bool IsDoubleNested { get; set; }
     [Parameter] public Guid Id { get; set; }
+    [Parameter]public bool ShowCompanyInfo { get; set; }
     [Parameter] public IEnumerable<string> CurrencyDisplay { get; set; } = null!;
     public ExportedOrder? Order { get; set; }
     private List<ExportedProduct>? ExportedProducts { get; set; }
@@ -276,7 +280,6 @@
         _isOpenPricePopover = false;
         _isOpenCompletePopover = false;
     }
-    
 }
 <style>
     .mud-table-orderD-header {

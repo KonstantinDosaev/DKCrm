@@ -1,7 +1,7 @@
 ﻿using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
 using System.Net.Http.Json;
-using System.Text.Json;
+using DKCrm.Client.Constants;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -31,21 +31,13 @@ namespace DKCrm.Client.Services.OrderServices
 
         public async Task<bool> UpdateAsync(ExportedOrder item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ExportedOrder/Put", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PutAsJsonAsync("api/ExportedOrder/Put", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ExportedOrder item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/Post", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/Post", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
@@ -61,23 +53,15 @@ namespace DKCrm.Client.Services.OrderServices
         }
 
 
-        public async Task<bool> AddStatusToOrderAsync(ExportedOrderStatusExportedOrder status)
+        public async Task<bool> AddStatusToOrderAsync(ExportedOrderStatusExportedOrder statusOrder)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/AddStatusToOrder/add-status", status, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/AddStatusToOrder/add-status", statusOrder, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> RemoveStatusFromOrderAsync(ExportedOrderStatusExportedOrder status)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/RemoveStatusFromOrder/remove-status", status, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/RemoveStatusFromOrder/remove-status", status, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
     }

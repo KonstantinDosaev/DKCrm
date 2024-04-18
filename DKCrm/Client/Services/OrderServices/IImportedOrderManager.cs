@@ -14,5 +14,6 @@ namespace DKCrm.Client.Services.OrderServices
         Task<bool> AddAsync(ImportedOrder item);
         Task<bool> RemoveRangeAsync(IEnumerable<ImportedOrder> items);
         Task<bool> RemoveAsync(Guid id);
+        Task<bool> AddStatusToOrderAsync(ImportedOrderStatusImportedOrder statusOrder);
     }
 }

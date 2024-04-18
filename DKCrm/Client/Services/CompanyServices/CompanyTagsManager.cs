@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
+﻿using DKCrm.Client.Constants;
+using DKCrm.Shared.Models.CompanyModels;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.CompanyServices
@@ -23,19 +24,19 @@ namespace DKCrm.Client.Services.CompanyServices
 
         public async Task<bool> UpdateAsync(TagsCompany tagsCompany)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/companyTags", tagsCompany);
+            var result = await _httpClient.PutAsJsonAsync("api/companyTags", tagsCompany, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(TagsCompany tagsCompany)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/companyTags", tagsCompany);
+            var result = await _httpClient.PostAsJsonAsync($"api/companyTags", tagsCompany, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> RemoveRangeAsync(IEnumerable<TagsCompany> tagsCompanies)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/companyTags/removerange", tagsCompanies);
+            var result = await _httpClient.PostAsJsonAsync($"api/companyTags/removerange", tagsCompanies, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
         public async Task<bool> RemoveAsync(Guid id)

@@ -33,6 +33,8 @@
 
     async Task Create()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         await CompanyManager.AddAsync(Company!);
         await RefreshParent.InvokeAsync();
         await CloseClick();

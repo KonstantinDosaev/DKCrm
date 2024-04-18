@@ -79,9 +79,10 @@ namespace DKCrm.Server.Services.OrderServices
                 EmployeeBuyer = s.EmployeeBuyer,
                 DateTimeCreated = s.DateTimeCreated,
                 DateTimeUpdate = s.DateTimeUpdate,
+                ExportedProducts = s.ExportedProducts,
                 ExportedOrderStatus = s.ExportedOrderStatus,
                 ExportedOrderStatusExported = s.ExportedOrderStatusExported,
-            }).Select(s => s);
+            });
             //if (request.Chapter != null && request.ChapterId != null)
             //{
             //    data = data.Where(o => o.ExportedOrderStatusId == request.ChapterId);
@@ -89,6 +90,10 @@ namespace DKCrm.Server.Services.OrderServices
 
             if (request.FilterTuple != null)
             {
+                //if (request.FilterTuple.IsNotCompleteOrders)
+                //{
+                //    data = data.Where(o => o.IsAllProductsAreCollected == false);
+                //}
                 if (request.FilterTuple.OurCompanies != null && request.FilterTuple.OurCompanies.Any())
                 {
                     data = data.Where(o => request.FilterTuple.OurCompanies.Contains((Guid)o.OurCompanyId!));
@@ -121,25 +126,28 @@ namespace DKCrm.Server.Services.OrderServices
             }
 
             var totalItems = data.Count();
-
-            switch (request.SortLabel)
+            if (request.SortLabel != null)
             {
-                case "ourCompany_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.OurCompany);
-                    break;
-                case "conterCompany_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.CompanyBuyer);
-                    break;
-                case "number_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Number);
-                    break;
-                case "create_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeCreated);
-                    break;
-                case "update_field":
-                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeUpdate);
-                    break;
+                switch (request.SortLabel)
+                {
+                    case "ourCompany_field":
+                        data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.OurCompany);
+                        break;
+                    case "conterCompany_field":
+                        data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.CompanyBuyer);
+                        break;
+                    case "number_field":
+                        data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Number);
+                        break;
+                    case "create_field":
+                        data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeCreated);
+                        break;
+                    case "update_field":
+                        data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeUpdate);
+                        break;
+                }
             }
+
             data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
 
             return new SortPagedResponse<ExportedOrder>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() };

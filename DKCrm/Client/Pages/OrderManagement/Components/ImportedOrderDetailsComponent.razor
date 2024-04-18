@@ -3,10 +3,25 @@
 @using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 
-
 @if (Order != null)
 {
-
+    if (ShowCompanyInfo)
+    {
+        <div class="p-3">
+            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">№:</span>
+                @Order.Number
+            </MudText>
+            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Дата создания:</span>
+                @Order.DateTimeCreated
+            </MudText>
+            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Компания продавец:</span>
+                @Order.SellersCompany?.Name
+            </MudText>
+            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Агент:</span>
+                @Order.EmployeeSeller?.LastName @Order.EmployeeSeller?.FirstName @Order.EmployeeSeller?.MiddleName
+            </MudText>
+        </div>
+    }
     <div class="d-flex px-3 align-items-center">
         <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
         <MudSpacer />
@@ -21,18 +36,14 @@
           HeaderClass="mud-table-orderD-header table-head-bordered"
           CustomHeader="true"
           Dense="true">
-        @* <ToolBarContent>
 
-    </ToolBarContent>*@
         <HeaderContent>
-
-
             <MudTHeadRow Class="header-centered">
 
                 <MudTh><MudTableSortLabel SortBy="new Func<ImportedProduct, object>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ImportedProduct, object>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ImportedProduct, object>(x => x.Product!.Brand?.Name!)">Производитель</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedProduct, object>(x => x.Quantity)">Количество</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ImportedProduct, object>(x => x.Quantity)">Количество / Свободно</MudTableSortLabel></MudTh>
 
                 <MudTh Style="text-align: center">
                     <MudTableSortLabel Enabled="true" SortBy="new Func<ImportedProduct, object?>(x => x.PriceInTransactionCurrency)">Цена в валюте/ </MudTableSortLabel>
@@ -43,12 +54,8 @@
                 </MudTh>
                 <MudTh Style="text-align: center">Edit</MudTh>
             </MudTHeadRow>
-
-
-
         </HeaderContent>
         <RowTemplate>
-
             <MudTd DataLabel="Парт-номер">
                 @if (context.Product != null)
                 {
@@ -67,9 +74,36 @@
                     @context.Product.Brand.Name
                 }
             </MudTd>
-
-
-            <MudTd DataLabel="Количество">@context.Quantity</MudTd>
+            <MudTd DataLabel="Количество">
+                <div class="d-flex justify-content-between align-items-center">
+                    
+                    @{
+                        var freeQuantity = GetFreeQuantity(context);
+                    }
+                    <MudText> @context.Quantity
+                        <span style="@(freeQuantity > 0 ? "color: green" : "color: rgba(0,0,0,0.2)")">/ @freeQuantity</span>
+                    </MudText>
+           
+                    <div style="margin: 0 -0.5rem 0 1rem">
+                        <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCompletePopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
+                    </div>
+                </div>
+                @if (ImportedProductId == context.Id && _isOpenCompletePopover)
+                {
+                    <MudPopover Open="@_isOpenCompletePopover"
+                                Style="min-width: 550px;"
+                                AnchorOrigin="Origin.BottomRight"
+                        TransformOrigin="Origin.BottomRight" Fixed="true" Class="px-4 pt-4" OverflowBehavior="OverflowBehavior.FlipAlways">
+                        <CompleteImportedProductComponent ImportedProduct="EditedImportedProduct"
+                                                          CancelEditCallback="() => _isOpenCompletePopover = false"
+                                                          RefreshParentCallback="OnInitializedAsync"
+                                                          IsDoubleNested="IsDoubleNested"/>
+                        <div class="text-end mb-2">
+                            <MudButton OnClick="(() => _isOpenCompletePopover = false)" Color="Color.Info">закрыть</MudButton>
+                        </div>
+                    </MudPopover>
+                }
+            </MudTd>
             <MudTd DataLabel="Цена">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="flex-grow-1">
@@ -104,7 +138,6 @@
                                 </MudText>
                             </div>
                         }
-
                     </div>
                     <div style="margin: 0 -0.5rem 0 1rem">
                         <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCurrencyPopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary" />
@@ -114,7 +147,7 @@
                         <MudPopover Open="@_isOpenPricePopover"
                             Style="min-width: 320px"
                             AnchorOrigin="Origin.BottomLeft"
-                            TransformOrigin="Origin.BottomLeft" Fixed="true" Class="px-4 pt-4">
+                            TransformOrigin="Origin.BottomLeft" Fixed="true" Class="px-4 pt-4" OverflowBehavior="OverflowBehavior.FlipAlways">
                             <CurrencyImportedProductComponent ImportedProduct="context"
                                                       Order="Order"
                                                       CancelEditCallback="() => _isOpenPricePopover = false" />
@@ -129,14 +162,7 @@
                            Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
             </MudTd>
         </RowTemplate>
-        @* <PagerContent>
-    <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
-    </PagerContent>*@
     </MudTable>
-
-
-
-
 
     <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
                              RefreshProductList="OnInitializedAsync"
@@ -145,25 +171,27 @@
     <EditImportedProductDialog @bind-VisibleDialog="@_visibleEditImportedProductDialog"
                            RefreshProductList="@OnInitializedAsync"
                            Id="@ImportedProductId" />
-
 }
 @code {
-
+    [Parameter] public bool IsDoubleNested { get; set; }
     [Parameter] public Guid Id { get; set; }
+    [Parameter]public bool ShowCompanyInfo { get; set; }
     [Parameter] public IEnumerable<string> CurrencyDisplay { get; set; } = null!;
     public ImportedOrder? Order { get; set; }
     private List<ImportedProduct>? ImportedProducts { get; set; }
     public ImportedProduct? ImportedProduct { get; set; }
     public Guid ImportedProductId { get; set; }
-
+    public ImportedProduct? EditedImportedProduct { get; set; }
     public bool VisibleCompanySettingsDrawer { get; set; }
     object _selectedValue = 1;
 
     private bool _visibleAddImportedProductDialog;
     private bool _visibleEditImportedProductDialog;
+ 
 
     private bool _oneQuantityPrice = true;
     private bool _isOpenPricePopover;
+    private bool _isOpenCompletePopover;
 
     protected override async Task OnInitializedAsync()
     {
@@ -177,7 +205,17 @@
             }
         }
     }
+    private int GetFreeQuantity(ImportedProduct importedProduct)
+    {  
+       var result = importedProduct.Quantity;
+        if (importedProduct!.PurchaseAtStorageList != null)
+            result -= importedProduct.PurchaseAtStorageList.Select(s => s.Quantity).Sum();
 
+        if (importedProduct.PurchaseAtExportList != null)
+            result -= importedProduct.PurchaseAtExportList.Select(s => s.Quantity).Sum();
+
+        return result;
+    }     
     private void OpenEditImportProductDialog(ImportedProduct importedProduct)
     {
         ImportedProductId = importedProduct.Id;
@@ -189,14 +227,20 @@
         ImportedProductId = importedProductId;
         _isOpenPricePopover = true;
     }
-
+    private async Task OpenEditCompletePopover(Guid importedProductId)
+    {
+        CloseAllPopover();
+        if (EditedImportedProduct == null || EditedImportedProduct.Id != importedProductId)
+            ImportedProductId = importedProductId;
+        EditedImportedProduct = await ImportedProductManager.GetDetailsAsync(importedProductId);
+        
+        _isOpenCompletePopover = true;
+    }
     private void CloseAllPopover()
     {
         _isOpenPricePopover = false;
+        _isOpenCompletePopover = false;
     }
-
-
-
 }
 <style>
     .mud-table-orderD-header {

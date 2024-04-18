@@ -105,6 +105,8 @@
 
     private async Task AddStorage()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         if (await StorageManager.AddAsync(Storage!))
         {
             StorageList ??= new List<Storage>();
@@ -120,6 +122,8 @@
     }
     private async Task UpdateStorage()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         if (await StorageManager.UpdateAsync(Storage!))
         {
             _visibleUpdateStorageDialog = false;
@@ -133,6 +137,8 @@
     }
     private async void RemoveStorage()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление"))
+            return;
         if (await StorageManager.RemoveAsync(Storage!.Id))
         {
             StorageList!.Remove(Storage);

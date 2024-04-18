@@ -196,7 +196,7 @@
     protected override async Task OnInitializedAsync()
     {
         StorageList = await StorageManager.GetAsync();
-        NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync();
+        NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync((Guid)ImportedProduct?.ProductId!);
         if (ImportedProduct!.ImportedOrder!.LocalCurrency != null && 
             ImportedProduct!.ImportedOrder.SupplierCurrency != null && 
             ImportedProduct!.ImportedOrder.TransactionCurrency != null)

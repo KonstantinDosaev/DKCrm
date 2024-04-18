@@ -1,9 +1,11 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Constants;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor;
 
 namespace DKCrm.Server.Services.OrderServices
 {
@@ -21,25 +23,44 @@ namespace DKCrm.Server.Services.OrderServices
             return await _context.ExportedProducts.Include(i => i.ExportedOrder).ToListAsync();
         }
 
-        public async Task<IEnumerable<ExportedProduct>> GetNotEquippedAsync()
+        public async Task<IEnumerable<ExportedProduct>> GetNotEquippedAsync(Guid productId)
         {
-            var status = _context.ExportedOrderStatus.FirstOrDefault(f => f.Value == ExportOrderStatusNames.Delivery)!.Position;
-            return await _context.ExportedProducts.Select(s => new ExportedProduct
-            {
-                Product = s.Product,
-                Quantity = s.Quantity,
-                ExportedOrder = s.ExportedOrder,
-                ExportedOrderId = s.ExportedOrderId,
-                ProductId = s.ProductId,
-                ImportedProducts = s.ImportedProducts,
-                PurchaseAtExports = s.PurchaseAtExports,
-                SoldFromStorage = s.SoldFromStorage,
-                StorageList = s.StorageList
-            })
-                .Where(w => w.Quantity < w.SoldFromStorage!.Select(s => s.Quantity).Sum() + w.PurchaseAtExports!.Select(s => s.Quantity).Sum())
-                .ToListAsync();
+           
+            return await _context.ExportedProducts.Where(w => w.ProductId == productId && (!w.ExportedOrder!.OrderIsOver || w.ExportedOrder == null))
+                .Select(s => new ExportedProduct()
+                {
+                    Id = s.Id,
+                    Product = s.Product,
+                    Quantity = s.Quantity,
+                    ExportedOrder = s.ExportedOrder,
+                    ExportedOrderId = s.ExportedOrderId,
+                    ProductId = s.ProductId,
+                    ImportedProducts = s.ImportedProducts,
+                    PurchaseAtExports = s.PurchaseAtExports,
+                    SoldFromStorage = s.SoldFromStorage,
+                    StorageList = s.StorageList
+                }).ToListAsync();
         }
+        public async Task<IEnumerable<ExportedProduct>> GetAllNotEquippedAsync()
+        {
 
+            return await _context.ExportedProducts.Where(w =>
+                    w.SoldFromStorage!.Select(s=>s.Quantity).Sum() + w.PurchaseAtExports!.Select(s=>s.Quantity).Sum() < w.Quantity
+                                                              && (!w.ExportedOrder!.OrderIsOver || w.ExportedOrder == null))
+                .Select(s => new ExportedProduct()
+                {
+                    Id = s.Id,
+                    Product = s.Product,
+                    Quantity = s.Quantity,
+                    ExportedOrder = s.ExportedOrder,
+                    ExportedOrderId = s.ExportedOrderId,
+                    ProductId = s.ProductId,
+                    ImportedProducts = s.ImportedProducts,
+                    PurchaseAtExports = s.PurchaseAtExports,
+                    SoldFromStorage = s.SoldFromStorage,
+                    StorageList = s.StorageList
+                }).ToListAsync();
+        }
         public async Task<ExportedProduct> GetOneAsync(Guid id)
         {
             var dev = await _context.ExportedProducts
@@ -51,7 +72,119 @@ namespace DKCrm.Server.Services.OrderServices
                 .FirstOrDefaultAsync(a => a.Id == id);
             return dev ?? throw new InvalidOperationException();
         }
+        public async Task<SortPagedResponse<ExportedProduct>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterExportedProductTuple> request)
+        {
+            var data = _context.ExportedProducts.AsQueryable();
+            if (request.FilterTuple is { IsNotComplete: true })
+            {
+                data = data.Where(w =>
+                    w.SoldFromStorage!.Select(s => s.Quantity).Sum() +
+                    w.PurchaseAtExports!.Select(s => s.Quantity).Sum() < w.Quantity
+                    && (!w.ExportedOrder!.OrderIsOver || w.ExportedOrder == null));
+            }
+            data = data.Select(s => new ExportedProduct()
+            {
+                Id = s.Id,
+                Product = s.Product,
+                Quantity = s.Quantity,
+                ExportedOrder = s.ExportedOrder,
+                ExportedOrderId = s.ExportedOrderId,
+                ProductId = s.ProductId,
+                ImportedProducts = s.ImportedProducts,
+                PurchaseAtExports = s.PurchaseAtExports,
+                SoldFromStorage = s.SoldFromStorage,
+                StorageList = s.StorageList
+            });
+           
+            if (request.FilterTuple != null)
+            {
+                if (request.FilterTuple.FilterOrderTuple != null)
+                {
+                    if (request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId != null && request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId != Guid.Empty)
+                    {
+                        data = data.Where(o =>
+                            o.ExportedOrder!.CompanyBuyerId ==
+                            request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId);
+                        if (request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId != null && request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId != Guid.Empty)
+                        {
+                            data = data.Where(o =>
+                                o.ExportedOrder!.EmployeeBuyerId ==
+                                request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId);
+                        }
+                    }
 
+                    if (request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId != null && request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId != Guid.Empty)
+                    {
+                        data = data.Where(o =>
+                            o.ExportedOrder!.OurCompanyId == request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId);
+                        if (request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId != null && request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId != Guid.Empty)
+                        {
+                            data = data.Where(o =>
+                                o.ExportedOrder!.OurEmployeeId ==
+                                request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId);
+                        }
+                    }
+                    if (request.FilterTuple.FilterOrderTuple.CreateDateFirst != null)
+                    {
+                        data = data.Where(w => w.ExportedOrder!.DateTimeCreated!.Value.Date >= request.FilterTuple.FilterOrderTuple.CreateDateFirst.Value.Date);
+                    }
+                    if (request.FilterTuple.FilterOrderTuple.CreateDateLast != null)
+                    {
+                        data = data.Where(w => w.ExportedOrder!.DateTimeCreated!.Value.Date <= request.FilterTuple.FilterOrderTuple.CreateDateLast.Value.Date);
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(request.SearchString))
+            {
+                if (request.SearchInChapter != null)
+                {
+                    switch (request.SearchInChapter)
+                    {
+                        case SearchChapterNames.ProductPartNumber:
+                            {
+                                data = data.Where(w => w.Product!.PartNumber!.ToLower().Contains(request.SearchString.ToLower()));
+                                break;
+                            }
+                        case SearchChapterNames.CompanyName:
+                            data = data.Where(w =>
+                                w.ExportedOrder != null && (w.ExportedOrder.OurCompany != null && w.ExportedOrder.OurCompany.Name.ToLower().Contains(request.SearchString.ToLower()) ||
+                                                            w.ExportedOrder.CompanyBuyer != null && w.ExportedOrder.CompanyBuyer.Name.ToLower().Contains(request.SearchString.ToLower())));
+                            break;
+                    }
+                }
+            }
+
+            var totalItems = data.Count();
+
+            switch (request.SortLabel)
+            {
+                case "create_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.ExportedOrder!.DateTimeCreated);
+                    break;
+                case "update_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeUpdate);
+                    break;
+            }
+
+            List<ExportedProduct> result;
+            if (request.FilterTuple is { GroupByOrder: true })
+            {
+                var groupCollection = data.Select(s => s.ExportedOrderId).Distinct();
+                totalItems = groupCollection.Count();
+                var pagination = groupCollection.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+                result = await data.Where(w=> pagination.Contains(w.ExportedOrderId)).AsSingleQuery().ToListAsync();
+                await _context.ExportedOrders.Where(w => result!.Select(s => s.ExportedOrderId).Contains(w.Id))
+                    .Include(i=>i.CompanyBuyer)
+                    .Include(i=>i.OurCompany).LoadAsync();
+            }
+            else
+            {
+                data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+                result = await data.AsSingleQuery().ToListAsync();
+            }
+            await _context.Products.Where(w => result!.Select(s => s.ProductId).Contains(w.Id)).Include(i => i.Brand).LoadAsync();
+            return new SortPagedResponse<ExportedProduct>() { TotalItems = totalItems, Items = result};
+        }
         public async Task<Guid> PostAsync(ExportedProduct exportedProduct)
         {
             _context.Entry(exportedProduct).State = EntityState.Added;

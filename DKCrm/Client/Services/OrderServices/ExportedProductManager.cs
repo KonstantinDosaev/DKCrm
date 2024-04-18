@@ -1,4 +1,6 @@
-﻿using DKCrm.Shared.Models.OrderModels;
+﻿using DKCrm.Client.Constants;
+using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.OrderModels;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -17,29 +19,35 @@ namespace DKCrm.Client.Services.OrderServices
             return await _httpClient.GetFromJsonAsync<List<ExportedProduct>>("api/ExportedProduct/Get") ?? throw new InvalidOperationException();
         }
 
-        public async Task<List<ExportedProduct>> GetNotEquippedAsync()
+        public async Task<List<ExportedProduct>> GetNotEquippedAsync(Guid productId)
         {
-            return await _httpClient.GetFromJsonAsync<List<ExportedProduct>>("api/ExportedProduct/GetNotEquipped") ?? throw new InvalidOperationException();
+            return await _httpClient.GetFromJsonAsync<List<ExportedProduct>>($"api/ExportedProduct/GetNotEquipped/{productId}") ?? throw new InvalidOperationException();
         }
 
+        public async Task<List<ExportedProduct>> GetAllNotEquippedAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<ExportedProduct>>($"api/ExportedProduct/GetAllNotEquipped") ?? throw new InvalidOperationException();
+        }
         public async Task<ExportedProduct> GetDetailsAsync(Guid id)
         {
             return await _httpClient.GetFromJsonAsync<ExportedProduct>($"api/ExportedProduct/Get/{id}") ?? throw new InvalidOperationException();
         }
+        public async Task<SortPagedResponse<ExportedProduct>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterExportedProductTuple> request)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/ExportedProduct/GetBySortPagedSearchChapter", request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<SortPagedResponse<ExportedProduct>>() ?? throw new InvalidOperationException();
+
+        }
 
         public async Task<bool> UpdateAsync(ExportedProduct item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ExportedProduct/Put", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PutAsJsonAsync("api/ExportedProduct/Put", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ExportedProduct item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ExportedProduct/Post", item, new JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve, PropertyNamingPolicy = null });
+            var result = await _httpClient.PostAsJsonAsync($"api/ExportedProduct/Post", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
@@ -56,11 +64,7 @@ namespace DKCrm.Client.Services.OrderServices
 
         public async Task<bool> UpdateSourcesOrderItems(ExportedProduct item)
         {
-            var result = await _httpClient.PostAsJsonAsync("api/ExportedProduct/UpdateSourcesOrderItems", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PostAsJsonAsync("api/ExportedProduct/UpdateSourcesOrderItems", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
     }

@@ -3,6 +3,7 @@ using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 using DKCrm.Shared.Models.OrderModels;
 using System.Text.Json;
+using DKCrm.Client.Constants;
 
 namespace DKCrm.Client.Services.ProductServices
 {
@@ -31,21 +32,13 @@ namespace DKCrm.Client.Services.ProductServices
 
         public async Task<bool> UpdateAsync(Storage storage)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/Storage", storage, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PutAsJsonAsync("api/Storage", storage, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(Storage storage)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Storage", storage, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PostAsJsonAsync($"api/Storage", storage, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
@@ -67,7 +60,7 @@ namespace DKCrm.Client.Services.ProductServices
 
         public async Task<bool> CancelReserveAProductAsync(SoldFromStorage soldFromStorage)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Storage/CancelReserveAProduct", soldFromStorage, new JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve, PropertyNamingPolicy = null });
+            var result = await _httpClient.PostAsJsonAsync($"api/Storage/CancelReserveAProduct", soldFromStorage, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
     }

@@ -1,11 +1,8 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Server.Interfaces.OrderInterfaces;
-using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models.CompanyModels;
+﻿using DKCrm.Server.Interfaces.OrderInterfaces;
+using DKCrm.Server.Services.OrderServices;
 using DKCrm.Shared.Models.OrderModels;
-using DKCrm.Shared.Models.Products;
+using DKCrm.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Controllers.OrderControllers
 {
@@ -29,21 +26,29 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpGet("{productId:guid}")]
         public async Task<IActionResult> GetNotEquipped(Guid productId) => Ok(await _importedProductService.GetNotEquippedAsync(productId));
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllNotAddToOrder() => Ok(await _importedProductService.GetAllNotAddToOrderAsync());
+
         [HttpPost]
         public async Task<IActionResult> Post(ImportedProduct importedProduct) => Ok(await _importedProductService.PostAsync(importedProduct));
        
         [HttpPut]
         public async Task<IActionResult> Put(ImportedProduct importedProduct) => Ok(await _importedProductService.PutAsync(importedProduct));
 
+        [HttpPost]
+        public async Task<IActionResult> MergeImportedProducts(MergeImportedProductsRequest request) => Ok(await _importedProductService.MergeImportedProductsAsync(request));
+
         [HttpPut("range")]
         public async Task<IActionResult> PutRange(IEnumerable<ImportedProduct> importedProducts) => Ok(await _importedProductService.PutRangeAsync(importedProducts));
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id) => Ok(await _importedProductService.DeleteAsync(id));
 
         [HttpPost("removerange")]
         public async Task<IActionResult> DeleteRange(IEnumerable<ImportedProduct> importedProducts) => Ok(await _importedProductService.DeleteRangeAsync(importedProducts));
 
+        [HttpPost]
+        public async Task<IActionResult> UpdateSourcesOrderItems(ImportedProduct importedProduct) => Ok(await _importedProductService.UpdateSourcesOrderItems(importedProduct));
         //[HttpPost("UpdatePurchaseAtExport")]
         //public async Task<IActionResult> UpdatePurchaseAtExport(PurchaseAtExport purchaseAtExport)
         //{

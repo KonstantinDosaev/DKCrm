@@ -33,6 +33,8 @@
     }
     async Task CreateProduct()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         await ProductManager.AddProductAsync(_productForm!.Product!);
         await RefreshProductList.InvokeAsync();
         _snackBar.Add("Продукт добавлен");

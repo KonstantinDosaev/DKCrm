@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using DKCrm.Client.Constants;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
 
@@ -38,17 +39,13 @@ namespace DKCrm.Client.Services.ProductServices
 
         public async Task<bool> UpdateProductAsync(Product product)
         {
-           var result = await _httpClient.PutAsJsonAsync("api/product", product, new JsonSerializerOptions
-           {
-               ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-               PropertyNamingPolicy = null
-           });
+           var result = await _httpClient.PutAsJsonAsync("api/product", product, JsonOptions.JsonIgnore);
             return result.StatusCode== HttpStatusCode.OK; 
         }
 
         public async Task<bool> UpdateRangeProductsAsync(IEnumerable<Product> products)
         {
-           return (await _httpClient.PutAsJsonAsync("api/product/range", products)).StatusCode== HttpStatusCode.OK;
+           return (await _httpClient.PutAsJsonAsync("api/product/range", products, JsonOptions.JsonIgnore)).StatusCode== HttpStatusCode.OK;
         }    
         public async Task<bool> RemoveAsync(Guid id)
         {
@@ -57,11 +54,7 @@ namespace DKCrm.Client.Services.ProductServices
 
         public async Task AddProductAsync(Product product)
         {
-            await _httpClient.PostAsJsonAsync($"api/product", product, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            await _httpClient.PostAsJsonAsync($"api/product", product, JsonOptions.JsonIgnore);
         }
 
         public async Task RemoveRangeProductsAsync(IEnumerable<Product> products)

@@ -1,6 +1,7 @@
 ﻿using DKCrm.Shared.Models;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Identity;
+using DKCrm.Client.Constants;
 
 namespace DKCrm.Client.Services.UserService
 {
@@ -20,12 +21,12 @@ namespace DKCrm.Client.Services.UserService
 
         public async Task UpdateUser(ApplicationUser user)
         {
-             await _httpClient.PostAsJsonAsync("api/user/update",user);
+             await _httpClient.PostAsJsonAsync("api/user/update",user, JsonOptions.JsonIgnore);
         }
 
         public async Task AddUser(ApplicationUser user)
         { 
-            await _httpClient.PostAsJsonAsync("api/user/add", user);
+            await _httpClient.PostAsJsonAsync("api/user/add", user, JsonOptions.JsonIgnore);
         }
 
         public async Task RemoveUsers(IEnumerable<ApplicationUser> users)
@@ -56,12 +57,12 @@ namespace DKCrm.Client.Services.UserService
 
         public async Task AddUserToRole(RoleRequest request)
         {
-            await _httpClient.PostAsJsonAsync("api/user/addtorole", request);
+            await _httpClient.PostAsJsonAsync("api/user/addtorole", request, JsonOptions.JsonIgnore);
         }
 
         public async Task UpdateUserRole(RoleRequest request)
         {
-            await _httpClient.PostAsJsonAsync("api/user/updateuserrole", request);
+            await _httpClient.PostAsJsonAsync("api/user/updateuserrole", request, JsonOptions.JsonIgnore);
         }
 
         //public async Task AddUserToRoles(RolesRequest request)

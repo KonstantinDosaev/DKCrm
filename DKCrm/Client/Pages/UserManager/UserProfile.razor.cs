@@ -6,33 +6,33 @@ namespace DKCrm.Client.Pages.UserManager
 {
     partial class UserProfile
     {
-       //[Inject] ISnackbar Snackbar { get; set; }
-
         MudForm? UserProfileForm;
 
-        private ApplicationUserModelFluentValidator _applicationUserValidator = new ApplicationUserModelFluentValidator();
+        private readonly ApplicationUserModelFluentValidator _applicationUserValidator = new ApplicationUserModelFluentValidator();
 
         AddressModelFluentValidator _addressValidator = new AddressModelFluentValidator();
 
-        ApplicationUser User = new ApplicationUser();
+        private ApplicationUser _user = new ();
         protected override async Task OnInitializedAsync()
         {
             var state = await _stateProvider.GetAuthenticationStateAsync();
             var userName = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!; ;
-            User = await UserManagerCustom.GetUserDetailsAsync(userName);
+            _user = await UserManagerCustom.GetUserDetailsAsync(userName);
         }
 
 
 
         private async Task Submit()
         {
+            if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+                return;
             if (UserProfileForm != null)
             {
                 await UserProfileForm.Validate();
 
                 if (UserProfileForm.IsValid)
                 {
-                    await UserManagerCustom.UpdateUser(User);
+                    await UserManagerCustom.UpdateUser(_user);
 
                     _snackBar.Add("Изменения применены!");
                 }

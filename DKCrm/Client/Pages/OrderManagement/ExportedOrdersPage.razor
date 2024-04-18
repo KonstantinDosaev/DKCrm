@@ -33,6 +33,7 @@
 </div>
 
 
+
 <MudTable ServerData="@(new Func<TableState, Task<TableData<ExportedOrder>>>(ServerReload))"
           Dense="false"
           Hover="true"
@@ -46,8 +47,6 @@
     <ToolBarContent>
         <MudText Typo="Typo.h6">Список заказов</MudText>
         <MudSpacer />
-
-
         <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
                       Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem;"
                       Adornment="Adornment.Start"
@@ -159,7 +158,7 @@
         @if (OrderId == context.Id && _showDetails)
         {
             <MudTr>
-                <td colspan="8" style="text-align: center">
+                <td colspan="9" style="text-align: center">
                
                     <MudCard Style="background: gainsboro;" Elevation="25">
                        
@@ -257,7 +256,6 @@
     [Parameter] public Guid ChapterId { get; set; }
    
     private List<ExportedOrderStatus>? StatusList { get; set; }
-
     private ExportedOrderStatus? Status { get; set; }
     public ExportedOrder Order { get; set; } = new();
 
@@ -278,7 +276,8 @@
     public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
     protected override async Task OnInitializedAsync()
     {
-        StatusList ??= await ExportedOrderStatusManager.GetAsync();
+      
+  
     }
 
     private async Task<TableData<ExportedOrder>> ServerReload(TableState state)

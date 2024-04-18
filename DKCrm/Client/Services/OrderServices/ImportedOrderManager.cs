@@ -1,4 +1,6 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
+using DKCrm.Client.Constants;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
 
@@ -29,13 +31,13 @@ namespace DKCrm.Client.Services.OrderServices
         }
         public async Task<bool> UpdateAsync(ImportedOrder item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ImportedOrder/Put", item);
+            var result = await _httpClient.PutAsJsonAsync("api/ImportedOrder/Put", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ImportedOrder item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ImportedOrder/Post", item);
+            var result = await _httpClient.PostAsJsonAsync($"api/ImportedOrder/Post", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
@@ -47,6 +49,11 @@ namespace DKCrm.Client.Services.OrderServices
         public async Task<bool> RemoveAsync(Guid id)
         {
             var result = await _httpClient.DeleteAsync($"api/ImportedOrder/Delete/{id}");
+            return result.IsSuccessStatusCode;
+        }
+        public async Task<bool> AddStatusToOrderAsync(ImportedOrderStatusImportedOrder statusOrder)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/ImportedOrder/AddStatusToOrder/add-status", statusOrder, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
     }

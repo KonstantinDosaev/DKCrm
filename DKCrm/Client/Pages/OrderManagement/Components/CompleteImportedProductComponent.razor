@@ -1,0 +1,557 @@
+﻿@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Client.Pages.OrderManagement.Dialogs
+@inject IConfirmationActionService ConfirmationActionService
+@if (ImportedProduct != null)
+{
+    <div class="d-flex flex-column">
+        @if (!_editTotalQuantity)
+        {
+            <div class="d-flex align-items-center">
+                <MudText Typo="Typo.button" Class="fw-bold mr-1" Style="color: darkgray">
+                    Заказано всего:
+                    <span style="color: black">@ImportedProduct.Quantity</span>
+                </MudText>
+                <MudIconButton Size="@Size.Small" OnClick="() => _editTotalQuantity = true" Icon="@Icons.Material.Outlined.Edit"> </MudIconButton>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex">
+                <MudNumericField T="int" Variant="Variant.Outlined"
+                         For="@(() => ImportedProduct.Quantity)"
+                         Immediate="true"
+                         FullWidth="false"
+                         Margin="Margin.Dense"
+                         Min="QuantityInReserveAll"
+                         @bind-Value="ImportedProduct.Quantity" />
+                <MudButton OnClick="UpdateTotalQuantity">Сохранить</MudButton>
+                <MudButton OnClick="ResetEditTotalQuantity">Отменить</MudButton>
+            </div>
+        }
+        <MudText Typo="Typo.button" Class="fw-bold" Style="color: darkgray">
+            Зарезервировано:
+            <span style="color: black; margin-right: 1rem">@QuantityInReserveAll</span>
+            @if (MissingQuantity != 0)
+            {
+                <span style="color: green">(Свободно: @MissingQuantity)</span>
+            }
+            else
+            {
+                <span style="color: darkgray">(Свободно: @MissingQuantity)</span>
+            }
+        </MudText>
+    </div>
+
+    <MudText Typo="Typo.h6">Наличие:</MudText>
+
+    @if (StorageList != null && StorageList.Any())
+    {
+        <table class="table table-bordered table-striped table-sm">
+            <thead>
+                <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                    <th scope="col">Склад</th>
+                    <th scope="col" style="width: 150px">Количество в наличии</th>
+                    <th scope="col" style="width: 150px">Зарезервировано</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @foreach (var item in StorageList)
+                {
+
+                    <tr>
+                        <td>@item.Storage?.Name</td>
+                        <td>@item.Quantity</td>
+                        <td class="d-flex align-items-center justify-content-center">
+                            @if (ImportedProduct.PurchaseAtStorageList != null && ImportedProduct.PurchaseAtStorageList.Select(s => s.StorageId).Contains((Guid)item.StorageId!))
+                            {
+                                var quantitySoldFromStorage = ImportedProduct!.PurchaseAtStorageList!.FirstOrDefault(f => f.ImportedProductId == ImportedProduct.Id && f.StorageId == item.StorageId)!.Quantity;
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                 For="@(() => item.Quantity)"
+                                 Immediate="true"
+                                 FullWidth="false"
+                                 Margin="Margin.Dense"
+                                 Min="0"
+                                 Max="@((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity) + quantitySoldFromStorage)"
+                                 ValueChanged="@(v => SetFromStorageQuantity(v, (Guid)item.StorageId!))" Value="quantitySoldFromStorage" Clearable="true" />
+                            }
+                            else
+                            {
+                                <MudIconButton Disabled="MissingQuantity <= 0"
+                               Color="Color.Primary"
+                               Style="width: 100%; height: 100%"
+                               OnClick="() => SetFromStorageQuantity((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity), (Guid)item.StorageId!)"
+                               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleDown"></MudIconButton>
+                            }
+                            @if (EditedQuantity.Contains((Guid)item.StorageId!) & _errorUpdate)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Error" />
+                            }
+
+                        </td>
+                    </tr>
+                }
+                <tr style="background-color: rgba(100, 255, 0, 0.388)">
+                    <th colspan="3" style="text-align: end">
+                        ВСЕГО:
+                        @if (ImportedProduct.PurchaseAtStorageList != null)
+                        {
+                            @ImportedProduct.PurchaseAtStorageList.Select(s => s.Quantity).Sum()
+                        }
+                    </th>
+                </tr>
+
+
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <MudText Typo="Typo.body1">продукт отсутствует</MudText>
+    }
+
+
+    @if (NotEquippedExportedProducts != null && NotEquippedExportedProducts.Any())
+    {
+        <MudText Typo="Typo.h6">Экспорт:</MudText>
+        <table class="table table-bordered table-striped table-sm">
+            <thead>
+                <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                    <th>№ заказа</th>
+                    <th style="width: 150px">Требуется</th>
+                    <th style="width: 150px">Зарезервировано</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var exportedProduct in NotEquippedExportedProducts)
+                {
+                    var notEquippedQuantity = exportedProduct.Quantity - (exportedProduct.PurchaseAtExports?.Select(s => s.Quantity).Sum() + exportedProduct.SoldFromStorage?.Select(s => s.Quantity).Sum()) ?? 0;
+                    <tr>
+                        <td>@exportedProduct.ExportedOrder?.Number
+                            @if (@exportedProduct.ExportedOrderId != null && !IsDoubleNested)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small' OnClick="() => OpenExportedOrderPopover((Guid)exportedProduct.ExportedOrderId)"></MudIconButton>
+                                @if (@exportedProduct.ExportedOrderId == ShowingExportOrderId && _visibleExportedOrder)
+                                {
+                                    <MudPopover Open="@_visibleExportedOrder"
+                                                Style="min-width: 550px;"
+                                                Class="px-4 pt-4"
+                                                OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                              
+                                        <ExportOrderDetailsComponent Id="(Guid)exportedProduct.ExportedOrderId" 
+                                                                     CurrencyDisplay="@(new[] { "Сделки" })" 
+                                                                     ShowCompanyInfo="true"
+                                                                     IsDoubleNested="true"/>
+                                        <div class="text-end mb-2">
+                                            <MudButton OnClick="(() => _visibleExportedOrder = false)" Color="Color.Info">закрыть</MudButton>
+                                        </div>
+                                    </MudPopover>
+                                }
+                            }</td>
+                        <td>@notEquippedQuantity</td>
+                        <td class="d-flex align-items-center">
+                            @if (ImportedProduct.PurchaseAtExportList != null && ImportedProduct.PurchaseAtExportList.Select(s => s.ExportedProductId).Contains(exportedProduct.Id))
+                            {
+                                var quantityPurchaseAtExport = ImportedProduct.PurchaseAtExportList.FirstOrDefault(f => f.ImportedProductId == ImportedProduct.Id && f.ExportedProductId == exportedProduct.Id)!.Quantity;
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                 For="@(() => quantityPurchaseAtExport)"
+                                 Immediate="true"
+                                 Margin="Margin.Dense"
+                                 Min="0"
+                                 Max="@((MissingQuantity > notEquippedQuantity ? notEquippedQuantity : MissingQuantity) + quantityPurchaseAtExport)"
+                                 ValueChanged="@(v => SetPurchaseAtExportQuantity(v, exportedProduct.Id))"
+                                 Value="quantityPurchaseAtExport" Clearable="true" />
+                            }
+                            else
+                            {
+                                <MudIconButton Disabled="MissingQuantity <= 0"
+                               Color="Color.Primary"
+                               Style="width: 100%; height: 100%"
+                               OnClick="() => SetPurchaseAtExportQuantity((MissingQuantity > notEquippedQuantity ? notEquippedQuantity : MissingQuantity), exportedProduct.Id)"
+                               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleDown"></MudIconButton>
+                            }
+                            @if (EditedQuantity.Contains(exportedProduct.Id) & _errorUpdate)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Error" />
+                            }
+
+                        </td>
+                    </tr>
+                }
+                @if (ImportedProduct.PurchaseAtExportList != null)
+                {
+                    <tr style="background-color: rgba(100, 255, 0, 0.388)">
+                        <th colspan="3" style="text-align: end">
+                            ВСЕГО:
+                            @ImportedProduct.PurchaseAtExportList.Select(s => s.Quantity).Sum()
+                        </th>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
+
+    }
+
+
+
+    @*<MudText Typo="Typo.h6">Импорт:</MudText>
+    @if (ImportedProduct.PurchaseAtExportList != null && ImportedProduct.PurchaseAtExportList.Any())
+    {
+        <table class="table table-bordered table-striped table-sm">
+            <thead>
+                <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                    <th>№ заказа</th>
+                    <th style="width: 150px">Забранное количество</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var purchaseAtExport in ImportedProduct.PurchaseAtExportList)
+                {
+                   
+                    <tr>
+                        <td>@purchaseAtExport.ExportedProduct?.ExportedOrder?.Number</td>
+                        <td class="d-flex align-items-center">
+                           @purchaseAtExport.Quantity
+
+                        </td>
+                    </tr>
+                }
+                @if (ImportedProduct.PurchaseAtExportList != null)
+                {
+                    <tr style="background-color: rgba(100, 255, 0, 0.388)">
+                        <th colspan="3" style="text-align: end">
+                            ВСЕГО:
+                            @ImportedProduct.PurchaseAtExportList.Select(s => s.Quantity).Sum()
+                        </th>
+                    </tr>
+                }
+
+
+            </tbody>
+        </table>
+
+    }
+    else
+    {
+        <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
+
+    }
+    <MudButton OnClick="CreateImportedProduct">Создать заказ на импорт</MudButton>
+    <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
+                             RefreshProductList="OnInitializedAsync" />*@
+}
+<div class="d-flex justify-content-end mb-3">
+    @if (_errorUpdate)
+    {
+        <MudText Color="Color.Error">Возникла ошибка при обновлении</MudText>
+    }
+    @if (EditedQuantity != null && EditedQuantity.Any())
+    {
+        <MudButton Color="Color.Primary"
+               OnClick="() => UpdateSources()"
+               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Check">Сохранить</MudButton>
+    }
+    @*    @if (EditedQuantity!.Any())
+    {
+    <MudButton OnClick="(async () => await CancelEditCallback.InvokeAsync())" Color="Color.Info">отменить</MudButton>
+    }*@
+</div>
+@code
+{
+    [Parameter] public bool IsDoubleNested { get; set; }
+    [Parameter] public EventCallback CancelEditCallback { get; set; }
+    [Parameter] public EventCallback RefreshParentCallback { get; set; }
+    [Parameter] public ImportedProduct? ImportedProduct { get; set; }
+    private List<PurchaseAtStorage>? BackupPurchaseAtStorage { get; set; }
+    private List<PurchaseAtExport>? BackupPurchaseAtExport { get; set; }
+    public List<ProductsInStorage>? StorageList { get; set; }
+    private List<ExportedProduct>? NotEquippedExportedProducts { get; set; }
+    private ImportedProduct? CreatedImportedProduct { get; set; }
+    private Guid ShowingExportOrderId { get; set; }
+    private int MissingQuantity { get; set; }
+    private int QuantityInReserveAll { get; set; }
+    private List<Guid> EditedQuantity { get; set; } = new();
+    private bool _errorUpdate;
+    private bool _soldFromStorageIsEdit;
+    private bool _loadProduct;
+    private bool _editTotalQuantity;
+    private int _backupTotalQuantity;
+    private bool _visibleAddImportedProductDialog;
+    private bool _visibleExportedOrder;
+
+    protected override async Task OnInitializedAsync()
+    {
+        SetBackup();
+    }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender && !_loadProduct && ImportedProduct != null)
+        {
+            _loadProduct = true;
+            CalculateQuantity();
+        }
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_loadProduct && ImportedProduct is { Product.ProductsInStorage: { } })
+            StorageList = ImportedProduct.Product.ProductsInStorage.ToList();
+
+        NotEquippedExportedProducts ??= await ExportedProductManager.GetNotEquippedAsync((Guid)ImportedProduct?.ProductId!);
+    }
+
+    private void SetBackup()
+    {
+        _backupTotalQuantity = ImportedProduct!.Quantity;
+        if (ImportedProduct is { PurchaseAtStorageList: { } })
+            BackupPurchaseAtStorage = ImportedProduct.PurchaseAtStorageList.Select(s => new PurchaseAtStorage()
+                {
+                    StorageId = s.StorageId,
+                     ImportedProductId= s.ImportedProductId,
+                    Quantity = s.Quantity
+                }).ToList();
+        if (ImportedProduct is { PurchaseAtExportList: { } })
+            BackupPurchaseAtExport = ImportedProduct.PurchaseAtExportList.Select(s => new PurchaseAtExport()
+                {
+                    ImportedProductId = s.ImportedProductId,
+                    ExportedProductId = s.ExportedProductId,
+                    Quantity = s.Quantity
+                }).ToList();
+    }
+    private async Task UpdateTotalQuantity()
+    {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
+        if (ImportedProduct != null)
+        {
+
+            if (await ImportedProductManager.UpdateAsync(ImportedProduct))
+            {
+                SetBackup();
+                CalculateQuantity();
+                await RefreshParentCallback.InvokeAsync();
+            }
+            else
+            {
+                ResetEditTotalQuantity();
+            }
+            _editTotalQuantity = false;
+        }
+
+    }
+    private void ResetEditTotalQuantity()
+    {
+        if (ImportedProduct == null) return;
+        ImportedProduct.Quantity = _backupTotalQuantity;
+        _editTotalQuantity = false;
+    }
+
+    private async Task ReloadExportedProduct()
+    {
+        ImportedProduct = await ImportedProductManager.GetDetailsAsync(ImportedProduct!.Id);
+        if (ImportedProduct is { Product.ProductsInStorage: { } })
+            StorageList = ImportedProduct.Product.ProductsInStorage.ToList();
+        SetBackup();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SetFromStorageQuantity(int quantity, Guid storageId)
+    {
+        var purchaseAtStorageInDb = ImportedProduct!.PurchaseAtStorageList?.FirstOrDefault(f => f.StorageId == storageId);
+        var quantityInBackup = 0;
+        if (BackupPurchaseAtStorage != null && BackupPurchaseAtStorage.Any())
+        {
+            var backupPurchaseAtStorage = BackupPurchaseAtStorage.FirstOrDefault(f => f.StorageId == storageId);
+            quantityInBackup = backupPurchaseAtStorage?.Quantity ?? quantityInBackup;
+        }
+        if (purchaseAtStorageInDb != null)
+        {
+            if (purchaseAtStorageInDb.Quantity == quantity)
+            {
+                EditedQuantity.Remove(storageId);
+                return;
+            }
+            purchaseAtStorageInDb.Quantity = quantity;
+        }
+        else
+        {
+            if (quantity < 0)
+                return;
+            ImportedProduct!.PurchaseAtStorageList ??= new List<PurchaseAtStorage>();
+            ImportedProduct!.PurchaseAtStorageList.Add(new PurchaseAtStorage()
+            {
+                StorageId = storageId,
+                ImportedProductId = ImportedProduct.Id,
+                Quantity = quantity
+            });
+        }
+
+        CalculateQuantity();
+        if (!EditedQuantity.Contains(storageId) && quantityInBackup != quantity)
+            EditedQuantity.Add(storageId);
+        if (quantityInBackup == quantity)
+            EditedQuantity.Remove(storageId);
+        StateHasChanged();
+    }
+    private void SetPurchaseAtExportQuantity(int quantity, Guid exportedProductId)
+    {
+        var exportedProduct = NotEquippedExportedProducts?.FirstOrDefault(f => f.Id == exportedProductId);
+        var quantityInBackup = 0;
+        if (BackupPurchaseAtExport != null)
+        {
+            var backupPurchase = BackupPurchaseAtExport.FirstOrDefault(f => f.ExportedProductId == exportedProductId);
+            quantityInBackup = backupPurchase?.Quantity ?? 0;
+        }
+        if (exportedProduct != null)
+        {
+            var purchaseInDb = ImportedProduct!.PurchaseAtExportList?.FirstOrDefault(f => f.ExportedProductId == exportedProductId);
+           
+            if (purchaseInDb != null)
+            {
+                if (purchaseInDb.Quantity == quantity)
+                {
+                    EditedQuantity.Remove(exportedProductId);
+                    return;
+                }
+                purchaseInDb.Quantity = quantity;
+                exportedProduct!.PurchaseAtExports!.FirstOrDefault(f => f.ExportedProductId == exportedProductId)!.Quantity = quantity;
+            }
+            else
+            {
+                var tempPurchase = new PurchaseAtExport()
+                    {
+                        ExportedProductId = exportedProductId,
+                        ImportedProductId = ImportedProduct!.Id,
+                        Quantity = quantity
+                    };
+                exportedProduct.PurchaseAtExports ??= new List<PurchaseAtExport>();
+                exportedProduct.PurchaseAtExports.Add(tempPurchase);
+                ImportedProduct.PurchaseAtExportList ??= new List<PurchaseAtExport>();
+                ImportedProduct.PurchaseAtExportList.Add(tempPurchase);
+            }
+        }
+
+        CalculateQuantity();
+        if (!EditedQuantity.Contains(exportedProductId) && quantityInBackup != quantity)
+            EditedQuantity.Add(exportedProductId);
+        if (quantityInBackup == quantity)
+            EditedQuantity.Remove(exportedProductId);
+        StateHasChanged();
+    }
+    private async Task UpdateSources()
+    {
+        var confirm = await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение");
+        if (!confirm) return;
+        if (await ImportedProductManager.UpdateSourcesOrderItems(ImportedProduct!))
+        {
+            _snackBar.Add($"Изменения сохранены");
+            EditedQuantity.Clear();
+            await ReloadExportedProduct();
+            await RefreshParentCallback.InvokeAsync();
+        }
+        else
+            _errorUpdate = true;
+    }
+    private async void SaveSoldFromStorage(Guid storageId)
+    {
+        //var soldFromStorage = ImportedProduct!.SoldFromStorage!.FirstOrDefault(f => f.StorageId == storageId);
+        //soldFromStorage!.ExportedProduct = ExportedProduct;
+        //if (await StorageManager.ReserveAProductAsync(soldFromStorage!))
+        //{
+        //    _snackBar.Add($"Зарезервировано {soldFromStorage!.Quantity} шт.");
+        //    _soldFromStorageIsEdit = false;
+        //}
+    }
+
+    private void CalculateQuantity()
+    {
+        QuantityInReserveAll = 0;
+        if (ImportedProduct!.PurchaseAtStorageList != null)
+            QuantityInReserveAll += ImportedProduct.PurchaseAtStorageList.Select(s => s.Quantity).Sum();
+
+        if (ImportedProduct.PurchaseAtExportList != null)
+            QuantityInReserveAll += ImportedProduct.PurchaseAtExportList.Select(s => s.Quantity).Sum();
+
+        MissingQuantity = ImportedProduct.Quantity - QuantityInReserveAll;
+    }         
+    private void OpenExportedOrderPopover(Guid exportedOrderId)
+    {
+    //CloseAllPopover();
+        ShowingExportOrderId = exportedOrderId;
+        _visibleExportedOrder = true;
+    }
+    
+    private async void CreateImportedProduct()
+    {
+        //CreatedImportedProduct = new ImportedProduct()
+        //    {
+        //        Product = ExportedProduct!.Product,
+        //        ProductId = ExportedProduct.ProductId,
+        //        ExportedProducts = new List<ExportedProduct>() { ExportedProduct! },
+        //        Quantity = MissingQuantity
+        //    };
+        //CreatedImportedProduct.PurchaseAtExportList = new List<PurchaseAtExport>()
+        //{
+        //    new()
+        //    {
+        //        ExportedProduct = ExportedProduct,
+        //        ExportedProductId = ExportedProduct!.Id,
+        //        Quantity = MissingQuantity,
+        //        ImportedProduct = CreatedImportedProduct,
+        //        ImportedProductId = CreatedImportedProduct.Id
+        //    }
+        //};
+        //if (await ImportedProductManager.AddAsync(CreatedImportedProduct))
+        //{
+        //    _snackBar.Add($"Шаблон на импорт создан");
+        //    await ReloadExportedProduct();
+        //    CalculateQuantity();
+        //}
+    }
+
+    //private async void RemoveSoldFromStorage(SoldFromStorage soldFromStorage)
+    //{
+    //    if (ExportedProduct == null) return;
+    //    if (await StorageManager.CancelReserveAProductAsync(soldFromStorage))
+    //    {
+    //        _snackBar.Add($"Отменена резервация {soldFromStorage.Quantity} шт.");
+
+    //    }
+    //    ExportedProduct.StorageList!.Remove(soldFromStorage.Storage!);
+    //    ExportedProduct.SoldFromStorage!.Remove(soldFromStorage);
+    //    await InvokeAsync(StateHasChanged);
+    //}
+
+    //private async void AddPurchaseAtExport(ImportedProduct importedProduct)
+    //{
+    //    if (ExportedProduct != null)
+    //    {
+    //        ExportedProduct.PurchaseAtExports ??= new List<PurchaseAtExport>();
+    //        ExportedProduct.ImportedProducts ??= new List<ImportedProduct>();
+    //        ExportedProduct.ImportedProducts.Add(importedProduct);
+    //        ExportedProduct.PurchaseAtExports.Add(new PurchaseAtExport()
+    //            {
+    //                ExportedProduct = ExportedProduct,
+    //                ExportedProductId = ExportedProduct.Id,
+    //                ImportedProduct = importedProduct,
+    //                ImportedProductId = importedProduct.Id
+    //            });
+    //    }
+    //    await InvokeAsync(StateHasChanged);
+    //}
+    //private async void RemovePurchaseAtExport(PurchaseAtExport purchaseAtExport)
+    //{
+    //    if (ExportedProduct != null)
+    //    {
+    //        ExportedProduct.ImportedProducts!.Remove(purchaseAtExport.ImportedProduct!);
+    //        ExportedProduct.PurchaseAtExports!.Remove(purchaseAtExport);
+    //    }
+    //    await InvokeAsync(StateHasChanged);
+    //}
+}

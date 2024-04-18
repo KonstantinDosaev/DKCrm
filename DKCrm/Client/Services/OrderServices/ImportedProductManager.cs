@@ -1,8 +1,8 @@
-﻿using DKCrm.Shared.Models;
-using DKCrm.Shared.Models.OrderModels;
-using DKCrm.Shared.Models.Products;
+﻿using DKCrm.Shared.Models.OrderModels;
 using System.Net.Http.Json;
 using System.Text.Json;
+using DKCrm.Client.Constants;
+using DKCrm.Shared.Requests;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -29,23 +29,26 @@ namespace DKCrm.Client.Services.OrderServices
             return await _httpClient.GetFromJsonAsync<List<ImportedProduct>>($"api/ImportedProduct/GetNotEquipped/{productId}") ?? throw new InvalidOperationException();
         }
 
+        public async Task<List<ImportedProduct>> GetAllNotAddToOrderAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<ImportedProduct>>("api/ImportedProduct/GetAllNotAddToOrder") ?? throw new InvalidOperationException();
+        }
+
         public async Task<bool> UpdateAsync(ImportedProduct item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ImportedProduct/Put", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PutAsJsonAsync("api/ImportedProduct/Put", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ImportedProduct item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ImportedProduct/Post", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PostAsJsonAsync($"api/ImportedProduct/Post", item, JsonOptions.JsonIgnore);
+            return result.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> MergeImportedProductsAsync(MergeImportedProductsRequest request)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/ImportedProduct/MergeImportedProducts", request, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
@@ -57,6 +60,12 @@ namespace DKCrm.Client.Services.OrderServices
         public async Task<bool> RemoveAsync(Guid id)
         {
             var result = await _httpClient.DeleteAsync($"api/ImportedProduct/Delete/{id}");
+            return result.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> UpdateSourcesOrderItems(ImportedProduct item)
+        {
+            var result = await _httpClient.PostAsJsonAsync("api/ImportedProduct/UpdateSourcesOrderItems", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
     }

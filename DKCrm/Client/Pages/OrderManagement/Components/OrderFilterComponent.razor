@@ -1,0 +1,226 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Constants
+<div class="order-filter-field">
+    <MudSelect T="Company"
+               Label="Наша компания" Value="CurrentOurCompany" ValueChanged="OnOurCompanyFilter"
+               Variant="Variant.Outlined" Dense="true"
+               Class="select-button"
+               OnOpen="() => LoadCompanyList(TypeCompanyNames.OurCompanies)"
+               ToStringFunc="com => com?.Name!"
+               Clearable OnClearButtonClick="()=> ResetOurCompanyFilter(true)">
+        @if (OurCompanies != null)
+        {
+            foreach (var company in OurCompanies)
+            {
+                <MudSelectItem T="Company" Value="@(company)">@company.Name</MudSelectItem>
+            }
+        }
+    </MudSelect>
+</div>
+@if (CurrentOurCompany is {Employees: { } })
+{  @*ToStringFunc="eml => eml.FirstName?.ToString()! + eml.MiddleName?.ToString()! + eml.LastName?.ToString()!"*@
+    <div class="order-filter-field">
+    <MudSelect  T="Employee"
+                Label="Наш сотрудник" 
+                Value="CurrentOurEmployee"
+                ValueChanged="OnOurEmployeeFilter"
+                Variant="Variant.Outlined" 
+                Dense="true"
+                Class="select-button"
+                Clearable OnClearButtonClick="()=> ResetOurEmployeeFilter(true)">
+
+        @foreach (var item in CurrentOurCompany.Employees)
+        {
+            <MudSelectItem T="Employee" Value="@item">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+        }
+        </MudSelect>
+    </div>
+}
+
+<div class="order-filter-field">
+    <MudSelect T="Company"
+               Label="Компания поставщик" Value="CurrentPartnerCompany" ValueChanged="OnClientCompanyFilter"
+               Variant="Variant.Outlined" Dense="true" Style=""
+               Class="select-button"
+               OnOpen="() => LoadCompanyList(PartnerTypeName)"
+               ToStringFunc="com => com?.Name!" 
+               Clearable OnClearButtonClick="()=> ResetPartnerCompanyFilter(true)">
+        @if (PartnerCompanies != null)
+        {
+            foreach (var company in PartnerCompanies)
+            {
+                <MudSelectItem T="Company" Value="@(company)">@company.Name</MudSelectItem>
+            }
+        }
+    </MudSelect>
+</div>
+@if (CurrentPartnerCompany is {Employees: { } })
+{  @*ToStringFunc="eml => eml.FirstName?.ToString()! + eml.MiddleName?.ToString()! + eml.LastName?.ToString()!"*@
+    <div class="order-filter-field">
+        <MudSelect  T="Employee"
+                    Label="Сотрудник партнера" 
+                    Value="CurrentPartnerEmployee" 
+                    ValueChanged="OnPartnerEmployeeFilter"
+                    Variant="Variant.Outlined" 
+                    Dense="true" Style=""
+                    Class="select-button"
+                    Clearable OnClearButtonClick="()=> ResetPartnerEmployeeFilter(true)">
+
+            @foreach (var item in CurrentPartnerCompany.Employees)
+            {
+                <MudSelectItem T="Employee" Value="@item">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+}tyu
+<MudPaper Class="p-3" 
+          Outlined="true">
+    <MudText Typo="Typo.button" Class=" fs-6">Созданы</MudText>
+    <div class="d-flex align-items-center justify-content-between w-100">
+        @*<MudIconButton 
+            Icon="@(_sortDirection==SortDirection.Descending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+            OnClick="Sorted"
+            Variant="Variant.Filled"
+            Class="mr-2"></MudIconButton>*@
+        <MudText Typo="Typo.button" Class=" fs-6">С</MudText>
+        <div>
+        <MudDatePicker Editable="true"
+                       Date="FilterOrderTuple.CreateDateFirst"
+                       DateChanged="OnFirstDateTimeCreatedFilter"
+                       Mask="@(new DateMask("dd/MM/yyyy"))"
+                       DateFormat="dd/MM/yyyy"
+                       Placeholder="день/месяц/год"
+                       Variant="Variant.Outlined"
+                       Style="width: 200px; margin: 0 1rem;"
+                                      Clearable />
+        </div>
+    </div>
+    <div class="d-flex align-items-center justify-content-between w-100">
+        <MudText Typo="Typo.button" Class=" fs-6">По</MudText>
+        <div>
+        <MudDatePicker Editable="true"
+                       Date="FilterOrderTuple.CreateDateLast"
+                       DateChanged="OnLastDateTimeCreatedFilter"
+                       Mask="@(new DateMask("dd/MM/yyyy"))"
+                       DateFormat="dd/MM/yyyy"
+                       Placeholder="день/месяц/год"
+                       Variant="Variant.Outlined"
+                       Style="width: 200px; margin: 0 1rem"
+                                      Clearable />
+        </div>
+    </div>
+</MudPaper>
+<MudButton Variant="Variant.Outlined" Color="Color.Warning" Class="mt-4" OnClick="ClearAll">Сбросить</MudButton>
+
+@code {
+    private List<Company>? PartnerCompanies { get; set; }
+    private List<Company>? OurCompanies { get; set; }
+    [Parameter] public FilterOrderTuple FilterOrderTuple { get; set; } = null!;
+    [Parameter] public EventCallback<FilterOrderTuple> IsSetOption { get; set; }
+    [Parameter]public string PartnerTypeName { get; set; } = null!;
+    private Company? CurrentPartnerCompany { get; set; }
+    private Company? CurrentOurCompany { get; set; }
+    private Employee? CurrentOurEmployee{ get; set; }
+    private Employee? CurrentPartnerEmployee { get; set; }  
+
+    protected override async Task OnParametersSetAsync()
+    {
+       
+    }
+    private async Task LoadCompanyList(string companyTypeName)
+    {
+        switch (companyTypeName)
+        {
+            case TypeCompanyNames.OurCompanies: OurCompanies ??= await CompanyManager.GetCompaniesByTypeAsync(TypeCompanyNames.OurCompanies);
+                break;
+            case TypeCompanyNames.Suppliers: PartnerCompanies ??= await CompanyManager.GetCompaniesByTypeAsync(TypeCompanyNames.Suppliers);
+                break;
+            case TypeCompanyNames.Customers: PartnerCompanies ??= await CompanyManager.GetCompaniesByTypeAsync(TypeCompanyNames.Customers);
+                break;
+        }
+    }
+   
+    private async Task OnClientCompanyFilter(Company? company)
+    {
+        CurrentPartnerCompany = company; 
+        FilterOrderTuple.CurrentPartnerCompanyId = company?.Id;
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+    private async Task OnPartnerEmployeeFilter(Employee? employee)
+    {
+        CurrentPartnerEmployee = employee;
+        FilterOrderTuple.CurrentPartnerEmployeeId = employee?.Id;
+
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+
+    private async Task OnOurCompanyFilter(Company? company)
+    {
+        CurrentOurCompany = company;
+        FilterOrderTuple.CurrentOurCompanyId = company?.Id;
+
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    } 
+    private async Task OnOurEmployeeFilter(Employee? employee)
+    {
+        CurrentOurEmployee = employee;
+        FilterOrderTuple.CurrentOurEmployeeId = employee?.Id;
+
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+
+    private async Task ResetPartnerCompanyFilter(bool refreshParent)
+    {
+        CurrentPartnerCompany = null;
+        FilterOrderTuple.CurrentPartnerCompanyId =  null;
+
+        await ResetPartnerEmployeeFilter(refreshParent);
+    }
+    private async Task ResetOurCompanyFilter(bool refreshParent)
+    {
+        CurrentOurCompany = null;
+        FilterOrderTuple.CurrentOurCompanyId =  null;
+
+        await ResetOurEmployeeFilter(refreshParent);
+    }
+    private async Task ResetOurEmployeeFilter(bool refreshParent)
+    {
+        CurrentOurEmployee = null;
+        FilterOrderTuple.CurrentOurEmployeeId =  null;
+        if (refreshParent)
+            await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+    private async Task ResetPartnerEmployeeFilter(bool refreshParent)
+    {
+        CurrentPartnerEmployee = null;
+        FilterOrderTuple.CurrentPartnerEmployeeId =  null;
+        if (refreshParent)
+            await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+    private async Task OnFirstDateTimeCreatedFilter(DateTime? dateTime)
+    {
+        FilterOrderTuple.CreateDateFirst = dateTime;
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+ 
+    private async Task OnLastDateTimeCreatedFilter(DateTime? dateTime)
+    {
+        FilterOrderTuple.CreateDateLast = dateTime;
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+    private async Task ClearAll()
+    {
+        await ResetOurCompanyFilter(false);
+        await ResetPartnerCompanyFilter(false);
+        FilterOrderTuple.CreateDateLast = null;
+        FilterOrderTuple.CreateDateFirst = null;
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+
+}
+<style>
+    .order-filter-field {
+        margin: 0 0 20px 0;
+    }
+</style>

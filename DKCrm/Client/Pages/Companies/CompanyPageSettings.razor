@@ -24,6 +24,16 @@
                                                   Step="0.1F"
                                                   Min="0" Max="100"
                                                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" />
+                                <MudNumericField  Label="НДС" @bind-Value="InternalCompanyData.Nds"
+                                                  For="@(() => InternalCompanyData.Nds)"
+                                                  Variant="Variant.Outlined"
+                                                  Required="true"
+                                             RequiredError="Введите НДС"
+                                                  Class="mb-3"
+                                                  Format="0.##"
+                                                  Step="0.1F"
+                                                  Min="0" Max="100"
+                                                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" />
                                 <MudSelect Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="InternalCompanyData.LocalCurrency"
                                            Label="Локальная валюта"
                                            T="string" ToStringFunc="c => c.ToString()"

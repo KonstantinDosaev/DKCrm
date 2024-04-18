@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.OrderModels;
+﻿using DKCrm.Client.Constants;
+using DKCrm.Shared.Models.OrderModels;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.OrderServices
@@ -23,13 +24,13 @@ namespace DKCrm.Client.Services.OrderServices
 
         public async Task<bool> UpdateAsync(ImportedOrderStatus item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ImportedOrderStatus/Put", item);
+            var result = await _httpClient.PutAsJsonAsync("api/ImportedOrderStatus/Put", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ImportedOrderStatus item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ImportedOrderStatus/Post", item);
+            var result = await _httpClient.PostAsJsonAsync($"api/ImportedOrderStatus/Post", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 

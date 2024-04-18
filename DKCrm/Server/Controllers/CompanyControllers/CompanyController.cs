@@ -21,12 +21,16 @@ namespace DKCrm.Server.Controllers.CompanyControllers
             return Ok(await _companyService.GetAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
             return Ok(await _companyService.GetAsync(id));
         }
-
+        [HttpGet("byType/{type}")]
+        public async Task<IActionResult> GetCompaniesByType(string type)
+        {
+            return Ok(await _companyService.GetCompaniesByTypeAsync(type));
+        }
         [HttpPost]
         public async Task<IActionResult> Post(Company company)
         {

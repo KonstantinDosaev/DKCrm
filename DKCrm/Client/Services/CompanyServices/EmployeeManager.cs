@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
+﻿using DKCrm.Client.Constants;
+using DKCrm.Shared.Models.CompanyModels;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.CompanyServices
@@ -23,13 +24,13 @@ namespace DKCrm.Client.Services.CompanyServices
 
         public async Task<bool> UpdateAsync(Employee employee)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/Employee", employee);
+            var result = await _httpClient.PutAsJsonAsync("api/Employee", employee, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(Employee employee)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Employee", employee);
+            var result = await _httpClient.PostAsJsonAsync($"api/Employee", employee, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 

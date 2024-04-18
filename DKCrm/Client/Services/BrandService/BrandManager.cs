@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.Products;
+﻿using DKCrm.Client.Constants;
+using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.BrandService
@@ -23,17 +24,17 @@ namespace DKCrm.Client.Services.BrandService
 
         public async Task UpdateAsync(Brand brand)
         {
-            await _httpClient.PutAsJsonAsync("api/brand", brand);
+            await _httpClient.PutAsJsonAsync("api/brand", brand, JsonOptions.JsonIgnore);
         }
 
         public async Task AddAsync(Brand brand)
         {
-            await _httpClient.PostAsJsonAsync($"api/Brand", brand);
+            await _httpClient.PostAsJsonAsync($"api/Brand", brand, JsonOptions.JsonIgnore);
         }
 
         public async Task RemoveRangeAsync(IEnumerable<Brand> brands)
         {
-            await _httpClient.PostAsJsonAsync($"api/brand/removerange", brands);
+            await _httpClient.PostAsJsonAsync($"api/brand/removerange", brands, JsonOptions.JsonIgnore);
         }
     }
 }

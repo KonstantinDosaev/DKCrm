@@ -41,5 +41,9 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpPost("removerange")]
         public async Task<IActionResult> DeleteRange(IEnumerable<ImportedOrder> importedOrders)
             => Ok(await _importedOrderService.DeleteRangeAsync(importedOrders));
+
+        [HttpPost("add-status")]
+        public async Task<IActionResult> AddStatusToOrder(ImportedOrderStatusImportedOrder statusImportedOrder)
+            => Ok(await _importedOrderService.AddStatusToOrderAsync(statusImportedOrder));
     }
 }

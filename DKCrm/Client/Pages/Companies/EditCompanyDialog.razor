@@ -32,6 +32,8 @@
 
     async Task Edit()
     {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         if (Company != null)
         {
 

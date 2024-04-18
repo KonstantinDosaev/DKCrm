@@ -1,0 +1,408 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Constants
+@using DKCrm.Client.Pages.OrderManagement.Dialogs
+@using Microsoft.VisualBasic
+
+<MudExpansionPanel DisableGutters="true"
+                   Text="Не доукомплектованные заказы на экспорт"
+                   Class="my-1"
+                   Style="background-color:rgba(0,0,0,0.4);color: white; font-size: 20px; font-weight: bold" 
+                   IsExpandedChanged="LoadNotAddToOrderExportedProducts">
+    @if (NotAddToOrderExportedProducts != null    )
+    {
+        
+        <MudTable Class="m-2" Items="@NotAddToOrderExportedProducts" Hover="true" SortLabel="Sort By" T="ExportedProduct"
+              Striped="true" FixedHeader="true"
+              Bordered="true"
+              HeaderClass="mud-table-notequpped-header table-head-bordered"
+              CustomHeader="true"
+              Dense="true"
+              GroupBy="@_groupDefinition"
+              GroupHeaderStyle="background-color:rgba(0,0,0,0.2)" Breakpoint="Breakpoint.Sm"
+              MultiSelection="_multiSelect" SelectedItemsChanged="s => OnSelectExportedProduct(s)" SelectedItems="selectedItems">
+            <ToolBarContent>
+                <MudPaper class="d-flex align-items-center justify-content-between p-2 w-100" Elevation="4" Outlined="true">
+                    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleOrderFilter = true" Style="margin-right: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                        Фильтр
+                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+                    </MudButton>
+                  </MudPaper>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh Class="not-equpped-heder">
+                    <MudSwitch T="bool" CheckedChanged="SetMultiSelect" Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
+                           Color="Color.Info" UnCheckedColor="Color.Default" />
+                </MudTh>
+                <MudTh Class="not-equpped-heder"><MudTableSortLabel SortBy="new Func<ExportedProduct, object>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
+                <MudTh Class="not-equpped-heder"><MudTableSortLabel SortBy="new Func<ExportedProduct, object>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
+                <MudTh Class="not-equpped-heder"><MudTableSortLabel SortBy="new Func<ExportedProduct, object>(x => x.Product!.Brand?.Name!)">Производитель</MudTableSortLabel></MudTh>
+                <MudTh Class="not-equpped-heder"><MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object>(x => x.Quantity)">Требуется</MudTableSortLabel></MudTh>
+                <MudTh Style="text-align: center">Edit</MudTh>
+            </HeaderContent>
+            <GroupHeaderTemplate>
+                <MudTh Class="mud-table-cell-custom-group" colspan="5">@($"{context.GroupName}: {context.Key} Продавец: {context.Items.FirstOrDefault()!.ExportedOrder?.CompanyBuyer?.Name}")</MudTh>
+                </GroupHeaderTemplate>
+            <RowTemplate>
+                <MudTd DataLabel="Парт-номер">
+                        @if (context.Product != null)
+                        {
+                            @context.Product.PartNumber
+                        }
+                    </MudTd>
+                <MudTd DataLabel="Наименование">
+                    @if (context.Product != null)
+                    {
+                        @context.Product.Name
+                    }
+                </MudTd>
+                <MudTd DataLabel="Наименование">
+                    @if (context.Product?.Brand != null)
+                    {
+                        @context.Product.Brand.Name
+                    }
+                </MudTd>
+
+                <MudTd DataLabel="Количество">
+                    @{ var allReserve = GetAllReserveQuantity(context);}
+                    @(context.Quantity - allReserve)
+                </MudTd>
+
+                <MudTd DataLabel="Редактировать">
+                    <MudButton Size="@Size.Small"
+                           OnClick="() => GetImportOrdersByProduct(context.Product?.PartNumber!)"
+                           Style="background-color: rgba(217, 214, 81, 0.431);">
+                        Найти заказы
+                        <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Search" Class="pa-0 ml-2" />
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+
+            <GroupFooterTemplate>
+                <MudTh Class="mud-table-cell-custom-group mud-table-cell-custom-group-footer" colspan="5">
+                    <MudButton Disabled="selectedItems.Any()" Size="@Size.Small" Color="Color.Tertiary" Variant="Variant.Filled">
+                        Создать заказ
+                        <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                    </MudButton>
+                </MudTh>
+            </GroupFooterTemplate>
+             <PagerContent>
+                     <MudPagination SelectedChanged="PageChanged" Rectangular="true"  Count="_totalItems/1" Class="pa-4"/>
+             </PagerContent>
+        </MudTable>
+
+        <div class="text-center">
+            <MudButton Disabled="!selectedItems.Any()"
+                   Size="@Size.Small"
+                   Color="Color.Tertiary"
+                   Variant="Variant.Filled" OnClick="CreateImportedOrder">
+                Создать заказ
+                <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+            </MudButton>
+        </div>
+    }
+</MudExpansionPanel>
+<MudDrawer @bind-Open="@_visibleOrderFilter" Anchor="@Anchor.Start" Elevation="1" Variant="@DrawerVariant.Temporary"  Height="100VH" Width="350px" Class="px-3" >
+    <MudDrawerHeader Class="d-flex align-items-center justify-content-between p-0">
+        <MudText Typo="Typo.h5">Фильтр</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       Size="Size.Large" OnClick="() => _visibleOrderFilter = false" Class="p-0" Color="Color.Default"/>
+    </MudDrawerHeader>
+    <OrderFilterComponent FilterOrderTuple="@_filterOrderTuple"
+                          PartnerTypeName="@TypeCompanyNames.Customers"
+                          IsSetOption="OnFilter"/>
+</MudDrawer>
+<CreateImportedOrderDialog
+    @bind-VisibleDialog="_visibleAddOrderByExportDialog"
+    RefreshProductList="() => _table!.ReloadServerData()" 
+    ImportedProducts="CreatedImportedProducts"/>
+
+@code {
+    [Parameter] public EventCallback<string> GetImportOrdersByProductCallback { get; set; }
+    private MudTable<ExportedProduct>? _table;
+    private List<ImportedProduct>? CreatedImportedProducts { get; set; }
+    private List<ExportedProduct>? NotAddToOrderExportedProducts { get; set; }
+    private List<ExportedOrder>? NotCompleteOrders { get; set; }
+    private string? _searchString = null;
+    public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
+    private TableGroupDefinition<ExportedProduct> _groupDefinition;
+    private HashSet<ExportedProduct> selectedItems = new HashSet<ExportedProduct>(); 
+    private FilterExportedProductTuple _filterProductTuple = new FilterExportedProductTuple();
+    private FilterOrderTuple _filterOrderTuple = new FilterOrderTuple();
+    private int _totalItems;
+    private int _currentPageNumber;
+    private bool _multiSelect; 
+    private bool isActiveMovingProductToOrder;
+    private bool _visibleAddOrderByExportDialog;
+    private bool _visibleOrderFilter;
+    private bool _filterIsOn;
+    TableState state = new TableState();
+    private async Task ServerReloadOrder()
+    {
+        _filterOrderTuple.IsNotCompleteOrders = true;
+        var response = await ExportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
+        {
+            PageIndex = _currentPageNumber,
+            PageSize = 5,
+            SearchString = _searchString,
+            //SortLabel = state.SortLabel,
+            //SortDirection = state.SortDirection,
+            SearchInChapter = SelectedOption,
+            FilterTuple = _filterOrderTuple
+        });
+        NotCompleteOrders = (List<ExportedOrder>?)response.Items;
+        if (NotCompleteOrders != null)
+        {
+            NotAddToOrderExportedProducts ??= new List<ExportedProduct>();
+            foreach (var order in NotCompleteOrders.Where(order => order.ExportedProducts != null))
+            {
+                NotAddToOrderExportedProducts.AddRange(order.ExportedProducts!);
+            }
+        }
+        _totalItems = response.TotalItems;
+    }
+
+    private async Task PageChanged(int i)
+    {
+        _currentPageNumber = i-1;
+        await ServerReloadNotAddToOrderExportedProducts();
+        StateHasChanged();
+
+    }
+    private async Task OnFilter(FilterOrderTuple filterTuple)
+    {
+        if (filterTuple.CurrentPartnerEmployeeId != null 
+            || filterTuple.CurrentOurCompanyId != null
+            || filterTuple.CurrentOurEmployeeId != null 
+            || filterTuple.CurrentPartnerCompanyId != null
+            || filterTuple.CreateDateFirst != null
+            || filterTuple.CreateDateLast != null)
+            _filterIsOn = true;
+        else
+            _filterIsOn = false;
+    
+        _filterProductTuple.FilterOrderTuple = _filterOrderTuple;
+        await ServerReloadNotAddToOrderExportedProducts();
+    }
+    private int GetAllReserveQuantity(ExportedProduct exportedProduct)
+    {
+        var quantityInReserveAll = 0;
+        if (exportedProduct!.SoldFromStorage != null)
+            quantityInReserveAll += exportedProduct.SoldFromStorage.Select(s => s.Quantity).Sum();
+
+        if (exportedProduct.PurchaseAtExports != null)
+            quantityInReserveAll += exportedProduct.PurchaseAtExports.Select(s => s.Quantity).Sum();
+
+        return quantityInReserveAll;
+    }
+    private async Task LoadNotAddToOrderExportedProducts()
+    {
+        if (NotAddToOrderExportedProducts==null || !NotAddToOrderExportedProducts.Any())
+        {
+            //NotAddToOrderImportedProducts = await ExportedProductManager.GetAllNotEquippedAsync();
+            await ServerReloadNotAddToOrderExportedProducts();
+            if (NotAddToOrderExportedProducts != null && NotAddToOrderExportedProducts.Any())
+            {
+                _groupDefinition = new(){
+                    GroupName = "Заказ на экспорт № ",
+                    Indentation = false,
+                    Expandable = true,
+                    Selector = (e) => e.ExportedOrder?.Number, 
+                    IsInitiallyExpanded = false
+                };
+            }
+        }
+    }
+    private async Task<TableData<ExportedProduct>> ServerReloadNotAddToOrderExportedProducts()
+    {
+        _filterProductTuple.IsNotComplete = true;
+        _filterProductTuple.GroupByOrder = true;
+        var response = await ExportedProductManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterExportedProductTuple>()
+        {
+            PageIndex = _currentPageNumber,
+            PageSize = 1,
+            SearchString = _searchString,
+            //SortLabel = state.SortLabel,
+            ////Chapter = Chapter,
+            ////ChapterId = ChapterId,
+            //SortDirection = state.SortDirection,
+            FilterTuple = _filterProductTuple
+        });
+        NotAddToOrderExportedProducts = (List<ExportedProduct>?)response.Items;
+        _totalItems = response.TotalItems;
+        
+        return new TableData<ExportedProduct>() { TotalItems = response.TotalItems, Items = response.Items };
+    }   
+
+    private HashSet<ExportedProduct> OnSelectExportedProduct(HashSet<ExportedProduct> set )
+    {
+        selectedItems = set;
+
+        isActiveMovingProductToOrder = selectedItems.Any();
+        return set;
+    }
+    private void CreateImportedOrder()
+    {
+        CreatedImportedProducts = CreateImportedProductListBySelectedExport();
+        _visibleAddOrderByExportDialog = true;
+    }
+    private async void CreateImportedProduct(ExportedProduct exportedProduct, ImportedOrder order)
+    {
+        var missQuantity = exportedProduct.Quantity - (exportedProduct.PurchaseAtExports?.Select(s => s.Quantity).Sum() +
+                                                       exportedProduct.SoldFromStorage?.Select(s => s.Quantity).Sum());
+        var productIds = order.ImportedProducts?.Select(s => s.ProductId);
+        if (missQuantity <= 0 ||( productIds != null && productIds.Contains(exportedProduct.ProductId)))
+            return;
+        var CreatedImportedProduct = new ImportedProduct()
+        {
+            ImportedOrderId = order.Id,
+            Product = exportedProduct!.Product,
+            ProductId = exportedProduct.ProductId,
+            ExportedProducts = new List<ExportedProduct>() { exportedProduct! },
+            Quantity = (int)missQuantity!
+        };
+        CreatedImportedProduct.PurchaseAtExportList ??= new List<PurchaseAtExport>();
+        CreatedImportedProduct.PurchaseAtExportList.Add(new()
+        {
+            ExportedProduct = exportedProduct,
+            ExportedProductId = exportedProduct!.Id,
+            Quantity = (int)missQuantity,
+            ImportedProduct = CreatedImportedProduct,
+            ImportedProductId = CreatedImportedProduct.Id
+        });
+
+        if (await ImportedProductManager.AddAsync(CreatedImportedProduct))
+        {
+            _snackBar.Add($"Шаблон на импорт создан");
+        }
+    }
+    private void SetMultiSelect()
+    {
+        _multiSelect = _multiSelect != true;
+        if (!_multiSelect)
+            selectedItems.Clear();
+    }
+    private async Task GetImportOrdersByProduct(string partNumber)
+    {
+        await GetImportOrdersByProductCallback.InvokeAsync(partNumber);
+    }
+    private async void MovingProductToOrder(ImportedOrder order)
+    {
+        var successResult = 0;
+        foreach (var exportedProduct in selectedItems)
+        {
+            var importedProductInOrder = order.ImportedProducts?.FirstOrDefault(f => f.ProductId == exportedProduct.ProductId);
+            if (importedProductInOrder != null)
+            {
+                var missQuantity = exportedProduct.Quantity - (exportedProduct.PurchaseAtExports?.Select(s => s.Quantity).Sum() +
+                                                               exportedProduct.SoldFromStorage?.Select(s => s.Quantity).Sum()) ?? 0;
+                if (missQuantity <= 0)
+                    return;
+                var purchaseAtExportInDb = importedProductInOrder.PurchaseAtExportList?.FirstOrDefault(f => f.ExportedProductId == exportedProduct.Id
+                                                                                                          && f.ImportedProductId == importedProductInOrder.Id);
+                if (purchaseAtExportInDb != null)
+                {
+                    purchaseAtExportInDb.Quantity += missQuantity;
+                }
+                else
+                {
+                    importedProductInOrder.PurchaseAtExportList ??= new List<PurchaseAtExport>();
+                    importedProductInOrder.PurchaseAtExportList.Add(new PurchaseAtExport()
+                        {
+                            ExportedProduct = exportedProduct,
+                            ExportedProductId = exportedProduct!.Id,
+                            Quantity = missQuantity,
+                            ImportedProduct = importedProductInOrder,
+                            ImportedProductId = importedProductInOrder.Id
+                        });
+                }
+                if (order.IsAllProductsAreCollected)
+                {
+
+                }
+                importedProductInOrder.Quantity += missQuantity;
+                if (await ImportedProductManager.UpdateAsync(importedProductInOrder))
+                {
+                    successResult += 1;
+                    selectedItems.Remove(exportedProduct);
+                }
+            }
+        }
+        CreatedImportedProducts = CreateImportedProductListBySelectedExport();
+       
+        if (CreatedImportedProducts != null && CreatedImportedProducts.Any())
+        {
+            foreach (var importedProduct in CreatedImportedProducts)
+            {
+                importedProduct.ImportedOrderId = order.Id;
+                await ImportedProductManager.AddAsync(importedProduct);
+            }
+        }
+        var message = selectedItems.Count == successResult ? "Объединение выполнено успешно!" : "Возникли проблемы при объединении!";
+        _snackBar.Add(message);
+    }
+
+    private List<ImportedProduct> CreateImportedProductListBySelectedExport()
+    {
+        var result = new List<ImportedProduct>();
+        foreach (var exportedProduct in selectedItems)
+        {
+            var missQuantity = exportedProduct.Quantity - (exportedProduct.PurchaseAtExports?.Select(s => s.Quantity).Sum() +
+                                                           exportedProduct.SoldFromStorage?.Select(s => s.Quantity).Sum());
+
+            if (missQuantity <= 0)
+                return new List<ImportedProduct>();
+            var createdImportedProduct = new ImportedProduct()
+            {
+                Product = exportedProduct!.Product,
+                ProductId = exportedProduct.ProductId,
+                ExportedProducts = new List<ExportedProduct>() { exportedProduct! },
+                Quantity = (int)missQuantity!
+            };
+            createdImportedProduct.PurchaseAtExportList ??= new List<PurchaseAtExport>();
+            createdImportedProduct.PurchaseAtExportList.Add(new()
+            {
+                ExportedProduct = exportedProduct,
+                ExportedProductId = exportedProduct!.Id,
+                Quantity = (int)missQuantity,
+                ImportedProduct = createdImportedProduct,
+                ImportedProductId = createdImportedProduct.Id
+            });
+
+            result.Add(createdImportedProduct);
+        }
+        return result;
+    }
+    //private async void MovingProductToOrder(ImportedOrder order)
+    //{
+    //    var successResult = 0;
+    //    foreach (var exportedProduct in selectedItems)
+    //    {
+    //        var importedProductInOrder = order.ImportedProducts?.FirstOrDefault(f => f.ProductId == exportedProduct.ProductId);
+    //        if (importedProductInOrder != null)
+    //        {
+    //            var mergeRequest = new MergeImportedProductsRequest()
+    //            {
+    //                PrimaryImportedProductId = importedProductInOrder.Id,
+    //                SecondaryImportedProductId = exportedProduct.Id
+    //            };
+    //            if (await ImportedProductManager.MergeImportedProductsAsync(mergeRequest))
+    //            {
+    //                successResult += 1;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            exportedProduct.ImportedOrderId = order.Id;
+    //            if (await ImportedProductManager.UpdateAsync(exportedProduct))
+    //            {
+    //                successResult += 1; 
+    //            }
+    //        }
+            
+    //    }
+        
+    //    var message = selectedItems.Count == successResult ? "Объединение выполнено успешно!" : "Возникли проблемы при объединении!";
+    //    _snackBar.Add(message);
+   
+    //}
+}

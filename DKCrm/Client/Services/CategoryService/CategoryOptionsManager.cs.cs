@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.Products;
+﻿using DKCrm.Client.Constants;
+using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.CategoryService
@@ -23,13 +24,13 @@ namespace DKCrm.Client.Services.CategoryService
 
         public async Task<bool> UpdateAsync(CategoryOption option)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/CategoryOptions", option);
+            var result = await _httpClient.PutAsJsonAsync("api/CategoryOptions", option, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(CategoryOption option)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/CategoryOptions", option);
+            var result = await _httpClient.PostAsJsonAsync($"api/CategoryOptions", option, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 

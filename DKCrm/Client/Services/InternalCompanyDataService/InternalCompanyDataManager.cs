@@ -1,6 +1,7 @@
 ﻿using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 using DKCrm.Shared.Models;
+using DKCrm.Client.Constants;
 
 namespace DKCrm.Client.Services.InternalCompanyDataService
 {
@@ -19,13 +20,13 @@ namespace DKCrm.Client.Services.InternalCompanyDataService
 
         public async Task<bool> UpdateAsync(InternalCompanyData data)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/InternalCompanyData", data);
+            var result = await _httpClient.PutAsJsonAsync("api/InternalCompanyData", data, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(InternalCompanyData data)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/InternalCompanyData", data);
+            var result = await _httpClient.PostAsJsonAsync($"api/InternalCompanyData", data, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
     }

@@ -8,7 +8,7 @@
 <MudText Typo="Typo.h5">@TitleText</MudText>
 @if (Product != null)
 {
-    <MudForm @ref="ProductFormRef" @bind-IsValid="@_success">
+    <MudForm @ref="ProductFormRef">
         <MudCard>
             <MudCardContent>
 
@@ -208,7 +208,12 @@
             await OnValidSubmit.InvokeAsync();
 
         else
+        {
             await ProductFormRef.Validate();
+            if (ProductFormRef!.IsValid)
+                await OnValidSubmit.InvokeAsync();
+        }
+          
 
     }
     private void ApplyCategory()
@@ -216,7 +221,7 @@
         if (Product!.Category != null) Product.CategoryId = Product.Category.Id;
         _visibleCategorySelectedList = false;
     }
-    private async void AddProductInStorage(Storage storage)
+    private async Task AddProductInStorage(Storage storage)
     {
         Product!.ProductsInStorage ??= new List<ProductsInStorage>(); 
         Product.Storage ??= new List<Storage>();
@@ -224,7 +229,7 @@
         Product.ProductsInStorage.Add(new ProductsInStorage { Storage = storage, StorageId = storage.Id, Product = Product, ProductId = Product.Id});
         await InvokeAsync(StateHasChanged);
     }
-    private async void AddProductOption(CategoryOption categoryOption)
+    private async Task AddProductOption(CategoryOption categoryOption)
     {
         Product!.ProductOption ??= new List<ProductOption>();
         Product.ProductOption.Add(new ProductOption() { CategoryOptionId = categoryOption.Id, CategoryOption = categoryOption, Product = Product, ProductId = Product.Id});

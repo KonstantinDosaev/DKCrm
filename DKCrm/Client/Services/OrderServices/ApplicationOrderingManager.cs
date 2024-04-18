@@ -2,6 +2,7 @@
 using DKCrm.Shared.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
+using DKCrm.Client.Constants;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -30,21 +31,13 @@ namespace DKCrm.Client.Services.OrderServices
         }
         public async Task<bool> UpdateAsync(ApplicationOrderingProducts item)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/ApplicationOrdering/Put", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PutAsJsonAsync("api/ApplicationOrdering/Put", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(ApplicationOrderingProducts item)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/ApplicationOrdering/Post", item, new JsonSerializerOptions
-            {
-                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
-                PropertyNamingPolicy = null
-            });
+            var result = await _httpClient.PostAsJsonAsync($"api/ApplicationOrdering/Post", item, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 

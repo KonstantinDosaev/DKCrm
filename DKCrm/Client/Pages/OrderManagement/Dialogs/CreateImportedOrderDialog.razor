@@ -19,6 +19,7 @@
 
 
 @code {
+    [Parameter] public List<ImportedProduct>? ImportedProducts { get; set; }
     [Parameter] public bool VisibleDialog { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
@@ -26,12 +27,28 @@
     private InternalCompanyData? InternalData { get; set; }
     protected override async Task OnInitializedAsync()
     {
-        InternalData ??= await InternalCompanyDataManager.GetAsync();
-        Order = new ImportedOrder { LocalCurrency = InternalData.LocalCurrency, CurrencyPercent = InternalData.CurrencyPercent, Nds = InternalData.Nds};
+        
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (VisibleDialog)
+        {
+            InternalData ??= await InternalCompanyDataManager.GetAsync();
+            Order = new ImportedOrder
+            {
+                LocalCurrency = InternalData.LocalCurrency, 
+                CurrencyPercent = InternalData.CurrencyPercent, 
+                Nds = InternalData.Nds,
+                ImportedProducts = ImportedProducts
+            };
+        }
     }
 
     async Task Create()
-    {
+    {       
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
         Order!.OurCompanyId = Order.OurCompany!.Id;
         Order.SellersCompanyId = Order.SellersCompany!.Id;
         await ImportedOrderManager.AddAsync(Order);

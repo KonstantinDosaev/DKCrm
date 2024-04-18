@@ -1,5 +1,7 @@
 ﻿using DKCrm.Server.Interfaces.OrderInterfaces;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
+using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers.OrderControllers
@@ -17,8 +19,16 @@ namespace DKCrm.Server.Controllers.OrderControllers
         [HttpGet]
         public async Task<IActionResult> Get() => Ok(await _exportedProductService.GetAsync());
 
+
+        [HttpGet("{productId:guid}")]
+        public async Task<IActionResult> GetNotEquipped(Guid productId) => Ok(await _exportedProductService.GetNotEquippedAsync(productId));
+
         [HttpGet]
-        public async Task<IActionResult> GetNotEquipped() => Ok(await _exportedProductService.GetNotEquippedAsync());
+        public async Task<IActionResult> GetAllNotEquippedAsync()=> Ok(await _exportedProductService.GetAllNotEquippedAsync());
+
+        [HttpPost]
+        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterExportedProductTuple> request)
+            => Ok(await _exportedProductService.GetBySortPagedSearchChapterAsync(request));
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> Get(Guid id) => Ok(await _exportedProductService.GetOneAsync(id));

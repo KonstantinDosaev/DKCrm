@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.Products;
+﻿using DKCrm.Client.Constants;
+using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.CategoryService
@@ -23,19 +24,19 @@ namespace DKCrm.Client.Services.CategoryService
 
         public async Task<bool> UpdateAsync(Category category)
         {
-            var result =await _httpClient.PutAsJsonAsync("api/category", category);
+            var result =await _httpClient.PutAsJsonAsync("api/category", category, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(Category category)
         {
-           var result= await _httpClient.PostAsJsonAsync($"api/category", category);
+           var result= await _httpClient.PostAsJsonAsync($"api/category", category, JsonOptions.JsonIgnore);
            return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> RemoveRangeAsync(IEnumerable<Category> categories)
         {
-            var result=await _httpClient.PostAsJsonAsync($"api/category/removerange", categories);
+            var result=await _httpClient.PostAsJsonAsync($"api/category/removerange", categories, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
          public async Task<bool> RemoveAsync(Guid id)

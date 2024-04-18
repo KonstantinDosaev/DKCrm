@@ -18,7 +18,15 @@ namespace DKCrm.Server.Services.OrderServices
 
         public async Task<IEnumerable<ImportedOrderStatus>> GetAsync()
         {
-            return await _context.ImportedOrderStatus.ToListAsync();
+            var statusList = await _context.ImportedOrderStatus.Include(i => i.ImportedOrders).OrderBy(o => o.Position).ToListAsync();
+            if (statusList == null || !statusList.Any())
+            {
+                if (Initialize())
+                    statusList = await _context.ImportedOrderStatus.Include(i => i.ImportedOrders).ToListAsync();
+                else
+                    throw new InvalidOperationException();
+            }
+            return statusList;
         }
 
         public async Task<ImportedOrderStatus> GetDetailAsync(Guid id)
@@ -67,9 +75,16 @@ namespace DKCrm.Server.Services.OrderServices
             _context.ImportedOrderStatus.AddRange(new[]
             {
                 new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,Value = ImportOrderStatusNames.BeginFormed,IsValueConstant = true},
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ImportOrderStatusNames.CompletedFormed,IsValueConstant = true},
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ImportOrderStatusNames.AwaitingConfirmation,IsValueConstant = true},
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,Value = ImportOrderStatusNames.Delivery,IsValueConstant = true},
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,Value = ImportOrderStatusNames.DeliveryCompleted,IsValueConstant = true},
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,Value = ImportOrderStatusNames.QualityTest,IsValueConstant = true},
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 6,Value = ImportOrderStatusNames.Completed,IsValueConstant = true}
 
             });
             return _context.SaveChangesAsync().IsCompletedSuccessfully;
         }
+
     }
 }

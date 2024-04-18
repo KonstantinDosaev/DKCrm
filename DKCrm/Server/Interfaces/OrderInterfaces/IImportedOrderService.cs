@@ -18,5 +18,6 @@ namespace DKCrm.Server.Interfaces.OrderInterfaces
         Task<int> PutRangeAsync(IEnumerable<ImportedOrder> importedOrders);
         Task<int> DeleteAsync(Guid id);
         Task<int> DeleteRangeAsync(IEnumerable<ImportedOrder> importedOrders);
+        Task<int> AddStatusToOrderAsync(ImportedOrderStatusImportedOrder statusOrder);
     }
 }

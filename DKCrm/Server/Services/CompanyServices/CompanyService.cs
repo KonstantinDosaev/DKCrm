@@ -31,7 +31,24 @@ namespace DKCrm.Server.Services.CompanyServices
                 Inn = s.Inn,
             }).ToListAsync();
         }
-
+        public async Task<IEnumerable<Company>> GetCompaniesByTypeAsync(string companyType)
+        {
+            var companyTypeId = _context.CompanyTypes.FirstOrDefault(f => f.Name == companyType)!.Id;
+            return await _context.Companies.Where(w=>w.CompanyTypeId==companyTypeId).AsNoTracking().Select(s => new Company()
+            {
+                Id = s.Id,
+                ActualAddress = s.ActualAddress,
+                ActualAddressId = s.ActualAddressId,
+                Name = s.Name,
+                Director = s.Director,
+                TagsCompanies = s.TagsCompanies,
+                CompanyTypeId = s.CompanyTypeId,
+                FnsRequestId = s.FnsRequestId,
+                CompanyType = s.CompanyType,
+                Employees = s.Employees,
+                Inn = s.Inn,
+            }).ToListAsync();
+        }
         public async Task<Company> GetAsync(Guid id)
         {
             var company = await _context.Companies.AsNoTracking().Include(i => i.ActualAddress).
@@ -42,6 +59,7 @@ namespace DKCrm.Server.Services.CompanyServices
                 .FirstOrDefaultAsync(a => a.Id == id);
             return company ?? throw new InvalidOperationException();
         }
+
 
         public async Task<Guid> PostAsync(Company company)
         {
