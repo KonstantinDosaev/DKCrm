@@ -56,7 +56,7 @@
     </MudSelect>
 </div>
 @if (CurrentPartnerCompany is {Employees: { } })
-{  @*ToStringFunc="eml => eml.FirstName?.ToString()! + eml.MiddleName?.ToString()! + eml.LastName?.ToString()!"*@
+{ 
     <div class="order-filter-field">
         <MudSelect  T="Employee"
                     Label="Сотрудник партнера" 
@@ -73,7 +73,7 @@
             }
         </MudSelect>
     </div>
-}tyu
+}
 <MudPaper Class="p-3" 
           Outlined="true">
     <MudText Typo="Typo.button" Class=" fs-6">Созданы</MudText>

@@ -11,7 +11,7 @@
     @if (NotAddToOrderExportedProducts != null    )
     {
         
-        <MudTable Class="m-2" Items="@NotAddToOrderExportedProducts" Hover="true" SortLabel="Sort By" T="ExportedProduct"
+        <MudTable Class="m-2 py-2" Items="@NotAddToOrderExportedProducts" Hover="true" SortLabel="Sort By" T="ExportedProduct"
               Striped="true" FixedHeader="true"
               Bordered="true"
               HeaderClass="mud-table-notequpped-header table-head-bordered"
@@ -86,7 +86,15 @@
                 </MudTh>
             </GroupFooterTemplate>
              <PagerContent>
-                     <MudPagination SelectedChanged="PageChanged" Rectangular="true"  Count="_totalItems/1" Class="pa-4"/>
+                 @*<MudPagination SelectedChanged="PageChanged" Rectangular="true" Count="_totalItems/1" Class="pa-4" />*@
+                 @{ var disableLoadMore = NotAddToOrderExportedProducts.GroupBy(g=>g.ExportedOrderId).Count() == _totalItems;}
+                 <div>
+                 <MudButton OnClick="LoadMore"
+                       Disabled="disableLoadMore"
+                       Class="pa-4" 
+                       Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" 
+                       Style="height: 2rem; margin: 1rem 1rem 0.4rem 1rem">Загрузить еще</MudButton>
+                </div>
              </PagerContent>
         </MudTable>
 
@@ -136,36 +144,18 @@
     private bool _visibleOrderFilter;
     private bool _filterIsOn;
     TableState state = new TableState();
-    private async Task ServerReloadOrder()
-    {
-        _filterOrderTuple.IsNotCompleteOrders = true;
-        var response = await ExportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
-        {
-            PageIndex = _currentPageNumber,
-            PageSize = 5,
-            SearchString = _searchString,
-            //SortLabel = state.SortLabel,
-            //SortDirection = state.SortDirection,
-            SearchInChapter = SelectedOption,
-            FilterTuple = _filterOrderTuple
-        });
-        NotCompleteOrders = (List<ExportedOrder>?)response.Items;
-        if (NotCompleteOrders != null)
-        {
-            NotAddToOrderExportedProducts ??= new List<ExportedProduct>();
-            foreach (var order in NotCompleteOrders.Where(order => order.ExportedProducts != null))
-            {
-                NotAddToOrderExportedProducts.AddRange(order.ExportedProducts!);
-            }
-        }
-        _totalItems = response.TotalItems;
-    }
-
+   
     private async Task PageChanged(int i)
     {
         _currentPageNumber = i-1;
         await ServerReloadNotAddToOrderExportedProducts();
         StateHasChanged();
+
+    }
+    private async Task LoadMore()
+    {
+        NotAddToOrderExportedProducts!.AddRange(await ServerReloadNotAddToOrderExportedProducts());
+        _currentPageNumber += 1;
 
     }
     private async Task OnFilter(FilterOrderTuple filterTuple)
@@ -181,7 +171,8 @@
             _filterIsOn = false;
     
         _filterProductTuple.FilterOrderTuple = _filterOrderTuple;
-        await ServerReloadNotAddToOrderExportedProducts();
+        _currentPageNumber = 0;
+        NotAddToOrderExportedProducts = await ServerReloadNotAddToOrderExportedProducts();
     }
     private int GetAllReserveQuantity(ExportedProduct exportedProduct)
     {
@@ -199,9 +190,11 @@
         if (NotAddToOrderExportedProducts==null || !NotAddToOrderExportedProducts.Any())
         {
             //NotAddToOrderImportedProducts = await ExportedProductManager.GetAllNotEquippedAsync();
-            await ServerReloadNotAddToOrderExportedProducts();
+           NotAddToOrderExportedProducts = await ServerReloadNotAddToOrderExportedProducts();
+
             if (NotAddToOrderExportedProducts != null && NotAddToOrderExportedProducts.Any())
             {
+                _currentPageNumber += 1;
                 _groupDefinition = new(){
                     GroupName = "Заказ на экспорт № ",
                     Indentation = false,
@@ -212,7 +205,7 @@
             }
         }
     }
-    private async Task<TableData<ExportedProduct>> ServerReloadNotAddToOrderExportedProducts()
+    private async Task<List<ExportedProduct>> ServerReloadNotAddToOrderExportedProducts()
     {
         _filterProductTuple.IsNotComplete = true;
         _filterProductTuple.GroupByOrder = true;
@@ -227,10 +220,10 @@
             //SortDirection = state.SortDirection,
             FilterTuple = _filterProductTuple
         });
-        NotAddToOrderExportedProducts = (List<ExportedProduct>?)response.Items;
+        //NotAddToOrderExportedProducts = (List<ExportedProduct>?)response.Items;
         _totalItems = response.TotalItems;
         
-        return new TableData<ExportedProduct>() { TotalItems = response.TotalItems, Items = response.Items };
+        return (List<ExportedProduct>?)response.Items!;
     }   
 
     private HashSet<ExportedProduct> OnSelectExportedProduct(HashSet<ExportedProduct> set )
