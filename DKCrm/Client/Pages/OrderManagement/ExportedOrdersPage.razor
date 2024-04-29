@@ -5,6 +5,7 @@
 @using DKCrm.Shared.Models.OrderModels
 @using Microsoft.AspNetCore.Components
 @page "/export_orders"
+@page "/export_orders/{OrderNumber}/{OrderId:guid}/{ShowOrder:bool}"
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
 <MudText Class="m-3" Typo="Typo.h4">Заказы на продажу</MudText>
@@ -53,7 +54,8 @@
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
 
         <div>
-            <MudSelect Style="min-width:14rem" Class="ml-2" T="string" @bind-Value="SelectedOption">
+            <MudSelect Style="min-width: 14rem" Class="ml-2" T="string" @bind-Value="SelectedOption">
+                <MudSelectItem Value="@(SearchChapterNames.OrderNumber)">по номеру заказа</MudSelectItem>
                 <MudSelectItem Value="@(SearchChapterNames.CompanyName)">по компании</MudSelectItem>
                 <MudSelectItem Value="@(SearchChapterNames.ProductPartNumber)">по парт-номеру</MudSelectItem>
             </MudSelect>
@@ -76,12 +78,12 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd
-               Style="@(_showDetails && OrderId == context.Id? "background-color: gainsboro; width: 3rem; margin: 0; padding: 0" : "background-color: none; width: 3rem; margin: 0; padding: 0")"
+               Style="@(ShowDetails && OrderId == context.Id? "background-color: gainsboro; width: 3rem; margin: 0; padding: 0" : "background-color: none; width: 3rem; margin: 0; padding: 0")"
                DataLabel="Номер заказа">
             <MudIconButton Size="@Size.Large" 
                            OnClick="() => OpenOrderDetails(context.Id)" 
                            Color="Color.Default"
-                           Icon="@(_showDetails && OrderId == context.Id? Icons.Material.Filled.KeyboardArrowUp : Icons.Material.Filled.KeyboardArrowDown)"
+                           Icon="@(ShowDetails && OrderId == context.Id? Icons.Material.Filled.KeyboardArrowUp : Icons.Material.Filled.KeyboardArrowDown)"
                            Class="pa-0 ml-2" />
         </MudTd>
         <MudTd DataLabel="Номер заказа">@context.Number</MudTd>
@@ -134,7 +136,7 @@
                 <MudText>Собран</MudText>
             }
         </MudTd>
-        @if (OrderId == context.Id && _showDetails)
+        @if (OrderId == context.Id && ShowDetails)
         {
             <MudTd Style="background-color: gainsboro;" DataLabel="">
 
@@ -155,7 +157,7 @@
     </RowTemplate>
 
     <ChildRowContent>
-        @if (OrderId == context.Id && _showDetails)
+        @if (OrderId == context.Id && ShowDetails)
         {
             <MudTr>
                 <td colspan="9" style="text-align: center">
@@ -254,26 +256,43 @@
 @code {
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
-   
+    [Parameter] public Guid OrderId { get; set; } 
+    [Parameter] public string? OrderNumber { get; set; }
+    [Parameter] public bool ShowDetails { get; set; }
+    [Parameter] public bool ShowOrder { get; set; }
     private List<ExportedOrderStatus>? StatusList { get; set; }
     private ExportedOrderStatus? Status { get; set; }
     public ExportedOrder Order { get; set; } = new();
-
     private string? _searchString = null;
-    public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
+    public string? SelectedOption { get; set; } = SearchChapterNames.OrderNumber;
     private FilterOrderTuple? _filterOrderTuple;
-    private Guid OrderId { get; set; }
     private MudTable<ExportedOrder>? _table;
 
-    private bool _showDetails;
     private bool _visibleAddOrderDialog;
     private bool _visibleUpdateOrderDialog;
     private bool _visibleSettingsOrderDialog; 
     private bool _visibleOrderStatusRemoveDialog;
     private bool _visibleOrderStatusEditDialog;
 
-
     public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
+    protected override void OnParametersSet()
+    {
+        
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (_table != null && OrderNumber != null && ShowOrder)
+            {
+                ShowDetails = true;
+                OnSearch(OrderNumber);
+            }
+        }
+        base.OnAfterRender(firstRender);
+    }
+
     protected override async Task OnInitializedAsync()
     {
       
@@ -330,7 +349,7 @@
     private void OpenOrderDetails(Guid orderId)
     {
         OrderId = orderId;
-        _showDetails = !_showDetails;
+        ShowDetails = !ShowDetails;
     }
 
     private async Task OpenSettingsDialog()

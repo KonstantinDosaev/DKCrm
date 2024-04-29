@@ -109,6 +109,10 @@ namespace DKCrm.Server.Services.OrderServices
                 {
                     switch (request.SearchInChapter)
                     {
+                        case SearchChapterNames.OrderNumber:
+                            data = data.Where(w =>
+                                w.Number != null && w.Number.ToLower().Contains(request.SearchString.ToLower()));
+                            break;
                         case SearchChapterNames.ProductPartNumber:
                             {
                                 var searchedOrdersId = await _context.ImportedProducts.Where(w => w.Product!.PartNumber!.Contains(request.SearchString))

@@ -196,54 +196,6 @@
         <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
 
     }
-
-
-
-    @*<MudText Typo="Typo.h6">Импорт:</MudText>
-    @if (ImportedProduct.PurchaseAtExportList != null && ImportedProduct.PurchaseAtExportList.Any())
-    {
-        <table class="table table-bordered table-striped table-sm">
-            <thead>
-                <tr style="background-color: rgba(0, 169, 255, 0.388)">
-                    <th>№ заказа</th>
-                    <th style="width: 150px">Забранное количество</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var purchaseAtExport in ImportedProduct.PurchaseAtExportList)
-                {
-                   
-                    <tr>
-                        <td>@purchaseAtExport.ExportedProduct?.ExportedOrder?.Number</td>
-                        <td class="d-flex align-items-center">
-                           @purchaseAtExport.Quantity
-
-                        </td>
-                    </tr>
-                }
-                @if (ImportedProduct.PurchaseAtExportList != null)
-                {
-                    <tr style="background-color: rgba(100, 255, 0, 0.388)">
-                        <th colspan="3" style="text-align: end">
-                            ВСЕГО:
-                            @ImportedProduct.PurchaseAtExportList.Select(s => s.Quantity).Sum()
-                        </th>
-                    </tr>
-                }
-
-
-            </tbody>
-        </table>
-
-    }
-    else
-    {
-        <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
-
-    }
-    <MudButton OnClick="CreateImportedProduct">Создать заказ на импорт</MudButton>
-    <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
-                             RefreshProductList="OnInitializedAsync" />*@
 }
 <div class="d-flex justify-content-end mb-3">
     @if (_errorUpdate)
@@ -267,6 +219,7 @@
     [Parameter] public EventCallback CancelEditCallback { get; set; }
     [Parameter] public EventCallback RefreshParentCallback { get; set; }
     [Parameter] public ImportedProduct? ImportedProduct { get; set; }
+    [Parameter] public Guid? ActualExportOrderId { get; set; }
     private List<PurchaseAtStorage>? BackupPurchaseAtStorage { get; set; }
     private List<PurchaseAtExport>? BackupPurchaseAtExport { get; set; }
     public List<ProductsInStorage>? StorageList { get; set; }
@@ -304,6 +257,10 @@
             StorageList = ImportedProduct.Product.ProductsInStorage.ToList();
 
         NotEquippedExportedProducts ??= await ExportedProductManager.GetNotEquippedAsync((Guid)ImportedProduct?.ProductId!);
+        if (ActualExportOrderId != null)
+        {
+            NotEquippedExportedProducts = NotEquippedExportedProducts.Where(w => w.ExportedOrderId == ActualExportOrderId).ToList();
+        }
     }
 
     private void SetBackup()

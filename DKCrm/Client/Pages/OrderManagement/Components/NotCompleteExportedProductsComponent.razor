@@ -40,7 +40,26 @@
                 <MudTh Style="text-align: center">Edit</MudTh>
             </HeaderContent>
             <GroupHeaderTemplate>
-                <MudTh Class="mud-table-cell-custom-group" colspan="5">@($"{context.GroupName}: {context.Key} Продавец: {context.Items.FirstOrDefault()!.ExportedOrder?.CompanyBuyer?.Name}")</MudTh>
+                <MudTh Class="mud-table-cell-custom-group" colspan="5">@($"{context.GroupName}: {context.Key} Продавец: {context.Items.FirstOrDefault()!.ExportedOrder?.CompanyBuyer?.Name}")
+                   
+                <MudIconButton Color="Color.Primary" Size="Size.Medium" Icon="@Icons.Material.Filled.Info" OnClick="() => OpenExportedOrderPopover((Guid)context.Items.FirstOrDefault()!.ExportedOrderId!)"></MudIconButton>
+                @if (context.Items.FirstOrDefault()!.ExportedOrderId == ShowingExportOrderId && _visibleExportedOrder)
+                    {
+                        <MudPopover Open="@_visibleExportedOrder"
+                                    Style="min-width: 550px;"
+                                    Class="px-4 pt-4"
+                                    OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                              
+                            <ExportOrderDetailsComponent Id="ShowingExportOrderId" 
+                                                         CurrencyDisplay="@(new[] { "Сделки" })" 
+                                                         ShowCompanyInfo="true"
+                                                         IsDoubleNested="true"/>
+                            <div class="text-end mb-2">
+                                <MudButton OnClick="(() => _visibleExportedOrder = false)" Color="Color.Info">закрыть</MudButton>
+                            </div>
+                        </MudPopover>
+                    }
+                </MudTh>
                 </GroupHeaderTemplate>
             <RowTemplate>
                 <MudTd DataLabel="Парт-номер">
@@ -77,14 +96,14 @@
                 </MudTd>
             </RowTemplate>
 
-            <GroupFooterTemplate>
+           @* <GroupFooterTemplate>
                 <MudTh Class="mud-table-cell-custom-group mud-table-cell-custom-group-footer" colspan="5">
                     <MudButton Disabled="selectedItems.Any()" Size="@Size.Small" Color="Color.Tertiary" Variant="Variant.Filled">
                         Создать заказ
                         <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
                     </MudButton>
                 </MudTh>
-            </GroupFooterTemplate>
+            </GroupFooterTemplate>*@
              <PagerContent>
                  @*<MudPagination SelectedChanged="PageChanged" Rectangular="true" Count="_totalItems/1" Class="pa-4" />*@
                  @{ var disableLoadMore = NotAddToOrderExportedProducts.GroupBy(g=>g.ExportedOrderId).Count() == _totalItems;}
@@ -100,11 +119,30 @@
 
         <div class="text-center">
             <MudButton Disabled="!selectedItems.Any()"
-                   Size="@Size.Small"
-                   Color="Color.Tertiary"
-                   Variant="Variant.Filled" OnClick="CreateImportedOrder">
+                       Size="@Size.Small"
+                       Color="Color.Tertiary"
+                       Style="color: azure"
+                       Variant="Variant.Filled" OnClick="CreateImportedOrder">
                 Создать заказ
-                <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0" />
+            </MudButton>
+            <MudButton Disabled="!selectedItems.Any()"
+                       Size="@Size.Small"
+                   Color="@(_addToOrderModeIsOn ? Color.Default : Color.Tertiary)"
+                       Variant="Variant.Filled" 
+                       OnClick="SetAddToOrderMode" 
+                       Style="@(_addToOrderModeIsOn ? "color: orange" : "color:azure")">
+                Добавить в заказ
+                <MudIcon Size="@Size.Small" Icon="@Icons.Material.Sharp.PlaylistAdd" Color="@(_addToOrderModeIsOn ? Color.Warning : Color.Default)" Class="pa-0 ml-2" />
+            </MudButton>
+            <MudButton Disabled="!selectedItems.Any()"
+                       Size="@Size.Small"
+                       Color="Color.Default"
+                       Variant="Variant.Filled" 
+                       OnClick="SetMergeInOrderMode"
+                       Style="@(_mergeInOrderModeIsOn ? "color: orange" : "color:azure")">
+                Объединить с существующим
+                <MudIcon Size="@Size.Small" Color="@(_mergeInOrderModeIsOn ? Color.Warning : Color.Default)" Icon="@Icons.Material.Sharp.JoinFull" Class="pa-0 ml-2" />
             </MudButton>
         </div>
     }
@@ -126,6 +164,9 @@
 
 @code {
     [Parameter] public EventCallback<string> GetImportOrdersByProductCallback { get; set; }
+    [Parameter] public EventCallback<bool> AddToOrderModeCallback { get; set; }
+    [Parameter] public EventCallback<bool> MergeInOrderModeCallback { get; set; }
+    [Parameter] public EventCallback<List<ExportedProduct>> GetSelectedItemsCallback { get; set; }
     private MudTable<ExportedProduct>? _table;
     private List<ImportedProduct>? CreatedImportedProducts { get; set; }
     private List<ExportedProduct>? NotAddToOrderExportedProducts { get; set; }
@@ -136,6 +177,7 @@
     private HashSet<ExportedProduct> selectedItems = new HashSet<ExportedProduct>(); 
     private FilterExportedProductTuple _filterProductTuple = new FilterExportedProductTuple();
     private FilterOrderTuple _filterOrderTuple = new FilterOrderTuple();
+    private Guid ShowingExportOrderId { get; set; }
     private int _totalItems;
     private int _currentPageNumber;
     private bool _multiSelect; 
@@ -143,6 +185,10 @@
     private bool _visibleAddOrderByExportDialog;
     private bool _visibleOrderFilter;
     private bool _filterIsOn;
+    private bool _addToOrderModeIsOn;
+    private bool _mergeInOrderModeIsOn;
+    private bool _visibleExportedOrder;
+    private bool _visibleMergeResultDialog;
     TableState state = new TableState();
    
     private async Task PageChanged(int i)
@@ -150,13 +196,11 @@
         _currentPageNumber = i-1;
         await ServerReloadNotAddToOrderExportedProducts();
         StateHasChanged();
-
     }
     private async Task LoadMore()
     {
         NotAddToOrderExportedProducts!.AddRange(await ServerReloadNotAddToOrderExportedProducts());
         _currentPageNumber += 1;
-
     }
     private async Task OnFilter(FilterOrderTuple filterTuple)
     {
@@ -220,9 +264,7 @@
             //SortDirection = state.SortDirection,
             FilterTuple = _filterProductTuple
         });
-        //NotAddToOrderExportedProducts = (List<ExportedProduct>?)response.Items;
         _totalItems = response.TotalItems;
-        
         return (List<ExportedProduct>?)response.Items!;
     }   
 
@@ -231,7 +273,58 @@
         selectedItems = set;
 
         isActiveMovingProductToOrder = selectedItems.Any();
+        if (!isActiveMovingProductToOrder)
+#pragma warning disable CS4014
+            ResetMode();
+#pragma warning restore CS4014
+        
         return set;
+    }
+    private async Task SetAddToOrderMode()
+    {
+        if (_addToOrderModeIsOn)
+        {
+            await ResetMode();
+            return;
+        }
+        if (_mergeInOrderModeIsOn)
+            await ResetMode();
+           
+        _addToOrderModeIsOn = true;
+        await AddToOrderModeCallback.InvokeAsync(_addToOrderModeIsOn);
+    }
+    private async Task SetMergeInOrderMode()
+    {
+        if (_mergeInOrderModeIsOn)
+        {
+            await ResetMode();
+            return;
+        }
+        if (_addToOrderModeIsOn)
+            await ResetMode();
+
+
+                _mergeInOrderModeIsOn = true;
+        await MergeInOrderModeCallback.InvokeAsync(_mergeInOrderModeIsOn);
+    }
+    private async Task ResetMode()
+    {
+        if (_addToOrderModeIsOn)
+        {
+            _addToOrderModeIsOn = false;
+            await AddToOrderModeCallback.InvokeAsync(_addToOrderModeIsOn);
+        }
+        if (_mergeInOrderModeIsOn)
+        {
+            _mergeInOrderModeIsOn = false;
+            await MergeInOrderModeCallback.InvokeAsync(_mergeInOrderModeIsOn);
+        }
+    }
+    private void OpenExportedOrderPopover(Guid exportedOrderId)
+    {
+        //CloseAllPopover();
+        ShowingExportOrderId = exportedOrderId;
+        _visibleExportedOrder = true;
     }
     private void CreateImportedOrder()
     {
@@ -268,17 +361,19 @@
             _snackBar.Add($"Шаблон на импорт создан");
         }
     }
-    private void SetMultiSelect()
+    private async Task SetMultiSelect()
     {
         _multiSelect = _multiSelect != true;
         if (!_multiSelect)
+        {
             selectedItems.Clear();
+            await ResetMode();
+        }
     }
-    private async Task GetImportOrdersByProduct(string partNumber)
-    {
-        await GetImportOrdersByProductCallback.InvokeAsync(partNumber);
-    }
-    private async void MovingProductToOrder(ImportedOrder order)
+
+    private async Task GetImportOrdersByProduct(string partNumber) => await GetImportOrdersByProductCallback.InvokeAsync(partNumber);
+
+    public async void MovingProductToOrder(ImportedOrder order)
     {
         var successResult = 0;
         foreach (var exportedProduct in selectedItems)
@@ -332,6 +427,10 @@
         }
         var message = selectedItems.Count == successResult ? "Объединение выполнено успешно!" : "Возникли проблемы при объединении!";
         _snackBar.Add(message);
+    }
+    public async void MergeProductToOrder(ImportedOrder order)
+    {
+        
     }
 
     private List<ImportedProduct> CreateImportedProductListBySelectedExport()

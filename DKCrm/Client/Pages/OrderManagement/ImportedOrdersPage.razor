@@ -10,7 +10,7 @@
 
 
 <NotCompleteExportedProductsComponent 
-    GetImportOrdersByProductCallback="GetImportOrdersByProduct" />
+    GetImportOrdersByProductCallback="GetImportOrdersByProduct" AddToOrderModeCallback="SetAddToOrderMode" MergeInOrderModeCallback="SetMergeToOrderMode" />
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
         <MudButton Variant="Variant.Filled"
@@ -171,10 +171,15 @@
 
             <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
             @if (isActiveMovingProductToOrder){
-            <MudIconButton Size="@Size.Small"
+            <MudIconButton Size="@Size.Medium"
                           OnClick="() => MovingProductToOrder(context)"
                            Style="background-color: rgba(217, 214, 81, 0.431);"
                            Icon="@Icons.Material.Sharp.ArrowDownward" Class="pa-0 ml-2"/>}
+            @if (isActiveMergeProductToOrder){
+                <MudIconButton Size="@Size.Medium"
+                               OnClick="() => MergeProductToOrder(context)"
+                               Style="background-color: rgba(217, 214, 81, 0.431);"
+                               Icon="@Icons.Material.Sharp.JoinFull" Class="pa-0 ml-2"/>}
         </MudTd>
     </RowTemplate>
     
@@ -201,9 +206,7 @@
     <PagerContent>
         <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
     </PagerContent>
-        </MudTable>
-  
-    
+</MudTable>
 
 <MudDrawer @bind-Open="@_visibleOrderFilter" Anchor="@Anchor.Start" Elevation="1" Variant="@DrawerVariant.Temporary"  Height="100VH" Width="350px" Class="px-3" >
     <MudDrawerHeader Class="d-flex align-items-center justify-content-between p-0">
@@ -229,13 +232,11 @@
     @bind-VisibleDialog="_visibleUpdateOrderDialog"
     RefreshProductList="() => _table!.ReloadServerData()"
     Id="Order.Id"/>
-
-
+    
 @code {
-  
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
-
+    private NotCompleteExportedProductsComponent?_completeExportedProductsComponent;
     private Guid OrderId { get; set; }
     public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
 
@@ -256,13 +257,26 @@
     private bool _visibleOrderFilter;
     private bool _showHistoryOrders;
     private bool _filterIsOn;
-    
+
     private bool isActiveMovingProductToOrder;
+    private bool isActiveMergeProductToOrder;
 
-    private async void MovingProductToOrder(ImportedOrder order)
+    private void MovingProductToOrder(ImportedOrder order)
     {
+        _completeExportedProductsComponent?.MovingProductToOrder(order);
     }
-
+    private void MergeProductToOrder(ImportedOrder order)
+    {
+        _completeExportedProductsComponent?.MergeProductToOrder(order);
+    }
+    private void SetAddToOrderMode(bool isOn)
+    {
+        isActiveMovingProductToOrder = isOn;
+    }  
+    private void SetMergeToOrderMode(bool isOn)
+    {
+        isActiveMergeProductToOrder = isOn;
+    }
     protected override async Task OnInitializedAsync()
     {
        
