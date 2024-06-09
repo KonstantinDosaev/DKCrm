@@ -1,0 +1,204 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using DKCrm.Shared.Models.Chat
+@using DKCrm.Shared.Models.OrderModels
+@page "/comments/{CurrentOrderId:guid}"
+<div  Class="pb-4 d-flex flex-column" Style="height: 95vh">
+    <MudToolBar Dense="true" Class="">
+        @*       <div class="d-flex align-items-center">
+            @if (CurrentChatGroup != null)
+            {
+                <MudText>@(CurrentChatGroup.IsPrivateGroup ? CurrentChatGroup.ApplicationUsers?.FirstOrDefault(f => f.Id != CurrentUser!.Id)?.UserName : CurrentChatGroup.Name)</MudText>
+            }
+        </div>*@
+        <MudSwitch T="bool" CheckedChanged="SetMultiSelect" Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
+                   Color="Color.Info" UnCheckedColor="Color.Default" />
+        @_comments.Count
+        <div class="d-flex align-items-center">
+            @if (SelectedValues.Any())
+            {
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnButtonDeleteClicked(SelectedValues)" Style="margin-right: 1rem;">Удалить</MudButton>
+            }
+        
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                <MudMenuItem>
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               OnClick="() => OnButtonDeleteClicked(_comments.Select(s => s.Id))"
+                               Style="justify-self: flex-start">Очистить переписку</MudButton>
+                </MudMenuItem>
+            </MudMenu>
+        </div>
+    </MudToolBar>
+    <div class="d-flex flex-column px-4 flex-grow-1" style="  overflow-y: scroll;" id="commentContainer">
+        @foreach (var message in _comments)
+        {
+            var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
+
+            <div class="my-2" style="padding: 5px 15px; background-color: whitesmoke; border-radius: 5px; border: solid 1px rgba(181, 181, 181, 0.361); overflow-wrap: break-word">
+                        <MudText Class="px-1" Typo="Typo.body2" Style="font-weight: bold; color: gray; background-color: lightsalmon; border-radius: 5px; width: max-content">@user?.UserName</MudText>
+                        <MudText Typo="Typo.body2"  Style="">@message.Value</MudText>
+                        <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")</MudText>
+                       @if (_multiSelect && message.FromUserId == CurrentUser?.Id)
+                       {
+                           <input type="checkbox" @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs.Value!); }"/>
+                       }
+                    </div>
+          
+        }
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between">
+        <MudTextField T="string" Placeholder="Введите сообщение..." DisableUnderLine="true" Variant="Variant.Outlined" Lines="3" MaxLines="3" AutoGrow="true" Class="field-item mx-4"
+                      @bind-Value="CurrentMessage" For="@(() => CurrentMessage)" />
+        <MudIconButton Variant="Variant.Filled" OnClick="SubmitAsync" Icon="@Icons.Material.Outlined.Send"
+                       Color="Color.Dark"
+                       ButtonType="ButtonType.Button"
+                       Class="h-50 mr-3"></MudIconButton>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid CurrentOrderId { get; set; }
+    [CascadingParameter] public HubConnection? HubConnection { get; set; }
+
+    [Parameter] public string CurrentMessage { get; set; } = null!;
+    public ApplicationUser? CurrentUser { get; set; }
+
+
+    private List<CommentOrder> _comments = new();
+    public List<ApplicationUser> ChatUsers = new();
+
+
+    public List<Guid> SelectedValues = new();
+
+    private bool _multiSelect; 
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await _stateProvider.GetAuthenticationStateAsync();
+        var user = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
+        CurrentUser = await UserManagerCustom.GetUserDetailsAsync(user);
+
+        HubConnection ??= new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
+        if (HubConnection.State == HubConnectionState.Disconnected)
+            await HubConnection.StartAsync();
+        
+        HubConnection.On<CommentOrder, string>("ReceiveComment", async (comment, userName) =>
+        {
+            if (CurrentOrderId == comment.OrderId)
+            {
+                _comments.Add(comment); 
+                StateHasChanged();
+                await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentContainer");
+              
+            }
+            //else if (CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(message.ToChatGroupId))
+            //{
+            //    await GetChatGroupsAsync();
+            //    await HubConnection.SendAsync("ChatNotificationAsync", $"Новое сообщение от {userName}", message.ToChatGroupId, message.FromUserId);
+            //    StateHasChanged();
+           // }
+        });
+        HubConnection.On<Guid>("ReceiveCommandToReloadCommentList", async (orderId) =>
+        {
+            if (CurrentOrderId == orderId)
+            {
+                await LoadComments(orderId);
+                await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentContainer");
+                _snackBar.Add("Изменения в комментариях");
+                 StateHasChanged();
+            }
+        });
+        await GetUsersAsync();
+       
+
+   
+    
+
+        
+            await LoadComments(CurrentOrderId);
+        
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (CurrentOrderId != Guid.Empty && !SelectedValues.Any())
+            await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentContainer");
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (!string.IsNullOrEmpty(CurrentMessage))
+        {
+            var chatHistory = new CommentOrder ()
+                {
+                    Value = CurrentMessage,
+                    OrderId = CurrentOrderId,
+                    FromUserId = CurrentUser!.Id,
+                    DateTimeCreated = DateTime.Now
+                };
+            await CommentOrderManager.SaveCommentAsync(chatHistory);
+            if (HubConnection != null)
+                await HubConnection.SendAsync("SendCommentAsync", chatHistory, CurrentUser.UserName);
+            CurrentMessage = string.Empty;
+        }
+    }
+
+    private async Task LoadComments(Guid orderId)
+    {
+        CurrentOrderId = orderId;
+        _comments = await CommentOrderManager.GetAllForOrderAsync(CurrentOrderId);
+    }
+    private async Task GetUsersAsync()
+    {
+        ChatUsers = await UserManagerCustom.GetUsersAsync();
+    }
+
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    private async void OnButtonDeleteClicked(IEnumerable<Guid> listId)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Внимание",
+            "Подтвердите удаление!",
+            yesText: "Удалить!  ", cancelText: "  Отменить");
+
+        if (result != null && (bool)result)
+        {
+            await RemoveMessage(listId);
+        }
+        StateHasChanged();
+    }
+    private async Task RemoveMessage(IEnumerable<Guid> listId)
+    {
+        await CommentOrderManager.RemoveRangeAsync(listId);
+        SetMultiSelect();
+        await LoadComments(CurrentOrderId);
+        if (HubConnection != null)
+            await HubConnection.SendAsync("ReloadCommentList", CurrentOrderId);
+    }
+    private void  SetMultiSelect()
+    {
+        _multiSelect = !_multiSelect;
+        if (!_multiSelect)
+        {
+            SelectedValues.Clear();
+        }
+    }
+    private void CheckboxClicked(Guid aSelectedId, object aChecked)
+    {
+        if ((bool)aChecked)
+        {
+            if (!SelectedValues.Contains(aSelectedId))
+            {
+                SelectedValues.Add(aSelectedId);
+            }
+        }
+        else
+        {
+            if (SelectedValues.Contains(aSelectedId))
+            {
+                SelectedValues.Remove(aSelectedId);
+            }
+        }
+    }
+}

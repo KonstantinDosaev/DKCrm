@@ -67,21 +67,23 @@ namespace DKCrm.Server.Services.OrderServices
         }
         public async Task<SortPagedResponse<ExportedOrder>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request)
         {
-            var data = _context.ExportedOrders.Select(s => new ExportedOrder()
+            var data = _context.ExportedOrders.Where(w => w.OrderIsOver == request.FilterTuple!.IsHistoryOrders).Select(s => new ExportedOrder()
             {
                 Id = s.Id,
                 Number = s.Number,
                 CurrencyPercent = s.CurrencyPercent,
                 Nds = s.Nds,
-                OurCompany = s.OurCompany,
-                CompanyBuyer = s.CompanyBuyer,
-                OurEmployee = s.OurEmployee,
-                EmployeeBuyer = s.EmployeeBuyer,
+                OurCompany = s.OurCompany,OurCompanyId = s.OurCompanyId,
+                CompanyBuyer = s.CompanyBuyer,CompanyBuyerId = s.CompanyBuyerId,
+                OurEmployee = s.OurEmployee, OurEmployeeId = s.OurEmployeeId,
+                EmployeeBuyer = s.EmployeeBuyer, EmployeeBuyerId = s.EmployeeBuyerId,
                 DateTimeCreated = s.DateTimeCreated,
                 DateTimeUpdate = s.DateTimeUpdate,
                 ExportedProducts = s.ExportedProducts,
                 ExportedOrderStatus = s.ExportedOrderStatus,
                 ExportedOrderStatusExported = s.ExportedOrderStatusExported,
+               IsAllProductsAreCollected = s.IsAllProductsAreCollected
+                
             });
             //if (request.Chapter != null && request.ChapterId != null)
             //{
@@ -90,10 +92,43 @@ namespace DKCrm.Server.Services.OrderServices
 
             if (request.FilterTuple != null)
             {
-                //if (request.FilterTuple.IsNotCompleteOrders)
-                //{
-                //    data = data.Where(o => o.IsAllProductsAreCollected == false);
-                //}
+                if (request.FilterTuple.IsCompleteOrders != null)
+                {
+                    data = data.Where(w => w.IsAllProductsAreCollected == request.FilterTuple.IsCompleteOrders);
+                }
+                if (request.FilterTuple.CurrentStatusId != null && request.FilterTuple.CurrentStatusId != Guid.Empty)
+                {
+                    data = data.Where(o => o.ExportedOrderStatusExported!.OrderBy(o => o.DateTimeCreate!.Value).LastOrDefault()!.ExportedOrderStatusId == request.FilterTuple.CurrentStatusId);
+                }
+                if (request.FilterTuple.CurrentPartnerCompanyId != null && request.FilterTuple.CurrentPartnerCompanyId != Guid.Empty)
+                {
+                    data = data.Where(o => o.CompanyBuyerId == request.FilterTuple.CurrentPartnerCompanyId);
+                    if (request.FilterTuple.CurrentPartnerEmployeeId != null && request.FilterTuple.CurrentPartnerEmployeeId != Guid.Empty)
+                    {
+                        data = data.Where(o => o.EmployeeBuyerId == request.FilterTuple.CurrentPartnerEmployeeId);
+                    }
+                }
+                if (request.FilterTuple.CurrentOurCompanyId != null && request.FilterTuple.CurrentOurCompanyId != Guid.Empty)
+                {
+                    data = data.Where(o => o.OurCompanyId == request.FilterTuple.CurrentOurCompanyId);
+                    if (request.FilterTuple.CurrentOurEmployeeId != null && request.FilterTuple.CurrentOurEmployeeId != Guid.Empty)
+                    {
+                        data = data.Where(o => o.OurEmployeeId == request.FilterTuple.CurrentOurEmployeeId);
+                    }
+                }
+                if (request.FilterTuple.CreateDateFirst != null)
+                {
+                    data = data.Where(w => w.DateTimeCreated!.Value.Date >= request.FilterTuple.CreateDateFirst.Value.Date);
+                }
+                if (request.FilterTuple.CreateDateLast != null)
+                {
+                    data = data.Where(w => w.DateTimeCreated!.Value.Date <= request.FilterTuple.CreateDateLast.Value.Date);
+                }
+                if (request.FilterTuple.UpdateDateFirst != null && request.FilterTuple.UpdateDateLast != null)
+                {
+                    data = data.Where(w => w.DateTimeUpdate!.Value.Date >= request.FilterTuple.UpdateDateFirst.Value.Date
+                                           && w.DateTimeUpdate.Value.Date <= request.FilterTuple.UpdateDateLast.Value.Date);
+                }
                 if (request.FilterTuple.OurCompanies != null && request.FilterTuple.OurCompanies.Any())
                 {
                     data = data.Where(o => request.FilterTuple.OurCompanies.Contains((Guid)o.OurCompanyId!));
@@ -129,7 +164,7 @@ namespace DKCrm.Server.Services.OrderServices
                 }
             }
 
-            var totalItems = data.Count();
+            var totalItems = data.Any() ? data.Count() : 0;
             if (request.SortLabel != null)
             {
                 switch (request.SortLabel)

@@ -16,13 +16,10 @@ namespace DKCrm.Shared.Models
         public virtual Address? AdditionalAddress { get; set; }
         public Guid? AddressId { get; set; }
         public Guid? AdditionalAddressId { get; set; }
-        public virtual ICollection<ChatMessage> ChatMessagesFromUsers { get; set; }
-        public virtual ICollection<ChatMessage> ChatMessagesToUsers { get; set; }
-        public ApplicationUser()
-        {
-            ChatMessagesFromUsers = new HashSet<ChatMessage>();
-            ChatMessagesToUsers = new HashSet<ChatMessage>();
-        }
+        public bool AreThereNewMessages { get; set; }
+        public bool AreThereNewOrderComments { get; set; }
+        public virtual ICollection<LogUsersVisitToChat>? LogUsersVisitToChatList { get; set; }
+        public virtual ICollection<ChatGroup>? ChatGroups { get; set; }
 
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }

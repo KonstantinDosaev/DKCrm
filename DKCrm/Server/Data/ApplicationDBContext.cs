@@ -35,8 +35,7 @@ namespace DKCrm.Server.Data
         public DbSet<Storage> Storages { get; set; } = null!;
         public DbSet<ProductsInStorage> ProductsInStorages { get; set; } = null!;
 
-        public DbSet<CommentOnImportedOrder> CommentOnImportedOrders { get; set; } = null!;
-        public DbSet<CommentOnExportedOrder> CommentOnExportedOrders { get; set; } = null!;
+        public DbSet<CommentOrder> CommentOrders { get; set; } = null!;
         public DbSet<ExportedOrder> ExportedOrders { get; set; } = null!;
         public DbSet<ExportedOrderStatus> ExportedOrderStatus { get; set; } = null!;
         public DbSet<ExportedProduct> ExportedProducts { get; set; } = null!;
@@ -273,6 +272,7 @@ namespace DKCrm.Server.Data
                     .HasForeignKey(d => d.ParentId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
+
         }
 
     }

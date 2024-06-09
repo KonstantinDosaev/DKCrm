@@ -9,29 +9,63 @@
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
 <MudText Class="m-3" Typo="Typo.h4">Заказы на продажу</MudText>
-<div class="d-flex align-items-center px-1">
-    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-right: 1rem;" Color="Color.Tertiary">
-        Добавить заказ
-        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
-    </MudButton>
-
-    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="OpenSettingsDialog" Style="margin-right: 1rem;" Color="Color.Tertiary">
-        Настройки
-        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
-    </MudButton>
-    <div style="width: 228px; margin-right: 0.5rem ">
-        <MudSelect
-            T="string"
-            MultiSelection="true"
-            @bind-SelectedValues="_currencyDisplay" Text="Отображаемая цена"
-            Variant="Variant.Outlined" Dense="true" Style=""
-            Class="select-button">
-            <MudSelectItem T="string" Value="@("Покупателя")">Покупателя</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Локальная")">Локальная</MudSelectItem>
-        </MudSelect>
+<MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
+    <div class="d-flex">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Style="margin-right: 1rem;"
+                   OnClick="OnHistory">
+            @(!_showHistoryOrders ? "История" : "Текущие")
+            <MudIcon Size="@Size.Medium" Icon="@(_showHistoryOrders ? Icons.Material.Sharp.Article : Icons.Material.Sharp.History)" Class="pa-0 ml-2" />
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleOrderFilter=true" Style="margin-right: 1rem;" Color="@(_filterIsOn?Color.Warning : Color.Default)">
+            Фильтр
+            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2" />
+        </MudButton>
+        <div style="width: 228px; margin-right: 1rem;">
+            <MudSelect T="ExportedOrderStatus"
+                       @bind-SelectedValue="CurrentOrderStatus" Placeholder="Статус" Value="CurrentOrderStatus" ValueChanged="OnStatusFilter"
+                       Variant="Variant.Outlined" Dense="true" Style=""
+                       Class="select-button"
+                       OnOpen="LoadStatusList" ToStringFunc="status => status?.Value!" Clearable OnClearButtonClick="ResetStatusFilter">
+                @if (StatusList != null)
+                {
+                    foreach (var status in StatusList)
+                    {
+                        <MudSelectItem T="ExportedOrderStatus" Value="@(status)">@status.Value</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </div>
+        <div style="width: 228px; margin-right: 1rem;">
+            <MudSelect T="bool?"
+                        Placeholder="Укомплектованность" Value="OrdersIsCompleted" ValueChanged="OnCompleteOrderFilter"
+                       Variant="Variant.Outlined" Dense="true" Style=""
+                       Class="select-button">
+                <MudSelectItem T="bool?" Value="true">Укомплектованные</MudSelectItem>
+                <MudSelectItem T="bool?" Value="false">Не укомплектованные</MudSelectItem>
+                <MudSelectItem T="bool?" Value="null">Все</MudSelectItem>
+            </MudSelect>
+        </div>
+        <div style="width: 228px; margin-right: 0.5rem">
+            <MudSelect T="string"
+                       MultiSelection="true"
+                       @bind-SelectedValues="_currencyDisplay" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
+                       Variant="Variant.Outlined" Dense="true"
+                       Class="select-button">
+                <MudSelectItem T="string" Value="@("Продавца")">Продавца</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Локальная")">Локальная</MudSelectItem>
+            </MudSelect>
+        </div>
     </div>
-</div>
+    <div>
+        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-right: 1rem;" Color="Color.Tertiary">
+            Добавить заказ
+            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+        </MudButton>
+    </div>
+</MudPaper>
 
 
 
@@ -136,22 +170,12 @@
                 <MudText>Собран</MudText>
             }
         </MudTd>
-        @if (OrderId == context.Id && ShowDetails)
-        {
-            <MudTd Style="background-color: gainsboro;" DataLabel="">
-
-                <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
-
-            </MudTd>
-        }
-        else
-        {
+        
             <MudTd DataLabel="">
-
                 <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
-
+                <MudIconButton Size="@Size.Medium" OnClick="() => OpenOrderComments(context.Id)" Color="Color.Default" Icon="@Icons.Material.Sharp.Comment" Class="pa-0 ml-2"/>
             </MudTd>
-        }
+        
 
 
     </RowTemplate>
@@ -183,64 +207,24 @@
     </PagerContent>
 </MudTable>
 
-
-
-
-
-<MudDialog @bind-IsVisible="_visibleSettingsOrderDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
-    <DialogContent>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
-        Добавить статус
-        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
-        </MudButton>
-        @if (StatusList != null)
-        {
-
-            foreach (var status in StatusList)
-            {
-               
-            }
-        }
-        <div class="flex-column">
-            @if (StatusList != null)
-            {
-                @foreach (var status in StatusList)
-                {
-                             
-                    <MudPaper Class="pa-4 m-3" Style="display: flex; justify-content: space-between; align-items: center">
-                        <MudText>@status.Value @status.Position</MudText>
-                        <MudButtonGroup>
-                            <MudIconButton OnClick="() => OpenStatusEditDialog(status)" Size="Size.Small" Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" class="ml-auto" />
-                            <MudIconButton OnClick="() => OpenStatusRemoveDialog(status)" Size="Size.Small" Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" class="ml-auto" />
-                        </MudButtonGroup>
-                    </MudPaper>
-                }
-            }
-        </div >
-    </DialogContent>
-</MudDialog>
-
-<MudDialog @bind-IsVisible="_visibleOrderStatusRemoveDialog">
-    <DialogContent>
-
-
-        @if (StatusList != null && StatusList.Any())
-        {
-            <MudText Class="pb-3 text-decoration-underline text-danger">За данным типом закреплены компании!!!Прикрепите их к другому типу</MudText>
-            <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleOrderStatusRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
-        }
-        else
-        {
-            <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
-            <div class="pt-5 justify-content-between d-flex">
-                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="async () => await RemoveStatusType()" Color="Color.Error">Удалить</MudButton>
-                <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleOrderStatusRemoveDialog = false" Color="Color.Primary">Закрыть</MudButton>
-            </div>
-        }
-
-    </DialogContent>
-</MudDialog>
-
+<MudDrawer @bind-Open="@_visibleOrderFilter" Anchor="@Anchor.Start" Elevation="1" Variant="@DrawerVariant.Temporary"  Height="100VH" Width="350px" Class="px-3" >
+    <MudDrawerHeader Class="d-flex align-items-center justify-content-between p-0">
+        <MudText Typo="Typo.h5">Фильтр</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       Size="Size.Large" OnClick="() => _visibleOrderFilter = false" Class="p-0" Color="Color.Default"/>
+    </MudDrawerHeader>
+    <OrderFilterComponent FilterOrderTuple="@_filterOrderTuple"
+                          PartnerTypeName="@TypeCompanyNames.Customers"
+                          IsSetOption="OnFilter"/>
+</MudDrawer>
+@if (_visibleOrderComments)
+{
+    <MudDialog @bind-IsVisible="_visibleOrderComments" DisableSidePadding="true" Style="max-width: 700px;padding: 0" Options="new DialogOptions(){CloseButton = true, FullScreen = true,}">
+        <DialogContent>
+            <OrderCommentComponent CurrentOrderId="OrderId" />
+        </DialogContent>
+    </MudDialog>
+}
 <CreateExportedOrderDialog 
     RefreshProductList="() => _table!.ReloadServerData()"
     @bind-VisibleDialog="_visibleAddOrderDialog"/>
@@ -261,25 +245,32 @@
     [Parameter] public bool ShowDetails { get; set; }
     [Parameter] public bool ShowOrder { get; set; }
     private List<ExportedOrderStatus>? StatusList { get; set; }
-    private ExportedOrderStatus? Status { get; set; }
+
     public ExportedOrder Order { get; set; } = new();
     private string? _searchString = null;
     public string? SelectedOption { get; set; } = SearchChapterNames.OrderNumber;
-    private FilterOrderTuple? _filterOrderTuple;
+    private FilterOrderTuple _filterOrderTuple = new FilterOrderTuple();
     private MudTable<ExportedOrder>? _table;
+    private ExportedOrderStatus? CurrentOrderStatus { get; set; }
+    private bool? OrdersIsCompleted { get; set; }
 
     private bool _visibleAddOrderDialog;
     private bool _visibleUpdateOrderDialog;
-    private bool _visibleSettingsOrderDialog; 
-    private bool _visibleOrderStatusRemoveDialog;
-    private bool _visibleOrderStatusEditDialog;
+    private bool _showHistoryOrders;
+    private bool _visibleOrderFilter; 
+    private bool _filterIsOn;  
+    private bool _visibleOrderComments;
 
     public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
     protected override void OnParametersSet()
     {
         
     }
-
+    protected override async Task OnInitializedAsync()
+    {
+      
+  
+    }
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
@@ -293,15 +284,8 @@
         base.OnAfterRender(firstRender);
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-      
-  
-    }
-
     private async Task<TableData<ExportedOrder>> ServerReload(TableState state)
     {
-       
         var response = await ExportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
         {
             PageIndex = state.Page,
@@ -323,74 +307,76 @@
         SelectedOption = SelectedOption != "null" ? SelectedOption : null;
         _table!.ReloadServerData();
     }
+    private void OnHistory()
+    {
+        _showHistoryOrders = !_showHistoryOrders;
+        _filterOrderTuple.IsHistoryOrders = !_filterOrderTuple.IsHistoryOrders;
+        _table!.ReloadServerData();
+    }
     private void SelectSearchOption(string text)
     {
         SelectedOption = text!="null"? text : null;
     }
     private void OnFilter(FilterOrderTuple filterTuple)
     {
+        if (filterTuple.CurrentPartnerEmployeeId != null 
+            || filterTuple.CurrentOurCompanyId != null 
+            || filterTuple.CurrentOurEmployeeId != null 
+            || filterTuple.CurrentPartnerCompanyId != null 
+            || filterTuple.CreateDateFirst != null
+            || filterTuple.CreateDateLast != null)
+        {
+            _filterIsOn = true;
+        }
+        else
+        {
+            _filterIsOn = false;
+        }
         _filterOrderTuple = filterTuple;
         _table!.ReloadServerData();
     }
-
-
+    
     private void OpenUpdateOrderDialog(ExportedOrder order)
     {
         Order = order;
         _visibleUpdateOrderDialog = true;
     }
-    
-    //private void RowClickEvent(TableRowClickEventArgs<ExportedOrder> tableRowClickEventArgs)
-    //{
-    ////row = row == "my-table-row-w" ? "my-table-row" : "my-table-row-w";
-    //    ProductId = tableRowClickEventArgs.Item.Id;
-    //    _showDetails = !_showDetails;
-    //}
+
     private void OpenOrderDetails(Guid orderId)
     {
         OrderId = orderId;
         ShowDetails = !ShowDetails;
     }
+    private void OpenOrderComments(Guid orderId)
+    {
+        OrderId = orderId;
+        _visibleOrderComments = !_visibleOrderComments;
+    }
+    private async Task LoadStatusList()
+    {
+        StatusList ??= await ExportedOrderStatusManager.GetAsync();
+    }
+    private void OnStatusFilter(ExportedOrderStatus? status)
+    {
+        CurrentOrderStatus = status;
+        _filterOrderTuple.CurrentStatusId = status?.Id;
 
-    private async Task OpenSettingsDialog()
-    {
-        StatusList = await ExportedOrderStatusManager.GetAsync();
-        _visibleSettingsOrderDialog = true;
+        _table!.ReloadServerData();
     }
-   
-    //public async void AddOrderStatus()
-    //{
-    //    var tempCompanyType = new CompanyType() { Name = _valueString };
-    //    if (await CompanyTypeManager.AddAsync(tempCompanyType))
-    //    {
-    //        CompanyTypes ??= new List<CompanyType>();
-    //        CompanyTypes.Add(tempCompanyType);
-    //        await GetCompanyTypes();
-    //    }
-    //}
-    public void OpenStatusEditDialog(ExportedOrderStatus status)
+    private void OnCompleteOrderFilter(bool? isCompleteOrder)
     {
-        _visibleOrderStatusEditDialog = true;
-        Status = status;
+        OrdersIsCompleted = isCompleteOrder;
+        _filterOrderTuple.IsCompleteOrders = isCompleteOrder;
+        _table!.ReloadServerData();
     }
-    public void OpenStatusRemoveDialog(ExportedOrderStatus status)
+
+    private void ResetStatusFilter()
     {
-        _visibleOrderStatusRemoveDialog = true;
-        Status = status;
+        CurrentOrderStatus = null;
+        _filterOrderTuple.CurrentStatusId = null;
+        _table!.ReloadServerData();
     }
-    private async Task RemoveStatusType()
-    {
-        if (await ExportedOrderStatusManager.RemoveAsync(Status!.Id))
-        {
-            _visibleOrderStatusRemoveDialog = false;
-            await InvokeAsync(StateHasChanged);
-            _snackBar.Add("Тип компании удален!");
-        }
-        else
-        {
-            _snackBar.Add("Ошибка при удалении!");
-        }
-    }
+    private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
 }
 <style>
     .mud-table-header {
@@ -411,7 +397,7 @@
         
     }
     .select-button .mud-input-slot.mud-input-root-outlined {
-            padding: 0.67rem 0.8rem !important;
+           padding: 0.67rem 0.8rem !important;*/
             text-transform: uppercase !important;
         font-size: 0.85rem !important;
         

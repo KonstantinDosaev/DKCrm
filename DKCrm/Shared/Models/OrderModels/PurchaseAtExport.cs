@@ -5,7 +5,6 @@ namespace DKCrm.Shared.Models.OrderModels
 {
     public class PurchaseAtExport
     {
-    
         public int Quantity { get; set; }
 
         public Guid ExportedProductId { get; set; }

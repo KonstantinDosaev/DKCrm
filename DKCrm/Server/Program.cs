@@ -10,6 +10,7 @@ using DKCrm.Server.Services.ProductServices;
 using DKCrm.Shared.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ var connectionStringUser = builder.Configuration.GetConnectionString("UserContex
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
 
 builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IDocumentService, DocumentService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IChatService, ChatService>();
 builder.Services.AddTransient<IInternalCompanyDataService, InternalCompanyDataService>();
@@ -40,6 +42,7 @@ builder.Services.AddTransient<IImportedOrderService, ImportedOrderService>();
 builder.Services.AddTransient<IExportedOrderStatusServices, ExportedOrderStatusService>();
 builder.Services.AddTransient<IImportedOrderStatusService, ImportedOrderStatusService>();
 builder.Services.AddTransient<IApplicationOrderingService, ApplicationOrderingService>();
+builder.Services.AddTransient<IOrderCommentsService, OrderCommentsService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
@@ -89,6 +92,13 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions()
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"StaticFiles")),
+    RequestPath = new PathString("/StaticFiles")
+});
 
 app.MapRazorPages();
 app.MapControllers();

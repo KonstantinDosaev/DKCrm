@@ -1,18 +1,23 @@
 ﻿
 using System.Text.Json.Serialization;
+using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.Chat
 {
-    public class ChatMessage
+    public class ChatMessage: ISoftDelete
     {
         public Guid Id { get; set; }
         public string FromUserId { get; set; } = null!;
-        public string ToUserId { get; set; } = null!;
+        public Guid ToChatGroupId { get; set; }
         public string Message { get; set; } = null!;
         public DateTime CreatedDate { get; set; }
 
         public virtual ApplicationUser? FromUser { get; set; }
 
-        public virtual ApplicationUser? ToUser { get; set; }
+        public virtual ChatGroup? ToChatGroup { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

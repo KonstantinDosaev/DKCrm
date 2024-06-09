@@ -1,9 +1,12 @@
-﻿using DKCrm.Shared.Models.Chat;
+﻿using System.Formats.Asn1;
+using System.Text;
+using DKCrm.Shared.Models.Chat;
 using DKCrm.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
+using DKCrm.Shared.Models.UserAuth;
 
 namespace DKCrm.Client.Pages
 {
@@ -12,99 +15,196 @@ namespace DKCrm.Client.Pages
 
         [CascadingParameter] public HubConnection? HubConnection { get; set; }
         [Parameter] public string CurrentMessage { get; set; } = null!;
-        [Parameter] public string CurrentUserId { get; set; } = null!;
-        [Parameter] public string CurrentUserEmail { get; set; } = null!;
-        private List<ChatMessage> messages = new List<ChatMessage>();
-
-        public List<ApplicationUser> ChatUsers = new List<ApplicationUser>();
+        private List<ChatMessage> _messages = new();
+        private List<Guid>? CurrentUserChatGroupsIds { get; set; }
+        public List<ApplicationUser> AllChatUsers = new();
+        public List<ApplicationUser> NotHavePrivateChatUsers = new();
         [Parameter] public string ContactEmail { get; set; } = null!;
         public string ContactName { get; set; } = null!;
-        public string CurrentUserName { get; set; } = null!;
-        [Parameter] public string ContactId { get; set; } = null!;
-
+        public ApplicationUser? CurrentUser { get; set; }
+        [Parameter] public Guid CurrentChatId { get; set; }
+        public ChatGroup? CurrentChatGroup { get; set; }
+        public List<ChatGroup> ChatGroups = new();
         public List<Guid> SelectedValues = new();
-        //private bool _checked;
-        //private Guid _value;
+        public List<string> SelectedUser = new();
+        private string? CreatedChatName { get; set; }
+        private MudForm? _formCreateChatGroup;
+        private bool _successFormCreateChatGroup;
+        private bool _addUserDialogIsOpen;
+        private bool _usersInChatDialogIsOpen;
+
+        private bool _collapseContacts = true;
+        private string? ContactsCssClass => _collapseContacts ? "collapse-contacts" : null;
+        private bool _collapseMessageBoard = true;
+        private string? MessageBoardCssClass => CurrentChatId==Guid.Empty ? "collapse-message" : null;
         protected override async Task OnInitializedAsync()
         {
-            if (HubConnection == null)
-            {
-                HubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
-            }
+            var state = await _stateProvider.GetAuthenticationStateAsync();
+            var user = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
+            CurrentUser = await UserManagerCustom.GetUserDetailsAsync(user);
+
+            HubConnection ??= new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
+
             if (HubConnection.State == HubConnectionState.Disconnected)
-            {
                 await HubConnection.StartAsync();
-            }
+            
             HubConnection.On<ChatMessage, string>("ReceiveMessage", async (message, userName) =>
             {
-                if ((ContactId == message.ToUserId && CurrentUserId == message.FromUserId) || (ContactId == message.FromUserId && CurrentUserId == message.ToUserId))
+                if (CurrentChatId == message.ToChatGroupId)
                 {
-
-                    if ((ContactId == message.ToUserId && CurrentUserId == message.FromUserId))
+                    if ((CurrentChatId == message.ToChatGroupId && CurrentUser.Id != message.FromUserId))
                     {
-                        messages.Add(new ChatMessage { Message = message.Message, CreatedDate = message.CreatedDate, FromUser = new ApplicationUser() { Email = CurrentUserEmail } });
-                        await HubConnection.SendAsync("ChatNotificationAsync", $"Новое сообщение от {userName}", ContactId, CurrentUserId);
+                        _messages.Add(message);
+                        await HubConnection.SendAsync("ChatNotificationAsync", $"Новое сообщение от {userName}", message.ToChatGroupId, message.FromUserId);
                     }
-                    else if ((ContactId == message.FromUserId && CurrentUserId == message.ToUserId))
-                    {
-                        messages.Add(new ChatMessage { Message = message.Message, CreatedDate = message.CreatedDate, FromUser = new ApplicationUser() { Email = ContactEmail } });
-                    }
+                    else if ((CurrentChatId == message.ToChatGroupId && CurrentUser.Id == message.FromUserId))
+                        _messages.Add(message);
+                    
                     await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "chatContainer");
                     StateHasChanged();
                 }
+                else if (CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(message.ToChatGroupId))
+                {
+                    await GetChatGroupsAsync();
+                    await HubConnection.SendAsync("ChatNotificationAsync", $"Новое сообщение от {userName}", message.ToChatGroupId, message.FromUserId);
+                    StateHasChanged();
+                }
             });
+            await GetChatGroupsAsync();
             await GetUsersAsync();
-            var state = await _stateProvider.GetAuthenticationStateAsync();
 
-            var user = state.User;
-            CurrentUserName = user.Claims.Where(a => a.Type.Contains("name")).Select(a => a.Value).FirstOrDefault()!;
-            CurrentUserId = user.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
-            CurrentUserEmail = user.Claims.Where(a => a.Type.Contains("emailaddress")).Select(a => a.Value).FirstOrDefault()!;
-
-            if (!string.IsNullOrEmpty(ContactId))
-            {
-                await LoadUserChat(ContactId);
-            }
+            if (CurrentChatId != Guid.Empty) 
+                await LoadUserChat(CurrentChatId);
         }
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "chatContainer");
+            if (CurrentChatId!= Guid.Empty && !SelectedValues.Any())
+                await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "chatContainer");
         }
 
         private async Task SubmitAsync()
         {
-            if (!string.IsNullOrEmpty(CurrentMessage) && !string.IsNullOrEmpty(ContactId))
+            if (!string.IsNullOrEmpty(CurrentMessage) && !string.IsNullOrEmpty(CurrentChatId.ToString()))
             {
                 var chatHistory = new ChatMessage()
                 {
                     Message = CurrentMessage,
-                    ToUserId = ContactId,
-                    FromUserId = CurrentUserId,
-                    CreatedDate = DateTime.Now
+                    ToChatGroupId = CurrentChatId,
+                    FromUserId = CurrentUser!.Id,
+                    CreatedDate = DateTime.Now,
+                    FromUser = CurrentUser
                 };
                 await _chatManager.SaveMessageAsync(chatHistory);
-                chatHistory.FromUserId = CurrentUserId;
                 if (HubConnection != null)
-                    await HubConnection.SendAsync("SendMessageAsync", chatHistory, CurrentUserEmail);
+                    await HubConnection.SendAsync("SendMessageAsync", chatHistory, $"{CurrentUser.LastName} {CurrentUser.FirstName}");
                 CurrentMessage = string.Empty;
             }
         }
-
-        private async Task LoadUserChat(string userId)
+        private async Task GetChatGroupsAsync()
         {
-            var contact = await _chatManager.GetUserDetailsAsync(userId);
-            ContactId = contact.Id;
-            ContactEmail = contact.Email;
-            ContactName = contact.UserName;
-            _navigationManager.NavigateTo($"chat/{ContactId}");
-            messages = new List<ChatMessage>();
-            messages = await _chatManager.GetConversationAsync(ContactId);
+            ChatGroups = await _chatManager.GetAllChatsToUser();
+            CurrentUserChatGroupsIds = ChatGroups.Select(s => s.Id).ToList();
+            ChatGroups = ChatGroups.OrderByDescending(o=>o.DateTimeUpdate).ToList();
+            CurrentChatGroup = ChatGroups.FirstOrDefault(f => f.Id == CurrentChatId)!;
         }
         private async Task GetUsersAsync()
         {
-            ChatUsers = await _chatManager.GetUsersAsync();
+            var privateChatsUsersIds = ChatGroups.Where(w => w.IsPrivateGroup).SelectMany(s => s.ApplicationUsers!).Select(s => s.Id).Distinct().ToList();
+            AllChatUsers = await _chatManager.GetUsersAsync();
+            NotHavePrivateChatUsers = AllChatUsers.Where(user => !privateChatsUsersIds.Contains(user.Id)).ToList();
         }
 
+        private async Task LoadUserChat(Guid chatId)
+        {
+            CurrentChatId = chatId;
+            _navigationManager.NavigateTo($"chat/{CurrentChatId}");
+            _messages.Clear();
+            _messages = await _chatManager.GetConversationAsync(CurrentChatId);
+            await GetChatGroupsAsync();
+        }
+        private async Task OnClickContact(string userId)
+        {
+            if (await ConfirmationActionService.ConfirmationActionAsync("Создание беседы"))
+                await CreateNewPrivateUserChatAsync(userId);
+            
+        }
+        private async Task CreateNewPrivateUserChatAsync(string userId)
+        {
+            var createdGroup = await _chatManager.CreateChatGroupAsync(new ChatGroup()
+            {
+                IsPrivateGroup = true,
+            });
+            if (createdGroup != Guid.Empty)
+                await AddUsersToChatAsync(new List<string>{userId},createdGroup);
+            
+            CurrentChatId = createdGroup;
+            _navigationManager.NavigateTo($"chat/{CurrentChatId}");
+            _messages.Clear();
+            _messages = await _chatManager.GetConversationAsync(CurrentChatId);
+        }
+        private async Task CreateNewGroupUserChatAsync(string chatName)
+        {
+            if (string.IsNullOrEmpty(chatName))return;
+            var createdGroup = await _chatManager.CreateChatGroupAsync(new ChatGroup(){Name = chatName});
+            if (createdGroup == Guid.Empty)return;
+            CurrentChatId = createdGroup;
+            _navigationManager.NavigateTo($"chat/{CurrentChatId}");
+            _messages.Clear();
+        }
+        private void OpenCloseUsersInChatDialog(bool isOpen)
+        {
+            SelectedUser.Clear();
+            _usersInChatDialogIsOpen = isOpen;
+        }
+        private void OpenCloseAddUserDialog(bool isOpen)
+        { 
+            SelectedUser.Clear();
+            _usersInChatDialogIsOpen = !_usersInChatDialogIsOpen;
+            _addUserDialogIsOpen =isOpen;
+        }
+        private async Task AddUsersToChatAsync(IEnumerable<string> usersId, Guid chatId)
+        {
+            usersId = usersId.ToArray();
+            if (!usersId.Any()) return;
+            var newLogs = usersId.Select(s=> new LogUsersVisitToChat()
+            {
+                ApplicationUserId = s, ChatGroupId = chatId
+            });
+            if (await _chatManager.AddUsersToChatAsync(newLogs) != 0)
+            {
+                
+                var userNames = AllChatUsers.Where(w => usersId.Contains(w.Id)).Select(s => s.UserName).ToArray();
+                var endChar = userNames.Length > 1 ? "ы" : "(а)";
+                CurrentMessage = $"{string.Join(", ", userNames)} добавлен{endChar} в беседу.";
+                await SubmitAsync();
+                await GetChatGroupsAsync();
+            }
+            else
+            {
+                _snackBar.Add("Возникли проблемы при добавлении пользователя в беседу");
+            }
+            _addUserDialogIsOpen = false;
+        }
+        private async Task RemoveUsersFromChatAsync(IEnumerable<string> usersId, Guid chatId)
+        {
+            if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление")) return;
+            
+            var newLogs = usersId.Select(s => new LogUsersVisitToChat()
+            {
+                ApplicationUserId = s,
+                ChatGroupId = chatId
+            });
+            if (await _chatManager.RemoveUsersFromChatAsync(newLogs) != 0)
+            {
+              
+                var userNames = AllChatUsers.Where(w => usersId.Contains(w.Id)).Select(s => s.UserName).ToArray();
+                var endChar = userNames.Length > 1 ? "ы" : "(а)";
+                CurrentMessage = $"{string.Join(", ", userNames)} удален{endChar} из беседы.";
+                await SubmitAsync();
+                await GetChatGroupsAsync();
+            }
+            _usersInChatDialogIsOpen = false;
+        }
         [Inject] private IDialogService DialogService { get; set; } = null!;
         private async void OnButtonDeleteClicked(IEnumerable<Guid> listId)
         {
@@ -114,32 +214,30 @@ namespace DKCrm.Client.Pages
                 yesText: "Удалить!  ", cancelText: "  Отменить");
             
             if (result != null && (bool)result)
-            {
                 await RemoveMessage(listId);
-            }
+            
             StateHasChanged();
         }
         private async Task RemoveMessage(IEnumerable<Guid> listId)
         {
-                await _chatManager.RemoveMessageAsync(listId);
+            await _chatManager.FoolRemoveMessageAsync(listId);
                 _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
         }
         private void CheckboxClicked(Guid aSelectedId, object aChecked)
         {
-            if ((bool)aChecked)
-            {
-                if (!SelectedValues.Contains(aSelectedId))
-                {
-                    SelectedValues.Add(aSelectedId);
-                }
-            }
-            else
-            {
-                if (SelectedValues.Contains(aSelectedId))
-                {
-                    SelectedValues.Remove(aSelectedId);
-                }
-            }
+            if ((bool)aChecked && !SelectedValues.Contains(aSelectedId))
+                SelectedValues.Add(aSelectedId);
+
+            if (!(bool)aChecked && SelectedValues.Contains(aSelectedId))
+                SelectedValues.Remove(aSelectedId);
+        }
+        private void CheckboxAddUserClicked(string aSelectedId, object aChecked)
+        {
+            if ((bool)aChecked && !SelectedUser.Contains(aSelectedId))
+                SelectedUser.Add(aSelectedId);
+
+            if (!(bool)aChecked && SelectedUser.Contains(aSelectedId))
+                SelectedUser.Remove(aSelectedId);
         }
     }
 }

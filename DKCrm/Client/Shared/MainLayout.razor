@@ -10,9 +10,9 @@
     <main>
         <NavMenu />
         <CascadingValue Value="_hubConnection">
-        @Body
-    </CascadingValue>
-</main>
+             @Body
+         </CascadingValue>
+    </main>
 </div>
 @functions{
     [CascadingParameter]
@@ -20,17 +20,18 @@
 
     private HubConnection _hubConnection = null!;
     public bool IsConnected => _hubConnection.State == HubConnectionState.Connected;
-    private string CurrentUserId { get; set; } = null!;
+    private string? CurrentUserId { get; set; }
+    private List<Guid>? CurrentUserChatGroupsIds { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
+        _hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).WithAutomaticReconnect().Build();
         await _hubConnection.StartAsync();
-        _hubConnection.On<string, string, string>("ReceiveChatNotification", (message, receiverUserId, senderUserId) =>
+        _hubConnection.On<string, Guid, string>("ReceiveChatNotification", async (message, chatId, senderUserId) =>
         {
-            if (CurrentUserId == receiverUserId)
+            if (CurrentUserId != senderUserId && CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(chatId))
             {
-                _jsRuntime.InvokeAsync<string>("PlayAudio", "notification");
+               await _jsRuntime.InvokeAsync<string>("PlayAudio", "notification");
                 _snackBar.Add(message, MudBlazor.Severity.Info, config =>
                 {
                     config.VisibleStateDuration = 100000;
@@ -44,11 +45,24 @@
                         return Task.CompletedTask;
                     };
                 });
+                var currentUser = await UserManagerCustom.GetUserDetailsAsync(CurrentUserId);
+                if (currentUser.AreThereNewMessages == false)
+                {
+                    currentUser.AreThereNewMessages = true;
+                    await UserManagerCustom.UpdateUser(currentUser);
+                }
             }
         });
         var state = await _stateProvider.GetAuthenticationStateAsync();
+        if (state == null) throw new ArgumentNullException(nameof(state));
         var user = state.User;
-        CurrentUserId = user.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
+        CurrentUserId = user.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault();
+        if (!string.IsNullOrEmpty(CurrentUserId))
+        {
+            var currentUserChatGroups = await _chatManager.GetAllChatsToUser();
+             CurrentUserChatGroupsIds = currentUserChatGroups.Select(s => s.Id).ToList();
+        }
+        
     }
 
     protected override async Task OnParametersSetAsync()

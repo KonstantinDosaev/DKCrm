@@ -1,0 +1,18 @@
+﻿@page "/ddd"
+@inject IDocumentManager Doc
+<MudText>@Patch</MudText>
+<MudButton OnClick="CreateDoc">
+    doc
+</MudButton>
+@*<div class="document__page">
+    <div class="document__body">
+       
+    </div>
+</div>*@
+@code {
+    string Patch { get; set; } = null!;
+    private async Task CreateDoc()
+    {
+         Patch=await DocumentManager.CreateDoc();
+    }
+}

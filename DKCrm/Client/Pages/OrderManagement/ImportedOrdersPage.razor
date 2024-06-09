@@ -42,8 +42,8 @@
         <div style="width: 228px; margin-right: 0.5rem">
             <MudSelect T="string"
                        MultiSelection="true"
-                       @bind-SelectedValues="_currencyDisplay" Text="Отображаемая цена"
-                       Variant="Variant.Outlined" Dense="true" Style=""
+                       @bind-SelectedValues="_currencyDisplay"   MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
+                       Variant="Variant.Outlined" Dense="true"
                        Class="select-button">
                 <MudSelectItem T="string" Value="@("Продавца")">Продавца</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
@@ -113,28 +113,28 @@
             @if (context.OurCompany != null)
             {
                 <MudText Typo="Typo.button"> @context.OurCompany.Name </MudText>
-                <MudText Typo="Typo.body2">
-                    @if (context.OurEmployee != null)
-                    {
+                @if (context.OurEmployee != null)
+                {
+                    <MudText Typo="Typo.body2">
+                        @context.OurEmployee.LastName
                         @context.OurEmployee.FirstName
                         @context.OurEmployee.MiddleName
-                        @context.OurEmployee.LastName
-                    }
-                </MudText>
+                    </MudText>
+                }
             }
         </MudTd>
         <MudTd DataLabel="Компания поставщик">
             @if (context.SellersCompany != null)
             {
                 <MudText Typo="Typo.button"> @context.SellersCompany.Name </MudText>
-                <MudText Typo="Typo.body2">
-                    @if (context.EmployeeSeller != null)
-                    {
+                @if (context.EmployeeSeller != null)
+                {
+                    <MudText Typo="Typo.body2">
+                        @context.EmployeeSeller.LastName
                         @context.EmployeeSeller.FirstName
                         @context.EmployeeSeller.MiddleName
-                        @context.EmployeeSeller.LastName
-                    }
-                </MudText>
+                    </MudText>
+                }
             }
         </MudTd>
         <MudTd DataLabel="Дата создания">
@@ -170,6 +170,7 @@
         <MudTd DataLabel="">
 
             <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
+            <MudIconButton Size="@Size.Medium" OnClick="() => OpenOrderComments(context.Id)" Color="Color.Default" Icon="@Icons.Material.Sharp.Comment" Class="pa-0 ml-2"/>
             @if (isActiveMovingProductToOrder){
             <MudIconButton Size="@Size.Medium"
                           OnClick="() => MovingProductToOrder(context)"
@@ -212,12 +213,21 @@
     <MudDrawerHeader Class="d-flex align-items-center justify-content-between p-0">
         <MudText Typo="Typo.h5">Фильтр</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.Close"
-                        Size="Size.Large" OnClick="() => _visibleOrderFilter = false" Class="p-0" Color="Color.Default"/>
+                       Size="Size.Large" OnClick="() => _visibleOrderFilter = false" Class="p-0" Color="Color.Default"/>
+        
     </MudDrawerHeader>
     <OrderFilterComponent FilterOrderTuple="@_filterOrderTuple"
-                           PartnerTypeName="@TypeCompanyNames.Suppliers"
-                             IsSetOption="OnFilter"/>
+                          PartnerTypeName="@TypeCompanyNames.Suppliers"
+                          IsSetOption="OnFilter"/>
 </MudDrawer>
+@if (_visibleOrderComments)
+{
+    <MudDialog @bind-IsVisible="_visibleOrderComments" DisableSidePadding="true" Style="max-width: 700px;padding: 0" Options="new DialogOptions(){CloseButton = true, FullScreen = true,}">
+        <DialogContent>
+            <OrderCommentComponent CurrentOrderId="OrderId" />
+        </DialogContent>
+    </MudDialog>
+}
 
 <MudDialog @bind-IsVisible="_visibleSettingsOrderDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
     <DialogContent>
@@ -249,6 +259,7 @@
     private string? _searchString = null;
     public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
     private FilterOrderTuple _filterOrderTuple= new FilterOrderTuple();
+    private string _widthCommentForOrderDriver = "350px";
 
     private bool _showDetails;
     private bool _visibleAddOrderDialog;
@@ -256,7 +267,8 @@
     private bool _visibleSettingsOrderDialog; 
     private bool _visibleOrderFilter;
     private bool _showHistoryOrders;
-    private bool _filterIsOn;
+    private bool _filterIsOn; 
+    private bool _visibleOrderComments;
 
     private bool isActiveMovingProductToOrder;
     private bool isActiveMergeProductToOrder;
@@ -364,6 +376,11 @@
         OrderId = orderId;
         _showDetails = !_showDetails;
     }
+    private void OpenOrderComments(Guid orderId)
+    {
+        OrderId = orderId;
+        _visibleOrderComments = !_visibleOrderComments;
+    }
     private async Task GetImportOrdersByProduct(string partNumber)
     {
         _searchString = partNumber;
@@ -371,6 +388,12 @@
         await _table!.ReloadServerData();
         StateHasChanged();
     }
+    private void ResizeOrderCommentDrawer()
+    {
+        _widthCommentForOrderDriver = _widthCommentForOrderDriver == "350px" ? "700px" : "350px";
+    }
+    private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
+
 }
 <style>
     .mud-table-header {

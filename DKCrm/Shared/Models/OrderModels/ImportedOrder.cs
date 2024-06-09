@@ -19,7 +19,6 @@ namespace DKCrm.Shared.Models.OrderModels
         public double? Nds { get; set; }
 
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
-        public virtual ICollection<CommentOnImportedOrder>? Comments { get; set; }
         public virtual ICollection<ImportedOrderStatus>? ImportedOrderStatus { get; set; }
         public virtual ICollection<ImportedOrderStatusImportedOrder>? ImportedOrderStatusImportedOrders { get; set; }
 

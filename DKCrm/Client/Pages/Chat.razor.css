@@ -1,0 +1,80 @@
+﻿.chat__container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+}
+
+.chat__messageBord {
+
+}
+.chat__correspondence {
+
+}
+.chat__contacts {
+    display: flex;
+}
+.collapse-contacts {
+
+}
+.button__message-back {
+    display: none;
+}
+.button__message-contact {
+     display: none
+}
+.button__message-contact-clear {
+    display: none
+}
+.message__field {
+    display: flex;
+    align-items: center;
+    flex-grow: 0;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+ 
+    width: 100%;
+   
+}
+
+@media (max-width: 1100px) {
+    .chat__container {
+        position: relative;
+    }
+    .chat__contacts {
+        position: absolute;
+        right: 0;
+    }
+    .collapse-contacts {
+        display: none;
+    }
+    .button__message-contact {
+        display: block
+    }
+    .button__message-contact-clear {
+        display: block
+    }
+    
+}
+@media (max-width: 740px) {
+    .chat__container {
+        position: relative;
+        display: block;
+    }
+    .button__message-back {
+        display: block;
+    }
+    .chat__contacts {
+        top: 0;
+        width: 100%;
+    }
+    .chat__messageBord {
+        position: absolute;
+        top: 0;
+        width: 100%;
+    }
+   .collapse-message {
+        display: none;
+    }
+}

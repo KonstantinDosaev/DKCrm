@@ -1,38 +1,64 @@
-﻿@page "/chat/{ContactId}"
+﻿@page "/chat/{CurrentChatId:guid}"
 @page "/chat"
-<div class="d-flex flex-grow-1 flex-row">
-    <MudPaper Elevation="25" Class="pa-3 ml-4 mr-2" Style="background-color:aliceblue" MinWidth="350px">
-        <MudToolBar Dense="true">
-            <MudText Typo="Typo.h6" Inline="true" Class="mr-2">#</MudText>
-            <MudText Typo="Typo.h6">контакты</MudText>
-        </MudToolBar>
-        <div class="d-flex flex-column px-4" style="max-height:70vh;min-height:70vh; overflow:scroll;">
-            <MudList Clickable="true">
-                @foreach (var user in ChatUsers)
+<div class="chat__container">
+<MudPaper Elevation="25" Class="pa-3  m-2 chat__correspondence" Style="background-color:aliceblue" MinWidth="350px">
+    <MudToolBar Dense="true">
+        <MudMenu StartIcon="@Icons.Material.Filled.Add" Class="" Label="Создать чат" Variant="Variant.Filled" Color="Color.Dark">
+            <MudForm @ref="_formCreateChatGroup" @bind-IsValid="@_successFormCreateChatGroup">
+                <div class="d-flex flex-column m-2 justify-content-end" style="min-width: 350px">
+                    <MudTextField @bind-Value="@CreatedChatName"
+                                  Required="true" RequiredError="Введите название!"
+                                  Label="Название чата" 
+                                  AutoGrow="true"
+                                  Variant="Variant.Outlined"></MudTextField>
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Dark" 
+                               Disabled="@(!_successFormCreateChatGroup)"
+                               Class="mt-4 w-25" OnClick="(args) =>CreateNewGroupUserChatAsync(CreatedChatName!)">Создать</MudButton>
+                </div>
+            </MudForm>
+        </MudMenu>
+        <div class="text-end m-2 button__message-contact">
+            <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1"
+                           Color="Color.Dark"
+                           Variant="Variant.Filled"
+                           OnClick="() => _collapseContacts = !_collapseContacts"></MudIconButton></div>
+    </MudToolBar>
+    <div class="d-flex flex-column px-4" style="max-height:80vh;min-height:80vh;  overflow-y: scroll;">
+        <MudList Clickable="true">
+            @foreach (var chatGroup in ChatGroups)
+            {
+                @if (chatGroup.Name != null)
                 {
-                    @if (user.UserName != null)
+                    <MudListItem Class="pa-2" Style="@(CurrentChatId == chatGroup.Id ? ("background-color: rgba(181, 181, 180, 0.58)") : ("background-color: none"))" OnClick="@(() => LoadUserChat(chatGroup.Id))">
+                        <div class="d-flex flex-row mt-n1 mb-n1">
+                            <MudBadge Origin="Origin.TopLeft" Overlap="true"  Class="mr-4" Color="Color.Warning"
+                                      Visible="chatGroup.LogUsersVisitToChatList?.FirstOrDefault(f => f.ApplicationUserId == CurrentUser?.Id)?.DateTimeVisit < chatGroup.DateTimeUpdate">
+                                <MudAvatar Color="Color.Default" Style="height: 50px; width: 50px;">
+                                    <MudIcon Icon="@Icons.Material.Filled.PeopleOutline"></MudIcon>
+                                </MudAvatar>
+                            </MudBadge>
+                            <MudText Typo="Typo.body2" Class="mt-3 mb-n2">@chatGroup.Name</MudText>
+                        </div>
+                    </MudListItem>
+                }
+                else
+                {
+                    var user = chatGroup.ApplicationUsers?.FirstOrDefault(f=>f.Id != CurrentUser?.Id);
+                    @if (user != null)
                     {
-                        <MudListItem Class="pa-0 px-2" OnClick="@(() => LoadUserChat(user.Id))">
+                        <MudListItem Class=" pa-2" Style="@(CurrentChatId == chatGroup.Id ? "background-color: rgba(181, 181, 180, 0.58)" : "background-color: none")" OnClick="@(() => LoadUserChat(chatGroup.Id))">
                             <div class="d-flex flex-row mt-n1 mb-n1">
-                                <div class="mr-4">
-                                    <MudBadge Class="my-2">
-                                        @if (user.Id == ContactId)
-                                        {
-                                            <MudAvatar Color="Color.Secondary" Style="height: 50px; width: 50px;">
-                                                @user.UserName.ToUpper().FirstOrDefault()
-                                            </MudAvatar>
-                                        }
-                                        else
-                                        {
-                                            <MudAvatar Color="Color.Dark" Style="height: 50px; width: 50px;">
-                                               @user.UserName.ToUpper().FirstOrDefault()
-                                            </MudAvatar>
-                                        }
-                                    </MudBadge>
-                                </div>
+                                <MudBadge Origin="Origin.TopLeft" Class="mr-4"
+                                          Visible="chatGroup.LogUsersVisitToChatList?.FirstOrDefault(f=>f.ApplicationUserId == CurrentUser?.Id)?.DateTimeVisit < chatGroup.DateTimeUpdate" 
+                                          Color="Color.Warning">
+                                    <MudAvatar Color="Color.Dark" Style="height: 50px; width: 50px;">
+                                        @user.UserName.ToUpper().FirstOrDefault()
+                                    </MudAvatar>
+                                </MudBadge>
                                 <div>
                                     <MudText Typo="Typo.body2" Class="mt-3 mb-n2">
-                                         @user.UserName
+                                        @user.UserName
                                     </MudText>
                                     <MudText Typo="Typo.caption" Style="font-size: xx-small !important;">
                                         @if (user.Email != null)
@@ -45,77 +71,196 @@
                         </MudListItem>
                     }
                 }
+                <MudDivider Light="true"/>
+            }
+        </MudList>
+    </div>
+</MudPaper>
+@if (CurrentChatId != Guid.Empty)
+{
+    <div class="@MessageBoardCssClass flex-grow-1 chat__messageBord">
+        <MudPaper Elevation="25" Class="py-4 m-2 h-auto d-flex flex-column position-relative" Style="background-color: whitesmoke">
+            <MudToolBar Dense="true" Class="justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="text-end m-2 button__message-back"> <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                                                                   Variant="Variant.Filled" Href="/chat" 
+                                                                                   Color="Color.Dark"
+                                                                                   OnClick="() => _collapseMessageBoard = !_collapseMessageBoard"></MudIconButton></div>
+                    @if (CurrentChatGroup != null)
+                    {
+                            <MudText>@(CurrentChatGroup.IsPrivateGroup ? CurrentChatGroup.ApplicationUsers?.FirstOrDefault(f => f.Id != CurrentUser!.Id)?.UserName : CurrentChatGroup.Name)</MudText>
+                    }
+                </div>
+                <div class="d-flex align-items-center">
+                    @if (SelectedValues.Any())
+                    {
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnButtonDeleteClicked(SelectedValues)" Style="margin-right: 1rem;">Удалить</MudButton>
+                    }
+                    <MudIconButton OnClick="() => _usersInChatDialogIsOpen = !_usersInChatDialogIsOpen"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Dark"
+                                   Class="" 
+                                   Icon="@Icons.Material.Filled.People"></MudIconButton>
+
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                        <MudMenuItem>
+                            <MudButton Variant="Variant.Filled" 
+                                       StartIcon="@Icons.Material.Filled.Delete" 
+                                       Color="Color.Error" 
+                                       OnClick="() => OnButtonDeleteClicked(_messages.Select(s => s.Id))" 
+                                       Style="justify-self: flex-start">Очистить переписку</MudButton>
+                        </MudMenuItem>
+                    </MudMenu>
+                </div>
+            </MudToolBar>
+            <div class="d-flex flex-column px-4 flex-grow-1" style="max-height: 75vh; min-height: 75vh;  overflow-y: scroll;" id="chatContainer">
+                @foreach (var message in _messages)
+                {
+                    if (message.FromUser != null && message.FromUserId != CurrentUser?.Id)
+                    {
+                        <div class="d-flex flex-row my-2 mr-15">
+                                <div style="padding: 5px 15px; background-color: antiquewhite; border-radius: 5px; border: solid 1px rgba(181, 181, 181, 0.361); margin-top: 5px; text-align: end">
+                                <MudText Class="px-1" Typo="Typo.body2" Style="font-weight: bold; color: gray; background-color: lightsalmon; border-radius: 5px; width: max-content">@message.FromUser?.UserName</MudText>
+                                <MudText  Typo="Typo.body2" Style="">@message.Message</MudText>
+                                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.CreatedDate.ToString("dd MMM, yyyy HH:mm")</MudText>
+                                <input type="checkbox" @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs.Value!); }"/>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-row my-2 align-self-end ml-15">
+                                <div style="padding: 5px 15px; background-color: rgba(199, 226, 252, 0.361); border-radius: 5px; border: solid 1px rgba(181, 181, 181, 0.361); border-radius: 5px; margin-top: 5px;">
+                                <div class="d-flex justify-content-end">
+                                    <MudText Class="px-1" Typo="Typo.body2" Style="font-weight: bold; color: gray; background-color: lightskyblue; border-radius: 5px; width: max-content">@message.FromUser?.UserName</MudText>
+                                </div>
+                                <MudText Typo="Typo.body2" Style="">@message.Message</MudText>
+                                <input style=" margin-right: 1rem;" type="checkbox"
+                                       @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs?.Value!); }"/>
+                                <MudText Typo="Typo.caption" Style="font-size: xx-small !important;">@message.CreatedDate.ToString("dd MMM, yyyy HH:mm")</MudText>
+                               
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="message__field">
+                <MudTextField T="string" Placeholder="Введите сообщение..." DisableUnderLine="true" Variant="Variant.Outlined" MaxLines="5" AutoGrow="true" Class="field-item mx-4"
+                              @bind-Value="CurrentMessage" For="@(() => CurrentMessage)"/>
+                <MudIconButton Variant="Variant.Filled" OnClick="SubmitAsync" Icon="@Icons.Material.Outlined.Send"  
+                               Color="Color.Dark" 
+                               ButtonType="ButtonType.Button"
+                               Class="h-50 mr-3"></MudIconButton>
+            </div>
+        </MudPaper>
+    </div>
+}
+<div class="@ContactsCssClass chat__contacts">
+    <MudPaper Elevation="25" Class="pa-3 m-2 " Style="background-color:aliceblue" MinWidth="350px">
+        <MudToolBar Dense="true">
+            <MudText Typo="Typo.h6" Inline="true" Class="mr-2">#</MudText>
+            <MudText Typo="Typo.h6">контакты</MudText>
+            <MudSpacer/>
+            <div class="text-end m-2 button__message-contact-clear"> <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                                                                    Color="Color.Dark"
+                                                                                    Variant="Variant.Filled"
+                                                                                    OnClick="() => _collapseContacts= !_collapseContacts"></MudIconButton></div>
+        </MudToolBar>
+        <div class="d-flex flex-column px-4 flex-grow-1" style="max-height:80vh;min-height:80vh; overflow-y: scroll;">
+            <MudList Clickable="true">
+                @foreach (var user in NotHavePrivateChatUsers)
+                {
+                    @if (user.UserName != null)
+                    {
+                        <MudListItem Class="pa-2" OnClick="@(() => OnClickContact(user.Id))">
+                            <div class="d-flex flex-row mt-n1 mb-n1">
+                                <MudAvatar Class="mr-4" Color="Color.Dark" Style="height: 50px; width: 50px;">
+                                            @user.UserName.ToUpper().FirstOrDefault()
+                                </MudAvatar>
+                                <div>
+                                    <MudText Typo="Typo.body2" Class="mt-3 mb-n2">
+                                        @user.UserName
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Style="font-size: xx-small !important;">
+                                        @if (user.Email != null)
+                                        {
+                                            @user.Email
+                                        }
+                                    </MudText>
+                                </div>
+                            </div>
+                        </MudListItem>
+                        <MudDivider Light="true"/>
+                    }
+                }
             </MudList>
         </div>
     </MudPaper>
-    <MudPaper Elevation="25" Class="py-4 flex-grow-1 ml-2 mr-4">
-        <MudToolBar Dense="true" Class="justify-content-end mr-15">
-            @if (SelectedValues.Any())
-            {
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnButtonDeleteClicked(SelectedValues)" Style="margin-right: 1rem;">Удалить</MudButton>
-            }
-            @if (string.IsNullOrEmpty(ContactId))
-            {
-                <MudIcon Icon="@Icons.Material.Outlined.Person" Style="margin-right: 10px"></MudIcon>
-                <MudText Typo="Typo.h6">Чат</MudText>
-            }
-            else
-            {
-                <MudIcon Icon="@Icons.Material.Outlined.ChatBubble" Style="margin-right: 10px"></MudIcon>
-                <MudText Typo="Typo.h6">@ContactName</MudText>
-            }
-            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                <MudMenuItem> <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnButtonDeleteClicked(messages.Select(s=>s.Id))" Style="justify-self: flex-start">Очистить переписку</MudButton></MudMenuItem>
-            </MudMenu>
-        </MudToolBar>
-        <div class="d-flex flex-column px-4" style="max-height: 65vh; min-height: 65vh; overflow: scroll;" id="chatContainer">
-            @foreach (var message in messages)
-            {
-                if (message.FromUser != null && message.FromUser.Email != @CurrentUserEmail)
-                {
-                    <div class="d-flex flex-row my-4 align-self-end">
-                        <div class="mr-4">
-                            <MudAvatar Color="Color.Secondary" Style="height: 50px; width: 50px;">
-                                @if (message.FromUser.Email != null)
-                                {
-                                    @message.FromUser.Email.ToUpper().FirstOrDefault()
-                                }
-                            </MudAvatar>
-                        </div>
-                        <div style="padding: 15px; background-color: antiquewhite; border-radius: 5px; margin-top: 5px">
-                            <MudText Typo="Typo.body2" Style="">@message.Message</MudText>
-                            <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.CreatedDate.ToString("dd MMM, yyyy hh:mm")</MudText>
-                            <input type="checkbox" @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs.Value!); }" /> 
-                        </div>
- 
-                    </div>
-                }
-                else
-                {
-                    <div class="d-flex flex-row my-4 ">
-                        <div class="mr-4">
-                            <MudAvatar Color="Color.Primary" Style="height: 50px; width: 50px;">
-                                @if (message.FromUser != null && message.FromUser.Email != null)
-                                {
-                                    @message.FromUser.Email.ToUpper().FirstOrDefault()
-                                }
-                            </MudAvatar>
-                        </div>
-                        <div style="padding: 15px; background-color: aliceblue; border-radius: 5px; margin-top: 5px">
-                            <MudText Typo="Typo.body2" Style="">@message.Message</MudText>
-                            <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.CreatedDate.ToString("dd MMM, yyyy hh:mm")</MudText>
-                            <input type="checkbox" 
-                       @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs?.Value!); }" />  
-                        </div>
-                    </div>
-                }
-            }
-        </div>
-        <MudPaper Elevation="25" Class="d-flex flex-row px-2 mx-4" Style="">
-            <MudTextField T="string" Placeholder="Введите сообщение..." DisableUnderLine="true" Class="mt-n2 mx-4"
-                          @bind-Value="CurrentMessage" For="@(() => CurrentMessage)"/>
-            <MudButton OnClick="SubmitAsync" StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button">Отправить</MudButton>
-        </MudPaper>
-    </MudPaper>
-
 </div>
+</div>
+
+@if (CurrentChatId != Guid.Empty)
+{
+    <MudDialog IsVisibleChanged="OpenCloseAddUserDialog" IsVisible="_addUserDialogIsOpen" Options="new DialogOptions() { CloseButton = true, }" C>
+        <DialogContent>
+            <div class="pt-4" style="min-width: 300px">
+                @foreach (var user in AllChatUsers.Where(w =>!CurrentChatGroup!.ApplicationUsers!.Select(s => s.Id).Contains(w.Id)))
+                {
+                    <div class="d-flex align-items-center">
+                        <MudCheckBox T="bool" Class="mr-2" ValueChanged="eventArgs => { CheckboxAddUserClicked(user.Id, eventArgs!); }" Dense="true" />
+                        <MudText Class="">@user.UserName</MudText>
+                    </div>
+                    <MudDivider DividerType="DividerType.Middle" Class="my-1" Light="true"/>
+                }
+                <div class="text-end mt-4 mb-2">
+                   <MudButton Variant="Variant.Filled"
+                               Color="Color.Dark"
+                               Disabled="@(!SelectedUser.Any())"
+                               OnClick="() => AddUsersToChatAsync(SelectedUser, CurrentChatId)">Добавить</MudButton>
+                </div>
+            </div>
+        </DialogContent>
+    </MudDialog>
+    <MudDialog IsVisibleChanged="OpenCloseUsersInChatDialog" IsVisible="_usersInChatDialogIsOpen" Options="new DialogOptions() { CloseButton = true,}" >
+        <DialogContent>
+            <div class="pt-4" style="min-width: 300px">
+                @if (CurrentChatGroup is {ApplicationUsers: { } })
+                {
+                    foreach (var user in CurrentChatGroup.ApplicationUsers)
+                    {
+                        <div class="d-flex align-items-center">
+                            @if (CurrentChatGroup.CreatingUserId == CurrentUser?.Id)
+                            {
+                                var disabledCurrent = user.Id == CurrentUser?.Id;
+                                @*<input class="mr-2" disabled="@disabledCurrent" type="checkbox" @onchange="eventArgs => { CheckboxAddUserClicked(user.Id, eventArgs.Value!); }"/>*@
+                                <MudCheckBox T="bool" Class="mr-2" Disabled="@disabledCurrent" ValueChanged="eventArgs => { CheckboxAddUserClicked(user.Id, eventArgs!); }" Dense="true" />
+                            }
+                            <MudText Class="">@user.UserName</MudText>
+                        </div>
+                        <MudDivider DividerType="DividerType.Middle" Class="my-1" Light="true"/>
+                    }
+                    @if (CurrentChatGroup.CreatingUserId == CurrentUser?.Id)
+                    {
+                        <div class="text-end mt-4 mb-2">
+                            @if (SelectedUser.Any())
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Warning"
+                                           OnClick="() => RemoveUsersFromChatAsync(SelectedUser, CurrentChatId)">Удалить</MudButton>
+                            }
+                            else
+                            {
+                                <MudIconButton OnClick="() => OpenCloseAddUserDialog(true)"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Dark"
+                                               Icon="@Icons.Material.Filled.PersonAddAlt"></MudIconButton>
+                            }
+                            
+                        </div>
+                    }
+                }
+            </div>
+        </DialogContent>
+    </MudDialog>
+}

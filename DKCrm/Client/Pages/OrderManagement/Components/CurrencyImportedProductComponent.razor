@@ -82,7 +82,8 @@
             {
                 PriceInSupplierCurrency = ImportedProduct.PriceInSupplierCurrency,
                 PriceInTransactionCurrency = ImportedProduct.PriceInTransactionCurrency,
-                PriceLocal = ImportedProduct.PriceLocal
+                PriceLocal = ImportedProduct.PriceLocal,
+                DateTimeConversionCurrency = ImportedProduct.DateTimeConversionCurrency
             };
         if (Order is { LocalCurrency: { }, SupplierCurrency: { }, TransactionCurrency: { } })
         {
@@ -127,6 +128,7 @@
         };
         curArr.Remove(charCode);
         var convertResult = await CurrencyManager.CurrencyConverter(charCode, price, ImportedProduct.ImportedOrder.CurrencyPercent, curArr);
+
         foreach (var item in convertResult)
         {
             if (item.charCod == supplierCharCode)
@@ -142,6 +144,7 @@
                 EditedImportedProduct!.PriceLocal = item.Item2;
             }
         }
+
         _textFieldIsChanged = false;
         _priceIsEdit = true;
     }
@@ -152,6 +155,7 @@
         ImportedProduct!.PriceInSupplierCurrency = EditedImportedProduct!.PriceInSupplierCurrency;
         ImportedProduct!.PriceInTransactionCurrency = EditedImportedProduct!.PriceInTransactionCurrency;
         ImportedProduct!.PriceLocal = EditedImportedProduct!.PriceLocal;
+        ImportedProduct.DateTimeConversionCurrency = DateTime.Now;
         @if (await ImportedProductManager.UpdateAsync(ImportedProduct!))
         {
             _snackBar.Add("Цена обновлена");

@@ -383,13 +383,20 @@ namespace DKCrm.Server.Migrations
                     b.ToTable("ApplicationOrderingProductsProducts", (string)null);
                 });
 
-            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.CommentOnExportedOrder", b =>
+            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.CommentOrder", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ExportedOrderId")
+                    b.Property<DateTime>("DateTimeCreated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("FromUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Value")
@@ -398,29 +405,7 @@ namespace DKCrm.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExportedOrderId");
-
-                    b.ToTable("CommentOnExportedOrders");
-                });
-
-            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.CommentOnImportedOrder", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ImportedOrderId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ImportedOrderId");
-
-                    b.ToTable("CommentOnImportedOrders");
+                    b.ToTable("CommentOrders");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ExportedOrder", b =>
@@ -572,6 +557,9 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<string>("BuyerCurrency")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("DateTimeConversionCurrency")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DateTimeUpdate")
                         .HasColumnType("timestamp without time zone");
@@ -764,6 +752,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DateTimeConversionCurrency")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DateTimeUpdate")
                         .HasColumnType("timestamp without time zone");
@@ -1178,28 +1169,6 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.CommentOnExportedOrder", b =>
-                {
-                    b.HasOne("DKCrm.Shared.Models.OrderModels.ExportedOrder", "ExportedOrder")
-                        .WithMany("Comments")
-                        .HasForeignKey("ExportedOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ExportedOrder");
-                });
-
-            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.CommentOnImportedOrder", b =>
-                {
-                    b.HasOne("DKCrm.Shared.Models.OrderModels.ImportedOrder", "ImportedOrder")
-                        .WithMany("Comments")
-                        .HasForeignKey("ImportedOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ImportedOrder");
-                });
-
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ExportedOrder", b =>
                 {
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "CompanyBuyer")
@@ -1531,8 +1500,6 @@ namespace DKCrm.Server.Migrations
                 {
                     b.Navigation("ApplicationOrderingProducts");
 
-                    b.Navigation("Comments");
-
                     b.Navigation("ExportedOrderStatusExported");
 
                     b.Navigation("ExportedProducts");
@@ -1554,8 +1521,6 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ImportedOrder", b =>
                 {
-                    b.Navigation("Comments");
-
                     b.Navigation("ImportedOrderStatusImportedOrders");
 
                     b.Navigation("ImportedProducts");

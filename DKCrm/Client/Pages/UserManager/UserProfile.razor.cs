@@ -16,8 +16,8 @@ namespace DKCrm.Client.Pages.UserManager
         protected override async Task OnInitializedAsync()
         {
             var state = await _stateProvider.GetAuthenticationStateAsync();
-            var userName = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!; ;
-            _user = await UserManagerCustom.GetUserDetailsAsync(userName);
+            var userId = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
+            _user = await UserManagerCustom.GetUserDetailsAsync(userId);
         }
 
 

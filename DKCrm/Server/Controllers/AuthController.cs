@@ -1,9 +1,6 @@
 ﻿using DKCrm.Server.Interfaces;
-using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers

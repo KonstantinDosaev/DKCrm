@@ -13,7 +13,7 @@ namespace DKCrm.Shared.Models.OrderModels
         public string? SupplierCurrency { get; set; }
         public decimal? PriceInSupplierCurrency { get; set; }
         public string? Description { get; set; }
-
+        public DateTime? DateTimeConversionCurrency { get; set; }
         public virtual ICollection<ExportedProduct>? ExportedProducts { get; set; }
         public virtual ICollection<PurchaseAtStorage>? PurchaseAtStorageList { get; set; }
         public virtual ICollection<PurchaseAtExport>? PurchaseAtExportList { get; set; }

@@ -35,16 +35,45 @@ namespace DKCrm.Server.Controllers
         {
             return Ok(await _chatService.SaveMessageAsync(message, User));
         }
-
-        [HttpGet("{contactId}")]
-        public async Task<IActionResult> GetConversationAsync(string contactId)
+        [HttpPost("add-group")]
+        public async Task<IActionResult> CreateChatGroup(ChatGroup chatGroup)
         {
-            return Ok(await _chatService.GetConversationAsync(contactId, User));
+            return Ok(await _chatService.CreateChatGroupAsync(chatGroup, User));
+        }
+        [HttpPost("remove-group")]
+        public async Task<IActionResult> RemoveChatGroup(Guid chatGroupId)
+        {
+            return Ok(await _chatService.RemoveChatGroupAsync(chatGroupId, User));
+        }
+        [HttpPost("add-users")]
+        public async Task<IActionResult> AddUsersToChat(List<LogUsersVisitToChat> usersToChat)
+        {
+            return Ok(await _chatService.AddUsersToChatAsync(usersToChat, User));
+        }
+        [HttpPost("remove-users")]
+        public async Task<IActionResult> RemoveUsersFromChat(List<LogUsersVisitToChat> usersToChat)
+        {
+            return Ok(await _chatService.RemoveUsersFromChatAsync(usersToChat, User));
+        }
+        [HttpGet("{chatId:guid}")]
+        public async Task<IActionResult> GetConversationAsync(Guid chatId)
+        {
+            return Ok(await _chatService.GetConversationAsync(chatId, User));
+        }
+        [HttpGet("allChats")]
+        public async Task<IActionResult> GetAllChatGroupsToUser()
+        {
+            return Ok(await _chatService.GetAllChatGroupsToUser(User));
         }
         [HttpPost("remove")]
         public async Task<IActionResult> RemoveMessageRange(IEnumerable<Guid> listId)
         {
             return Ok(await _chatService.RemoveMessageRangeAsync(listId, User));
+        }
+        [HttpPost("remove-fool")]
+        public async Task<IActionResult> FoolRemoveMessageRange(IEnumerable<Guid> listId)
+        {
+            return Ok(await _chatService.FoolRemoveMessageRangeAsync(listId, User));
         }
     }
 }

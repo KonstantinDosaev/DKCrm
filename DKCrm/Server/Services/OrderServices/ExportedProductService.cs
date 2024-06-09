@@ -38,7 +38,8 @@ namespace DKCrm.Server.Services.OrderServices
                     ImportedProducts = s.ImportedProducts,
                     PurchaseAtExports = s.PurchaseAtExports,
                     SoldFromStorage = s.SoldFromStorage,
-                    StorageList = s.StorageList
+                    StorageList = s.StorageList,
+                    DateTimeConversionCurrency = s.DateTimeConversionCurrency
                 }).ToListAsync();
         }
         public async Task<IEnumerable<ExportedProduct>> GetAllNotEquippedAsync()
@@ -58,7 +59,8 @@ namespace DKCrm.Server.Services.OrderServices
                     ImportedProducts = s.ImportedProducts,
                     PurchaseAtExports = s.PurchaseAtExports,
                     SoldFromStorage = s.SoldFromStorage,
-                    StorageList = s.StorageList
+                    StorageList = s.StorageList,
+                    DateTimeConversionCurrency = s.DateTimeConversionCurrency
                 }).ToListAsync();
         }
         public async Task<ExportedProduct> GetOneAsync(Guid id)
@@ -93,7 +95,8 @@ namespace DKCrm.Server.Services.OrderServices
                 ImportedProducts = s.ImportedProducts,
                 PurchaseAtExports = s.PurchaseAtExports,
                 SoldFromStorage = s.SoldFromStorage,
-                StorageList = s.StorageList
+                StorageList = s.StorageList,
+                DateTimeConversionCurrency = s.DateTimeConversionCurrency
             });
            
             if (request.FilterTuple != null)

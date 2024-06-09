@@ -76,6 +76,12 @@ namespace DKCrm.Server.Migrations.UserDb
                     b.Property<Guid?>("AddressId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("AreThereNewMessages")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AreThereNewOrderComments")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -157,6 +163,44 @@ namespace DKCrm.Server.Migrations.UserDb
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.Chat.ChatGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CreatingUserId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DateTimeUpdate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFullDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPrivateGroup")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UpdatedUser")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChatGroups");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.Chat.ChatMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -166,25 +210,54 @@ namespace DKCrm.Server.Migrations.UserDb
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<DateTime?>("DateTimeUpdate")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("FromUserId")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFullDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ToUserId")
-                        .IsRequired()
+                    b.Property<Guid>("ToChatGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UpdatedUser")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("FromUserId");
 
-                    b.HasIndex("ToUserId");
+                    b.HasIndex("ToChatGroupId");
 
                     b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Chat.LogUsersVisitToChat", b =>
+                {
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ChatGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateTimeVisit")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("ApplicationUserId", "ChatGroupId");
+
+                    b.HasIndex("ChatGroupId");
+
+                    b.ToTable("LogUsersVisitToChats", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -337,18 +410,39 @@ namespace DKCrm.Server.Migrations.UserDb
             modelBuilder.Entity("DKCrm.Shared.Models.Chat.ChatMessage", b =>
                 {
                     b.HasOne("DKCrm.Shared.Models.ApplicationUser", "FromUser")
-                        .WithMany("ChatMessagesFromUsers")
+                        .WithMany()
                         .HasForeignKey("FromUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DKCrm.Shared.Models.ApplicationUser", "ToUser")
-                        .WithMany("ChatMessagesToUsers")
-                        .HasForeignKey("ToUserId")
+                    b.HasOne("DKCrm.Shared.Models.Chat.ChatGroup", "ToChatGroup")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("ToChatGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("FromUser");
 
-                    b.Navigation("ToUser");
+                    b.Navigation("ToChatGroup");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.Chat.LogUsersVisitToChat", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("LogUsersVisitToChatList")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DKCrm.Shared.Models.Chat.ChatGroup", "ChatGroup")
+                        .WithMany("LogUsersVisitToChatList")
+                        .HasForeignKey("ChatGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("ChatGroup");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -404,9 +498,14 @@ namespace DKCrm.Server.Migrations.UserDb
 
             modelBuilder.Entity("DKCrm.Shared.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("ChatMessagesFromUsers");
+                    b.Navigation("LogUsersVisitToChatList");
+                });
 
-                    b.Navigation("ChatMessagesToUsers");
+            modelBuilder.Entity("DKCrm.Shared.Models.Chat.ChatGroup", b =>
+                {
+                    b.Navigation("ChatMessages");
+
+                    b.Navigation("LogUsersVisitToChatList");
                 });
 #pragma warning restore 612, 618
         }

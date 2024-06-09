@@ -153,6 +153,7 @@
         ExportedProduct!.PriceInBuyerCurrency = EditedExportedProduct!.PriceInBuyerCurrency;
         ExportedProduct!.PriceInTransactionCurrency = EditedExportedProduct!.PriceInTransactionCurrency;
         ExportedProduct!.PriceLocal = EditedExportedProduct!.PriceLocal;
+        ExportedProduct.DateTimeConversionCurrency = DateTime.Now;
         @if (await ExportedProductManager.UpdateAsync(ExportedProduct!))
         {
             _snackBar.Add("Цена обновлена");

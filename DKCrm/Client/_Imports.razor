@@ -14,7 +14,8 @@
 @inject ISnackbar _snackBar
 @inject IJSRuntime _jsRuntime
 @inject AuthenticationStateProvider _stateProvider;
-
+@inject IConfirmationActionService ConfirmationActionService
+@inject IDocumentManager DocumentManager
 
 @inject IChatManager _chatManager
 @inject IUserManagerCustom UserManagerCustom
@@ -37,7 +38,8 @@
 @inject ICategoryOptionsManager CategoryOptionsManager
 @inject IApplicationOrderingManager ApplicationOrderingManager
 @inject IMissingProductConverter MissingProductConverterService
-@inject IConfirmationActionService ConfirmationActionService
+@inject ICommentOrderManager CommentOrderManager
+
 
 @using DKCrm.Client
 @using DKCrm.Client.Shared
@@ -55,6 +57,7 @@
 @using DKCrm.Client.Services.CompanyServices
 @using DKCrm.Client.Services.ConfirmationAction
 @using DKCrm.Client.Services.CurrencyService
+@using DKCrm.Client.Services.DocumentService
 @using DKCrm.Client.Services.InternalCompanyDataService
 @using DKCrm.Client.Services.OrderServices
 

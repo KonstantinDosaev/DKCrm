@@ -11,7 +11,7 @@ namespace DKCrm.Shared.Models.OrderModels
         public List<Guid>? OurCompanies { get; set; }
         public List<Guid>? ContragentsCompanies { get; set; }
         public bool IsHistoryOrders { get; set; }
-        public bool IsNotCompleteOrders { get; set; }
+        public bool? IsCompleteOrders { get; set; }
         public Guid? CurrentStatusId { get; set; }
         public Guid? CurrentPartnerCompanyId { get; set; }
         public Guid? CurrentOurCompanyId { get; set; }

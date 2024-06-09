@@ -48,7 +48,8 @@ namespace DKCrm.Server.Services.OrderServices
                     ExportedProducts = s.ExportedProducts,
                     PurchaseAtExportList = s.PurchaseAtExportList,
                     PurchaseAtStorageList = s.PurchaseAtStorageList,
-                    StorageList = s.StorageList
+                    StorageList = s.StorageList,
+                    DateTimeConversionCurrency = s.DateTimeConversionCurrency
                 }).ToListAsync();
         }
 
@@ -68,7 +69,8 @@ namespace DKCrm.Server.Services.OrderServices
                     ExportedProducts = s.ExportedProducts,
                     PurchaseAtExportList = s.PurchaseAtExportList,
                     PurchaseAtStorageList = s.PurchaseAtStorageList,
-                    StorageList = s.StorageList
+                    StorageList = s.StorageList,
+                    DateTimeConversionCurrency = s.DateTimeConversionCurrency
                 }).ToListAsync();
             await _context.Brands.Where(w => importedProducts.Select(s => s.Product!.BrandId).Contains(w.Id)).LoadAsync();
             
