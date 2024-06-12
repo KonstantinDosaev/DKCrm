@@ -20,7 +20,7 @@ var connectionStringUser = builder.Configuration.GetConnectionString("UserContex
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
 
 builder.Services.AddTransient<IAuthService, AuthService>();
-builder.Services.AddTransient<IDocumentService, DocumentService>();
+
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IChatService, ChatService>();
 builder.Services.AddTransient<IInternalCompanyDataService, InternalCompanyDataService>();
@@ -43,7 +43,7 @@ builder.Services.AddTransient<IExportedOrderStatusServices, ExportedOrderStatusS
 builder.Services.AddTransient<IImportedOrderStatusService, ImportedOrderStatusService>();
 builder.Services.AddTransient<IApplicationOrderingService, ApplicationOrderingService>();
 builder.Services.AddTransient<IOrderCommentsService, OrderCommentsService>();
-
+builder.Services.AddTransient<IDocumentService, DocumentService>();
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
 builder.Services.AddDbContext<UserDbContext>(options =>

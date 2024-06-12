@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FreeSpire.Doc" Version="12.2.0" />
+    <PackageReference Include="DocXToPdfConverter" Version="1.0.5" />
+    <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.4.20" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.22" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.22" />
@@ -23,8 +24,6 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.22" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.0" />
-    <PackageReference Include="NReco.PdfGenerator" Version="1.2.1" />
-    <PackageReference Include="OpenXmlPowerTools.NetCore" Version="1.1.0" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
     <PackageReference Include="TemplateEngine.Docx" Version="1.1.5" />
   </ItemGroup>
@@ -36,6 +35,7 @@
 
   <ItemGroup>
     <Folder Include="Models\" />
+    <Folder Include="Services\DocumentServices\" />
     <Folder Include="StaticFiles\Images\" />
   </ItemGroup>
 

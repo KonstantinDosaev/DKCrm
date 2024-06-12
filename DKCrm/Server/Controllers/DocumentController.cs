@@ -19,7 +19,7 @@ namespace DKCrm.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDoc()
         {
-            var t = _documentService.CreateAsync();
+            var t = await _documentService.CreateAsync();
             return Ok(t);
         }
     }

@@ -3,6 +3,6 @@
     public interface IDocumentService
     {
         void CreatePaymentInvoiceAsync(Guid orderId);
-        string CreateAsync();
+        Task<string> CreateAsync();
     }
 }
