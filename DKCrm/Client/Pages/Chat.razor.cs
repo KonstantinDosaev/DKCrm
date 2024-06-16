@@ -1,12 +1,9 @@
-﻿using System.Formats.Asn1;
-using System.Text;
-using DKCrm.Shared.Models.Chat;
+﻿using DKCrm.Shared.Models.Chat;
 using DKCrm.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
-using DKCrm.Shared.Models.UserAuth;
 
 namespace DKCrm.Client.Pages
 {

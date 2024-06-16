@@ -1,5 +1,5 @@
 ﻿
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
 using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.Chat
@@ -7,8 +7,10 @@ namespace DKCrm.Shared.Models.Chat
     public class ChatMessage: ISoftDelete
     {
         public Guid Id { get; set; }
+        [MaxLength(50)]
         public string FromUserId { get; set; } = null!;
         public Guid ToChatGroupId { get; set; }
+        [MaxLength(2400)]
         public string Message { get; set; } = null!;
         public DateTime CreatedDate { get; set; }
 
@@ -18,6 +20,7 @@ namespace DKCrm.Shared.Models.Chat
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
+        [MaxLength(50)]
         public string? UpdatedUser { get; set; }
     }
 }

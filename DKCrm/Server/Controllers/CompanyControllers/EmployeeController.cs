@@ -44,7 +44,5 @@ namespace DKCrm.Server.Controllers.CompanyControllers
         {
             return Ok(await _employeeService.DeleteAsync(id));
         }
-
-
     }
 }

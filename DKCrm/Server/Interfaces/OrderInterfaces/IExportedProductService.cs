@@ -1,9 +1,5 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models;
+﻿using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Interfaces.OrderInterfaces
 {

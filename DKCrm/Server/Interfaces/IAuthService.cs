@@ -1,7 +1,4 @@
-﻿using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models.UserAuth;
-using DKCrm.Shared.Models;
-using Microsoft.AspNetCore.Identity;
+﻿using DKCrm.Shared.Models.UserAuth;
 using System.Security.Claims;
 
 namespace DKCrm.Server.Interfaces

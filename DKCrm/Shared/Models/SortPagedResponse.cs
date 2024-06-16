@@ -1,6 +1,4 @@
-﻿
-
-namespace DKCrm.Shared.Models
+﻿namespace DKCrm.Shared.Models
 {
     public class SortPagedResponse <T>
     {

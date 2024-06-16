@@ -1,6 +1,4 @@
-﻿using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models.CompanyModels;
-using Microsoft.EntityFrameworkCore;
+﻿using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Server.Interfaces.CompanyInterfaces
 {

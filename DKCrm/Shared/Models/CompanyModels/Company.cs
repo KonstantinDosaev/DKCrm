@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 using DKCrm.Shared.Iterfaces;
 using DKCrm.Shared.Models.OrderModels;
-using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Shared.Models.CompanyModels
 {
     public class Company: IIdentifiable
     {
         public Guid Id { get; set; }
-
+        [MaxLength(50)]
         public string Name { get; set; } = null!;
+        [MaxLength(200)]
         public string? Description { get; set; }
+        [MaxLength(50)]
         public string? Director { get; set; }
+        [MaxLength(50)]
         public string? Inn { get; set; }
         public virtual Address? ActualAddress { get; set; }
         public  Guid? ActualAddressId { get; set; }

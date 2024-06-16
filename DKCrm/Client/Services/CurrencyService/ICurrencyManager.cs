@@ -1,6 +1,4 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
-
-namespace DKCrm.Client.Services.CurrencyService
+﻿namespace DKCrm.Client.Services.CurrencyService
 {
     public interface ICurrencyManager
     {

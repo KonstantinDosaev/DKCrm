@@ -1,6 +1,4 @@
 ﻿using DKCrm.Server.Interfaces;
-using DKCrm.Server.Services;
-using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers
@@ -20,6 +18,12 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> GetDoc()
         {
             var t = await _documentService.CreateAsync();
+            return Ok(t);
+        }
+        [HttpPost("{orderId:guid}")]
+        public async Task<IActionResult> CreatePaymentInvoicePdf(Guid orderId)
+        {
+            var t = await _documentService.CreatePaymentInvoicePdfAsync(orderId);
             return Ok(t);
         }
     }

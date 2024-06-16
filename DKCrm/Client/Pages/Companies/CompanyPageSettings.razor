@@ -1,9 +1,5 @@
 ﻿@using DKCrm.Shared.Models.CompanyModels
 
-
-        @* <MudText Typo="Typo.h6">Общие настройки компаний</MudText>*@
-
-
 <MudTabs @bind-ActivePanelIndex="_activeIndex" Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
     <MudTabPanel OnClick="LoadingData">
         <ChildContent>
@@ -21,17 +17,17 @@
                                                   RequiredError="Введите процент"
                                                   Class="mb-3"
                                                   Format="0.##"
-                                                  Step="0.1F"
+                                                  Step="0.1D"
                                                   Min="0" Max="100"
                                                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" />
                                 <MudNumericField  Label="НДС" @bind-Value="InternalCompanyData.Nds"
-                                                  For="@(() => InternalCompanyData.Nds)"
+                                                  For="@(() => InternalCompanyData.Nds!)"
                                                   Variant="Variant.Outlined"
                                                   Required="true"
                                              RequiredError="Введите НДС"
                                                   Class="mb-3"
                                                   Format="0.##"
-                                                  Step="0.1F"
+                                                  Step="0.1D"
                                                   Min="0" Max="100"
                                                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" />
                                 <MudSelect Variant="Variant.Outlined" Placeholder="Выберите локальную валюту" @bind-Value="InternalCompanyData.LocalCurrency"
@@ -130,8 +126,7 @@
     </MudTabPanel>
 </MudTabs>
 
-
-      <MudDialog @bind-IsVisible="_visibleCompanyTypeUpdateDialog">
+<MudDialog @bind-IsVisible="_visibleCompanyTypeUpdateDialog">
           <DialogContent>
               <MudText>Редактирование типа компании</MudText>
               <MudCard>
@@ -146,7 +141,6 @@
               </MudCard>
           </DialogContent>
       </MudDialog>
-  
 
 <MudDialog @bind-IsVisible="_visibleCompanyTypeRemoveDialog">
     <DialogContent>
@@ -169,8 +163,7 @@
     </DialogContent>
 </MudDialog>
 
-
-    <MudDialog @bind-IsVisible="_visibleCompanyTagUpdateDialog">
+<MudDialog @bind-IsVisible="_visibleCompanyTagUpdateDialog">
         <DialogContent>
             <MudText>Редактирование тега компании</MudText>
             <MudCard>
@@ -386,4 +379,4 @@
     }
    
     }
-}
+

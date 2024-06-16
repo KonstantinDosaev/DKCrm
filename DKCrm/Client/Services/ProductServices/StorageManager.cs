@@ -1,5 +1,4 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
-using DKCrm.Shared.Models.Products;
+﻿using DKCrm.Shared.Models.Products;
 using System.Net.Http.Json;
 using DKCrm.Shared.Models.OrderModels;
 using System.Text.Json;

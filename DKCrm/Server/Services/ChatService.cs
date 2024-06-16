@@ -6,8 +6,6 @@ using System.Security.Claims;
 using DKCrm.Server.Interfaces;
 using DKCrm.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
-using DKCrm.Shared.Models.UserAuth;
-using DKCrm.Shared.Models.OrderModels;
 using DateTime = System.DateTime;
 
 namespace DKCrm.Server.Services

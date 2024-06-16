@@ -5,6 +5,7 @@ using DKCrm.Client.Services.CategoryService;
 using DKCrm.Client.Services.Chat;
 using DKCrm.Client.Services.CompanyServices;
 using DKCrm.Client.Services.ConfirmationAction;
+using DKCrm.Client.Services.CurrencyDictionaryService;
 using DKCrm.Client.Services.CurrencyService;
 using DKCrm.Client.Services.DocumentService;
 using DKCrm.Client.Services.FnsRequesting;
@@ -55,6 +56,7 @@ builder.Services.AddTransient<IMissingProductConverter, MissingProductConverter>
 
 builder.Services.AddTransient<IConfirmationActionService, ConfirmationActionService>();
 builder.Services.AddTransient<IDocumentManager, DocumentManager>();
+builder.Services.AddTransient<ICurrencyDictionaryManager, CurrencyDictionaryManager>();
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

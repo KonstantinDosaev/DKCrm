@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Iterfaces;
+﻿using System.ComponentModel.DataAnnotations;
+using DKCrm.Shared.Iterfaces;
 using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Shared.Models.OrderModels
@@ -10,12 +11,16 @@ namespace DKCrm.Shared.Models.OrderModels
         public double? Nds { get; set; }
         public DateTime? DateTimeCreated { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
+        [MaxLength(1000)]
         public string? Images { get; set; }
         public bool IsAllProductsAreCollected { get; set; }
         public bool OrderIsOver { get; set; }
         public double? CurrencyPercent { get; set; }
+        [MaxLength(10)]
         public string? TransactionCurrency { get; set; }
+        [MaxLength(10)]
         public string? BuyerCurrency { get; set; }
+        [MaxLength(10)]
         public string? LocalCurrency { get; set; }
         public virtual ICollection<ExportedProduct>? ExportedProducts { get; set; }
         public virtual ICollection<ExportedOrderStatus>? ExportedOrderStatus { get; set; }
@@ -35,6 +40,7 @@ namespace DKCrm.Shared.Models.OrderModels
 
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
+        [MaxLength(50)]
         public string? UpdatedUser { get; set; }
     }
 }

@@ -1,7 +1,5 @@
-﻿@using Microsoft.AspNetCore.Components
-@using DKCrm.Shared.Models.CompanyModels
+﻿@using DKCrm.Shared.Models.CompanyModels
 @using DKCrm.Client.Services.FnsRequesting
-@using System.Net
 @using DKCrm.Shared.Models.OrderModels
 @inject IRequestingFromFnsService RequestingFromFnsService
 
@@ -166,8 +164,8 @@
                                           Immediate="true"
                                           Label="Наименование банка" />
 
-                            <MudTextField @bind-Value="@bankDetail.INN"
-                                          For="@(() => @bankDetail.INN)"
+                            <MudTextField @bind-Value="@bankDetail.Inn"
+                                          For="@(() => @bankDetail.Inn)"
                                           Immediate="true"
                                           Label="ИНН" />
                             <MudTextField @bind-Value="@bankDetail.BankAccount"

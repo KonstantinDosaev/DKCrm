@@ -12,9 +12,9 @@
     Настройки
     <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
 </MudButton>
-<MudGrid>
-    <MudItem xs="10">
-        <MudTable Height="" Class="m-2" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" 
+<div class="d-flex ">
+    <div class="flex-grow-1 mr-4">
+        <MudTable Height="" Class="" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" 
                   OnRowClick="RowClickEvent" Filter="new Func<Company,bool>(FilterFunc1)"
                   Striped="true" 
                   Bordered="true" 
@@ -64,9 +64,9 @@
                 <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
             </PagerContent>
         </MudTable>
-    </MudItem>
-    <MudItem xs="2">
-        <MudCard Outlined="true" Class="m-3 pa-3">
+    </div>
+    <div style="min-width: 250px">
+        <MudCard Outlined="true" Class="pa-3">
             <MudText Typo="Typo.h4">Теги</MudText>
             @if (TagsCompanies != null)
             {
@@ -85,24 +85,29 @@
                 </MudList>
             }
         </MudCard>
-    </MudItem>
-</MudGrid>
+    </div>
+</div>
 
 
 <CreateCompanyDialog 
     RefreshParent="GetAllCompanies"
                      @bind-VisibleDialog="_visibleAddCompanyDialog" />
 
-<MudDrawerContainer Class="mud-height-full">
-
-    <MudDrawer @bind-Open="@VisibleCompanySettingsDrawer" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
+<MudDialog @bind-IsVisible="@VisibleCompanySettingsDrawer" Options="new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium}" >
+    <TitleContent> <MudText Typo="Typo.h6">Общие настройки компаний</MudText></TitleContent>
+    <DialogContent>
+       
+         <CompanyPageSettings/>
+    </DialogContent>
+</MudDialog>
+@*    <MudDrawer @bind-Open="@VisibleCompanySettingsDrawer" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">Общие настройки компаний</MudText>
         </MudDrawerHeader>
         
         <CompanyPageSettings/>
-    </MudDrawer>
-</MudDrawerContainer>
+    </MudDrawer>*@
+
 @code {
 
     [Parameter] public Guid? TagId { get; set; }
@@ -192,5 +197,4 @@
         color: white !important;
         font-weight: bold;
     }
-    
 </style>

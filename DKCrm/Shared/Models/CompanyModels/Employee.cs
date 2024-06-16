@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 using DKCrm.Shared.Iterfaces;
 using DKCrm.Shared.Models.OrderModels;
 
@@ -13,16 +7,24 @@ namespace DKCrm.Shared.Models.CompanyModels
     public class Employee : IIdentifiable
     {
         public Guid Id { get; set; }
+        [MaxLength(30)]
         public string? FirstName { get; set; }
+        [MaxLength(30)]
         public string? MiddleName { get; set; }
+        [MaxLength(30)]
         public string? LastName { get; set; }
+        [MaxLength(30)]
         public string? Position { get; set; }
+        [MaxLength(30)]
         public string? Phone { get; set; }
+        [MaxLength(50)]
         public string? Email { get; set;}
+        [MaxLength(200)]
         public string? Description { get; set; }
         public bool IsOurEmployee { get; set; }
       
         public virtual ICollection<Company>? Companies { get; set; }
+        [MaxLength(50)]
         public string? UserId { get; set; }
 
         //[InverseProperty(nameof(ExportedOrder.OurEmployee))] public virtual ICollection<ExportedOrder>? ExportedOrdersOur { get; set; }

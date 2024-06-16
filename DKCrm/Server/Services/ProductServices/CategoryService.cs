@@ -1,7 +1,6 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces.ProductInterfaces;
 using DKCrm.Shared.Models.Products;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Services.ProductServices

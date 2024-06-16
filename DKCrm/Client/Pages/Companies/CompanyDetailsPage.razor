@@ -11,8 +11,8 @@
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
         </MudButton>
     </div>
-    <MudGrid>
-        <MudItem xs="10">
+    <div class="d-flex ">
+    <div class="flex-grow-1 mr-4">
   
             <MudPaper Elevation="12"Class="p-4 m-1">
         
@@ -146,9 +146,9 @@
                             </MudText>
                             <MudText Typo="Typo.body1">
                                 <span class="mr-2 fw-bold">ИНН:</span>
-                                @if (bankDetailsItem.INN != null)
+                                @if (bankDetailsItem.Inn != null)
                                 {
-                                    @bankDetailsItem.INN
+                                    @bankDetailsItem.Inn
                                 }
                             </MudText>
                             <MudText Typo="Typo.body1">
@@ -166,9 +166,9 @@
             <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="()=>_visibleRemoveCompanyDialog=true" Style="margin-top: 2rem;" Color="Color.Warning">
                 Удалить компанию<MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.DeleteForever" Class="pa-0 ml-2" />
             </MudButton>
-        </MudItem>
-        <MudItem xs="2">
-            <MudCard Outlined="true" Class="m-3 pa-3">
+        </div>
+        <div style="min-width: 250px">
+            <MudCard Outlined="true" Class=" pa-3">
                 <MudText Typo="Typo.h4">Теги</MudText>
                 @if (Company.TagsCompanies != null)
                 {
@@ -187,8 +187,8 @@
                     </MudList>
                 }
             </MudCard>
-        </MudItem>
-    </MudGrid>
+        </div>
+    </div>
     <EditCompanyDialog 
         Id="Company.Id"
         RefreshProductList="GetCompany"

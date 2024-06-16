@@ -1,4 +1,4 @@
-﻿using DKCrm.Shared.Models.Chat;
+﻿using DKCrm.Client.Constants;
 using System.Net.Http.Json;
 
 namespace DKCrm.Client.Services.DocumentService
@@ -16,7 +16,11 @@ namespace DKCrm.Client.Services.DocumentService
         {
             var ytr = await _httpClient.GetFromJsonAsync<string>($"api/Document/GetDoc") ?? throw new InvalidOperationException();
             return ytr;
-
+        }
+        public async Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/Document/CreatePaymentInvoicePdf/{orderId}", orderId, JsonOptions.JsonIgnore);
+            return result.IsSuccessStatusCode;
         }
     }
 }

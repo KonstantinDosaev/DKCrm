@@ -1,9 +1,5 @@
-﻿using DKCrm.Shared.Models.Products;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using DKCrm.Shared.Models.Products;
 using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.OrderModels
@@ -13,10 +9,13 @@ namespace DKCrm.Shared.Models.OrderModels
         public Guid Id { get; set; }
         public int Quantity { get; set; }
         public decimal? PriceLocal { get; set; }
+        [MaxLength(10)]
         public string? TransactionCurrency { get; set; }
         public decimal? PriceInTransactionCurrency { get; set; }
+        [MaxLength(10)]
         public string? BuyerCurrency { get; set; }
         public decimal? PriceInBuyerCurrency { get; set; }
+        [MaxLength(200)]
         public string? Description { get; set; }
         public DateTime? DateTimeConversionCurrency { get; set; }
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
@@ -33,6 +32,7 @@ namespace DKCrm.Shared.Models.OrderModels
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
+        [MaxLength(50)]
         public string? UpdatedUser { get; set; }
     }
 }

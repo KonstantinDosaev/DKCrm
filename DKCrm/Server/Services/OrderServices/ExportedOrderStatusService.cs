@@ -1,9 +1,7 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Services.OrderServices
@@ -32,6 +30,13 @@ namespace DKCrm.Server.Services.OrderServices
         public async Task<ExportedOrderStatus> GetDetailAsync(Guid id)
         {
             var status = await _context.ExportedOrderStatus.FirstOrDefaultAsync(a => a.Id == id);
+            if (status== null)
+            {
+                if (Initialize())
+                    status = await _context.ExportedOrderStatus.FirstOrDefaultAsync(a => a.Id == id);
+                else
+                    throw new InvalidOperationException();
+            }
             return status ?? throw new InvalidOperationException();
         }
 

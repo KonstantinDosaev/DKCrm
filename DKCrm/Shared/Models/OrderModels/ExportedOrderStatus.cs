@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 using DKCrm.Shared.Iterfaces;
-using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Shared.Models.OrderModels
 {
     public class ExportedOrderStatus : IIdentifiable, ISoftDelete
     {
         public Guid Id { get; set; }
+        [MaxLength(50)]
         public string Value { get; set; } = null!;
         public double Position { get; set; }
         public virtual ICollection<ExportedOrder>? ExportedOrders { get; set; }
@@ -19,6 +15,7 @@ namespace DKCrm.Shared.Models.OrderModels
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
+        [MaxLength(50)]
         public string? UpdatedUser { get; set; }
 
         public Guid? ParentId { get; set; }

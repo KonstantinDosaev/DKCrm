@@ -13,6 +13,7 @@
     string Patch { get; set; } = null!;
     private async Task CreateDoc()
     {
-         Patch=await DocumentManager.CreateDoc();
+        var res = await DocumentManager.CreatePaymentInvoicePdfAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
+        Patch = res.ToString();
     }
 }

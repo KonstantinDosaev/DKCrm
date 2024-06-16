@@ -1,5 +1,4 @@
 ﻿using DKCrm.Shared.Models.CompanyModels;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Interfaces.CompanyInterfaces
 {

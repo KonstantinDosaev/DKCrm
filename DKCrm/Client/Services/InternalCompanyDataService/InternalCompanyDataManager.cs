@@ -1,5 +1,4 @@
-﻿using DKCrm.Shared.Models.Products;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using DKCrm.Shared.Models;
 using DKCrm.Client.Constants;
 

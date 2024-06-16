@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DKCrm.Shared.Models.UserAuth
 {
@@ -11,7 +6,6 @@ namespace DKCrm.Shared.Models.UserAuth
     {
         [Required] public string UserName { get; set; } = null!;
         [Required] public string Password { get; set; } = null!;
-
         public bool RememberMe { get; set; }
     }
 }

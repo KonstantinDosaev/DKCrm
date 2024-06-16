@@ -1,6 +1,4 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Shared.Models;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DKCrm.Server.Interfaces;
 using DKCrm.Shared.Models.Chat;

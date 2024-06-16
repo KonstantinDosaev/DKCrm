@@ -1,5 +1,4 @@
 ﻿using DKCrm.Shared.Models;
-using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Client.Services.InternalCompanyDataService
 {

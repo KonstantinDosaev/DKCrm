@@ -1,8 +1,6 @@
-﻿using DKCrm.Server.Data;
-using DKCrm.Server.Interfaces.CompanyInterfaces;
+﻿using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Models.CompanyModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Controllers.CompanyControllers
 {

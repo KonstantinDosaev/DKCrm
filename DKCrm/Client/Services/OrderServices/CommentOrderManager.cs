@@ -1,6 +1,4 @@
-﻿using DKCrm.Shared.Models.Chat;
-using System.Net.Http;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
 

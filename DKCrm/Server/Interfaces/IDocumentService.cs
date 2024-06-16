@@ -2,7 +2,7 @@
 {
     public interface IDocumentService
     {
-        void CreatePaymentInvoiceAsync(Guid orderId);
+        Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId);
         Task<string> CreateAsync();
     }
 }

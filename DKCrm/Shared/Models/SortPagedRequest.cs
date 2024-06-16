@@ -1,6 +1,4 @@
-﻿using DKCrm.Shared.Models.Products;
-using Microsoft.OData.UriParser;
-using MudBlazor;
+﻿using MudBlazor;
 
 namespace DKCrm.Shared.Models
 {

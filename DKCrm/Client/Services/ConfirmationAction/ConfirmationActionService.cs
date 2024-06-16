@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-using MudBlazor;
+﻿using MudBlazor;
 
 namespace DKCrm.Client.Services.ConfirmationAction
 {

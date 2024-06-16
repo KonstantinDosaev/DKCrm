@@ -3,5 +3,6 @@
     public interface IDocumentManager
     {
          Task<string> CreateDoc();
+         Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId);
     }
 }

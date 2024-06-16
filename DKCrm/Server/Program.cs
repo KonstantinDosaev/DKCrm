@@ -1,10 +1,12 @@
 using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces;
 using DKCrm.Server.Interfaces.CompanyInterfaces;
+using DKCrm.Server.Interfaces.DocumentInterfaces;
 using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Server.Interfaces.ProductInterfaces;
 using DKCrm.Server.Services;
 using DKCrm.Server.Services.CompanyServices;
+using DKCrm.Server.Services.DocumentServices;
 using DKCrm.Server.Services.OrderServices;
 using DKCrm.Server.Services.ProductServices;
 using DKCrm.Shared.Models;
@@ -44,6 +46,11 @@ builder.Services.AddTransient<IImportedOrderStatusService, ImportedOrderStatusSe
 builder.Services.AddTransient<IApplicationOrderingService, ApplicationOrderingService>();
 builder.Services.AddTransient<IOrderCommentsService, OrderCommentsService>();
 builder.Services.AddTransient<IDocumentService, DocumentService>();
+builder.Services.AddTransient<IPriceToStringConverter, PriceToStringConverter>();
+builder.Services.AddTransient<IDocumentToOrderService, DocumentToOrderService>();
+builder.Services.AddTransient<PaymentInvoicePdfGenerator>();
+builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryService>();
+
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
 builder.Services.AddDbContext<UserDbContext>(options =>

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
-using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.Products
 {

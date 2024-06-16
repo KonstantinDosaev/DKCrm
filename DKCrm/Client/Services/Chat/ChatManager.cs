@@ -1,7 +1,6 @@
 ﻿using DKCrm.Shared.Models.Chat;
 using DKCrm.Shared.Models;
 using System.Net.Http.Json;
-using System.Security.Claims;
 
 namespace DKCrm.Client.Services.Chat
 {

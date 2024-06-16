@@ -1,5 +1,4 @@
 ﻿using DKCrm.Shared.Models;
-using DKCrm.Shared.Models.Chat;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
@@ -49,6 +48,8 @@ namespace DKCrm.Server.Data
 
         public DbSet<ApplicationOrderingProducts> ApplicationOrderingProducts { get; set; } = null!;
         public DbSet<ApplicationOrderingProductsProduct> ApplicationOrderingProductsProducts { get; set; } = null!;
+        public DbSet<CurrencyDictionary> CurrencyDictionaries { get; set; } = null!;
+        public DbSet<InfoSetFromDocumentToOrder> DocumentsToOrder { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -1,7 +1,5 @@
-﻿using DKCrm.Shared.Models.Products;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using DKCrm.Shared.Models.CompanyModels;
-using System.Text.Json;
 using DKCrm.Client.Constants;
 
 namespace DKCrm.Client.Services.CompanyServices

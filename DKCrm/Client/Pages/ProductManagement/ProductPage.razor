@@ -1,9 +1,7 @@
 ﻿@page "/product"
 @page "/product/{chapter}/{chapterid:guid}"
-@using Microsoft.AspNetCore.Components
 @using DKCrm.Client.Components.ProductFilter
 @using DKCrm.Shared.Constants
-@using Microsoft.OData.UriParser
 
 <MudTable ServerData="@(new Func<TableState, Task<TableData<ProductsDto>>>(ServerReload))"
           Dense="false"

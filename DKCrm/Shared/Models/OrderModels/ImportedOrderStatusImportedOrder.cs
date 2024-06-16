@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.OrderModels
@@ -18,6 +14,7 @@ namespace DKCrm.Shared.Models.OrderModels
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeCreate { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
+        [MaxLength(50)]
         public string? UpdatedUser { get; set; }
     }
 }

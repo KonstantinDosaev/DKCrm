@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Iterfaces;
+﻿using System.ComponentModel.DataAnnotations;
+using DKCrm.Shared.Iterfaces;
 using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Shared.Models.OrderModels
@@ -6,15 +7,20 @@ namespace DKCrm.Shared.Models.OrderModels
     public class ImportedOrder : IIdentifiable,ISoftDelete
     {
         public Guid Id { get; set; }
+        [MaxLength(50)]
         public string? Number { get; set; }
         public DateTime? DateTimeCreated { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
+        [MaxLength(200)]
         public string? Images { get; set; }
         public bool OrderIsOver { get; set; }
         public bool IsAllProductsAreCollected { get; set; }
         public double? CurrencyPercent { get; set; }
+        [MaxLength(10)]
         public string? TransactionCurrency { get; set; }
+        [MaxLength(10)]
         public string? SupplierCurrency { get; set; }
+        [MaxLength(10)]
         public string? LocalCurrency { get; set; }
         public double? Nds { get; set; }
 
@@ -43,6 +49,7 @@ namespace DKCrm.Shared.Models.OrderModels
 
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
+        [MaxLength(50)]
         public string? UpdatedUser { get; set; }
     }
 }

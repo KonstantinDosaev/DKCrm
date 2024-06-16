@@ -1,7 +1,6 @@
 ﻿using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
-using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers.OrderControllers

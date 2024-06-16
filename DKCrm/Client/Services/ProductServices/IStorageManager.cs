@@ -1,5 +1,4 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
-using DKCrm.Shared.Models.OrderModels;
+﻿using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
 
 namespace DKCrm.Client.Services.ProductServices

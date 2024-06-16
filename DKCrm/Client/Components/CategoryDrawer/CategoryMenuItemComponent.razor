@@ -1,6 +1,4 @@
-﻿@using DKCrm.Client.Components.CategoryDrawer
-
-@if (Category!.Children == null || !Category.Children.Any())
+﻿@if (Category!.Children == null || !Category.Children.Any())
  {
 
     <MudListItem Dense="true" OnClick="@CloseCategoryDrawerCallback" Href=@($"/product/category/{Category.Id}") Value="@Category.Name">

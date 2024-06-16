@@ -1,6 +1,5 @@
 ﻿using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Chat;
-using DKCrm.Shared.Models.Products;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

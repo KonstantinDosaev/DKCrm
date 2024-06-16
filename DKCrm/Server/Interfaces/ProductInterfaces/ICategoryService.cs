@@ -1,5 +1,4 @@
 ﻿using DKCrm.Shared.Models.Products;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKCrm.Server.Interfaces.ProductInterfaces
 {

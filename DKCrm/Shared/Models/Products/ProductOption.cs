@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using DKCrm.Shared.Iterfaces;
 
 namespace DKCrm.Shared.Models.Products
@@ -6,6 +7,7 @@ namespace DKCrm.Shared.Models.Products
     public class ProductOption:IIdentifiable
     {
         public Guid Id { get; set; }
+        [MaxLength(50)]
         public string Value { get; set; } = null!;
         public Guid ProductId { get; set; }
         public Guid CategoryOptionId { get; set; }
