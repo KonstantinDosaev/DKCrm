@@ -4,7 +4,7 @@ namespace DKCrm.Shared.Models.OrderModels
 {
     public class InfoSetFromDocumentToOrder
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         [MaxLength(50)]
         public string Name { get; set; } = null!;
         public int DocumentType { get; set; }

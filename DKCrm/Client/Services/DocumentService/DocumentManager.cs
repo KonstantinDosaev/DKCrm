@@ -1,5 +1,6 @@
 ﻿using DKCrm.Client.Constants;
 using System.Net.Http.Json;
+using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Client.Services.DocumentService
 {
@@ -12,10 +13,25 @@ namespace DKCrm.Client.Services.DocumentService
             _httpClient = httpClient;
         }
        
-        public async Task<string> CreateDoc()
+        public async Task<IEnumerable<InfoSetFromDocumentToOrder>> GetAllInfoSetsForOrderAsync(Guid orderId)
         {
-            var ytr = await _httpClient.GetFromJsonAsync<string>($"api/Document/GetDoc") ?? throw new InvalidOperationException();
-            return ytr;
+            return await _httpClient.GetFromJsonAsync<IEnumerable<InfoSetFromDocumentToOrder>>
+                ($"api/Document/GetAllDocumentFileInfoSetsForOrder/{orderId}") ?? throw new InvalidOperationException();
+        }
+        public async Task<IEnumerable<InfoSetFromDocumentToOrder>> GetOneInfoSetFromDocumentFileAsync(Guid infoSetId)
+        {
+            return await _httpClient.GetFromJsonAsync<IEnumerable<InfoSetFromDocumentToOrder>>
+                ($"api/Document/GetInfoSetFromDocumentFile/{infoSetId}") ?? throw new InvalidOperationException();
+        }
+        public async Task<byte[]> GetDocumentBytArrayAsync(Guid infoSetId)
+        {
+            return await _httpClient.GetFromJsonAsync<byte[]>
+                ($"api/Document/GetDocumentBytArray/{infoSetId}") ?? throw new InvalidOperationException();
+        }
+        public async Task<bool> RemoveDocumentAsync(Guid infoSetId)
+        {
+            var result = await _httpClient.DeleteAsync($"api/Document/RemoveDocument/{infoSetId}");
+            return result.IsSuccessStatusCode;
         }
         public async Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId)
         {

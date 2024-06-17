@@ -14,8 +14,7 @@ namespace DKCrm.Server.Migrations
                 name: "DocumentsToOrder",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     DocumentType = table.Column<int>(type: "integer", nullable: false),
                     FileType = table.Column<int>(type: "integer", nullable: false),

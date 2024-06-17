@@ -47,7 +47,7 @@ builder.Services.AddTransient<IApplicationOrderingService, ApplicationOrderingSe
 builder.Services.AddTransient<IOrderCommentsService, OrderCommentsService>();
 builder.Services.AddTransient<IDocumentService, DocumentService>();
 builder.Services.AddTransient<IPriceToStringConverter, PriceToStringConverter>();
-builder.Services.AddTransient<IDocumentToOrderService, DocumentToOrderService>();
+builder.Services.AddTransient<IInfoSetFromDocumentToOrderService, InfoSetFromDocumentToOrderService>();
 builder.Services.AddTransient<PaymentInvoicePdfGenerator>();
 builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryService>();
 
