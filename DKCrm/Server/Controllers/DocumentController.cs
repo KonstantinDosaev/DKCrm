@@ -1,5 +1,6 @@
 ﻿using DKCrm.Server.Interfaces;
 using DKCrm.Server.Interfaces.OrderInterfaces;
+using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers
@@ -35,5 +36,8 @@ namespace DKCrm.Server.Controllers
         [HttpPost("{orderId:guid}")]
         public async Task<IActionResult> CreatePaymentInvoicePdf(Guid orderId) 
             => Ok(await _documentService.CreatePaymentInvoicePdfAsync(orderId));
+        [HttpPost("{request}")]
+        public async Task<IActionResult> CreateOrderSpecificationPdf(CreateOrderSpecificationRequest request) 
+            => Ok(await _documentService.CreateOrderSpecificationPdfAsync(request));
     }
 }

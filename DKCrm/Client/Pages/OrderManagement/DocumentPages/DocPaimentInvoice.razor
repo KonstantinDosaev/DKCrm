@@ -11,7 +11,7 @@
     </ActivatorContent>
     <ChildContent>
         <MudButton OnClick="CreateDocument">Счет на оплату</MudButton>
-        <MudMenuItem>Barracks</MudMenuItem>
+        <MudButton OnClick="OpenCreateSpecificationDialog">Спецификацию</MudButton>
         <MudMenuItem>Armory</MudMenuItem>
     </ChildContent>
 </MudMenu>
@@ -43,12 +43,28 @@
         </MudPaper>
     }
 }
+<MudDialog @bind-IsVisible="_visibleCreateSpecificationDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="(() => _visibleCreateSpecificationDialog = false)" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+    
+
+        </MudCard>
+    </DialogContent>
+</MudDialog>
 @code {
 
-   [Parameter]public Guid OrderId { get; set; }
+    [Parameter] public Guid OrderId { get; set; } = new Guid("f41f77b1-0b1d-4025-b972-d985d742d772");
     IEnumerable<InfoSetFromDocumentToOrder>? InfoSets { get; set; }
     IGrouping<int,InfoSetFromDocumentToOrder>[]? GroupInfoSet { get; set; }
     InfoSetFromDocumentToOrder? CurrentInfoSet { get; set; }
+    CreateOrderSpecificationRequest? CreateOrderSpecificationRequest { get; set; }
+    
+    private bool _visibleCreateSpecificationDialog;
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,13 +72,29 @@
     }
     private async Task LoadDocInfoList()
     {
-        InfoSets = await DocumentManager.GetAllInfoSetsForOrderAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
+        InfoSets = await DocumentManager.GetAllInfoSetsForOrderAsync(OrderId);
        GroupInfoSet = InfoSets.GroupBy(g => g.DocumentType).ToArray();
         
     }
+
+    private void OpenCreateSpecificationDialog()
+    {
+        CreateOrderSpecificationRequest = new CreateOrderSpecificationRequest()
+        {
+            OrderId = OrderId, 
+            Conditions = new List<string>(){
+                "Базис поставки - франко-склад Покупателя.",
+                "Срок поставки с момента подписания настоящей Спецификации Сторонами.",
+                "Порядок расчетов: Покупатель производит 100% оплату стоимости Товара надлежащего качества на расчетный" +
+                " счет Поставщика в течении ______ банковских дней с момента приемки Товара и подписания обеими сторонами" +
+                " товарной накладной (универсального передаточного документа).",
+                "Настоящяя Спецификация вступает в силу с момента её подписания Сторонами."
+            }, NamingCondition = ""
+        };
+    }
     private async Task CreateDocument()
     {
-        var result = await DocumentManager.CreatePaymentInvoicePdfAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
+        var result = await DocumentManager.CreatePaymentInvoicePdfAsync(OrderId);
        
 
         await LoadDocInfoList();

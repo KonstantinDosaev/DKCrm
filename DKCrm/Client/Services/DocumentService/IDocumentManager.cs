@@ -9,5 +9,6 @@ namespace DKCrm.Client.Services.DocumentService
         Task<byte[]> GetDocumentBytArrayAsync(Guid infoSetId);
         Task<bool> RemoveDocumentAsync(Guid infoSetId);
          Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId);
+         Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request);
     }
 }

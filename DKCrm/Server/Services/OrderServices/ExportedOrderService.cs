@@ -55,13 +55,6 @@ namespace DKCrm.Server.Services.OrderServices
             await _context.PurchaseAtExports.Where(w => order!.ExportedProducts!.Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
             await _context.Products.Where(w => order!.ExportedProducts!.Select(s => s.ProductId).Contains(w.Id)).Include(i => i.Brand).LoadAsync();
             return order ?? throw new InvalidOperationException();
-            //var result = await _context.ExportedOrders
-            //    .Include(i=>i.OurCompany).ThenInclude(i=>i!.Employees)
-            //    .Include(i => i.CompanyBuyer).ThenInclude(i=>i!.Employees)
-            //    .Include(i => i.ApplicationOrderingProducts).ThenInclude(t=>t!.ProductList)
-            //    .Include(i => i.ExportedProducts)!.ThenInclude(t=>t.Product).ThenInclude(t=>t!.Brand)
-            //    .AsSingleQuery().FirstOrDefaultAsync(a => a.Id == id);
-            //return Ok(result);
         }
         public async Task<SortPagedResponse<ExportedOrder>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request)
         {

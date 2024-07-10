@@ -5,6 +5,7 @@ using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Globalization;
 using DKCrm.Shared.Constants;
+using DKCrm.Shared.Models.CompanyModels;
 using Document = iTextSharp.text.Document;
 using Font = iTextSharp.text.Font;
 using PageSize = iTextSharp.text.PageSize;
@@ -15,6 +16,8 @@ namespace DKCrm.Server.Services.DocumentServices
     public class PaymentInvoicePdfGenerator
     {
         private ExportedOrder? Order { get; set; } = null!;
+        private Company? OurCompany { get; set; }
+        private Company? BuyerCompany { get; set; }
         private readonly IExportedOrderService _orderService;
         private readonly IPriceToStringConverter _priceToString;
         private readonly IInfoSetFromDocumentToOrderService _infoSetFromDocumentToOrderService;
@@ -39,6 +42,8 @@ namespace DKCrm.Server.Services.DocumentServices
             _mainPathToFiles = Directory.GetCurrentDirectory();
             // Order = await _orderService.GetDetailAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
             if (Order == null) return false;
+            OurCompany = Order.OurCompany;
+            BuyerCompany = Order.CompanyBuyer;
             var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);
             var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();

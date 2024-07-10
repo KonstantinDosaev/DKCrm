@@ -18,12 +18,14 @@ namespace DKCrm.Server.Services
         private readonly ApplicationDBContext _context;
         private readonly IInfoSetFromDocumentToOrderService _infoSetFromDocumentToOrderService;
 
-        private readonly PaymentInvoicePdfGenerator _generator;
-        public DocumentService(ApplicationDBContext context, PaymentInvoicePdfGenerator generator, IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService)
+        private readonly PaymentInvoicePdfGenerator _generatorPayment;
+        private readonly OrderSpecificationPdfGenerator _generatorSpecification;
+        public DocumentService(ApplicationDBContext context, PaymentInvoicePdfGenerator generatorPayment, IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService, OrderSpecificationPdfGenerator generatorSpecification)
         {
             _context = context;
-            this._generator = generator;
+            this._generatorPayment = generatorPayment;
             _infoSetFromDocumentToOrderService = infoSetFromDocumentToOrderService;
+            _generatorSpecification = generatorSpecification;
         }
         public async Task<byte[]> GetDocumentBytArrayAsync(Guid infoSetId)
         {
@@ -42,10 +44,13 @@ namespace DKCrm.Server.Services
         
         public async Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId)
         {
-            return await _generator.CreatePaymentAsync(orderId);
+            return await _generatorPayment.CreatePaymentAsync(orderId);
         }
 
-
+        public async Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest createOrderSpecificationRequest)
+        {
+            return await _generatorSpecification.CreateSpecificationAsync(createOrderSpecificationRequest);
+        }
 
 
        
