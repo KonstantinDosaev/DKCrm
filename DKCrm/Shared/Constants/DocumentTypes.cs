@@ -3,6 +3,6 @@
     public enum DocumentTypes
     {
         PaymentInvoice = 1,
-        NoPaiment = 2,
+        OrderSpecification = 2,
     }
 }

@@ -1,5 +1,6 @@
 ﻿using DKCrm.Server.Interfaces;
 using DKCrm.Server.Interfaces.OrderInterfaces;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,6 +39,10 @@ namespace DKCrm.Server.Controllers
             => Ok(await _documentService.CreatePaymentInvoicePdfAsync(orderId));
         [HttpPost("{request}")]
         public async Task<IActionResult> CreateOrderSpecificationPdf(CreateOrderSpecificationRequest request) 
-            => Ok(await _documentService.CreateOrderSpecificationPdfAsync(request));
+            => Ok(await _documentService.CreateOrderSpecificationPdfAsync(request)); 
+
+        [HttpPost("{request}")]
+        public async Task<IActionResult> SetStampAndGetDocumentBytArray(AddStampToPdfRequest request) 
+            => Ok(await _documentService.AddStampToPdfAsync(request));
     }
 }

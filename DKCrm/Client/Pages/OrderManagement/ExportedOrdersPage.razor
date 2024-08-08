@@ -1,4 +1,5 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Components
+@using DKCrm.Client.Pages.OrderManagement.DocumentComponents
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 @using DKCrm.Shared.Constants
 @using DKCrm.Shared.Models.OrderModels
@@ -170,8 +171,21 @@
         </MudTd>
         
             <MudTd DataLabel="">
-                <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
-                <MudIconButton Size="@Size.Medium" OnClick="() => OpenOrderComments(context.Id)" Color="Color.Default" Icon="@Icons.Material.Sharp.Comment" Class="pa-0 ml-2"/>
+                <MudIconButton Size="@Size.Medium"
+                               OnClick="() => OpenUpdateOrderDialog(context)" 
+                               Color="Color.Default" 
+                               Icon="@Icons.Material.Sharp.Edit"
+                               Class="pa-0 ml-2"/>
+                <MudIconButton Size="@Size.Medium" 
+                               OnClick="() => OpenOrderComments(context.Id)"
+                               Color="Color.Default"
+                               Icon="@Icons.Material.Sharp.Comment"
+                               Class="pa-0 ml-2"/>
+                <MudIconButton Size="@Size.Medium" 
+                               OnClick="() => OpenDocumentManager(context.Id)"
+                               Color="Color.Default"
+                               Icon="@Icons.Material.Sharp.DocumentScanner"
+                               Class="pa-0 ml-2"/>
             </MudTd>
         
 
@@ -223,6 +237,22 @@
         </DialogContent>
     </MudDialog>
 }
+<MudDialog @bind-IsVisible="_visibleDocumentManagerDialog"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,DisableBackdropClick = true}"
+           Style="height: 100VH">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" 
+                       Size="Size.Small"
+                       OnClick="(() =>_visibleDocumentManagerDialog = false)"
+                       Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <DocumentManagerComponent OrderId="OrderId"></DocumentManagerComponent>
+    </DialogContent>
+  
+</MudDialog>
 <CreateExportedOrderDialog 
     RefreshProductList="() => _table!.ReloadServerData()"
     @bind-VisibleDialog="_visibleAddOrderDialog"/>
@@ -258,6 +288,7 @@
     private bool _visibleOrderFilter; 
     private bool _filterIsOn;  
     private bool _visibleOrderComments;
+    private bool _visibleDocumentManagerDialog;
 
     public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
     protected override void OnParametersSet()
@@ -339,6 +370,11 @@
         Order = order;
         _visibleUpdateOrderDialog = true;
     }
+    private void OpenDocumentManager(Guid orderId)
+    {
+        OrderId = orderId;
+        _visibleDocumentManagerDialog = true;
+    }
 
     private void OpenOrderDetails(Guid orderId)
     {
@@ -375,6 +411,7 @@
         _table!.ReloadServerData();
     }
     private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
+
 }
 <style>
     .mud-table-header {

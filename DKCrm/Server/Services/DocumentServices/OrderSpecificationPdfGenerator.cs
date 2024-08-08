@@ -1,12 +1,9 @@
-using DKCrm.Server.Interfaces.DocumentInterfaces;
 using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models.OrderModels;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Globalization;
-using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models.CompanyModels;
 using Document = iTextSharp.text.Document;
 using Font = iTextSharp.text.Font;
 using PageSize = iTextSharp.text.PageSize;
@@ -15,14 +12,12 @@ using Paragraph = iTextSharp.text.Paragraph;
 namespace DKCrm.Server.Services.DocumentServices;
 public class OrderSpecificationPdfGenerator
 {
-    private ExportedOrder? Order { get; set; }
-    private Company? OurCompany { get; set; }
-    private Company? BuyerCompany { get; set; }
+        private ExportedOrder? Order { get; set; }
+        private CreateOrderSpecificationRequest? CreateOrderSpecificationRequest { get; set; }
         private readonly IExportedOrderService _orderService;
-        private readonly ICompanyService _companyService;
-        private readonly IPriceToStringConverter _priceToString;
         private readonly IInfoSetFromDocumentToOrderService _infoSetFromDocumentToOrderService;
-        private Font _font = null!;
+        private readonly IConfiguration _configuration;
+    private Font _font = null!;
         private Font _fontBold = null!;
         private Font _fontBigBold = null!;
         private float _stampPosition;
@@ -30,32 +25,31 @@ public class OrderSpecificationPdfGenerator
         private int _indexInstanceDocument;
         private string _mainPathToFiles  = null!;
 
-        public OrderSpecificationPdfGenerator(IExportedOrderService orderService, IPriceToStringConverter priceToString, 
-            IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService, ICompanyService companyService)
+        public OrderSpecificationPdfGenerator(IExportedOrderService orderService, 
+            IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService, IConfiguration configuration)
         {
             _orderService = orderService;
-            _priceToString = priceToString;
             _infoSetFromDocumentToOrderService = infoSetFromDocumentToOrderService;
-            _companyService = companyService;
+            _configuration = configuration;
         }
 
         public async Task<bool> CreateSpecificationAsync(CreateOrderSpecificationRequest createOrderSpecificationRequest)
         {
+            CreateOrderSpecificationRequest = createOrderSpecificationRequest;
+            if (CreateOrderSpecificationRequest == null) return false;
+           
             Order = await _orderService.GetDetailAsync(createOrderSpecificationRequest.OrderId);
-            _mainPathToFiles = Directory.GetCurrentDirectory();
-            // Order = await _orderService.GetDetailAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
-            if (Order?.OurCompanyId == null || Order.CompanyBuyerId == null) return false;
-            OurCompany = await _companyService.GetAsync((Guid)Order.OurCompanyId);
-            BuyerCompany = await _companyService.GetAsync((Guid)Order.CompanyBuyerId);
-            if (OurCompany == null || BuyerCompany == null) return false;
-            
-            var docs = await _infoSetFromDocumentToOrderService
+            _mainPathToFiles = _configuration["PathToStaticFiles"];
+
+        var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);
             var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
-            _indexInstanceDocument = infoSetFromDocumentToOrders.Any() ? infoSetFromDocumentToOrders
-                .Where(w => w.DocumentType == (int)DocumentTypes.PaymentInvoice)
+            var infoSetFromSpecification = infoSetFromDocumentToOrders
+                .Where(w => w.DocumentType == (int)DocumentTypes.OrderSpecification).ToArray();
+            _indexInstanceDocument = infoSetFromSpecification.Any() ? infoSetFromSpecification
+                .Where(w => w.DateTimeCreated.Date == DateTime.Now.Date)
                 .GroupBy(g => g.FileType)
-                .Select(s => s.Count()).Max() + 1 : 1;
+                .Select(s => s.Count()).Max(s=>s) + 1 : 1;
             var memoryStream = new MemoryStream();
             const float margeLeft = 1.5f;
             const float margeRight = 1.5f;
@@ -70,7 +64,7 @@ public class OrderSpecificationPdfGenerator
                                     margeBottom.ToDpi()
                                    );
 
-            pdf.AddTitle("Счет на оплату");
+            pdf.AddTitle("Спецификация");
             pdf.AddAuthor(Order.OurCompany?.Name);
             pdf.AddCreationDate();
             var writer = PdfWriter.GetInstance(pdf, memoryStream);
@@ -84,12 +78,12 @@ public class OrderSpecificationPdfGenerator
         private async Task<bool> SaveToFileAsync(byte[] pdfBytes)
         { 
             if (Order == null) return false;
-            var folderName = Path.Combine("StaticFiles", "Documents", "PaymentInvoices");
-            var pathToSave = Path.Combine(_mainPathToFiles, folderName);
-            if (!Directory.Exists(pathToSave))
+           
+            var pathToSave = Path.Combine(_mainPathToFiles + PathsToDirectories.Documents, Order.Number!);
+        if (!Directory.Exists(pathToSave))
                 Directory.CreateDirectory(pathToSave);
-            
-            var fileOutPdfName = $"СПЕЦИФИКАЦИЯ № {Order.Number}-{_indexInstanceDocument}.pdf";
+        var date = DateTime.Now.Date.ToShortDateString();
+        var fileOutPdfName = $"СПЕЦИФИКАЦИЯ № {Order.Number}-{date}-{_indexInstanceDocument}.pdf";
             var fullOutPdfPath = Path.Combine(pathToSave, fileOutPdfName);
 
             await File.WriteAllBytesAsync(fullOutPdfPath, pdfBytes);
@@ -102,7 +96,7 @@ public class OrderSpecificationPdfGenerator
                 FileType = (int)FileTypes.Pdf,
                 DateTimeCreated = DateTime.Now,
                 OrderId = Order.Id,
-                DocumentType = (int)DocumentTypes.PaymentInvoice,
+                DocumentType = (int)DocumentTypes.OrderSpecification,
                 PathToFile = fullOutPdfPath,
                 StampPosition = _stampPosition
             };
@@ -114,52 +108,51 @@ public class OrderSpecificationPdfGenerator
 
         private void FillPdf(Document pdf, PdfWriter writer)
         {
-            var ttf = Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles", "Fonts", "Arial.TTF");
+            var ttf = Path.Combine(_mainPathToFiles + PathsToDirectories.Fonts, "times.TTF");
             var baseFont = BaseFont.CreateFont(ttf, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
             _font = new Font(baseFont, 10, Font.NORMAL);
             _fontBold = new Font(baseFont, 10, Font.BOLD);
             _fontBigBold = new Font(baseFont, 14, Font.BOLD); 
             _totalWidth = pdf.PageSize.Width - 3f.ToDpi();
-            
+            var spaceAfterBase = 10f;
             var title = new Paragraph($"СПЕЦИФИКАЦИЯ № {Order!.Number}-{_indexInstanceDocument}   " +
                                       $"от {DateTime.Now.ToLongDateString()}", _fontBigBold)
             {
-                SpacingAfter = 18f,
+                Alignment = Element.ALIGN_CENTER,
+                SpacingAfter = spaceAfterBase,
                 SpacingBefore = 10f
             };
             pdf.Add(title);
-            var subTitle = new Paragraph($"к контракту № ????????   " +
-                                      $"от ?????????", _fontBold)
+            var subTitle = new Paragraph($"к контракту № ???????? от ?????????", _fontBold)
             {
-                SpacingAfter = 18f,
-                SpacingBefore = 10f
+                Alignment = Element.ALIGN_CENTER,
+                SpacingAfter = spaceAfterBase,
             };
             pdf.Add(subTitle);
-            var naming = new Paragraph
-            {
-                new Phrase($"{OurCompany?.FnsRequest?.Name}, в лице Генерального директора {OurCompany?.FnsRequest?.Director}, " +
-                           $"действующим на основании Устава, именуемое в дальнейшем ", _font),
-                new Phrase("Поставщик", _fontBold),
-                new Phrase($" и {BuyerCompany?.FnsRequest?.Name}, в лице {BuyerCompany?.FnsRequest?.Director}, действующего на основании Устава, именуемое в дальнейшем ", _font),
-                new Phrase("Покупатель", _fontBigBold),
-                new Phrase($", при совместном упоминании именуемые ", _font),
-                new Phrase("Стороны", _fontBigBold),
-                new Phrase($", согласовали поставку следующего товара: ", _font)
-            };
-            pdf.Add(naming);
-            /*var contractPartiesTable = CreateContractPartiesTable();
-            contractPartiesTable.SpacingAfter = 10f;
-            pdf.Add(contractPartiesTable);
 
-            var tablePaintings = CreatePaintingsTable();
-           pdf.Add(tablePaintings);*/
+            var naming = new Paragraph();
+            foreach (var stringToFont in CreateOrderSpecificationRequest!.NamingCondition)
+            {
+                var font = stringToFont.FontType switch
+                {
+                    FontTypes.Normal10 => _font,
+                    FontTypes.Bold10 => _fontBold,
+                    FontTypes.Bold14 => _fontBigBold,
+                    FontTypes.Normal14 => _font,
+                    _ => _font
+                };
+                naming.Add(new Phrase(stringToFont.Value, font));
+            }
+            naming.SpacingAfter = spaceAfterBase;
+            pdf.Add(naming);
             var productTable = CreateProductTable();
-            productTable.SpacingAfter = 20f;
+            productTable.SpacingAfter = spaceAfterBase;
             pdf.Add(productTable);
             var conditionsTable = CreateConditionsTable();
-            conditionsTable.SpacingAfter = 20f;
+            conditionsTable.SpacingAfter = spaceAfterBase;
             pdf.Add(conditionsTable);
-            _stampPosition = writer.GetVerticalPosition(false);
+            var paintingsTable = CreatePaintingsTable(writer);
+            pdf.Add(paintingsTable);
         }
 
         private PdfPTable CreateProductTable()
@@ -173,7 +166,7 @@ public class OrderSpecificationPdfGenerator
             if (productList != null)
             {
                 var widthMainCell = _totalWidth / 2;
-                var widths = new [] { 30, 180, 30, 60, 90, 90 ,90};
+                var widths = new [] { 30, 180, 40, 60, 80, 90 ,90};
                 table.SetWidths(widths);
                 table.LockedWidth = true;
                 table.HorizontalAlignment = Element.ALIGN_CENTER;
@@ -236,7 +229,7 @@ public class OrderSpecificationPdfGenerator
                         HorizontalAlignment = Element.ALIGN_RIGHT
                     };
                     table.AddCell(quantityCell);
-                    table.AddCell(new Phrase("????", _font));
+                    table.AddCell(new Phrase($"{CreateOrderSpecificationRequest!.DaysOfDelivery}", _font));
                     var priceOneCell = new PdfPCell(new Phrase((decimal.Round(priceOnePosition, round)).ToString(CultureInfo.CurrentCulture), _font))
                     {
                         HorizontalAlignment = Element.ALIGN_RIGHT
@@ -289,19 +282,19 @@ public class OrderSpecificationPdfGenerator
                     Colspan = 6,
                     HorizontalAlignment = Element.ALIGN_LEFT
                 };
-                table.AddCell(fullPriceToPaymentCellLeft);
+                table.AddCell(profitCellLeft);
                 var profitCellRight = new PdfPCell(new Phrase( "?????", _fontBold))
                 {
                     HorizontalAlignment = Element.ALIGN_RIGHT
                 };
-                table.AddCell(fullPriceToPaymentCellRight);
+                table.AddCell(profitCellRight);
 
             }
             return table;
         }
         private PdfPTable CreateConditionsTable()
         {
-            var table = new PdfPTable(7)
+            var table = new PdfPTable(2)
             {
                 TotalWidth = _totalWidth
             };
@@ -309,75 +302,77 @@ public class OrderSpecificationPdfGenerator
             table.SetWidths(widths);
             table.LockedWidth = true;
             table.HorizontalAlignment = Element.ALIGN_LEFT;
-            string[] conditions =
+            var index = 1;
+            foreach (var stringToFont in CreateOrderSpecificationRequest!.Conditions)
             {
-                "Базис поставки - франко-склад Покупателя.",
-                "Срок поставки с момента подписания настоящей Спецификации Сторонами.",
-                "Порядок расчетов: Покупатель производит 100% оплату стоимости Товара надлежащего качества на расчетный" +
-                " счет Поставщика в течении ______ банковских дней с момента приемки Товара и подписания обеими сторонами" +
-                " товарной накладной (универсального передаточного документа).",
-                "Настоящяя Спецификация вступает в силу с момента её подписания Сторонами."
-            };
-            for (var i = 0; i < conditions.Length; i++)
-            {
-                var numCell = new PdfPCell(new Phrase($"{i}.", _font))
+                var font = stringToFont.FontType switch
+                {
+                    FontTypes.Normal10 => _font,
+                    FontTypes.Bold10 => _fontBold,
+                    FontTypes.Bold14 => _fontBigBold,
+                    FontTypes.Normal14 => _font,
+                    _ => _font
+                };
+                var numCell = new PdfPCell(new Phrase($"{index}.", font))
                 {
                     Border = Rectangle.NO_BORDER,
-                    //HorizontalAlignment = Element.ALIGN_LEFT
                 };
                 table.AddCell(numCell);
-                var conditionCell = new PdfPCell(new Phrase(conditions[i], _font))
+                var conditionCell = new PdfPCell(new Phrase(stringToFont.Value, font))
                 {
                     Border = Rectangle.NO_BORDER,
-                    //HorizontalAlignment = Element.ALIGN_RIGHT
                 };
                 table.AddCell(conditionCell);
+                index++;
             }
             return table;
         }
-        private PdfPTable CreatePaintingsTable()
+        private PdfPTable CreatePaintingsTable(PdfWriter writer)
         {
-            var tablePaintings = new PdfPTable(4)
+            var tablePaintings = new PdfPTable(2)
             {
                 TotalWidth = _totalWidth
             };
             var widths = new [] { _totalWidth/2 , _totalWidth/2 };
             tablePaintings.SetWidths(widths);
             tablePaintings.LockedWidth = true;
-            tablePaintings.AddCell(new PdfPCell(new Phrase($"ПОСТАВЩИК", _fontBigBold))
+            tablePaintings.AddCell(new PdfPCell(new Phrase($"ПОСТАВЩИК", _fontBold))
             {
                 Border = Rectangle.NO_BORDER,
-               // HorizontalAlignment = Element.ALIGN_CENTER
             });
-            tablePaintings.AddCell(new PdfPCell(new Phrase($"ПОКУПАТЕЛЬ", _fontBigBold))
+            tablePaintings.AddCell(new PdfPCell(new Phrase($"ПОКУПАТЕЛЬ", _fontBold))
             {
                 Border = Rectangle.NO_BORDER,
-                // HorizontalAlignment = Element.ALIGN_CENTER
+                 HorizontalAlignment = Element.ALIGN_RIGHT
             });
-            tablePaintings.AddCell(new PdfPCell(new Phrase("", _font))
+            var sellerCertifyingPerson = CreateOrderSpecificationRequest!.SellerCertifyingPersonId;
+            var buyerCertifyingPerson = CreateOrderSpecificationRequest!.BuyerCertifyingPersonId;
+            tablePaintings.AddCell(new PdfPCell(new Phrase(sellerCertifyingPerson.Position, _font))
             {
                 Border = Rectangle.NO_BORDER,
-                // HorizontalAlignment = Element.ALIGN_CENTER
             });
-            var directorOurArr = Order!.OurCompany?.Director!.Split(' ');
-            tablePaintings.AddCell(new PdfPCell(new Phrase($"{directorOurArr?[0]} {directorOurArr?[1][0]}. {directorOurArr?[2][0]}. _______________", _font))
+            tablePaintings.AddCell(new PdfPCell(new Phrase(buyerCertifyingPerson.Position, _font))
             {
                 Border = Rectangle.NO_BORDER,
-                BorderWidthBottom = 1f,
-                HorizontalAlignment = Element.ALIGN_RIGHT
+                 HorizontalAlignment = Element.ALIGN_RIGHT
             });
-            tablePaintings.AddCell(new PdfPCell(new Phrase($"Бухгалтер", _fontBold))
+            _stampPosition = writer.GetVerticalPosition(false);
+            tablePaintings.AddCell(new PdfPCell(new Phrase($"_______________ {sellerCertifyingPerson.LastName} " +
+                                                           $"{sellerCertifyingPerson.FirstName?[0]}. " +
+                                                           $"{sellerCertifyingPerson.MiddleName?[0]}.", _font))
             {
                 Border = Rectangle.NO_BORDER,
-                HorizontalAlignment = Element.ALIGN_CENTER
+                HorizontalAlignment = Element.ALIGN_LEFT
             });
 
-            tablePaintings.AddCell(new PdfPCell(new Phrase($"{directorOurArr?[0]} {directorOurArr?[1][0]}. {directorOurArr?[2][0]}. _______________", _font))
-            {
-                Border = Rectangle.NO_BORDER,
-                BorderWidthBottom = 1f,
-                HorizontalAlignment = Element.ALIGN_RIGHT
-            });
-            return tablePaintings;
+
+        tablePaintings.AddCell(new PdfPCell(new Phrase($"_______________ {buyerCertifyingPerson.LastName} " +
+                                                       $"{buyerCertifyingPerson.FirstName?[0]}. " +
+                                                       $"{buyerCertifyingPerson.MiddleName?[0]}.", _font))
+        {
+            Border = Rectangle.NO_BORDER,
+            HorizontalAlignment = Element.ALIGN_RIGHT
+        });
+        return tablePaintings;
         }
 }

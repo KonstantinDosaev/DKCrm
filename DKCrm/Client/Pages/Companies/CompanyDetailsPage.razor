@@ -325,11 +325,12 @@
     private async Task UpdateEmployee()
     {
         if (await EmployeeManager.UpdateAsync(Employee!))
-        {
-            _visibleUpdateEmployeeDialog = false;
             _snackBar.Add("Данные сотрудника обновлены!");
-            await GetCompany();
-        }
+        else
+            _snackBar.Add("Ошибка при обновлении данных!");
+
+        _visibleUpdateEmployeeDialog = false; 
+        await GetCompany();
     }
     private void OpenRemoveEmployeeDialog(Employee employee)
     {
@@ -346,7 +347,6 @@
                 await GetCompany();
                 _snackBar.Add("Сотрудник откреплен");
             }
-            
         }
         else
         {

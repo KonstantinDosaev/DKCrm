@@ -1,5 +1,6 @@
 ﻿using DKCrm.Client.Constants;
 using System.Net.Http.Json;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Client.Services.DocumentService
@@ -42,6 +43,11 @@ namespace DKCrm.Client.Services.DocumentService
         {
             var result = await _httpClient.PostAsJsonAsync($"api/Document/CreateOrderSpecificationPdf/{request}", request, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
+        }
+        public async Task<byte[]> AddStampToPdfAsync(AddStampToPdfRequest request)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/Document/SetStampAndGetDocumentBytArray/{request}", request, JsonOptions.JsonIgnore);
+            return await result.Content.ReadFromJsonAsync<byte[]>() ?? throw new InvalidOperationException();
         }
     }
 }

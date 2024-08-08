@@ -24,4 +24,10 @@ window.BlazorDownloadFile= async (filename, contentType, data)=> {
     // On Safari it seems you need to comment this line... (please let me know if you know why)
     URL.revokeObjectURL(exportUrl);
     a.remove();
+};
+
+window.ReturnIndexPdfFile = async () => {
+    // Create the URL
+    var text = document.getElementsByTagName("input")[0];
+    return text.value;
 }

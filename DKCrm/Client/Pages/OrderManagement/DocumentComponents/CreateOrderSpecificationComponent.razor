@@ -1,0 +1,367 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Models.OrderModels
+@using Microsoft.AspNetCore.Components
+@using System.Text
+@using Microsoft.EntityFrameworkCore.Diagnostics
+@using Microsoft.EntityFrameworkCore.Metadata
+
+@if (_currentCreateSpecificationDialogItem >= 0)
+{
+    <div class="d-flex flex-column w-100 my-2">
+        <MudSelect T="Employee"
+                   @bind-Value="OurCertifyingPerson" Label="Заверитель от нашей компании"
+                   Variant="Variant.Outlined" Dense="true" Style=""
+                   Class="mb-2"
+                   ToStringFunc="_converter" Immediate="true">
+            @if (OurCompany?.Employees != null)
+            {
+                foreach (var employee in OurCompany.Employees)
+                {
+                    <MudSelectItem T="Employee" Value="employee">
+                        @($"{employee.FirstName} {employee.MiddleName}" +
+                          $" {employee.LastName}// {employee.Position}")
+                    </MudSelectItem>
+                }
+            }
+        </MudSelect>
+        <MudSelect T="Employee"
+                   @bind-Value="BuyerCertifyingPerson" Label="Заверитель от компании покупателя"
+                   Variant="Variant.Outlined" Dense="true" Style=""
+                   Class="mb-2"
+                   ToStringFunc="_converter" Immediate="true">
+            @if (BuyerCompany?.Employees != null)
+            {
+                foreach (var employee in BuyerCompany.Employees)
+                {
+                    <MudSelectItem T="Employee" Value="employee">
+                        @($"{employee.FirstName} {employee.MiddleName}" +
+                            $" {employee.LastName}// {employee.Position}")
+                    </MudSelectItem>
+                }
+            }
+        </MudSelect>
+        <div class="d-flex justify-content-end m-2">
+            <MudTooltip Text="@((OurCertifyingPerson == null || BuyerCertifyingPerson == null) ? "Не все поля выбраны" : "Далее")">
+                <MudButton Variant="Variant.Filled"  
+                           Color="Color.Primary" 
+                           Disabled="OurCertifyingPerson == null || BuyerCertifyingPerson == null"
+                           OnClick="InitNamingCondition">применить</MudButton>
+            </MudTooltip>
+        </div>
+    </div>
+}
+
+@if (_currentCreateSpecificationDialogItem >= 1)
+{
+    <MudPaper Elevation="7" Class="d-flex my-1 flex-column justify-content-center w-100">
+        <MudText Typo="Typo.h6" Class="my-1 text-center">Абзац именования</MudText>
+        <MudTable Elevation="0" Items="@NamingConditionList" Dense="true" Hover="true" CanCancelEdit="true"
+                  CommitEditTooltip="Сохранить"
+                  RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+                  IsEditRowSwitchingBlocked ="true"
+                  ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" 
+                  EditTrigger="@TableEditTrigger.RowClick">
+            <RowTemplate>
+                @if (@context.FontType is @FontTypes.Normal10 or @FontTypes.Normal14)
+                {
+                    if (context.Value == string.Empty)
+                    {
+                        <MudTd Style="color: red" DataLabel="Nr">Укажите должность в родительском падеже</MudTd>
+                    }
+                    else
+                    {
+                        <MudTd DataLabel="Nr">@context.Value</MudTd>
+                    }
+                }
+                else
+                {
+                    <MudTd Style="font-weight: bold" DataLabel="Nr">@context.Value</MudTd>
+                }
+            </RowTemplate>
+            <RowEditingTemplate>
+                <MudTd DataLabel="Nr">
+                    <MudTextField @bind-Value="context.Value" Required AutoGrow="true"/>
+                </MudTd>
+                <MudTd DataLabel="Font">
+                    <MudSelect T="FontTypes"
+                               @bind-Value="context.FontType" Label="Шрифт"
+                               Variant="Variant.Text" Dense="true" Style=""
+                               Class="mb-1"
+                               Immediate="true" Lines="2">
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Normal10">Normal 10</MudSelectItem>
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Normal14">Normal 14</MudSelectItem>
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Bold10">Bold 10</MudSelectItem>
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Bold14">Bold 14</MudSelectItem>
+                    </MudSelect> 
+                </MudTd>
+            </RowEditingTemplate>
+
+            <EditButtonContent Context="button">
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+            </EditButtonContent>
+        </MudTable>
+        <div class="d-flex justify-content-end m-2">
+                <MudText Class="mr-2" Color="Color.Error">@_resultCheckedNamingConditionMessage</MudText>
+            @if (_currentCreateSpecificationDialogItem == 1)
+            {
+                <MudTooltip Text="@((OurCertifyingPerson == null || BuyerCertifyingPerson == null) ? "Не все поля выбраны" : "Далее")">
+                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Disabled="OurCertifyingPerson == null || BuyerCertifyingPerson == null"
+                                   OnClick="InitMainCondition" Icon="@Icons.Material.Filled.ArrowForward"></MudIconButton>
+                </MudTooltip>
+            }
+        </div>
+    </MudPaper>
+}
+@if (_currentCreateSpecificationDialogItem >= 2)
+{
+    <MudPaper Class="d-flex my-1 flex-column justify-content-center w-100">
+        <MudText Typo="Typo.h6" Class="my-1 text-center">Абзац условий</MudText>
+        <MudTable Items="@MainConditionList" Dense="true" Hover="true" CanCancelEdit="true"
+                  CommitEditTooltip="Сохранить"
+                  RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+                  IsEditRowSwitchingBlocked="true"
+                  ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="@TableEditTrigger.RowClick">
+            <RowTemplate>
+                @if (@context.FontType is @FontTypes.Normal10 or @FontTypes.Normal14)
+                {
+                    if (context.Value == string.Empty)
+                    {
+                        <MudTd Style="color: red" DataLabel="Nr">Укажите должность в родительском падеже</MudTd>
+                    }
+                    else
+                    {
+                        <MudTd DataLabel="Nr">@context.Value</MudTd>
+                    }
+                }
+                else
+                {
+                    <MudTd Style="font-weight: bold" DataLabel="Nr">@context.Value</MudTd>
+                }
+            </RowTemplate>
+            <RowEditingTemplate>
+                <MudTd DataLabel="Nr">
+                    <MudTextField @bind-Value="context.Value" Required AutoGrow="true"/>
+                </MudTd>
+                <MudTd DataLabel="Font">
+                    <MudSelect T="FontTypes"
+                               @bind-Value="context.FontType" Label="Шрифт"
+                               Variant="Variant.Text" Margin="Margin.Dense" Dense="true" Style=""
+                               Class="mb-1"
+                               Immediate="true" Lines="2">
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Normal10">Normal 10</MudSelectItem>
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Normal14">Normal 14</MudSelectItem>
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Bold10">Bold 10</MudSelectItem>
+                        <MudSelectItem T="FontTypes" Value="FontTypes.Bold14">Bold 14</MudSelectItem>
+                    </MudSelect>
+                </MudTd>
+            </RowEditingTemplate>
+
+            <EditButtonContent Context="button">
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+            </EditButtonContent>
+        </MudTable>
+        <div class="d-flex align-items-center justify-content-end m-2">
+            <MudText Class="mr-4">Срок поставки</MudText>
+            <MudNumericField Style="width: 80px" Margin="Margin.Dense" T="int" @bind-Value="DaysOfDelivery"
+                             Variant="Variant.Outlined" Label=""
+                             Immediate="true" Min="1"></MudNumericField>
+            <MudText>@DaysOfDelivery</MudText>
+        </div>
+        <div class="d-flex justify-content-end m-2">
+            <MudTooltip Text="Создать">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="CreateSpecification">Создать документ</MudButton>
+            </MudTooltip>
+        </div>
+    </MudPaper>
+}
+@code {
+    [Parameter] public Guid OrderId { get; set; }
+    [Parameter] public EventCallback RefreshParent{ get; set; }
+    public Guid CurrentOrderId { get; set; }
+    CreateOrderSpecificationRequest CreateOrderSpecificationRequest { get; set; } = new ();
+
+    List<StringToFonts> NamingConditionList { get; set; } = null!;
+    List<StringToFonts>? MainConditionList { get; set; }
+    Company? OurCompany { get; set; }
+    Company? BuyerCompany { get; set; }
+    Employee? OurCertifyingPerson { get; set; }
+    Employee? BuyerCertifyingPerson { get; set; }
+    ExportedOrder? CurrentOrder { get; set; }
+    private int _currentCreateSpecificationDialogItem = 0;
+    private StringToFonts _elementBeforeEdit =new();
+    private string? _resultCheckedNamingConditionMessage;
+    private int DaysOfDelivery { get; set; }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CurrentOrderId == OrderId)return;
+        CurrentOrderId = OrderId;
+        CurrentOrder = await ExportedOrderManager.GetDetailsAsync(CurrentOrderId);
+        OurCompany = await CompanyManager.GetDetailsAsync((Guid)CurrentOrder.OurCompanyId!);
+        BuyerCompany = await CompanyManager.GetDetailsAsync((Guid)CurrentOrder.CompanyBuyerId!);
+    }
+    private async Task CreateSpecification()
+    {
+        if (CheckNamingConditionToEmpty()) return;
+        CreateOrderSpecificationRequest = new CreateOrderSpecificationRequest()
+        {
+            OrderId = OrderId,
+            Conditions = MainConditionList, 
+            NamingCondition = NamingConditionList, 
+            DaysOfDelivery = DaysOfDelivery, SellerCertifyingPersonId = OurCertifyingPerson, 
+            BuyerCertifyingPersonId = BuyerCertifyingPerson
+        };
+        var result = await DocumentManager.CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest);
+        await RefreshParent.InvokeAsync();
+    }
+
+    private void InitNamingCondition()
+    {
+        if (OurCompany == null || BuyerCompany == null) return;
+        var ourCertifyingPerson = OurCertifyingPerson != null ? DeclensionByCase(OurCertifyingPerson.LastName ?? "Фамилия",
+            OurCertifyingPerson.FirstName ?? "Имя", OurCertifyingPerson.MiddleName ?? "Отчество") : "Ф. И. О. ";
+        var buyerCertifyingPerson = BuyerCertifyingPerson != null ? DeclensionByCase(BuyerCertifyingPerson.LastName ?? "Фамилия", 
+            BuyerCertifyingPerson.FirstName ?? "Имя", BuyerCertifyingPerson.MiddleName ?? "Отчество") : "Ф. И. О.";
+
+        NamingConditionList = new List<StringToFonts>()
+        {
+            new (FontTypes.Normal10, $"{OurCompany.FnsRequest?.Name ?? "НАЗВАНИЕ КОМПАНИИ"}, в лице "),
+            new (FontTypes.Normal10, string.Empty),
+            new (FontTypes.Normal10, $" {ourCertifyingPerson} действующего на основании Устава, именуемое в дальнейшем "),
+            new (FontTypes.Bold10, "Поставщик"),
+            new (FontTypes.Normal10, $" и {BuyerCompany.FnsRequest?.Name ?? "НАЗВАНИЕ КОМПАНИИ"}, в лице "),
+            new (FontTypes.Normal10, string.Empty),
+            new (FontTypes.Normal10,$" {buyerCertifyingPerson}, действующего на основании Устава, именуемое в дальнейшем "),
+            new (FontTypes.Bold10, "Покупатель"),
+            new (FontTypes.Normal10, " , при совместном упоминании именуемые "),
+            new (FontTypes.Bold10, "Стороны"),
+            new (FontTypes.Normal10, ", согласовали поставку следующего товара:"),
+
+        };
+        if (_currentCreateSpecificationDialogItem == 0)
+            _currentCreateSpecificationDialogItem++;
+    }
+
+    private void ClickEditCertifyingPersons()
+    {
+        InitNamingCondition();
+    }
+
+    private bool CheckNamingConditionToEmpty()
+    {
+        var result = NamingConditionList.Any(a => a.Value == string.Empty);
+        _resultCheckedNamingConditionMessage = !result ? null : "Не все поля заполнены!!!";
+        return result;
+    }
+
+    private void InitMainCondition()
+    {
+        if (CheckNamingConditionToEmpty()) return;
+
+            MainConditionList ??=  new List<StringToFonts>(){
+            new(FontTypes.Normal10,"Базис поставки - франко-склад Покупателя."),
+            new(FontTypes.Normal10,"Срок поставки с момента подписания настоящей Спецификации Сторонами."),
+            new(FontTypes.Normal10,$"Порядок расчетов: Покупатель производит 100% оплату стоимости Товара надлежащего качества на расчетный" +
+                                   $" счет Поставщика в течении _ банковских дней с момента приемки Товара и подписания обеими сторонами" +
+                                   " товарной накладной (универсального передаточного документа)."),
+            new(FontTypes.Normal10,"Настоящая Спецификация вступает в силу с момента её подписания Сторонами.")};
+        _currentCreateSpecificationDialogItem++;
+    }
+    private void BackupItem(object element)
+    {
+        if (!string.IsNullOrEmpty(_resultCheckedNamingConditionMessage))
+            _resultCheckedNamingConditionMessage = null;
+        _elementBeforeEdit = new(((StringToFonts)element).FontType, ((StringToFonts)element).Value);
+    }
+    private void ResetItemToOriginalValues(object element)
+    {
+        ((StringToFonts)element).Value = _elementBeforeEdit.Value;
+        ((StringToFonts)element).FontType = _elementBeforeEdit.FontType;
+    }
+
+    private string DeclensionByCase(string lastName, string firstName, string middleName)
+    {
+        var isMan = true;
+        const string vowelLetters = "а, у, о, ы, и, э, я, ю, ё, е";
+
+        if (middleName.EndsWith("а"))
+            isMan = false;
+
+        if (isMan)
+        {
+            if (lastName.EndsWith("й"))
+            {
+                lastName = lastName.Substring(0, lastName.Length - 2) + "ого";
+            }
+            else if (!vowelLetters.Contains(lastName[^1]))
+            {
+                lastName += "а";
+            }
+
+            if (!vowelLetters.Contains(firstName[^1]))
+            {
+                firstName += "а";
+            }
+            else if ((firstName.EndsWith("й")) || (firstName.EndsWith("ь")))
+            {
+                firstName = firstName.Substring(0, firstName.Length - 1) + "я";
+            }
+            else if (firstName.EndsWith("я"))
+            {
+                firstName = firstName.Substring(0, firstName.Length - 1) + "и";
+            }
+            else if (firstName.EndsWith("ка"))
+            {
+                firstName = firstName.Substring(0, firstName.Length - 2) + "ки";
+            }
+            else if (firstName.EndsWith("а"))
+            {
+                firstName = firstName.Substring(0, firstName.Length - 1) + "ы";
+            }
+
+            middleName += "а";
+        }
+        else
+        {
+            if (lastName.EndsWith("а"))
+            {
+                lastName = lastName.Substring(0, lastName.Length - 1) + "ой";
+            }
+            else if (lastName.EndsWith("ая"))
+            {
+                lastName = lastName.Substring(0, lastName.Length - 2) + "ой";
+            }
+
+            if (firstName.EndsWith("а"))
+            {
+                firstName = firstName.Substring(0, firstName.Length - 1) + "ы";
+            }
+            else if (firstName.EndsWith("я"))
+            {
+                firstName = firstName.Substring(0, firstName.Length - 1) + "и";
+            }
+
+            middleName = middleName.Substring(0, middleName.Length - 1) + "ы";
+        }
+        return $"{lastName} {firstName} {middleName}";
+    }
+
+    private string CheckString(string checkedString)
+    {
+        checkedString = checkedString.Trim();
+        var sb = new StringBuilder(checkedString);
+        if (sb[0] == ' ')
+            sb.Remove(0, 1);
+        sb.Replace("   ", " ");
+        sb.Replace("  ", " ");
+        sb.Replace(" - ", "-");
+        sb.Replace("- ", "-");
+        sb.Replace(" -", "-");
+        return sb.ToString();
+    }
+
+    Func<Employee, string> _converter = p => $"{p.FirstName} {p.MiddleName} {p.LastName}//\n {p.Position}";
+}

@@ -58,7 +58,8 @@ builder.Services.AddTransient<IConfirmationActionService, ConfirmationActionServ
 builder.Services.AddTransient<IDocumentManager, DocumentManager>();
 builder.Services.AddTransient<ICurrencyDictionaryManager, CurrencyDictionaryManager>();
 
+
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
+builder.Services.AddBlazorBootstrap();
 await builder.Build().RunAsync();

@@ -1,0 +1,19 @@
+﻿.clearPdfDialogButton {
+    text-align: end;
+  
+}
+@media (min-width: 425px) {
+    .clearPdfDialogButton {
+        top: 5px;
+        position: absolute;
+        right: 10px;
+    }
+
+
+}
+
+@media (max-width: 717px) {
+    .getIndexPdfDialogButton {
+        display: none;
+    }
+}

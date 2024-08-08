@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.OrderModels;
+﻿using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Client.Services.DocumentService
 {
@@ -10,5 +11,6 @@ namespace DKCrm.Client.Services.DocumentService
         Task<bool> RemoveDocumentAsync(Guid infoSetId);
          Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId);
          Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request);
+         Task<byte[]> AddStampToPdfAsync(AddStampToPdfRequest request);
     }
 }

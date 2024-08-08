@@ -13,6 +13,9 @@ using DKCrm.Shared.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
+using System.Dynamic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,24 @@ var connectionStringProduct = builder.Configuration.GetConnectionString("Product
                               throw new InvalidOperationException("Connection string 'ProductContextConnection' not found.");
 var connectionStringUser = builder.Configuration.GetConnectionString("UserContextConnection") ??
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
+var pathToStaticFiles = builder.Configuration["PathToStaticFiles"];
+if (pathToStaticFiles == null)
+{
+    var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+    var json = File.ReadAllText(appSettingsPath);
 
+    var jsonSettings = new JsonSerializerSettings();
+    jsonSettings.Converters.Add(new ExpandoObjectConverter());
+    jsonSettings.Converters.Add(new StringEnumConverter());
+
+    dynamic config = JsonConvert.DeserializeObject<ExpandoObject>(json, jsonSettings) ?? throw new InvalidOperationException();
+    var defaultStaticFilesPath = Path.Combine(Directory.GetCurrentDirectory(), @"StaticFiles");
+    var expando = config as IDictionary<string, object>;
+    expando?.Add("PathToStaticFiles", defaultStaticFilesPath);
+    var newJson = JsonConvert.SerializeObject(config, Formatting.Indented, jsonSettings);
+    File.WriteAllText(appSettingsPath, newJson);
+    pathToStaticFiles = defaultStaticFilesPath;
+}
 builder.Services.AddTransient<IAuthService, AuthService>();
 
 builder.Services.AddTransient<IUserService, UserService>();
@@ -34,6 +54,7 @@ builder.Services.AddTransient<ICategoryService, CategoryService>();
 builder.Services.AddTransient<ICategoryOptionsService, CategoryOptionsService>();
 
 builder.Services.AddTransient<ICompanyService, CompanyService>();
+builder.Services.AddTransient<IEmployeeService, EmployeeService>();
 builder.Services.AddTransient<ICompanyTagsService, CompanyTagsService>();
 builder.Services.AddTransient<ICompanyTypeService, CompanyTypeService>();
 
@@ -94,20 +115,23 @@ else
 app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
-app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();
+//app.UseStaticFiles(new StaticFileOptions()
+//{
+//    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"StaticFiles")),
+//    RequestPath = new PathString("/StaticFiles")
+//});
 app.UseStaticFiles(new StaticFileOptions()
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"StaticFiles")),
-    RequestPath = new PathString("/StaticFiles")
+    FileProvider = new PhysicalFileProvider(Path.Combine(pathToStaticFiles)),
+    //RequestPath = new PathString(Path.Combine(@"/C:", @"Repo", @"StaticFiles").Replace("\\", "/"))
+    //RequestPath = new PathString("/StaticFiles")
 });
-
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");

@@ -21,6 +21,7 @@ namespace DKCrm.Server.Services.DocumentServices
         private readonly IExportedOrderService _orderService;
         private readonly IPriceToStringConverter _priceToString;
         private readonly IInfoSetFromDocumentToOrderService _infoSetFromDocumentToOrderService;
+        private readonly IConfiguration _configuration;
         private Font _font = null!;
         private Font _fontBold = null!;
         private Font _fontBigBold = null!;
@@ -29,17 +30,19 @@ namespace DKCrm.Server.Services.DocumentServices
         private int _indexInstanceDocument;
         private string _mainPathToFiles  = null!;
 
-        public PaymentInvoicePdfGenerator(IExportedOrderService orderService, IPriceToStringConverter priceToString, IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService)
+        public PaymentInvoicePdfGenerator(IExportedOrderService orderService, IPriceToStringConverter priceToString, IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService, IConfiguration configuration)
         {
             _orderService = orderService;
             _priceToString = priceToString;
             _infoSetFromDocumentToOrderService = infoSetFromDocumentToOrderService;
+            _configuration = configuration;
         }
 
         public async Task<bool> CreatePaymentAsync(Guid orderId)
         {
             Order = await _orderService.GetDetailAsync(orderId);
-            _mainPathToFiles = Directory.GetCurrentDirectory();
+            _mainPathToFiles = _configuration["PathToStaticFiles"];
+            //_mainPathToFiles = Directory.GetCurrentDirectory();
             // Order = await _orderService.GetDetailAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
             if (Order == null) return false;
             OurCompany = Order.OurCompany;
@@ -47,9 +50,13 @@ namespace DKCrm.Server.Services.DocumentServices
             var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);
             var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
-            _indexInstanceDocument = infoSetFromDocumentToOrders.Any() ? infoSetFromDocumentToOrders.Where(w => w.DocumentType == (int)DocumentTypes.PaymentInvoice)
+
+            var infoSetFromPayment = infoSetFromDocumentToOrders
+                .Where(w => w.DocumentType == (int)DocumentTypes.PaymentInvoice).ToArray();
+            _indexInstanceDocument = infoSetFromPayment.Any() ? infoSetFromPayment
+                .Where(w=>w.DateTimeCreated.Date == DateTime.Now.Date)
                 .GroupBy(g => g.FileType)
-                .Select(s => s.Count()).Max() + 1 : 1;
+                .Select(s => s.Count()).Max(s => s) + 1 : 1;
             var memoryStream = new MemoryStream();
             const float margeLeft = 1.5f;
             const float margeRight = 1.5f;
@@ -79,12 +86,11 @@ namespace DKCrm.Server.Services.DocumentServices
         private async Task<bool> SaveToFile(byte[] pdfBytes)
         { 
             if (Order == null) return false;
-            var folderName = Path.Combine("StaticFiles", "Documents", "PaymentInvoices");
-            var pathToSave = Path.Combine(_mainPathToFiles, folderName);
+            var pathToSave = Path.Combine(_mainPathToFiles + PathsToDirectories.Documents, Order.Number!);
             if (!Directory.Exists(pathToSave))
                 Directory.CreateDirectory(pathToSave);
-            
-            var fileOutPdfName = $"Счет на оплату № {Order.Number}-{_indexInstanceDocument}.pdf";
+            var date = DateTime.Now.Date.ToShortDateString();
+            var fileOutPdfName = $"Счет на оплату № {Order.Number}-{date}-{_indexInstanceDocument}.pdf";
             var fullOutPdfPath = Path.Combine(pathToSave, fileOutPdfName);
 
             await File.WriteAllBytesAsync(fullOutPdfPath, pdfBytes);
@@ -109,7 +115,7 @@ namespace DKCrm.Server.Services.DocumentServices
 
         private async Task FillPdf(Document pdf, PdfWriter writer)
         {
-            var ttf = Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles", "Fonts", "Arial.TTF");
+            var ttf = Path.Combine(_mainPathToFiles + PathsToDirectories.Fonts, "Arial.TTF");
             var baseFont = BaseFont.CreateFont(ttf, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
             _font = new Font(baseFont, 10, Font.NORMAL);
             _fontBold = new Font(baseFont, 10, Font.BOLD);
