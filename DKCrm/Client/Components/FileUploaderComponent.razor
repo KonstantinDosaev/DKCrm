@@ -1,0 +1,120 @@
+﻿@using DKCrm.Shared.Requests.FileService
+@using DKCrm.Shared.Constants
+@using Microsoft.AspNetCore.Components
+@using System.Globalization
+@using MudBlazor
+<MudFileUpload MaximumFileCount="10" T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
+    <ButtonTemplate>
+        <MudButton HtmlTag="label"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   for="@context.Id">
+            Добавить
+        </MudButton>
+        
+    </ButtonTemplate>
+</MudFileUpload>
+<MudButton OnClick="SaveFilesAsync"
+           Variant="Variant.Filled"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.CloudUpload">
+    Сохранить
+</MudButton>
+<MudSelect Placeholder="Select culture" @bind-Value="SizeImage" HelperText="CultureInfo">
+    <MudSelectItem Value="480" />
+    <MudSelectItem  Value="720" />
+    <MudSelectItem Value="1080" />
+</MudSelect>
+<MudText>@files.Count</MudText>
+@if (files.Any())
+{
+    <MudList T="string">
+        @foreach (var file in files)
+        {
+            <MudListItem Icon="@Icons.Material.Filled.AttachFile">
+                <div>@file.FileName</div>
+                @if (FileType is FileTypes.Images or FileTypes.Stamps)
+                {
+                   
+                    @* <img  src="data:image;base64, @Convert.ToBase64String(file.Content)" alt=""/> *@
+
+                    <MudImage ObjectFit="ObjectFit.Contain" Height="200" Width="400"
+                              Src="@($"data:image;base64,{Convert.ToBase64String(file.Content)}")"
+                              Elevation="25" 
+                              Class="rounded-lg"
+                              Alt="@file.FileName" Fluid="true"/>
+                }
+                <MudIconButton Icon="@Icons.Material.Filled.Clear" OnClick="() => files.Remove(file)"></MudIconButton>
+            </MudListItem>
+        }
+    </MudList>
+}
+
+@code {
+    [Parameter] public FileTypes FileType { get; set; }
+    [Parameter] public DirectoryType DirectoryType { get; set; }
+    [Parameter] public string RelativePath { get; set; } = null!;
+    IList<SaveFileRequest> files = new List<SaveFileRequest>();
+    private int SizeImage { get; set; } = 720;
+    private async Task UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var file in files)
+        {
+            var temp = new SaveFileRequest()
+            {
+                FileName = file.Name, ContentType = FileType, DirectoryType = DirectoryType, Path = RelativePath
+            };
+            var type = file.ContentType;
+            if (file.ContentType.Contains("image"))
+            {
+                var resize = await ResizeImage(file);
+                temp.Content = await ConvertBrowseFileToByteArray(resize);
+            }
+            else
+                temp.Content = await ConvertBrowseFileToByteArray(file);
+            
+            this.files.Add(temp);
+        }
+    }
+    private async Task SaveFilesAsync()
+    {
+        foreach (var file in files)
+        {
+            await FilesManager.SaveFileAsync(file);
+        }
+    }
+    private async Task<IBrowserFile> ResizeImage(IBrowserFile file)
+    {
+        var width = 1280;
+        var height = 720;
+        switch (SizeImage)
+        {
+            case 480 :
+                height = 480;
+                width = 640;
+                break;
+            case 720 :
+                height = 720;
+                width = 1280;
+                break;
+            case 1080 :
+                height = 1080;
+                width = 1920;
+                break;
+            case 1440 :
+                height = 1440;
+                width = 2560;
+                break;
+        }
+        return await file.RequestImageFileAsync(file.ContentType, width, height);
+    }
+    private async Task<byte[]> ConvertBrowseFileToByteArray(IBrowserFile file)
+    {
+        using (var ms = new MemoryStream())
+        {
+            await file.OpenReadStream().CopyToAsync(ms);
+            return ms.ToArray();
+        }
+    }
+}

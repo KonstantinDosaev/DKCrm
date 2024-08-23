@@ -1,4 +1,6 @@
 ﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Requests.FileService
+@using DKCrm.Shared.Constants
 
 <MudTabs @bind-ActivePanelIndex="_activeIndex" Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
     <MudTabPanel OnClick="LoadingData">
@@ -7,7 +9,7 @@
                 @if (InternalCompanyData != null)
                 {
                     <MudText>Редактирование внутренних данных</MudText>
-                    <MudCard>
+                    <MudCard Class="px-2">
                         <MudForm @ref="_editInternalDataForm" Model="@InternalCompanyData">
                             <MudCardContent>
                                 <MudNumericField  Label="Процент на курс валюты" @bind-Value="InternalCompanyData.CurrencyPercent"
@@ -24,7 +26,7 @@
                                                   For="@(() => InternalCompanyData.Nds!)"
                                                   Variant="Variant.Outlined"
                                                   Required="true"
-                                             RequiredError="Введите НДС"
+                                                  RequiredError="Введите НДС"
                                                   Class="mb-3"
                                                   Format="0.##"
                                                   Step="0.1D"
@@ -45,11 +47,12 @@
                                     }
                                 </MudSelect>
                                 <MudTextField @bind-Value="InternalCompanyData.KeyFns"
-                                          T="string" Label="Ключ API ЕГРНЮЛ"
+                                              T="string" Label="Ключ API ЕГРНЮЛ"
                                               Required="true" Variant="Variant.Outlined"
                                               RequiredError="Введите ключ API ЕГРНЮЛ!" Lines="1"/>
                             </MudCardContent>
                         </MudForm>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="OpenStampDialog">Печати</MudButton>
                         <MudCardActions>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateInternalData())">Применить</MudButton>
                         </MudCardActions>
@@ -199,7 +202,30 @@
 
     </DialogContent>
 </MudDialog>
-
+<MudDialog @bind-IsVisible="_visibleStampsDialog" 
+           Options="new DialogOptions(){CloseButton = true, MaxWidth = MaxWidth.ExtraExtraLarge}">
+    <DialogContent>
+        <MudText>Печати</MudText>
+        <MudCard Class="d-flex flex-column">
+            @if (Stamps != null)
+            {
+                foreach (var file in Stamps.FileDictionary)
+                {
+                    <MudImage ObjectFit="ObjectFit.Contain" Height="200" Width="400"
+                              Src="@($"data:image;base64,{Convert.ToBase64String(file.Value)}")"
+                              Elevation="25"
+                              Class="rounded-lg"
+                              Alt="@file.Key" Fluid="true" />
+                }
+            }
+          
+                <FileUploaderComponent DirectoryType="DirectoryType.Private"
+                                       FileType="FileTypes.Stamps" 
+                                       RelativePath="@PathsToDirectories.Stamps"></FileUploaderComponent>
+           
+        </MudCard>
+    </DialogContent>
+</MudDialog>
 @code {
     private int _activeIndex = 0;
     private string? _valueString;
@@ -212,8 +238,9 @@
     private List<CompanyType>? CompanyTypes { get; set; }
     private CompanyType? CurrentCompanyType { get; set; }
     private bool _visibleCompanyTypeUpdateDialog;
-    private bool _visibleCompanyTypeRemoveDialog;
-
+    private bool _visibleCompanyTypeRemoveDialog; 
+    private bool _visibleStampsDialog;
+    private GetManyFilesResponse? Stamps { get; set; }
     private List<TagsCompany>? TagsCompanies { get; set; }
     private TagsCompany? CurrentTagCompany { get; set; }
 
@@ -378,5 +405,13 @@
         }
     }
    
+    public async Task OpenStampDialog()
+    {
+        _visibleStampsDialog = true;
+        Stamps = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+        {
+            DirectoryType = DirectoryType.Private, FileCountSkip = 0, FileCountTake = 5, PathToDirectory = PathsToDirectories.Stamps
+        });
+    }
     }
 

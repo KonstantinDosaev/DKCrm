@@ -16,6 +16,8 @@ using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 using System.Dynamic;
+using DocumentFormat.OpenXml.InkML;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,7 @@ var connectionStringProduct = builder.Configuration.GetConnectionString("Product
 var connectionStringUser = builder.Configuration.GetConnectionString("UserContextConnection") ??
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
 var pathToStaticFiles = builder.Configuration["PathToStaticFiles"];
+var pathToPublicFiles = builder.Configuration["PathToPublicDirectory"];
 if (pathToStaticFiles == null)
 {
     var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
@@ -72,6 +75,7 @@ builder.Services.AddTransient<IInfoSetFromDocumentToOrderService, InfoSetFromDoc
 builder.Services.AddTransient<PaymentInvoicePdfGenerator>();
 builder.Services.AddTransient<OrderSpecificationPdfGenerator>();
 builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryService>();
+builder.Services.AddTransient<IFileService, FileService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
@@ -121,16 +125,25 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();
-//app.UseStaticFiles(new StaticFileOptions()
-//{
-//    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"StaticFiles")),
-//    RequestPath = new PathString("/StaticFiles")
-//});
+app.UseStaticFiles(new StaticFileOptions()
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(pathToPublicFiles)),
+    // RequestPath = new PathString("/StaticFiles")
+});
+
 app.UseStaticFiles(new StaticFileOptions()
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(pathToStaticFiles)),
-    //RequestPath = new PathString(Path.Combine(@"/C:", @"Repo", @"StaticFiles").Replace("\\", "/"))
-    //RequestPath = new PathString("/StaticFiles")
+    OnPrepareResponse = (context) =>
+    {
+        if (context.Context.User.Identity is { IsAuthenticated: false })
+        {
+            context.Context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            context.Context.Response.ContentLength = 0;
+            context.Context.Response.Body = Stream.Null;
+            context.Context.Response.Headers.Add("Cache-Control", "no-store");
+        }
+    }
 });
 app.MapRazorPages();
 app.MapControllers();

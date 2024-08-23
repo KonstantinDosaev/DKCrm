@@ -8,6 +8,7 @@ using DKCrm.Client.Services.ConfirmationAction;
 using DKCrm.Client.Services.CurrencyDictionaryService;
 using DKCrm.Client.Services.CurrencyService;
 using DKCrm.Client.Services.DocumentService;
+using DKCrm.Client.Services.FilesService;
 using DKCrm.Client.Services.FnsRequesting;
 using DKCrm.Client.Services.InternalCompanyDataService;
 using DKCrm.Client.Services.OrderServices;
@@ -56,6 +57,7 @@ builder.Services.AddTransient<IMissingProductConverter, MissingProductConverter>
 
 builder.Services.AddTransient<IConfirmationActionService, ConfirmationActionService>();
 builder.Services.AddTransient<IDocumentManager, DocumentManager>();
+builder.Services.AddTransient<IFilesManager, FilesManager>();
 builder.Services.AddTransient<ICurrencyDictionaryManager, CurrencyDictionaryManager>();
 
 

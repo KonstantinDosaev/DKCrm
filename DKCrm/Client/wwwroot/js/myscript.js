@@ -30,4 +30,4 @@ window.ReturnIndexPdfFile = async () => {
     // Create the URL
     var text = document.getElementsByTagName("input")[0];
     return text.value;
-}
+};

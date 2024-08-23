@@ -6,6 +6,10 @@
 @using Placement = MudBlazor.Placement
 @using Orientation = BlazorBootstrap.Orientation
 @using System.Reflection
+@using DKCrm.Shared.Requests.FileService
+@using System.Buffers.Text
+@using DKCrm.Shared.Constants
+@inject IConfiguration conf
 <MudMenu>
     <ActivatorContent>
         <MudButton EndIcon="@Icons.Material.Filled.Add" Color="Color.Success" Variant="Variant.Filled">Создать</MudButton>
@@ -16,9 +20,17 @@
         <MudMenuItem>Armory</MudMenuItem>
     </ChildContent>
 </MudMenu>
-
+@if (ImageToOrder!=null && ImageToOrder.Any() && ImageToOrder.Length > 0)
+{
+    <img width="100" height="100" src="data:image;base64, @Convert.ToBase64String(ImageToOrder)" />
+}
+else
+{
+    <img width="100" height="100" src="/default.jpg" />
+}
 @if (GroupInfoSet != null && GroupInfoSet.Any())
 {
+   
     @foreach (var setList in GroupInfoSet)
     {
         <MudPaper Square="true" Style="background-color: rgba(0, 0, 0, 0.1);" class="d-flex flex-column my-2 p-2">
@@ -155,6 +167,8 @@ else
 </MudDialog>
 
 @code {
+    
+    byte[]? ImageToOrder { get; set; }
     PdfViewer viwer;
     private bool _loading;
     [Parameter] public Guid OrderId { get; set; }
@@ -171,11 +185,20 @@ else
     string _visibleStampPdf = "display: none";
     public double valueX = 50;
     public double valueY = 50;
-   
+
+    private async Task GetImage(Guid id)
+    {
+        ImageToOrder = await FilesManager.GetFirstOrDefaultFileInBytArrayAsync( new GetFileRequest(){Path= $"{PathsToDirectories.OrdersImages}\\{id}", DirectoryType = DirectoryType.Private});
+        var t = $"data:image;base64, @Convert.ToBase64String(item.Value)";
+    }
     protected override async Task OnInitializedAsync()
     {
+        await GetImage(OrderId);
+        //imageBytes = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest() { Path = $"{PathsToDirectories.OrdersImages}\\{OrderId}\\1.jpg" });
         await LoadDocInfoList();
+        
     }
+
     private async Task LoadDocInfoList()
     {
         InfoSets = await DocumentManager.GetAllInfoSetsForOrderAsync(OrderId);

@@ -2,6 +2,9 @@
 {
     public enum FileTypes
     {
-        Pdf = 1
+        Documents = 1,
+        Images = 2,
+        Fonts = 3,
+        Stamps = 4,
     }
 }

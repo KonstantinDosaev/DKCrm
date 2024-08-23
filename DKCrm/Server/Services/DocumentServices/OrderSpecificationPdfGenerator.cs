@@ -93,7 +93,7 @@ public class OrderSpecificationPdfGenerator
             var document = new InfoSetFromDocumentToOrder()
             {
                 Name = fileOutPdfName,
-                FileType = (int)FileTypes.Pdf,
+                FileType = (int)FileTypes.Documents,
                 DateTimeCreated = DateTime.Now,
                 OrderId = Order.Id,
                 DocumentType = (int)DocumentTypes.OrderSpecification,
