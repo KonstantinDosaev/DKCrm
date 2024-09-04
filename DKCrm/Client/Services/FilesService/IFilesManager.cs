@@ -10,5 +10,6 @@ namespace DKCrm.Client.Services.FilesService
         Task<byte[]> GetFirstOrDefaultFileInBytArrayAsync(GetFileRequest request);
         Task<byte[]> GetFileInBytArrayAsync(GetFileRequest request);
         Task<GetManyFilesResponse> GetManyFileInBytArrayAsync(GetManyFileRequest request);
+        Task<bool> RemoveFilesAsync(RemoveFileRequest request);
     }
 }

@@ -48,7 +48,11 @@ namespace DKCrm.Client.Services.FilesService
             var tyy = await result.Content.ReadFromJsonAsync<SaveFileResponse>();
             return tyy.FileName ?? string.Empty;
         }
-    
+        public async Task<bool> RemoveFilesAsync(RemoveFileRequest request)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/Files/RemoveFile", request, JsonOptions.JsonIgnore);
+            return await result.Content.ReadFromJsonAsync<bool>();
+        }
 
     }
 }

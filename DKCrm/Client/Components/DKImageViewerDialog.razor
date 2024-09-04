@@ -1,0 +1,280 @@
+﻿@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Requests.FileService
+@using MudBlazor.Services
+@implements IBrowserViewportObserver
+@implements IAsyncDisposable
+<MudDialog @ref="_dialog" IsVisible="VisibleDialog" Style="overflow: hidden; max-height: 100%;" IsVisibleChanged="VisibleDialogChanged"
+           DisableSidePadding="true" ClassContent="no-padding" TitleClass=""
+           Options="new DialogOptions() { MaxWidth = MaxWidth.Large, NoHeader = true}" OnBackdropClick="CloseClick">
+   
+    <DialogContent>
+        @if (Images != null)
+        {
+            <div class="text-center">
+                <div class="dilaog__title">
+                    <MudIcon Class="no-padding" Size="Size.Large" Icon="@Icons.Material.Filled.Image" />
+                   
+                    <div class="dilog__titleText">@TitleText</div>
+                    <div class="d-flex">
+                        @if (IsSelected)
+                        {
+                            var isDisabled = SelectImageName != null || (SelectImageNameList != null && SelectImageNameList.Any());
+                            <div class="mr-2">
+                                <MudTooltip Text="Подтвердить" Arrow="true" Placement="Placement.Left">
+                                    <MudIconButton Variant="Variant.Filled"
+                                                   Class="btn-castom"
+                                                   Icon="@Icons.Material.Filled.Check"
+                                                   OnClick="ReturnSelectedResult"
+                                                   Color="Color.Success" Disabled="!isDisabled"/>
+                                </MudTooltip>
+                            </div>
+                        }
+                        <MudTooltip Text="Закрыть" Arrow="true" Placement="Placement.Left">
+                            <MudIconButton Variant="Variant.Filled"
+                                           Class="btn-castom"
+                                           Icon="@Icons.Material.Filled.Close"
+                                           OnClick="CloseClick"
+                                           Color="Color.Info"/>
+                        </MudTooltip>
+                    </div>
+                </div>
+                <div style="overflow: auto; max-height: 90VH;">
+                    <div class="d-flex flex-wrap justify-content-around mb-2" style="">
+                        @foreach (var file in Images.FileDictionary)
+                        {
+                            <div class="dcImageManager__container">
+                                @if (_loadFullScreen && _currImage == file.Key)
+                                {
+                                    <div class="loader">Загрузка...</div>
+                                }
+                                @if (IsSelected)
+                                {
+                                    bool toggle;
+                                    <div class="dcImageManager__buttons">
+                                        @if (MultipleSelect && SelectImageNameList != null)
+                                        {
+                                            toggle = SelectImageNameList.Contains(file.Key);
+                                        }
+                                        else
+                                        {
+                                            toggle = SelectImageName == file.Key;
+                                        }
+                                        <MudToggleIconButton Toggled="@toggle" Variant="Variant.Filled"
+                                                             Icon="@Icons.Material.Filled.CheckBoxOutlineBlank" Color="@Color.Info"
+                                                             ToggledIcon="@Icons.Material.Filled.CheckBox"
+                                                             ToggledColor="@Color.Success" ToggledChanged="(() => SelectImage(file.Key))"/>
+                                    </div>
+                                }
+                                <MudLink OnClick="() => OpenFullScreenImageDialog(file.Key)">
+                              <MudImage ObjectFit="ObjectFit.Cover"
+                                                Src="@($"data:image;base64,{Convert.ToBase64String(file.Value)}")"
+                                                Elevation="25"
+                                                Class="rounded-lg"
+                                                Alt="@file.Key" Fluid="true"
+                                                Style="background-color: rgba(0, 0, 0, 0.1); width: 240px; height: 240px;"/>
+                                  
+
+                                </MudLink>
+                            </div>
+                        }
+                    </div>
+                    @if ( _loading)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+                    }
+                    @if (Images.FileDictionary.Count < Images.FileInDirectoryCount)
+                    {
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   Size="Size.Medium"
+                                   OnClick="LoadMore" Class="mb-2">Загрузить больше</MudButton>
+                    }
+                </div>
+              
+            </div>
+        }
+        @if (_currentImage != null)
+        {
+            <ImageFullScreenDialog Image="@_currentImage" @bind-VisibleDialog="_visibleFullScreenImageDialog"
+                                   WindowHeight="@_windowHeight"
+                                   WindowWidth="@_windowWidth"/>
+        }
+        
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    private bool _loadFullScreen;
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+    [Parameter] public FileTypes FileType { get; set; }
+    [Parameter] public DirectoryType DirectoryType { get; set; }
+    [Parameter] public string RelativePath { get; set; } = null!;
+    [Parameter] public int LoadMoreCount { get; set; }
+    [Parameter] public string TitleText { get; set; } = null!;
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public bool MultipleSelect { get; set; }
+    [Parameter] public EventCallback<string> SelectedImageCallback { get; set; }
+    [Parameter] public EventCallback<List<string>> SelectedImageListCallback { get; set; }
+    private string? SelectImageName { get; set; }
+    private List<string>? SelectImageNameList { get; set; }
+    private MudDialog _dialog = null!;
+
+    async Task CloseClick(MouseEventArgs eArgs)
+    {
+        VisibleDialog = false;
+        _dialog.Close();
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+    private string? _currImage;
+    private byte[]? _currentImage;
+    private bool _visibleFullScreenImageDialog;
+    private GetManyFilesResponse? Images { get; set; }
+    private int _contToWidth = 0;
+    [Inject]
+    private IBrowserViewportService BrowserViewportService { get; set; }
+    private int _windowWidth = 0;
+    private int _windowHeight = 0;
+    private bool _loading = false;
+ 
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!VisibleDialog)
+            return;
+       
+        await BrowserViewportService.SubscribeAsync(this, fireImmediately: true);
+        _contToWidth = _windowWidth switch
+        {
+            > 1260 => 5,
+            > 1010 => 4,
+            > 760 => 3,
+            > 515 => 2,
+            _ => 1
+        };
+        await InitImagePreviewListAsync();
+    }
+    public async Task ReturnSelectedResult()
+    {
+        if (MultipleSelect)
+        {
+            if (SelectImageNameList != null && SelectImageNameList.Any()) await SelectedImageListCallback.InvokeAsync(SelectImageNameList);
+        }
+        else if (SelectImageName != null) await SelectedImageCallback.InvokeAsync(SelectImageName);
+    }
+    private async Task InitImagePreviewListAsync()
+    {
+        Images = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+            {
+                DirectoryType = DirectoryType,
+                FileCountSkip = 0,
+                FileCountTake = _contToWidth,
+                PathToDirectory = RelativePath + PathsToDirectories.Preview
+            });
+    }
+    private async Task LoadMore()
+    {
+        if (Images != null && Images.FileDictionary.Count < Images.FileInDirectoryCount)
+        {
+            _loading = true;
+            var loadedList = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+                {
+                    DirectoryType = DirectoryType,
+                    FileCountSkip = Images.FileDictionary.Count,
+                    FileCountTake = LoadMoreCount,
+                    PathToDirectory = RelativePath + PathsToDirectories.Preview
+                });
+
+            foreach (var item in loadedList.FileDictionary)
+            {
+                Images.FileDictionary.Add(item.Key, item.Value);
+            }
+            _loading = false;
+        }
+    }
+    public async Task OpenFullScreenImageDialog(string imageKey)
+    {
+        if (_currImage != imageKey)
+        {
+            _currImage = imageKey;
+            _loadFullScreen = true;
+            _currentImage = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest()
+                {
+                    DirectoryType = DirectoryType,
+                    Path = Path.Combine(RelativePath, imageKey)
+                });
+            _loadFullScreen = false;
+        }
+      
+        _visibleFullScreenImageDialog = true;
+        
+    }
+   
+    public async Task SelectImage(string imageKey)
+    {
+       
+        if (MultipleSelect)
+        {
+            SelectImageNameList ??= new List<string>();
+            if (SelectImageNameList.Contains(imageKey))
+                SelectImageNameList.Remove(imageKey);
+            else
+                SelectImageNameList.Add(imageKey);
+        }
+        else
+            SelectImageName = SelectImageName == imageKey ? null : imageKey;
+        
+
+    // await SelectedImageCallback.InvokeAsync(imageKey);
+    }
+
+
+    public async ValueTask DisposeAsync() => await BrowserViewportService.UnsubscribeAsync(this);
+
+    Guid IBrowserViewportObserver.Id { get; } = Guid.NewGuid();
+
+    ResizeOptions IBrowserViewportObserver.ResizeOptions { get; } = new()
+        {
+            ReportRate = 50,
+            NotifyOnBreakpointOnly = false
+        };
+
+    Task IBrowserViewportObserver.NotifyBrowserViewportChangeAsync(BrowserViewportEventArgs browserViewportEventArgs)
+    {
+        _windowWidth = browserViewportEventArgs.BrowserWindowSize.Width;
+        _windowHeight = browserViewportEventArgs.BrowserWindowSize.Height;
+        return InvokeAsync(StateHasChanged);
+    }
+
+
+}
+<style>
+    .dcImageManager__container {
+        position: relative;
+        margin: 4px;
+    }
+
+    .dcImageManager__buttons {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+
+.loader {
+        background-color: rgba(0, 0, 0, 0.5);
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    border-radius: 5px;
+}
+
+</style>

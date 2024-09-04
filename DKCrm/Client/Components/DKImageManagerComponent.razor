@@ -1,0 +1,183 @@
+﻿@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Requests.FileService
+@using MudBlazor.Services
+@implements IBrowserViewportObserver
+@implements IAsyncDisposable
+
+@if (Images != null)
+{
+    <MudPaper Elevation="10" Class="my-2 p-2 text-center">
+        <div class="d-flex flex-wrap justify-content-around mb-2">
+            @foreach (var file in Images.FileDictionary)
+            {
+                <div class="dcImageManager__container">
+                    <div class="dcImageManager__buttons">
+                        <MudIconButton Variant="Variant.Filled"
+                                       Class=""
+                                       Icon="@Icons.Material.Filled.DeleteForever"
+                                       OnClick="() => RemoveImage(file.Key)"
+                                       Color="Color.Info" />
+                    </div>
+                    <MudLink OnClick="() => OpenFullScreenImageDialog(file.Key)">
+                        <MudImage ObjectFit="ObjectFit.Cover"
+                                  Src="@($"data:image;base64,{Convert.ToBase64String(file.Value)}")"
+                                  Elevation="25"
+                                  Class="rounded-lg m-1"
+                                  Alt="@file.Key" Fluid="true"
+                                  Style="background-color: rgba(0, 0, 0, 0.1); width: 240px; height: 240px;" />
+                    </MudLink>
+                </div>
+            }
+        </div>
+        @if (_loading)
+        {
+            <MudProgressLinear Class="my-2" Color="Color.Info" Rounded="true" Size="Size.Medium" Indeterminate="true"></MudProgressLinear>
+        }
+        @if (Images.FileDictionary.Count < Images.FileInDirectoryCount)
+        {
+            <MudButton Color="Color.Primary" 
+                       Variant="Variant.Filled" 
+                       Size="Size.Medium"
+                       OnClick="LoadMore">Загрузить больше</MudButton>
+        }
+    </MudPaper>
+}
+<MudPaper Elevation="10" Class="my-2 p-2">
+    <FileUploaderComponent DirectoryType="@DirectoryType"
+                           FileType="@FileType"
+                           RelativePath="@RelativePath" UploadsFilesCallback="InitImagePreviewListAsync"></FileUploaderComponent>
+</MudPaper>
+@if (_currentImage != null)
+{
+    <ImageFullScreenDialog Image="@_currentImage" @bind-VisibleDialog="_visibleFullScreenImageDialog"
+                           WindowHeight="@_windowHeight" 
+                           WindowWidth="@_windowWidth"/>
+}
+@code {
+    [Parameter] public FileTypes FileType { get; set; }
+    [Parameter] public DirectoryType DirectoryType { get; set; }
+    [Parameter] public string RelativePath { get; set; } = null!;
+    [Parameter] public int LoadMoreCount { get; set; }
+    private string? _currImage;
+    private byte[]? _currentImage;
+    private bool _visibleFullScreenImageDialog;
+    private GetManyFilesResponse? Images { get; set; }
+    private int _contToWidth = 0;
+    [Inject]
+    private IBrowserViewportService BrowserViewportService { get; set; }
+    private int _windowWidth = 0;
+    private int _windowHeight = 0;
+    private bool _loading = false;
+    protected override async Task OnInitializedAsync()
+    {
+        await BrowserViewportService.SubscribeAsync(this, fireImmediately: true);
+        _contToWidth = _windowWidth switch
+        {
+            >1260 => 5,
+            >1010 => 4,
+            >760 => 3,
+            >515 => 2,
+            _=>1
+        };
+        await InitImagePreviewListAsync();
+    }
+    private async Task InitImagePreviewListAsync()
+    {
+        Images = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+        {
+            DirectoryType = DirectoryType,
+            FileCountSkip = 0,
+            FileCountTake = _contToWidth,
+            PathToDirectory = RelativePath + PathsToDirectories.Preview
+        });
+    }
+    private async Task LoadMore()
+    {
+        if (Images != null && Images.FileDictionary.Count < Images.FileInDirectoryCount)
+        {
+            _loading = true;
+            var loadedList = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+                {
+                    DirectoryType = DirectoryType,
+                    FileCountSkip = Images.FileDictionary.Count,
+                    FileCountTake = LoadMoreCount,
+                    PathToDirectory = RelativePath+PathsToDirectories.Preview
+                });
+          
+                foreach (var item in loadedList.FileDictionary)
+                {
+                    Images.FileDictionary.Add(item.Key, item.Value);
+                }
+            _loading = false;
+        }
+    }
+    public async Task OpenFullScreenImageDialog(string imageKey)
+    {
+        if (_currImage != imageKey)
+        {
+            _currImage = imageKey;
+            _currentImage = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest()
+                {
+                    DirectoryType = DirectoryType, Path = Path.Combine(RelativePath, imageKey)
+                }); 
+        }
+        _visibleFullScreenImageDialog = true;
+    }
+    public async Task RemoveImage(string imageKey)
+    {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление изображения!"))
+            return;
+        if (await FilesManager.RemoveFilesAsync(new RemoveFileRequest()
+        {
+            DirectoryType = DirectoryType,
+            FileType = FileTypes.Stamps,
+            Path = RelativePath,
+            FileName = imageKey
+        }))
+        {
+            Images!.FileDictionary.Remove(imageKey);
+             Images.FileInDirectoryCount -= 1;
+        }
+        
+    }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+     
+    
+    //     }
+    //     await base.OnAfterRenderAsync(firstRender);
+    // }
+
+    public async ValueTask DisposeAsync() => await BrowserViewportService.UnsubscribeAsync(this);
+
+    Guid IBrowserViewportObserver.Id { get; } = Guid.NewGuid();
+
+    ResizeOptions IBrowserViewportObserver.ResizeOptions { get; } = new()
+    {
+        ReportRate = 50,
+        NotifyOnBreakpointOnly = false
+    };
+
+    Task IBrowserViewportObserver.NotifyBrowserViewportChangeAsync(BrowserViewportEventArgs browserViewportEventArgs)
+    {
+        _windowWidth = browserViewportEventArgs.BrowserWindowSize.Width;
+        _windowHeight = browserViewportEventArgs.BrowserWindowSize.Height;
+        return InvokeAsync(StateHasChanged);
+    }
+
+
+}
+<style>
+    .dcImageManager__container{
+        position: relative;
+    }
+
+    .dcImageManager__buttons {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+</style>

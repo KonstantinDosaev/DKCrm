@@ -37,9 +37,13 @@ namespace DKCrm.Server.Controllers
         [HttpPost("{request}")]
         public async Task<IActionResult> SaveFile(SaveFileRequest request)
             => Ok(await _fileService.SaveFileAsync(request));
-       
-    
- 
-        
+
+        [HttpPost]
+        public IActionResult RemoveFile(RemoveFileRequest request)
+            => Ok( _fileService.RemoveFile(request));
+
+
+
+
     }
 }

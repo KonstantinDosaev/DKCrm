@@ -52,7 +52,7 @@
                                               RequiredError="Введите ключ API ЕГРНЮЛ!" Lines="1"/>
                             </MudCardContent>
                         </MudForm>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="OpenStampDialog">Печати</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="(() => _visibleStampsDialog = true)">Печати</MudButton>
                         <MudCardActions>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateInternalData())">Применить</MudButton>
                         </MudCardActions>
@@ -202,34 +202,14 @@
 
     </DialogContent>
 </MudDialog>
-<MudDialog @bind-IsVisible="_visibleStampsDialog" 
-           Options="new DialogOptions(){CloseButton = true, MaxWidth = MaxWidth.ExtraExtraLarge}">
-    <DialogContent>
-        <MudText>Печати</MudText>
-        <MudCard Class="d-flex flex-column">
-            @if (Stamps != null)
-            {
-                foreach (var file in Stamps.FileDictionary)
-                {
-                    <MudImage ObjectFit="ObjectFit.Contain" Height="200" Width="400"
-                              Src="@($"data:image;base64,{Convert.ToBase64String(file.Value)}")"
-                              Elevation="25"
-                              Class="rounded-lg"
-                              Alt="@file.Key" Fluid="true" />
-                }
-            }
-          
-                <FileUploaderComponent DirectoryType="DirectoryType.Private"
-                                       FileType="FileTypes.Stamps" 
-                                       RelativePath="@PathsToDirectories.Stamps"></FileUploaderComponent>
-           
-        </MudCard>
-    </DialogContent>
-</MudDialog>
+<DKImageManagerDialog DirectoryType="DirectoryType.Private"
+                         FileType="FileTypes.Stamps"
+                         RelativePath="@PathsToDirectories.Stamps"
+                         LoadMoreCount="5" @bind-VisibleDialog="_visibleStampsDialog" TitleText="Печати"/>
+
 @code {
     private int _activeIndex = 0;
     private string? _valueString;
-
     private InternalCompanyData? InternalCompanyData { get; set; }
     MudForm? _editInternalDataForm;
     public List<(string charCode, string name)>? CurrencyCharCodes { get; set; }
@@ -238,9 +218,9 @@
     private List<CompanyType>? CompanyTypes { get; set; }
     private CompanyType? CurrentCompanyType { get; set; }
     private bool _visibleCompanyTypeUpdateDialog;
-    private bool _visibleCompanyTypeRemoveDialog; 
+    private bool _visibleCompanyTypeRemoveDialog;
     private bool _visibleStampsDialog;
-    private GetManyFilesResponse? Stamps { get; set; }
+
     private List<TagsCompany>? TagsCompanies { get; set; }
     private TagsCompany? CurrentTagCompany { get; set; }
 
@@ -405,13 +385,8 @@
         }
     }
    
-    public async Task OpenStampDialog()
-    {
-        _visibleStampsDialog = true;
-        Stamps = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
-        {
-            DirectoryType = DirectoryType.Private, FileCountSkip = 0, FileCountTake = 5, PathToDirectory = PathsToDirectories.Stamps
-        });
-    }
-    }
+    
+
+}
+
 

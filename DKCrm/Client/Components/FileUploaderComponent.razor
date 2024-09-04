@@ -3,79 +3,112 @@
 @using Microsoft.AspNetCore.Components
 @using System.Globalization
 @using MudBlazor
-<MudFileUpload MaximumFileCount="10" T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
-    <ButtonTemplate>
-        <MudButton HtmlTag="label"
-                   Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   for="@context.Id">
-            Добавить
-        </MudButton>
-        
-    </ButtonTemplate>
-</MudFileUpload>
-<MudButton OnClick="SaveFilesAsync"
-           Variant="Variant.Filled"
-           Color="Color.Primary"
-           StartIcon="@Icons.Material.Filled.CloudUpload">
-    Сохранить
-</MudButton>
-<MudSelect Placeholder="Select culture" @bind-Value="SizeImage" HelperText="CultureInfo">
-    <MudSelectItem Value="480" />
-    <MudSelectItem  Value="720" />
-    <MudSelectItem Value="1080" />
-</MudSelect>
-<MudText>@files.Count</MudText>
-@if (files.Any())
-{
-    <MudList T="string">
-        @foreach (var file in files)
-        {
-            <MudListItem Icon="@Icons.Material.Filled.AttachFile">
-                <div>@file.FileName</div>
-                @if (FileType is FileTypes.Images or FileTypes.Stamps)
-                {
-                   
-                    @* <img  src="data:image;base64, @Convert.ToBase64String(file.Content)" alt=""/> *@
 
-                    <MudImage ObjectFit="ObjectFit.Contain" Height="200" Width="400"
-                              Src="@($"data:image;base64,{Convert.ToBase64String(file.Content)}")"
-                              Elevation="25" 
-                              Class="rounded-lg"
-                              Alt="@file.FileName" Fluid="true"/>
-                }
-                <MudIconButton Icon="@Icons.Material.Filled.Clear" OnClick="() => files.Remove(file)"></MudIconButton>
-            </MudListItem>
-        }
-    </MudList>
+<div class="d-flex align-items-end flex-wrap" >
+    @if (FileType is FileTypes.Stamps or FileTypes.Images)
+    {
+        <div class="m-1">
+            <MudSelect Class="select-fileUploader" Dense="true" Variant="Variant.Outlined" Placeholder="Выбрать качество" @bind-Value="SizeImage" Label="Качество">
+                <MudSelectItem Value="SizeImg.S480">480</MudSelectItem>
+                <MudSelectItem Value="SizeImg.S720">720</MudSelectItem>
+                <MudSelectItem Value="SizeImg.S1080">1080</MudSelectItem>
+                <MudSelectItem Value="SizeImg.S1440">1440</MudSelectItem>
+            </MudSelect>
+        </div>
+    }
+    <div class="m-1">
+        <MudFileUpload  MaximumFileCount="10" T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
+            <ButtonTemplate>
+                <MudButton HtmlTag="label"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary" Size="Size.Medium"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           for="@context.Id">
+                    Добавить
+                </MudButton>
+                
+            </ButtonTemplate>
+        </MudFileUpload>
+    </div>
+    <div class="m-1">
+        <MudButton  OnClick="SaveFilesAsync"
+                    Variant="Variant.Filled"
+                    Color="Color.Primary" 
+                    Disabled="!files.Any()"
+                    StartIcon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium">Сохранить
+        </MudButton>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Info" Rounded="true" Size="Size.Medium" Indeterminate="true"></MudProgressLinear>
 }
+
+    @if (files.Any())
+    {
+        <MudList Dense="true" T="string">
+            @foreach (var file in files.Reverse())
+            {
+                <MudListItem Style="" Icon="@Icons.Material.Filled.AttachFile">
+                    <MudPaper Class="d-flex px-4 py-2  align-items-center justify-content-between" Elevation="14">
+                        <div class="d-flex align-items-center">
+                        @if (FileType is FileTypes.Images or FileTypes.Stamps)
+                            {
+                                <MudImage ObjectFit="ObjectFit.Contain" Height="180" Width="300"
+                                          Src="@($"data:image;base64,{Convert.ToBase64String(file.Content)}")"
+                                          Elevation="25"
+                                          Class="rounded-lg mr-4"
+                                          Alt="@file.FileName" Fluid="true"/>
+                            }
+                            <div class="mr-2">@file.FileName</div>
+                        </div>
+                        <MudIconButton Icon="@Icons.Material.Filled.Clear" Variant="Variant.Filled" Color="Color.Info"
+                                       OnClick="() => files.Remove(file)"></MudIconButton>
+                    </MudPaper>
+                </MudListItem>
+            }
+        </MudList>
+    }
 
 @code {
     [Parameter] public FileTypes FileType { get; set; }
     [Parameter] public DirectoryType DirectoryType { get; set; }
     [Parameter] public string RelativePath { get; set; } = null!;
     IList<SaveFileRequest> files = new List<SaveFileRequest>();
-    private int SizeImage { get; set; } = 720;
+    [Parameter] public EventCallback UploadsFilesCallback { get; set; }
+    private SizeImg SizeImage { get; set; } = SizeImg.S720;
+    private bool _loading = false;
+    
     private async Task UploadFiles(IReadOnlyList<IBrowserFile> files)
     {
+        _loading = true;
         foreach (var file in files)
         {
+            var memSize = SizeImage;
             var temp = new SaveFileRequest()
             {
-                FileName = file.Name, ContentType = FileType, DirectoryType = DirectoryType, Path = RelativePath
+                 ContentType = FileType, DirectoryType = DirectoryType, Path = RelativePath
             };
             var type = file.ContentType;
             if (file.ContentType.Contains("image"))
             {
                 var resize = await ResizeImage(file);
                 temp.Content = await ConvertBrowseFileToByteArray(resize);
+                temp.FileName = SizeImage.ToString() + file.Name;
+                SizeImage = SizeImg.S240;
+                var preview = await ResizeImage(file);
+                temp.Preview = await ConvertBrowseFileToByteArray(preview);
             }
             else
                 temp.Content = await ConvertBrowseFileToByteArray(file);
             
             this.files.Add(temp);
+           // ShouldRender();
+            SizeImage = memSize;
         }
+        //StateHasChanged();
+        _loading = false;
     }
     private async Task SaveFilesAsync()
     {
@@ -83,6 +116,8 @@
         {
             await FilesManager.SaveFileAsync(file);
         }
+        await UploadsFilesCallback.InvokeAsync();
+        files.Clear();
     }
     private async Task<IBrowserFile> ResizeImage(IBrowserFile file)
     {
@@ -90,31 +125,80 @@
         var height = 720;
         switch (SizeImage)
         {
-            case 480 :
+            case SizeImg.S240:
+                height = int.MaxValue;
+                width = 320;
+                break;
+            case SizeImg.S480 :
                 height = 480;
                 width = 640;
                 break;
-            case 720 :
+            case SizeImg.S720 :
                 height = 720;
                 width = 1280;
                 break;
-            case 1080 :
+            case SizeImg.S1080 :
                 height = 1080;
                 width = 1920;
                 break;
-            case 1440 :
+            case SizeImg.S1440 :
                 height = 1440;
                 width = 2560;
                 break;
         }
+       
         return await file.RequestImageFileAsync(file.ContentType, width, height);
     }
     private async Task<byte[]> ConvertBrowseFileToByteArray(IBrowserFile file)
     {
+
+        while (file.Size > 3500000)
+        {
+            if (SizeImage == SizeImg.S480)
+            {
+                break;
+            }
+            var tt = file.Size;
+            switch (SizeImage)
+            {
+                case SizeImg.S720 :
+                   SizeImage = SizeImg.S480;
+                    break;
+                case SizeImg.S1080 :
+                    SizeImage = SizeImg.S720;
+                    break;
+                case SizeImg.S1440 :
+                    SizeImage = SizeImg.S1080;
+                    break;
+            }
+           file =  await ResizeImage(file);
+        }
         using (var ms = new MemoryStream())
         {
-            await file.OpenReadStream().CopyToAsync(ms);
+            await file.OpenReadStream(maxAllowedSize: 3500000).CopyToAsync(ms);
             return ms.ToArray();
         }
     }
+
+    public enum SizeImg
+    {
+        S240,
+        S480,
+        S720,
+        S1080,
+        S1440
+
+    }
 }
+<style>
+    .select-fileUploader {
+        margin: 0 !important;
+    }
+
+        .select-fileUploader .mud-input-slot.mud-input-root-outlined {
+        padding: 0.65rem 0.8rem !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+        
+    }
+</style>

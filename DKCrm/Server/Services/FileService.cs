@@ -44,21 +44,6 @@ namespace DKCrm.Server.Services
 
             return allFileInfo.ToDictionary(info => info.Name, info => info.FullName);
         }
-        public async Task<SaveFileResponse> SaveFileAsync(SaveFileRequest request)
-        {
-            var extension = request.FileName.Split('.').Last();
-           
-            var path = BuildingPath(request.Path, request.DirectoryType);
-            var count = 0;
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            else
-                count = new DirectoryInfo(path).GetFiles().Length;
-            var name = count+1 + $".{extension}";
-            var fullPath = Path.Combine(path, name);
-            await File.WriteAllBytesAsync(fullPath, request.Content);
-            return new SaveFileResponse(){FileName = name};
-        }
         public async Task<byte[]> GetFirstOrDefaultFileInBytArrayAsync(GetFileRequest request)
         {
             try
@@ -88,10 +73,15 @@ namespace DKCrm.Server.Services
             {
                 FileDictionary = new Dictionary<string, byte[]>()
             };
-            var directoryItems = GetAllFileNamesAndPathsInDirectory(new GetFileRequest(){Path = request.PathToDirectory, DirectoryType = request.DirectoryType}).ToArray();
+            var directoryItems = GetAllFileNamesAndPathsInDirectory(new GetFileRequest()
+            {
+                Path = request.PathToDirectory,
+                DirectoryType = request.DirectoryType
+            }).ToArray();
             result.FileInDirectoryCount = directoryItems.Length;
+            if (!directoryItems.Any() || directoryItems.Length == request.FileCountSkip) return new GetManyFilesResponse();
             directoryItems = directoryItems.Skip(request.FileCountSkip).Take(request.FileCountTake).ToArray();
-            if (!directoryItems.Any()) return new GetManyFilesResponse();
+            
             foreach (var item in directoryItems)
             {
                
@@ -105,6 +95,55 @@ namespace DKCrm.Server.Services
             //    result.Add(await File.ReadAllBytesAsync(path));
             //}
             return result ;
+        }
+        public async Task<SaveFileResponse> SaveFileAsync(SaveFileRequest request)
+        {
+            var extension = request.FileName.Split('.').Last();
+            var trustedFileName = Path.GetRandomFileName();
+            var path = BuildingPath(request.Path, request.DirectoryType);
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            var name = trustedFileName + $".{extension}";
+            var fullPath = Path.Combine(path, name);
+            await File.WriteAllBytesAsync(fullPath, request.Content);
+
+            if (request.Preview != null)
+            {
+                var prevPath = path + PathsToDirectories.Preview;
+                if (!Directory.Exists(prevPath))
+                    Directory.CreateDirectory(prevPath);
+                var fullPrevPath = Path.Combine(prevPath, name);
+                await File.WriteAllBytesAsync(fullPrevPath, request.Preview);
+            }
+            return new SaveFileResponse() { FileName = name };
+        }
+        public bool RemoveFile(RemoveFileRequest request)
+        {
+           
+            var path = BuildingPath(request.Path, request.DirectoryType);
+
+            var fullPath = Path.Combine(path, request.FileName);
+            var fileInfo = new FileInfo(fullPath);
+            if (fileInfo.Exists)
+            {
+                fileInfo.Delete();
+            }
+            else
+                return false;
+
+            if (request.FileType is FileTypes.Stamps or FileTypes.Images)
+            {
+                var prevPath = path + PathsToDirectories.Preview;
+                var prevFullPath = Path.Combine(prevPath, request.FileName);
+                var prevFileInfo = new FileInfo(prevFullPath);
+                if (prevFileInfo.Exists)
+                {
+                    prevFileInfo.Delete();
+                }
+            }
+            return !fileInfo.Exists;
         }
     }
 }

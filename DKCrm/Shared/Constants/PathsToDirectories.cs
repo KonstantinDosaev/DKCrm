@@ -15,5 +15,6 @@ namespace DKCrm.Shared.Constants
         public const string OrdersDocuments = @"\Documents\Orders";
         public const string Fonts = @"\Fonts";
         public const string Stamps = @"\Stamps";
+        public const string Preview = @"\Preview";
     }
 }

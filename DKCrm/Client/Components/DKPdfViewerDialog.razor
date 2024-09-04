@@ -1,0 +1,81 @@
+﻿
+<MudDialog @bind-IsVisible="_visibleViewPdfDialog" Style="height: 100VH" 
+           Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}" 
+           ClassContent="myPdfViewerDialog">
+    <DialogContent>
+        <div class="clearPdfDialogButton">
+            <MudIconButton 
+                Size="Size.Large"
+                OnClick="() => _visibleViewPdfDialog = false"
+                Color="Color.Info" Icon="@Icons.Material.Filled.Close"></MudIconButton>
+        </div>
+        @if (_loading)
+        {<div style="width: 100%; height: 100%;" class="d-flex align-items-center justify-content-center">
+             <MudText Typo="Typo.h4">Загрузка...</MudText>
+         </div>
+        }
+        else
+        {
+            <div style ="overflow: scroll; height: 100VH;">
+                <PdfViewer @ref="viwer" Class="myPdfViwer mb-3"
+                           Url="@(string.Format("data:application/pdf;base64,{0}", pdfContent))" 
+                           OnDocumentLoaded="OnDocumentLoaded"
+                           OnPageChanged="OnPageChanged" />
+                <div class="stampGrid" style="@_visibleStampPdf">
+                    <div class="stampGrid__block">                           
+                        
+                        <div class="stampGrid__container">
+                            <MudSlider 
+                                @bind-Value="valueX"
+                                Style="width: 595px;"
+                                Size="Size.Medium"
+                                Min="20" Max="480"
+                                Color="Color.Info"/>
+                            
+                            <div style="position:absolute; top: 420px; right: 190px;  transform: rotate(270deg);">
+                                <MudSlider
+                                    @bind-Value="valueY" 
+                                    Min="20" 
+                                    Max="712"
+                                    Size="Size.Medium" 
+                                    Style="width: 842px;"
+                                    Color="Color.Info"/>
+                            </div>
+                            <MudPaper Class="stampItem" Style="@($"bottom:{valueY}px;left: {valueX}px;")">
+                                <div class="containerbackground">Печать</div> 
+                            </MudPaper>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="getIndexPdfDialogButton">
+            <MudText>@valueX</MudText> <MudText>@valueY</MudText>
+            <MudButton OnClick="OpenStampGrid">inp</MudButton>
+            <MudButton OnClick="AddStampPosition">применить</MudButton>
+            <MudButton OnClick="(() => _visibleStampImagesDialog = true)">image</MudButton>
+            @if (StampToPdfRequest.StampPositionList != null)
+            {
+                @foreach (var r in StampToPdfRequest.StampPositionList)
+                {
+                    <div>@r.StampImage @r.PercentOfBottomEdge @r.PercentOfLeftEdge @r.PageNumber </div>
+                }
+            }
+            <div>@_currentStampName</div>
+        </div>
+    </DialogContent>
+</MudDialog>
+@if (_visibleStampImagesDialog)
+{
+    <DKImageViewerDialog DirectoryType="DirectoryType.Private"
+                         FileType="FileTypes.Stamps"
+                         RelativePath="@PathsToDirectories.Stamps"
+                         LoadMoreCount="5" @bind-VisibleDialog="_visibleStampImagesDialog" TitleText="Печати"
+                         IsSelected="true" MultipleSelect="false"
+                         SelectedImageCallback="SetStampImage"/>
+}
+
+@code {
+
+}

@@ -1,0 +1,114 @@
+﻿@using MudBlazor.Services
+
+<MudDialog Style="min-width: 300px; min-height: 200px;" Class="fullImage__dialog " 
+           ClassContent="fullImageClass" IsVisibleChanged="VisibleDialogChanged" 
+           IsVisible="VisibleDialog"
+           Options="new DialogOptions() { NoHeader = true, DisableBackdropClick = false, FullScreen = true}">
+    <DialogContent>
+        <div class="fullScreenImage__closeButton">
+            <MudTooltip Text="Закрыть" Arrow="true" Placement="Placement.Right">
+                <MudIconButton Variant="Variant.Filled"
+                               Class="mb-2"
+                               Icon="@Icons.Material.Filled.Close"
+                               OnClick="CloseClick"
+                               Color="Color.Info"/>
+            </MudTooltip>
+            <MudTooltip Text="Реальный размер" Arrow="true" Placement="Placement.Right">
+                <MudToggleIconButton Toggled="@_isRealImageSize" Variant="Variant.Filled"
+                                     Icon="@Icons.Material.Filled.Fullscreen" Color="@Color.Info"
+                                     ToggledIcon="@Icons.Material.Filled.FullscreenExit" 
+                                     ToggledColor="@Color.Success" ToggledChanged="SwitchRealImageSize"/>
+            </MudTooltip>
+        </div>
+        @if (Image != null)
+        {
+            <div @onclick="CloseClick" class="fullImage__imageContainer" style="@($"width: {WindowWidth}px; height: {WindowHeight}px")">
+                <MudImage ObjectFit="ObjectFit.Contain"
+                          Src="@($"data:image;base64,{Convert.ToBase64String(Image)}")"
+                          Elevation="25" Class="fullImage__image"
+                          Style="@($"max-width: {_imageWidth}px; max-height: {_imageHeight}px")" />
+                
+            </div>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public byte[]? Image { get; set; }
+    [Parameter]public int WindowWidth { get; set; } = 0;
+    [Parameter] public int WindowHeight { get; set; } = 0;
+    [Parameter]public EventCallback<bool> VisibleDialogChanged { get; set; }
+
+    private bool _isRealImageSize;
+    private int _imageHeight;
+    private int _imageWidth;
+    string _scrollInZoom = "max-height: 90VH; height: 100 %; width: 100 %; overflow: scroll;";
+    
+
+    protected override void OnParametersSet()
+    {
+        _imageWidth = WindowWidth;
+        _imageHeight = WindowHeight;
+        base.OnParametersSet();
+    }
+
+    private void SwitchRealImageSize(bool isRealImageSize)
+    {
+        if (!_isRealImageSize)
+        {
+            _imageWidth = int.MaxValue;
+            _imageHeight = int.MaxValue;
+            _isRealImageSize = true;
+        }
+        else
+        {
+            _imageHeight = WindowHeight;
+            _imageWidth = WindowWidth;
+            _isRealImageSize = false;
+        }
+    }
+    private void ResetZoom()
+    {
+        _isRealImageSize = false;
+        _imageHeight = WindowHeight;
+        _imageWidth = WindowWidth;
+    }
+
+    async Task CloseClick()
+    {
+        ResetZoom();
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+}
+<style>
+    .fullImage__dialog {
+        background: none;
+    }
+    .fullImageClass {
+        padding: 0 !important;
+    }
+    .fullImage__imageContainer {
+        overflow: auto;
+        display: flex;
+        align-items: center;
+    }
+    .fullImage__image {
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.4);
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        vert-align: middle;
+    }
+    .fullScreenImage__closeButton {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: flex;
+        flex-direction: column;
+        width: 38px;
+    }
+</style>

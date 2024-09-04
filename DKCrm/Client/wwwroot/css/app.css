@@ -62,3 +62,79 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+.dialogAbstractButton {
+    position: fixed;
+    display: flex;
+    z-index: 99;
+}
+.dialogAbstractButton-rtv {
+    top: 10px;
+    right: 10px;
+    flex-direction: column;
+    width: 38px;
+}
+.dialogAbstractButton-rbv {
+    bottom: 10px;
+    right: 10px;
+    flex-direction: column;
+    width: 38px;
+}
+.dialogAbstractButton-ltv {
+    top: 10px;
+    left: 10px;
+    flex-direction: column;
+    width: 38px;
+}
+.dialogAbstractButton-lbv {
+    bottom: 10px;
+    left: 10px;
+    flex-direction: column;
+    width: 38px;
+}
+.dialogAbstractButton-rth {
+    top: 10px;
+    right: 10px;
+    flex-direction: row;
+    height: 38px;
+}
+
+.dialogAbstractButton-rbh {
+    bottom: 10px;
+    right: 10px;
+    flex-direction: row;
+    height: 38px;
+}
+
+.dialogAbstractButton-lth {
+    top: 10px;
+    left: 10px;
+    flex-direction: row;
+    height: 38px;
+}
+
+.dialogAbstractButton-lbh {
+    bottom: 10px;
+    left: 10px;
+    flex-direction: row;
+    height: 38px;
+}
+.dilaog__title {
+    position: sticky;
+    padding: 8px 16px!important;
+    background: rgba(270, 270, 270, 0.3);
+    top: 0px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: end
+}
+.no-padding {
+    padding: 0 !important;
+}
+.dilog__titleText {
+    font-size: 26px; 
+}
+.btn-castom {
+    margin: 0 !important;
+}
+

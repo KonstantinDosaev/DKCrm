@@ -1,0 +1,40 @@
+﻿@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Constants
+<MudDialog IsVisible="VisibleDialog" IsVisibleChanged="VisibleDialogChanged"
+           DisableSidePadding="true" ClassContent="no-padding" TitleClass="dilaog__title"
+           Options="new DialogOptions() { MaxWidth = MaxWidth.Large }">
+    <TitleContent>
+        <MudIcon Class="no-padding" Size="Size.Large" Icon="@Icons.Material.Filled.Image" />
+        <div class="dilog__titleText">@TitleText</div>
+        <div>
+            <MudTooltip Text="Закрыть" Arrow="true" Placement="Placement.Right">
+                <MudIconButton Variant="Variant.Filled"
+                               Class="mb-2 btn-castom"
+                               Icon="@Icons.Material.Filled.Close"
+                               OnClick="CloseClick"
+                               Color="Color.Info" />
+            </MudTooltip>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <DKImageManagerComponent DirectoryType="@DirectoryType"
+                                 FileType="@FileType"
+                                 RelativePath="@RelativePath"
+                                 LoadMoreCount="@LoadMoreCount" />
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+    [Parameter] public FileTypes FileType { get; set; }
+    [Parameter] public DirectoryType DirectoryType { get; set; }
+    [Parameter] public string RelativePath { get; set; } = null!;
+    [Parameter] public int LoadMoreCount { get; set; }
+    [Parameter] public string TitleText { get; set; } = null!;
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+}

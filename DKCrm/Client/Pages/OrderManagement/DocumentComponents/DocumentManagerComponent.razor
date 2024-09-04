@@ -67,7 +67,7 @@ else
 }
 else
 {
-    <MudText Class="m-4">Документов не обнаружено</MudText>
+    <MudText Class="m-4">Документы не обнаружены</MudText>
 }
 <MudDialog @bind-IsVisible="_visibleCreateSpecificationDialog" @ref="_createSpecificationDialog"
            Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,DisableBackdropClick = true}">
@@ -83,70 +83,8 @@ else
         <CreateOrderSpecificationComponent OrderId="OrderId" RefreshParent="EndCreateSpecification" />
     </DialogContent>
 </MudDialog>
-<MudDialog @bind-IsVisible="_visibleViewPdfDialog" Style="height: 100VH" 
-           Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}"  ClassContent="myPdfViewerDialog">
-    <TitleContent>
-        
-    </TitleContent>
-    <DialogContent>
-        <div class="clearPdfDialogButton">
-            <MudIconButton 
-                Size="Size.Large"
-                OnClick="() => _visibleViewPdfDialog = false"
-                Color="Color.Info" Icon="@Icons.Material.Filled.Close"></MudIconButton>
-        </div>
-  
-        @if (_loading)
-        {<div style="width: 100%; height: 100%;" class="d-flex align-items-center justify-content-center">
-             <MudText Typo="Typo.h4">Загрузка...</MudText>
-         </div>
-        }
-        else
-        {
-            <div style ="overflow: scroll; height: 100VH;">
-                <PdfViewer @ref="viwer" Class="myPdfViwer mb-3"
-                            Url="@(string.Format("data:application/pdf;base64,{0}", pdfContent))" 
-                            OnDocumentLoaded="OnDocumentLoaded"
-                            OnPageChanged="OnPageChanged" />
-                <div class="stampGrid" style="@_visibleStampPdf">
-                    <div class="stampGrid__block">                           
-                        
-                        <div class="stampGrid__container">
-                            <MudSlider 
-                                @bind-Value="valueX"
-                                Style="width: 595px;"
-                                       Size="Size.Medium"
-                                Min="20" Max="480"
-                                Color="Color.Info"/>
-                            
-                            <div style="position:absolute; top: 420px; right: 190px;  transform: rotate(270deg);">
-                                <MudSlider
-                                    @bind-Value="valueY" 
-                                    Min="20" 
-                                    Max="712"
-                                    Size="Size.Medium" 
-                                    Style="width: 842px;"
-                                    Color="Color.Info"/>
-                            </div>
-                            <MudPaper Class="stampItem" Style="@($"bottom:{valueY}px;left: {valueX}px;")">
-                                <div class="containerbackground">Печать</div> 
-                            </MudPaper>
-                            
-                        </div>
-                    </div>
-                </div>
-                </div>
-        }
-        
-        <div class="getIndexPdfDialogButton">
-            <MudText>@valueX</MudText> <MudText>@valueY</MudText>
-            <MudButton OnClick="OpenStampGrid">inp</MudButton>
-            <MudButton OnClick="OpenStampGrid">применить</MudButton>
-        </div>
-        
-    </DialogContent>
-</MudDialog>
-<MudDialog @bind-IsVisible="_visibleStampPdfDialog" Style="height: 100VH"
+
+@* <MudDialog @bind-IsVisible="_visibleStampPdfDialog" Style="height: 100VH"
            Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}"  ClassContent="myPdfViewerDialog">
     <TitleContent>
         
@@ -165,10 +103,11 @@ else
         
     </DialogContent>
 </MudDialog>
-
+ *@
 @code {
     
     byte[]? ImageToOrder { get; set; }
+
     PdfViewer viwer;
     private bool _loading;
     [Parameter] public Guid OrderId { get; set; }
@@ -182,14 +121,19 @@ else
     private bool _visibleCreateSpecificationDialog;
     private bool _visibleViewPdfDialog;
     private bool _visibleStampPdfDialog;
+    private bool _visibleStampImagesDialog;
     string _visibleStampPdf = "display: none";
     public double valueX = 50;
     public double valueY = 50;
-
+    private string? _currentStampName;
     private async Task GetImage(Guid id)
     {
         ImageToOrder = await FilesManager.GetFirstOrDefaultFileInBytArrayAsync( new GetFileRequest(){Path= $"{PathsToDirectories.OrdersImages}\\{id}", DirectoryType = DirectoryType.Private});
         var t = $"data:image;base64, @Convert.ToBase64String(item.Value)";
+    }
+    private void SetStampImage(string name)
+    {
+        _currentStampName = name;
     }
     protected override async Task OnInitializedAsync()
     {
@@ -271,8 +215,12 @@ else
         StampToPdfRequest.StampPositionList ??= new List<StampPosition>();
         StampToPdfRequest.StampPositionList.Add(new StampPosition()
         {
-            PageNumber = _currentPage, PercentOfBottomEdge = valueY, PercentOfLeftEdge = valueX, 
+            PageNumber = _currentPage, PercentOfBottomEdge = valueY, PercentOfLeftEdge = valueX, StampImage = _currentStampName
         });
+    }
+    private void SelectedImage(string patch)
+    {
+       
     }
 }
 <style>

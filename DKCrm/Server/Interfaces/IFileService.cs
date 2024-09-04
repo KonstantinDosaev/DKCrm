@@ -11,5 +11,6 @@ namespace DKCrm.Server.Interfaces
         Task<byte[]> GetFirstOrDefaultFileInBytArrayAsync(GetFileRequest request);
         Task<byte[]> GetFileInBytArrayAsync(GetFileRequest request);
         Task<GetManyFilesResponse> GetManyFileInBytArrayAsync(GetManyFileRequest request);
+        bool RemoveFile(RemoveFileRequest request);
     }
 }
