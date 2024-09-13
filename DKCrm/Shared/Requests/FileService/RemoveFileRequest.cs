@@ -13,5 +13,6 @@ namespace DKCrm.Shared.Requests.FileService
         public DirectoryType DirectoryType { get; set; }
         public FileTypes FileType { get; set; }
         public string Path { get; set; } = null!;
+        public bool IsFullPath { get; set; }
     }
 }

@@ -9,6 +9,7 @@ namespace DKCrm.Shared.Requests.FileService
         public FileTypes FileTypes { get; set; }
         public int FileCountSkip { get; set; }
         public int FileCountTake { get; set; }
+        public bool IsFullPath { get; set; }
 
     }
 }

@@ -10,6 +10,7 @@ namespace DKCrm.Shared.Requests.FileService
         public FileTypes? ContentType { get; set; }
         public byte[] Content { get; set; } = null!;
         public byte[]? Preview { get; set; }
+        public bool IsFullPath { get; set; }
 
 
     }

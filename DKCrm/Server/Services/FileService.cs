@@ -22,33 +22,39 @@ namespace DKCrm.Server.Services
 
         public string BuildingPath(string path, DirectoryType directoryType)
         {
-            if (path[0] != '\\') return path;
-            
             var mainPath = directoryType == DirectoryType.Public ? _configuration["PathToPublicDirectory"] 
                 : _configuration["PathToStaticFiles"];
 
-            mainPath += path;
-            return mainPath;
+            return Path.Combine(mainPath,path);
         }
-        public IEnumerable<string> GetAllFileNamesInDirectory(GetFileRequest request, ClaimsPrincipal user)
+        public IEnumerable<GetFileInfoResponse> GetAllFileInfoInDirectory(GetFileRequest request)
         {
-            var path = BuildingPath(request.Path, request.DirectoryType);
-            var allFileInfo = new DirectoryInfo(path).GetFiles().Select(s=>s.Name);
+            var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
+            var dirInfo = new DirectoryInfo(path);
+            if (!dirInfo.Exists)
+                return Array.Empty<GetFileInfoResponse>();
+            var allFileInfo = dirInfo.GetFiles();
+            var result = allFileInfo.Select(s=> 
+                new GetFileInfoResponse()
+                {
+                    Path = s.FullName, FileName = s.Name, DateTimeCreate = s.CreationTimeUtc
+                }
+            );
 
-            return allFileInfo;
+            return result;
         }
-        public Dictionary<string,string> GetAllFileNamesAndPathsInDirectory(GetFileRequest request)
-        {
-            var path = BuildingPath(request.Path, request.DirectoryType);
-            var allFileInfo = new DirectoryInfo(path).GetFiles();
+        //public Dictionary<string,string> GetAllFileNamesAndPathsInDirectory(GetFileRequest request)
+        //{
+        //    var path = BuildingPath(request.Path, request.DirectoryType);
+        //    var allFileInfo = new DirectoryInfo(path).GetFiles();
 
-            return allFileInfo.ToDictionary(info => info.Name, info => info.FullName);
-        }
+        //    return allFileInfo.ToDictionary(info => info.Name, info => info.FullName);
+        //}
         public async Task<byte[]> GetFirstOrDefaultFileInBytArrayAsync(GetFileRequest request)
         {
             try
             {
-                var path = BuildingPath(request.Path, request.DirectoryType);
+                var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
                 var allFileInfo = new DirectoryInfo(path).GetFiles();
                 if (!allFileInfo.Any()) return Array.Empty<byte>();
                 var defaultFile = allFileInfo.Where(w => w.Name.Contains("default")).Select(s => s.FullName).FirstOrDefault();
@@ -64,7 +70,7 @@ namespace DKCrm.Server.Services
 
         public async Task<byte[]> GetFileInBytArrayAsync(GetFileRequest request)
         {
-            var path = BuildingPath(request.Path, request.DirectoryType);
+            var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
             return await File.ReadAllBytesAsync(path);
         }
         public async Task<GetManyFilesResponse> GetManyFileInBytArrayAsync(GetManyFileRequest request)
@@ -73,10 +79,10 @@ namespace DKCrm.Server.Services
             {
                 FileDictionary = new Dictionary<string, byte[]>()
             };
-            var directoryItems = GetAllFileNamesAndPathsInDirectory(new GetFileRequest()
+            var directoryItems = GetAllFileInfoInDirectory(new GetFileRequest()
             {
                 Path = request.PathToDirectory,
-                DirectoryType = request.DirectoryType
+                DirectoryType = request.DirectoryType, IsFullPath = request.IsFullPath
             }).ToArray();
             result.FileInDirectoryCount = directoryItems.Length;
             if (!directoryItems.Any() || directoryItems.Length == request.FileCountSkip) return new GetManyFilesResponse();
@@ -85,8 +91,8 @@ namespace DKCrm.Server.Services
             foreach (var item in directoryItems)
             {
                
-                var byt = await File.ReadAllBytesAsync(item.Value);
-                result.FileDictionary.Add(item.Key,byt);
+                var byt = await File.ReadAllBytesAsync(item.Path);
+                result.FileDictionary.Add(item.FileName,byt);
             }
             //var outDot = directoryItems.Length - request.FileCountSkip > request.FileCountTake ?
             //    request.FileCountTake : directoryItems.Length;
@@ -100,7 +106,7 @@ namespace DKCrm.Server.Services
         {
             var extension = request.FileName.Split('.').Last();
             var trustedFileName = Path.GetRandomFileName();
-            var path = BuildingPath(request.Path, request.DirectoryType);
+            var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
 
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
@@ -122,7 +128,7 @@ namespace DKCrm.Server.Services
         public bool RemoveFile(RemoveFileRequest request)
         {
            
-            var path = BuildingPath(request.Path, request.DirectoryType);
+            var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
 
             var fullPath = Path.Combine(path, request.FileName);
             var fileInfo = new FileInfo(fullPath);

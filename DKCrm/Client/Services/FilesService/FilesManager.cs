@@ -1,6 +1,4 @@
 ﻿using DKCrm.Client.Constants;
-using DKCrm.Shared.Models;
-using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Requests.FileService;
 using System.Net.Http.Json;
 
@@ -14,16 +12,16 @@ namespace DKCrm.Client.Services.FilesService
         {
             _httpClient = httpClient;
         }
-        public async Task<IEnumerable<string>> GetAllFileNamesInDirectoryAsync(GetFileRequest request)
+        public async Task<IEnumerable<GetFileInfoResponse>> GetAllFileInfoInDirectoryAsync(GetFileRequest request)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Files/GetAllFileNamesInDirectory", request, JsonOptions.JsonIgnore);
-            return await result.Content.ReadFromJsonAsync<IEnumerable<string>>() ?? throw new InvalidOperationException();
+            var result = await _httpClient.PostAsJsonAsync($"api/Files/GetAllFileInfoInDirectory", request, JsonOptions.JsonIgnore);
+            return await result.Content.ReadFromJsonAsync<IEnumerable<GetFileInfoResponse>>() ?? throw new InvalidOperationException();
         }
-        public async Task<Dictionary<string, string>> GetAllFileNamesAndPathsInDirectoryAsync(GetFileRequest request)
-        {
-            var result = await _httpClient.PostAsJsonAsync($"api/Files/GetAllFileNamesAndPathsInDirectory", request, JsonOptions.JsonIgnore);
-            return await result.Content.ReadFromJsonAsync<Dictionary<string, string>>() ?? throw new InvalidOperationException();
-        }
+        //public async Task<Dictionary<string, string>> GetAllFileNamesAndPathsInDirectoryAsync(GetFileRequest request)
+        //{
+        //    var result = await _httpClient.PostAsJsonAsync($"api/Files/GetAllFileNamesAndPathsInDirectory", request, JsonOptions.JsonIgnore);
+        //    return await result.Content.ReadFromJsonAsync<Dictionary<string, string>>() ?? throw new InvalidOperationException();
+        //}
         public async Task<byte[]> GetFirstOrDefaultFileInBytArrayAsync(GetFileRequest request)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/Files/GetFirstOrDefaultFileInBytArray", request, JsonOptions.JsonIgnore);

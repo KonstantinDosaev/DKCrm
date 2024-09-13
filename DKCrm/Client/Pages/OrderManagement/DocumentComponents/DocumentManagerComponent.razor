@@ -31,13 +31,12 @@ else
 @if (GroupInfoSet != null && GroupInfoSet.Any())
 {
    
-    @foreach (var setList in GroupInfoSet)
+    @foreach (var set in GroupInfoSet)
     {
         <MudPaper Square="true" Style="background-color: rgba(0, 0, 0, 0.1);" class="d-flex flex-column my-2 p-2">
-            @foreach (var set in setList)
-            { 
+           
                 <MudPaper Elevation="2" class="d-flex align-items-center justify-content-between p-1 my-1">
-                    <MudLink Class="mr-4 flex-grow-1" OnClick="() => ViewPdfDialog(set.Id)">@set.Name</MudLink>
+                    <MudLink Class="mr-4 flex-grow-1" OnClick="(() => OpenDocument(set))">@set.FileName</MudLink>
                     <div>
                         @* <MudTooltip Text="Откырть">
                             <MudButton Class="mr-2" 
@@ -50,18 +49,18 @@ else
                         </MudTooltip>
                         <MudTooltip Text="Скачать">
                             <MudIconButton Class="mr-2" Icon="@Icons.Material.Filled.Download"
-                                           OnClick="() => ClickToSave(set.Id)"
+                                           OnClick="() => ClickToSave(set.Path, set.FileName)"
                                            Variant="Variant.Outlined"/>
                         </MudTooltip>
                         <MudTooltip Text="Удалить">
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                            Color="Color.Error"
-                                           OnClick="() => RemoveDocument(set.Id)"
+                                           OnClick="() => RemoveDocument(new Guid())"
                                            Variant="Variant.Outlined"/>
                         </MudTooltip>
                     </div>
                 </MudPaper>
-            }
+            
         </MudPaper>
     }
 }
@@ -83,7 +82,13 @@ else
         <CreateOrderSpecificationComponent OrderId="OrderId" RefreshParent="EndCreateSpecification" />
     </DialogContent>
 </MudDialog>
-
+@if (CurrentInfoSet != null && _visibleViewPdfDialog)
+{
+    <DKPdfViewerDialog @bind-VisibleDialog="_visibleViewPdfDialog" 
+                       RelativePath="@CurrentInfoSet.Path" 
+                       DirectoryType="DirectoryType.Private" 
+                       StamperIsOn="true"></DKPdfViewerDialog>
+}
 @* <MudDialog @bind-IsVisible="_visibleStampPdfDialog" Style="height: 100VH"
            Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}"  ClassContent="myPdfViewerDialog">
     <TitleContent>
@@ -108,33 +113,25 @@ else
     
     byte[]? ImageToOrder { get; set; }
 
-    PdfViewer viwer;
-    private bool _loading;
+
+
     [Parameter] public Guid OrderId { get; set; }
-    IEnumerable<InfoSetFromDocumentToOrder>? InfoSets { get; set; }
-    IGrouping<int,InfoSetFromDocumentToOrder>[]? GroupInfoSet { get; set; }
-    InfoSetFromDocumentToOrder? CurrentInfoSet { get; set; }
-    string pdfContent = "";
-    AddStampToPdfRequest StampToPdfRequest { get; set; } = new AddStampToPdfRequest();
-    private int _currentPage;
+    IEnumerable<GetFileInfoResponse>? InfoSets { get; set; }
+    IEnumerable<GetFileInfoResponse>? GroupInfoSet { get; set; }
+    GetFileInfoResponse? CurrentInfoSet { get; set; }
+    private bool _visibleViewPdfDialog;
+ 
+    
     MudDialog? _createSpecificationDialog;
     private bool _visibleCreateSpecificationDialog;
-    private bool _visibleViewPdfDialog;
-    private bool _visibleStampPdfDialog;
-    private bool _visibleStampImagesDialog;
-    string _visibleStampPdf = "display: none";
-    public double valueX = 50;
-    public double valueY = 50;
-    private string? _currentStampName;
+
+
     private async Task GetImage(Guid id)
     {
         ImageToOrder = await FilesManager.GetFirstOrDefaultFileInBytArrayAsync( new GetFileRequest(){Path= $"{PathsToDirectories.OrdersImages}\\{id}", DirectoryType = DirectoryType.Private});
         var t = $"data:image;base64, @Convert.ToBase64String(item.Value)";
     }
-    private void SetStampImage(string name)
-    {
-        _currentStampName = name;
-    }
+   
     protected override async Task OnInitializedAsync()
     {
         await GetImage(OrderId);
@@ -145,8 +142,9 @@ else
 
     private async Task LoadDocInfoList()
     {
-        InfoSets = await DocumentManager.GetAllInfoSetsForOrderAsync(OrderId);
-       GroupInfoSet = InfoSets.GroupBy(g => g.DocumentType).ToArray();
+        InfoSets = await FilesManager.GetAllFileInfoInDirectoryAsync(new GetFileRequest(){DirectoryType = DirectoryType.Private,Path = Path.Combine(PathsToDirectories.OrdersDocuments,OrderId.ToString())});
+        GroupInfoSet = InfoSets;
+
     }
     private async Task EndCreateSpecification()
     {
@@ -167,116 +165,28 @@ else
         await DocumentManager.RemoveDocumentAsync(infoSetId);
         await LoadDocInfoList();
     }
-    private async Task ClickToSave(Guid infoSetId)
+    private async Task OpenDocument(GetFileInfoResponse response)
+    {
+        CurrentInfoSet = response;
+        _visibleViewPdfDialog = true;
+      
+    }
+    private async Task ClickToSave(string path, string name)
     {
        if(!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите скачивание"))
               return;
-        CurrentInfoSet = InfoSets?.FirstOrDefault(f => f.Id == infoSetId);
-        if (CurrentInfoSet == null)return;
-        var bytFile = await DocumentManager.GetDocumentBytArrayAsync(CurrentInfoSet.Id);
-            await _jsRuntime.InvokeVoidAsync
-                ("BlazorDownloadFile", CurrentInfoSet.Name, "application/octet-stream", bytFile);
+        // CurrentInfoSet = InfoSets?.FirstOrDefault(f => f.Id == infoSetId);
+        // if (CurrentInfoSet == null)return;
+        var bytFile = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest(){Path = path, IsFullPath = true});
+        await _jsRuntime.InvokeVoidAsync
+                ("BlazorDownloadFile",  name, "application/octet-stream", bytFile);
     } 
     private async Task GetIndexPage()
     {
        string tu =  await _jsRuntime.InvokeAsync<string>
                  ("ReturnIndexPdfFile");
     }
-    private async Task OpenStampGrid()
-    {
-        var methodInfo = typeof(PdfViewer).GetMethod("ResetZoomAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-        if (methodInfo != null) methodInfo.Invoke(viwer, null);
-        _visibleStampPdf = _visibleStampPdf == "display: none" ? "display: block" : "display: none";
-    }
-    private async Task ViewPdfDialog(Guid infoSetId)
-    {_loading = true;
-        _visibleViewPdfDialog = true;
-        
-        CurrentInfoSet = InfoSets?.FirstOrDefault(f => f.Id == infoSetId);
-        if (CurrentInfoSet == null)return;
-        var bytFile = await DocumentManager.GetDocumentBytArrayAsync(CurrentInfoSet.Id);
-        // pdfContent = "data:application/pdf;base64,";
-        pdfContent = System.Convert.ToBase64String(bytFile);
-        
-        _loading = false;
-    }
-    private string eventLog { get; set; } = $"Last event: ..., CurrentPage: 0, TotalPages: 0";
-    private void OnDocumentLoaded(PdfViewerEventArgs args)
-        => eventLog = $"Last event: OnDocumentLoaded, CurrentPage: {args.CurrentPage}, TotalPages: {args.TotalPages}";
-
-    private void OnPageChanged(PdfViewerEventArgs args)
-    {
-        eventLog = $"Last event: OnPageChanged, CurrentPage: {args.CurrentPage}, TotalPages: {args.TotalPages}";
-        _currentPage = args.CurrentPage;
-    }
-
-    private void AddStampPosition()
-    {
-        StampToPdfRequest.StampPositionList ??= new List<StampPosition>();
-        StampToPdfRequest.StampPositionList.Add(new StampPosition()
-        {
-            PageNumber = _currentPage, PercentOfBottomEdge = valueY, PercentOfLeftEdge = valueX, StampImage = _currentStampName
-        });
-    }
-    private void SelectedImage(string patch)
-    {
-       
-    }
 }
 <style>
-    .myPdfViewerDialog {
-        padding: 0!important;height: 100VH;
-    }
-    .bg-body-tertiary {
-        position: absolute !important;
-        width: 350px;
-    }
-
-    .getIndexPdfDialogButton {
-        top: 50px;
-        position: absolute;
-        right: 10px;
-    }
-
-    .stampGrid {
-        position: absolute;
-        top: 0;
-      
-    }
-
-    .stampGrid__block {
-        display: flex;
-        justify-content: center;
-        width: 100VW;
-        height: 100VH;
-    }
-    .stampGrid__container {
-       /*  display: flex;
-        flex-wrap: wrap; */
-        position: relative;
-        width: 595px;
-       min-width:  595px;
-        height: 842px;
-    }
-
-    .stampItem {
-        position: absolute;
-        height: 100px;
-        width: 100px;
-        opacity: 0.7;
-        border: solid black 2px;
-        border-radius: 50%;
-    }
-    .containerbackground { 
-        margin: 2rem;
-        font-weight: bold;
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        bottom: 0; 
-        z-index: -1; 
-        transform: rotate(300deg); 
-        -webkit-transform: rotate(300deg); 
-        color: black; 
-    } 
+  
 </style>

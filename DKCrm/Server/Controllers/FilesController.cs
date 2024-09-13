@@ -16,11 +16,11 @@ namespace DKCrm.Server.Controllers
         }
 
         [HttpPost]
-        public  IActionResult GetAllFileNamesInDirectory(GetFileRequest request)
-            => Ok( _fileService.GetAllFileNamesInDirectory(request, User));
-        [HttpPost]
-        public IActionResult GetAllFileNamesAndPathsInDirectory(GetFileRequest request)
-            => Ok(_fileService.GetAllFileNamesAndPathsInDirectory(request));
+        public  IActionResult GetAllFileInfoInDirectory(GetFileRequest request)
+            => Ok( _fileService.GetAllFileInfoInDirectory(request));
+        //[HttpPost]
+        //public IActionResult GetAllFileNamesAndPathsInDirectory(GetFileRequest request)
+        //    => Ok(_fileService.GetAllFileNamesAndPathsInDirectory(request));
 
         [HttpPost]
         public async Task<IActionResult> GetFirstOrDefaultFileInBytArray(GetFileRequest request)
