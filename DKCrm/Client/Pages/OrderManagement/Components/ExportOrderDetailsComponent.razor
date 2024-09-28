@@ -65,8 +65,9 @@
                 <MudTh Style="text-align: center">
                     <MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInBuyerCurrency)">Цена в валюте/ </MudTableSortLabel>
                     <div class="d-flex justify-content-center align-items-center">
-                        <span class="mr-2 fs-6">ед.</span><MudSwitch T="bool" CheckedChanged="() =>  _oneQuantityPrice = _oneQuantityPrice != true" Size="Size.Medium" Label="все"
-                                                                Color="Color.Success" UnCheckedColor="Color.Info" />
+                        <span class="mr-2 fs-6">ед.</span>
+                        <MudSwitch T="bool" ValueChanged="() =>  _oneQuantityPrice = _oneQuantityPrice != true" Size="Size.Medium" Label="все"
+                                                                Color="Color.Success" UncheckedColor="Color.Info" />
                     </div>
                 </MudTh>
                 <MudTh Style="text-align: center">Edit</MudTh>

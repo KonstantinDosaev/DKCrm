@@ -1,7 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using DKCrm.Shared.Constants
-<MudDialog IsVisible="VisibleDialog" IsVisibleChanged="VisibleDialogChanged"
-           DisableSidePadding="true" ClassContent="no-padding" TitleClass="dilaog__title"
+<MudDialog Visible="VisibleDialog" VisibleChanged="VisibleDialogChanged"
+           ContentClass="no-padding" TitleClass="dilaog__title"
            Options="new DialogOptions() { MaxWidth = MaxWidth.Large }">
     <TitleContent>
         <MudIcon Class="no-padding" Size="Size.Large" Icon="@Icons.Material.Filled.Image" />

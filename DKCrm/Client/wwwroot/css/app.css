@@ -131,6 +131,9 @@ a, .btn-link {
 .no-padding {
     padding: 0 !important;
 }
+.no-margin {
+    margin: 0 !important;
+}
 .dilog__titleText {
     font-size: 26px; 
 }

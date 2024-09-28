@@ -2,7 +2,7 @@
 {
     public enum DirectoryType
     {
-        Public,
-        Private
+        PublicFolder,
+        PrivateFolder
     }
 }

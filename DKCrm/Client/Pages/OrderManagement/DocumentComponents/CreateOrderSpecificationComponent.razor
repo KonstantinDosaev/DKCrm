@@ -209,10 +209,11 @@
         CreateOrderSpecificationRequest = new CreateOrderSpecificationRequest()
         {
             OrderId = OrderId,
-            Conditions = MainConditionList, 
+            Conditions = MainConditionList!, 
             NamingCondition = NamingConditionList, 
-            DaysOfDelivery = DaysOfDelivery, SellerCertifyingPersonId = OurCertifyingPerson, 
-            BuyerCertifyingPersonId = BuyerCertifyingPerson
+            DaysOfDelivery = DaysOfDelivery, 
+            SellerCertifyingPersonId = OurCertifyingPerson!, 
+            BuyerCertifyingPersonId = BuyerCertifyingPerson!
         };
         var result = await DocumentManager.CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest);
         await RefreshParent.InvokeAsync();

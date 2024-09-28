@@ -63,7 +63,7 @@ namespace DKCrm.Server.Services
                 byte[] byt = new byte[] { };
                 var folderName = Path.Combine("StaticFiles", "Images");
                 var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
-                var image = request.StampPositionList.FirstOrDefault()?.StampImage;
+                var image = request.StampPositionList.FirstOrDefault()?.StampImageName;
                 // var document = new Document();
                 var pdfReader = new PdfReader(infoSet.PathToFile);
                 var fs = new MemoryStream(byt);
@@ -80,7 +80,7 @@ namespace DKCrm.Server.Services
                         var currentStampPosition = request.StampPositionList
                             .FirstOrDefault(f => f.PageNumber == page)!;
                      
-                        if (image != currentStampPosition.StampImage)
+                        if (image != currentStampPosition.StampImageName)
                         {
                             img = iTextSharp.text.Image.GetInstance(image);
                             img.RotationDegrees = 0;
@@ -107,7 +107,7 @@ namespace DKCrm.Server.Services
                 return byt;
             }
 
-            catch (Exception ex)
+            catch
             {
                 throw;
             }

@@ -32,7 +32,7 @@ namespace DKCrm.Server.Services
 
         public async Task<IdentityResult> PutAsync(ApplicationUser user)
         {
-            var userToBeUpdated = await _userManager.FindByNameAsync(user.UserName);
+            var userToBeUpdated = await _userManager.FindByNameAsync(user.UserName!);
             if (userToBeUpdated == null)
                 return IdentityResult.Failed(new IdentityError() { Description = $"User {user.UserName} was not found." });
 
@@ -66,7 +66,7 @@ namespace DKCrm.Server.Services
         public async Task<IdentityRole> GetRoleAsync(string name)
         {
             var result = await _roleManager.FindByNameAsync(name);
-            return result;
+            return result ?? throw new InvalidOperationException();
         }
 
         public async Task<IEnumerable<IdentityRole>> GetAllRolesAsync()
@@ -78,28 +78,27 @@ namespace DKCrm.Server.Services
         public async Task<IEnumerable<string>> GetRoleFromUserAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            var result = await _userManager.GetRolesAsync(user);
-            return result;
+            return await _userManager.GetRolesAsync(user ?? throw new InvalidOperationException()); 
         }
 
         public async Task<IdentityResult> AddToRoleAsync(RoleRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.UserName);
+            var user = await _userManager.FindByNameAsync(request.UserName!);
             if (user == null)
                 return IdentityResult.Failed(new IdentityError() { Description = $"User {request.UserName} was not found." });
 
-            var result = await _userManager.AddToRoleAsync(user, request.RoleName);
+            var result = await _userManager.AddToRoleAsync(user, request.RoleName!);
             return result;
         }
 
         public async Task<IdentityResult> UpdateUserRoleAsync(RoleRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.UserName);
+            var user = await _userManager.FindByNameAsync(request.UserName!);
             if (user == null)
                 return IdentityResult.Failed(new IdentityError() { Description = $"User {request.UserName} was not found." });
             var oldRole = await _userManager.GetRolesAsync(user);
             await _userManager.RemoveFromRolesAsync(user, oldRole);
-            var result = await _userManager.AddToRoleAsync(user, request.RoleName);
+            var result = await _userManager.AddToRoleAsync(user, request.RoleName!);
             return result;
         }
         //[HttpPost("addtoroles")]

@@ -18,7 +18,7 @@
  else
  {
    
-     <MudListItem Text="">
+     <MudListItem T="string" Text="">
          <ChildContent>
              <CategoryRelocatedButtonPanel CurrentCategory="@Category"
                                            CheckedParentCategory="@CheckedParentCategory"
@@ -50,7 +50,7 @@
     
  }
 
-@*<MudDialog @bind-IsVisible="_visibleAddCategoryDialog">
+@*<MudDialog @bind-Visible="_visibleAddCategoryDialog">
     <DialogContent>
         <MudForm Style="display: flex">
             <MudTextField @bind-Value="value" T="string" Label="Категория" Required="true" RequiredError="Введите название категории!" />
@@ -70,9 +70,7 @@
     public bool VisableButtonRelocation { get; set; }
     [Parameter]
     public EventCallback CloseCategoryDrawerCallback { get; set; }
-  
-    string? _value;
-
+    
     [Parameter]
     public EventCallback RefreshCategoryListCallback { get; set; }
 

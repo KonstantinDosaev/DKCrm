@@ -7,12 +7,12 @@
 @using Orientation = BlazorBootstrap.Orientation
 @using System.Reflection
 @using DKCrm.Shared.Requests.FileService
-@inject IConfiguration conf
+@inject IConfiguration Conf
 
-<MudDialog @ref="_dialog" IsVisible="VisibleDialog" IsVisibleChanged="VisibleDialogChanged"
-           DisableSidePadding="true" Style="height: 100VH" 
-           Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}" 
-           ClassContent="myPdfViewerDialog">
+<MudDialog @ref="_dialog" Visible="VisibleDialog" VisibleChanged="VisibleDialogChanged"
+           Class="no-padding" Style="height: 100VH" 
+           Options="new DialogOptions() {BackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true,}" 
+           ContentClass="myPdfViewerDialog no-margin">
     <DialogContent>
         <div class="pdfDialogButton">
             <MudTooltip Arrow="true" Text="Закрыть" Placement="Placement.Left">
@@ -63,13 +63,11 @@
                             <MudIconButton Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.List" Color="Color.Primary" OnClick="OpenCloseListAddedStamps"/></MudTooltip>
                         <MudPopover Open="@_isOpenMenuAddedStamps" Fixed="true" Class="py-3 px-2">
                             <div class="d-flex flex-column">
-
-
                                 @if (StampToPdfRequest.StampPositionList != null)
                                 {
                                     @foreach (var r in StampToPdfRequest.StampPositionList)
                                     {
-                                        <MudPaper Class="p-2 my-1">стр. @r.PageNumber (@r.StampImage) 
+                                        <MudPaper Class="p-2 my-1">стр. @r.PageNumber (@r.StampImageName) 
                                             <MudIconButton Icon="@Icons.Material.Filled.ArrowCircleRight" OnClick="(() => GetToStampItem(r))"/>
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="(() => RemoveStampItem(r))"/>
                                             </MudPaper>
@@ -85,7 +83,6 @@
                     </div>
                 </div>
             }
-
         </div>
         @if (_loading)
         {<div style="width: 100%; height: 100%;" class="d-flex align-items-center justify-content-center">
@@ -96,11 +93,15 @@
         {
             <div class="myPdfViwer__container" style="overflow: auto; height: 100VH; position: relative;">
                 <div class="controll__toggler">
-                <MudToggleIconButton Size="Size.Large" ToggledSize="Size.Large" Toggled="@VisiblePdfControl" ToggledChanged="OnToggledChanged" Class=""
-                                     Icon="@Icons.Material.Filled.KeyboardDoubleArrowUp" Color="@Color.Info" Title="Off"
-                                         ToggledIcon="@Icons.Material.Filled.KeyboardDoubleArrowDown" ToggledColor="@Color.Info" ToggledTitle="On" />
+                    <MudToggleIconButton Size="Size.Large" ToggledSize="Size.Large"
+                                         Toggled="@VisiblePdfControl" 
+                                         ToggledChanged="OnToggledChanged" Class=""
+                                         Icon="@Icons.Material.Filled.KeyboardDoubleArrowUp" 
+                                         Color="@Color.Info"
+                                         ToggledIcon="@Icons.Material.Filled.KeyboardDoubleArrowDown" 
+                                         ToggledColor="@Color.Info"/>
                 </div>
-                <PdfViewer @ref="_viwer" Class="myPdfViwer"
+                <PdfViewer @ref="_viewer" Class="myPdfViwer"
                            Url="@(string.Format("data:application/pdf;base64,{0}", _pdfContent))"
                            OnDocumentLoaded="OnDocumentLoaded"
                            OnPageChanged="OnPageChanged" Orientation="Orientation.Portrait"/>
@@ -109,7 +110,8 @@
                     @if (_visibleStampPdf)
                     {
                         <div class="stampGrid " style="@($" width: {_widthStampGrid}px;height: {_heightStampGrid}px;")">
-                            <div class="stampGrid__container my-3" style="@($" width: {_widthStampGrid}px;height: {_heightStampGrid}px;")">
+                            <div class="stampGrid__container my-3"
+                                 style="@($" width: {_widthStampGrid}px;height: {_heightStampGrid}px;")">
                                 <MudSlider
                                     @bind-Value="CurrentStampPosition.PercentOfBottomEdge"
                                     Style="@($"height:{_heightStampGrid}px; position: absolute; bottom:-10px; left:0px;")"
@@ -131,37 +133,51 @@
                         </div>
                         <MudOverlay Visible="_visibleStampPdf" DarkBackground="true" AutoClose="false"/>
                     }
+                @if (StampToPdfRequest.StampPositionList != null && StampToPdfRequest.StampPositionList.Any())
+                    {
+                        var stampInPages = StampToPdfRequest.StampPositionList.Where(s => s.PageNumber == _currentPage).ToArray();
+                        if (stampInPages.Any())
+                        {
+                            <div class="stampGrid " style="@($" width: {_widthStampGrid}px;height: {_heightStampGrid}px;")">
+                                <div class="stampGrid__container my-3"
+                                     style="@($" width: {_widthStampGrid}px;height: {_heightStampGrid}px;")">
+                                
+                                    @foreach (var stamp in stampInPages)
+                                    {
+
+                                        <div class="stampItem" style="@($"bottom:{stamp.PercentOfBottomEdge}%;left: {stamp.PercentOfLeftEdge}%;") background: url(@($"data:image;base64,{Convert.ToBase64String(stamp.StampImage)}")); background-size: cover; background-position: center;"></div>
+                                    }
+                                </div>
+                            </div>
+                           
+                        }
+                       
+                        
+                    }
                 }
             </div>
         }
         @if (StamperIsOn)
         {
             <div class="getIndexPdfDialogButton">
-               
                 @if (_visibleStampPdf)
                 {
                     <MudText>@CurrentStampPosition.PercentOfLeftEdge</MudText>
                     <MudText>@CurrentStampPosition.PercentOfBottomEdge</MudText>
-                  
                     <MudButton OnClick="(() => _visibleStampImagesDialog = true)"></MudButton>
-                   
                 }
-               
-                   
-                   
-                
             </div>
         }
     </DialogContent>
 </MudDialog>
 @if (_visibleStampImagesDialog)
 {
-    <DKImageViewerDialog DirectoryType="DirectoryType.Private"
+    <DKImageViewerDialog DirectoryType="DirectoryType.PrivateFolder"
                          FileType="FileTypes.Stamps"
                          RelativePath="@PathsToDirectories.Stamps"
                          LoadMoreCount="5" @bind-VisibleDialog="_visibleStampImagesDialog" TitleText="Печати"
                          IsSelected="true" MultipleSelect="false"
-                         SelectedImageCallback="SetStampImage"/>
+                         SelectedImageCallback="SetStampImage" SelectImageName="@CurrentStampPosition.StampImageName"/>
 }
 @code {
     [Parameter] public bool VisibleDialog { get; set; }
@@ -171,32 +187,37 @@
     [Parameter] public FileTypes FileType { get; set; }
     [Parameter] public DirectoryType DirectoryType { get; set; }
     [Parameter] public string RelativePath { get; set; } = null!;
-    private DKImageViewerDialog _imageViewer;
-    private MudDialog _dialog;
-    private PdfViewer _viwer;
+
+    private DKImageViewerDialog? _imageViewer;
+    private MudDialog? _dialog;
+    private PdfViewer? _viewer;
+    string _pdfContent = "";
+    Orientation _tempOrientation;
+
     private bool _isOpenMenuAddedStamps;
     public bool VisiblePdfControl { get; set; }
     private bool _visibleStampImagesDialog;
     private bool _loading;
-    bool _visibleStampPdf;
+    private bool _visibleStampPdf;
     // private double _valueX = 0;
     // private double _valueY =88;
    // private string? _currentStampName;
     //private int _currentPage;
     AddStampToPdfRequest StampToPdfRequest { get; set; } = new AddStampToPdfRequest();
-    private StampPosition? CurrentStampPosition { get; set; } = new StampPosition();
-    string _pdfContent = "";
+    private StampPosition CurrentStampPosition { get; set; } = new StampPosition();
+    byte[]? CurrentStampImage { get; set; }
+
     int _widthStampGrid;
     int _heightStampGrid;
     int _horizontalLimit;
     int _verticalLimit;
-    byte[]? CurrentStampImage { get; set; }
-    Orientation _tempOrientation;
-    string positionControlPanel = "0px";
-    string positionToggleButtonControlPanel = "200px";
-    string displayControl = "100";
-    string defaultSize = "";
    
+ 
+    private string _positionControlPanel = "0px";
+    private string _positionToggleButtonControlPanel = "200px";
+    private string _displayControl = "100";
+    private string _defaultSize = "";
+    private int _currentPage;
 
     private void OpenCloseListAddedStamps()
     {
@@ -215,15 +236,15 @@
     async Task CloseClick(MouseEventArgs eArgs)
     {
         VisibleDialog = false;
-        _dialog.Close(DialogResult.Cancel());
+        await _dialog!.CloseAsync(DialogResult.Cancel());
         await VisibleDialogChanged.InvokeAsync(VisibleDialog);
     }
     private void OnDocumentLoaded(PdfViewerEventArgs args)
     {
         if (!StamperIsOn)
             return;
-        _tempOrientation = _viwer.Orientation;
-        var or = _viwer.Orientation;
+        _tempOrientation = _viewer!.Orientation;
+        var or = _viewer.Orientation;
         _heightStampGrid = or  == Orientation.Landscape ? 595 : 842;
         _widthStampGrid = or == Orientation.Landscape ? 842 : 595;
         _verticalLimit = or == Orientation.Landscape ? 83 : 88;
@@ -242,13 +263,14 @@
             _horizontalLimit = 83;
         }
         CurrentStampPosition.PageNumber = args.CurrentPage;
+        _currentPage = args.CurrentPage;
     } 
 
     private void OnPageChanged(PdfViewerEventArgs args)
     {
         if (!StamperIsOn)
             return;
-        var or = _viwer.Orientation;
+        var or = _viewer!.Orientation;
         if (_tempOrientation != or)
         {
             if (or == Orientation.Landscape)
@@ -267,44 +289,47 @@
             }
         }
         CurrentStampPosition.PageNumber = args.CurrentPage;
+        _currentPage = args.CurrentPage;
     }
-
-
-
 
     private async Task SetStampImage(string name)
     {
-       CurrentStampPosition.StampImage = name;
+       CurrentStampPosition.StampImageName = name;
         CurrentStampImage = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest()
         {
             DirectoryType = DirectoryType, 
             Path = Path.Combine(PathsToDirectories.Stamps, name), 
             IsFullPath = false
         });
+        CurrentStampPosition.StampImage = CurrentStampImage;
+        if (!_visibleStampPdf) OpenStampGrid();
     }
     private void OpenStampGrid()
     {
-        
-        var methodInfo = typeof(PdfViewer).GetMethod("ResetZoomAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-        if (methodInfo != null) methodInfo.Invoke(_viwer, null);
-        _visibleStampPdf = true;
-        if (CurrentStampPosition.StampImage == null)
+        if (CurrentStampPosition.StampImageName == null)
+        {
             _visibleStampImagesDialog = true;
-        defaultSize =  _visibleStampPdf ?"myPdfViwer .bg-secondary-subtle canvas" : "";
-        displayControl = _visibleStampPdf ? "0" : "100";
+            return;
+        }
+
+        var methodInfo = typeof(PdfViewer).GetMethod("ResetZoomAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+        if (methodInfo != null) methodInfo.Invoke(_viewer, null);
+        _visibleStampPdf = true;
+        _defaultSize =  _visibleStampPdf ?"myPdfViwer .bg-secondary-subtle canvas" : "";
+        _displayControl = _visibleStampPdf ? "0" : "100";
     }
     private void CloseStampGrid()
     {
         _visibleStampPdf = false;
-        defaultSize = "";
-        displayControl = "100";
+        _defaultSize = "";
+        _displayControl = "100";
         CurrentStampPosition = new StampPosition();
 
     }
     private void AddStampPosition(MouseEventArgs args)
     {
         StampToPdfRequest.StampPositionList ??= new List<StampPosition>();
-        if (CurrentStampPosition.Id != Guid.Empty  || CurrentStampPosition.Id != null)
+        if (!string.IsNullOrEmpty(CurrentStampPosition.Id.ToString()))
         {
             StampToPdfRequest.StampPositionList.Remove( StampToPdfRequest.StampPositionList.FirstOrDefault(f => f.Id == CurrentStampPosition.Id)!);
         }
@@ -318,21 +343,21 @@
     // Because variable is not two-way bound, we need to update it ourself
         VisiblePdfControl = toggled;
 
-        positionControlPanel = !VisiblePdfControl ? "0" : "-200px";
-        positionToggleButtonControlPanel = !VisiblePdfControl ? "200px" : "10px";
+        _positionControlPanel = !VisiblePdfControl ? "0" : "-200px";
+        _positionToggleButtonControlPanel = !VisiblePdfControl ? "200px" : "10px";
     }
     public async Task GetToStampItem(StampPosition position)
     {
         CurrentStampPosition = position;
         var methodInfo = typeof(PdfViewer).GetMethod("PageNumberChangedAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-        if (methodInfo != null) methodInfo.Invoke(_viwer, new object?[]{position.PageNumber});
+        if (methodInfo != null) methodInfo.Invoke(_viewer, new object?[]{position.PageNumber});
 
-        if (position.StampImage != null) await SetStampImage(position.StampImage);
+        if (position.StampImageName != null) await SetStampImage(position.StampImageName);
 
         if (!_visibleStampPdf) 
             OpenStampGrid();
     }
-    public async Task RemoveStampItem(StampPosition position)
+    public void RemoveStampItem(StampPosition position)
     {
 
         StampToPdfRequest.StampPositionList.Remove(position);
@@ -344,12 +369,12 @@
     }
     .myPdfViwer .bg-body-tertiary {
         position: absolute !important;
-        top: @positionControlPanel;
+        top: @_positionControlPanel;
         transition: top 1s 0s;
         width: 60px;
         flex-direction: column;
         border: 1px solid gray;
-        z-index: @displayControl;
+        z-index: @_displayControl;
  
     }
     .myPdfViwer .bg-body-tertiary div {
@@ -369,9 +394,9 @@
     .controll__toggler {
        
         position: absolute;
-        top: @positionToggleButtonControlPanel;
+        top: @_positionToggleButtonControlPanel;
         left: 0px;
-        z-index: @displayControl;
+        z-index: @_displayControl;
         transition: top 1s;
     }
 
@@ -380,7 +405,7 @@
         position: relative;
        
     }
-    .@defaultSize {
+    .@_defaultSize {
          height: @($"{_heightStampGrid}px");
         width: @($"{_widthStampGrid}px");
     }
@@ -393,7 +418,7 @@
         display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     .pdfDialogButton__clear {
-        z-index: @displayControl;
+        z-index: @_displayControl;
     }
 
     .stamp__editButtons {

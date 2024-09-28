@@ -1,6 +1,7 @@
 ﻿@inject HttpClient httpClient
 @inject ISnackbar Snackbar
 @page "/usermanager"
+@using Microsoft.AspNetCore.Identity
 <MudTable Items="@Elements"
           Dense="true"
           Hover="true"
@@ -48,8 +49,8 @@
     </ColGroup>
     <HeaderContent>
         <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Id)">Nr</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Email)">Sign</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ApplicationUser, object>(x => x.UserName)">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Email!)">Sign</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ApplicationUser, object>(x => x.UserName!)">Name</MudTableSortLabel></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Nr">@context.Id</MudTd>
@@ -78,16 +79,16 @@
     </EditButtonContent>
 </MudTable>
 
-<MudDialog @bind-IsVisible="_visibleRegisterDialog" Options="_registerDialogOptions">
+<MudDialog @bind-Visible="_visibleRegisterDialog" Options="_registerDialogOptions">
     <DialogContent>
         <Register/>
     </DialogContent>
 </MudDialog>
 
-<MudDialog @bind-IsVisible="_visibleRoleDialog" Options="_roleDialogOptions">
+<MudDialog @bind-Visible="_visibleRoleDialog" Options="_roleDialogOptions">
     <DialogContent>
         <MudSelect T="string" Label="US States"  @bind-Value="value" >
-            @foreach (var state in Roles ?? new ())
+            @foreach (var state in Roles ?? new List<IdentityRole>())
             {
                 <MudSelectItem T="string" Value="@state.Name">@state.Name</MudSelectItem>
             }

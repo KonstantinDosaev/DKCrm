@@ -22,10 +22,10 @@ namespace DKCrm.Client.Services.OrderServices
         {
             return await _httpClient.GetFromJsonAsync<ExportedOrder>($"api/ExportedOrder/Get/{id}") ?? throw new InvalidOperationException();
         }
-        public async Task<SortPagedResponse<ExportedOrder>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterOrderTuple> request)
+        public async Task<SortPagedResponse<ExportedOrder>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterOrderTuple> request, CancellationToken token)
         {
-            var response = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/GetBySortPagedSearchChapter", request) ?? throw new InvalidOperationException();
-            return await response.Content.ReadFromJsonAsync<SortPagedResponse<ExportedOrder>>() ?? throw new InvalidOperationException();
+            var response = await _httpClient.PostAsJsonAsync($"api/ExportedOrder/GetBySortPagedSearchChapter", request, cancellationToken: token) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<SortPagedResponse<ExportedOrder>>(cancellationToken: token) ?? throw new InvalidOperationException();
 
         }
 

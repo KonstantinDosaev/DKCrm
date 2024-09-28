@@ -3,7 +3,7 @@
 @using DKCrm.Client.Components.ProductFilter
 @using DKCrm.Shared.Constants
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<ProductsDto>>>(ServerReload))"
+<MudTable ServerData="ServerReload"
           Dense="false"
           Hover="true"
           ReadOnly="false"
@@ -149,7 +149,7 @@
         if (_table != null) await _table.ReloadServerData();
     }
 
-    private async Task<TableData<ProductsDto>> ServerReload(TableState state)
+    private async Task<TableData<ProductsDto>> ServerReload(TableState state,CancellationToken token)
     {
         var response = await ProductManager.GetProductsBySortAsync(new SortPagedRequest<FilterProductTuple>()
             {
@@ -164,15 +164,15 @@
 
             });
           //  pagedData = response.Items;
-        if (response.Items != null && Chapter== ProductFromChapterNames.Category && response.Items.Any())
-        {
-            _currentCategoryName = response.Items.FirstOrDefault()!.CategoryName;
-        }
-        else
-        {
-            _currentCategoryName = null;
-        }
-       
+        // if (response.Items != null && Chapter== ProductFromChapterNames.Category && response.Items.Any())
+        // {
+        //     _currentCategoryName = response.Items.FirstOrDefault()!.CategoryName;
+        // }
+        // else
+        // {
+        //     _currentCategoryName = null;
+        // }
+
             return new TableData<ProductsDto>() { TotalItems = response.TotalItems, Items = response.Items };
     }
 

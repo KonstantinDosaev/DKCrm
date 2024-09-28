@@ -1,4 +1,4 @@
-﻿<MudDialog @bind-IsVisible="_visibleStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+﻿<MudDialog @bind-Visible="_visibleStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
     <DialogContent>
 
         <MudPaper Elevation="12" Class="p-4 m-1">
@@ -51,7 +51,7 @@
             }
         </MudPaper>
 
-        <MudDialog @bind-IsVisible="_visibleRemoveStorageDialog">
+        <MudDialog @bind-Visible="_visibleRemoveStorageDialog">
             <DialogContent>
                 <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
                 <div class="pt-5 justify-content-between d-flex">
@@ -60,7 +60,7 @@
                 </div>
             </DialogContent>
         </MudDialog>
-        <MudDialog @bind-IsVisible="_visibleAddStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+        <MudDialog @bind-Visible="_visibleAddStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
             <DialogContent>
                 <StorageForm 
                     ButtonText="Сохранить" 
@@ -72,7 +72,7 @@
             </DialogContent>
         </MudDialog>
 
-        <MudDialog @bind-IsVisible="_visibleUpdateStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+        <MudDialog @bind-Visible="_visibleUpdateStorageDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
             <DialogContent>
                 <StorageForm ButtonText="Сохранить"
                               OnValidSubmit="UpdateStorage"

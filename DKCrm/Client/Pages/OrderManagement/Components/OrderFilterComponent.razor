@@ -124,10 +124,6 @@
     private Employee? CurrentOurEmployee{ get; set; }
     private Employee? CurrentPartnerEmployee { get; set; }  
 
-    protected override async Task OnParametersSetAsync()
-    {
-       
-    }
     private async Task LoadCompanyList(string companyTypeName)
     {
         switch (companyTypeName)

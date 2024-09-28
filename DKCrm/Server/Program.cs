@@ -16,8 +16,8 @@ using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 using System.Dynamic;
-using DocumentFormat.OpenXml.InkML;
 using System.Net;
+using DKCrm.Shared.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +25,8 @@ var connectionStringProduct = builder.Configuration.GetConnectionString("Product
                               throw new InvalidOperationException("Connection string 'ProductContextConnection' not found.");
 var connectionStringUser = builder.Configuration.GetConnectionString("UserContextConnection") ??
                               throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
-var pathToStaticFiles = builder.Configuration["PathToStaticFiles"];
-var pathToPublicFiles = builder.Configuration["PathToPublicDirectory"];
+var pathToStaticFiles = builder.Configuration[$"{DirectoryType.PrivateFolder}"];
+var pathToPublicFiles = builder.Configuration[$"{DirectoryType.PublicFolder}"];
 if (pathToStaticFiles == null)
 {
     var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
@@ -39,7 +39,7 @@ if (pathToStaticFiles == null)
     dynamic config = JsonConvert.DeserializeObject<ExpandoObject>(json, jsonSettings) ?? throw new InvalidOperationException();
     var defaultStaticFilesPath = Path.Combine(Directory.GetCurrentDirectory(), @"StaticFiles");
     var expando = config as IDictionary<string, object>;
-    expando?.Add("PathToStaticFiles", defaultStaticFilesPath);
+    expando?.Add($"{DirectoryType.PrivateFolder}", defaultStaticFilesPath);
     var newJson = JsonConvert.SerializeObject(config, Formatting.Indented, jsonSettings);
     File.WriteAllText(appSettingsPath, newJson);
     pathToStaticFiles = defaultStaticFilesPath;
@@ -95,16 +95,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddSignalR();
-builder.Services.AddControllers().AddNewtonsoftJson(opt=>opt.SerializerSettings.ReferenceLoopHandling= Newtonsoft.Json.ReferenceLoopHandling.Ignore);
-
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(opt=>opt.SerializerSettings.ReferenceLoopHandling=ReferenceLoopHandling.Ignore);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -112,7 +109,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -125,11 +121,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();
-app.UseStaticFiles(new StaticFileOptions()
-{
-    FileProvider = new PhysicalFileProvider(Path.Combine(pathToPublicFiles)),
-    // RequestPath = new PathString("/StaticFiles")
-});
+if (pathToPublicFiles != null)
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(Path.Combine(pathToPublicFiles)),
+        // RequestPath = new PathString("/StaticFiles")
+    });
 
 app.UseStaticFiles(new StaticFileOptions()
 {
@@ -141,7 +138,7 @@ app.UseStaticFiles(new StaticFileOptions()
             context.Context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             context.Context.Response.ContentLength = 0;
             context.Context.Response.Body = Stream.Null;
-            context.Context.Response.Headers.Add("Cache-Control", "no-store");
+            context.Context.Response.Headers.Append("Cache-Control", "no-store");
         }
     }
 });

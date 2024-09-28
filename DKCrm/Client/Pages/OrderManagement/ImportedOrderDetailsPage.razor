@@ -70,8 +70,8 @@
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
        <div class="d-flex justify-content-center align-items-center">
-           <span class="mr-2 fs-6">за ед.</span><MudSwitch T="bool" CheckedChanged="() =>  _allOrOnePrice = _allOrOnePrice != true" Label="все кол.-во"
-                                                           Color="Color.Success" UnCheckedColor="Color.Info" />
+           <span class="mr-2 fs-6">за ед.</span><MudSwitch T="bool" ValueChanged="() =>  _allOrOnePrice = _allOrOnePrice != true" Label="все кол.-во"
+                                                           Color="Color.Success" UncheckedColor="Color.Info" />
        </div>
        <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddImportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
            Добавить продукт

@@ -15,7 +15,7 @@ namespace DKCrm.Server.Services.DocumentServices
 {
     public class PaymentInvoicePdfGenerator
     {
-        private ExportedOrder? Order { get; set; } = null!;
+        private ExportedOrder Order { get; set; } = null!;
         private Company? OurCompany { get; set; }
         private Company? BuyerCompany { get; set; }
         private readonly IExportedOrderService _orderService;
@@ -41,7 +41,7 @@ namespace DKCrm.Server.Services.DocumentServices
         public async Task<bool> CreatePaymentAsync(Guid orderId)
         {
             Order = await _orderService.GetDetailAsync(orderId);
-            _mainPathToFiles = _configuration["PathToStaticFiles"];
+            _mainPathToFiles = _configuration[$"{DirectoryType.PrivateFolder}"]!;
             //_mainPathToFiles = Directory.GetCurrentDirectory();
             // Order = await _orderService.GetDetailAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
             if (Order == null) return false;
@@ -215,7 +215,7 @@ namespace DKCrm.Server.Services.DocumentServices
         }
         private PdfPTable CreateContractPartiesTable()
         {
-            var ourCompany = Order.OurCompany;
+            var ourCompany = Order!.OurCompany;
             var buyerCompany = Order.CompanyBuyer;
             var table = new PdfPTable(2)
             {
@@ -434,7 +434,7 @@ namespace DKCrm.Server.Services.DocumentServices
                 Border = Rectangle.NO_BORDER,
                 HorizontalAlignment = Element.ALIGN_CENTER
             });
-            var directorArr = Order.OurCompany?.Director!.Split(' ');
+            var directorArr = Order!.OurCompany?.Director!.Split(' ');
             tablePaintings.AddCell(new PdfPCell(new Phrase($"{directorArr?[0]} {directorArr?[1][0]}. {directorArr?[2][0]}.", _font))
             {
                 Border = Rectangle.NO_BORDER,

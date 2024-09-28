@@ -10,7 +10,9 @@
                     Заказано всего:
                     <span style="color: black">@ImportedProduct.Quantity</span>
                 </MudText>
-                <MudIconButton Size="@Size.Small" OnClick="() => _editTotalQuantity = true" Icon="@Icons.Material.Outlined.Edit"> </MudIconButton>
+                <MudIconButton Size="@Size.Small" 
+                               OnClick="() => _editTotalQuantity = true" 
+                               Icon="@Icons.Material.Outlined.Edit"/> 
             </div>
         }
         else
@@ -40,9 +42,7 @@
             }
         </MudText>
     </div>
-
     <MudText Typo="Typo.h6">Наличие:</MudText>
-
     @if (StorageList != null && StorageList.Any())
     {
         <table class="table table-bordered table-striped table-sm">
@@ -62,9 +62,13 @@
                         <td>@item.Storage?.Name</td>
                         <td>@item.Quantity</td>
                         <td class="d-flex align-items-center justify-content-center">
-                            @if (ImportedProduct.PurchaseAtStorageList != null && ImportedProduct.PurchaseAtStorageList.Select(s => s.StorageId).Contains((Guid)item.StorageId!))
+                            @if (ImportedProduct.PurchaseAtStorageList != null 
+                                 && ImportedProduct.PurchaseAtStorageList.Select(s => s.StorageId)
+                                     .Contains((Guid)item.StorageId!))
                             {
-                                var quantitySoldFromStorage = ImportedProduct!.PurchaseAtStorageList!.FirstOrDefault(f => f.ImportedProductId == ImportedProduct.Id && f.StorageId == item.StorageId)!.Quantity;
+                                var quantitySoldFromStorage = ImportedProduct!.PurchaseAtStorageList!
+                                    .FirstOrDefault(f => f.ImportedProductId == ImportedProduct.Id 
+                                                         && f.StorageId == item.StorageId)!.Quantity;
                                 <MudNumericField T="int" Variant="Variant.Outlined"
                                  For="@(() => item.Quantity)"
                                  Immediate="true"
@@ -72,15 +76,16 @@
                                  Margin="Margin.Dense"
                                  Min="0"
                                  Max="@((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity) + quantitySoldFromStorage)"
-                                 ValueChanged="@(v => SetFromStorageQuantity(v, (Guid)item.StorageId!))" Value="quantitySoldFromStorage" Clearable="true" />
+                                 ValueChanged="@(v => SetFromStorageQuantity(v, (Guid)item.StorageId!))"
+                                 Value="quantitySoldFromStorage" Clearable="true" />
                             }
                             else
                             {
                                 <MudIconButton Disabled="MissingQuantity <= 0"
-                               Color="Color.Primary"
-                               Style="width: 100%; height: 100%"
-                               OnClick="() => SetFromStorageQuantity((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity), (Guid)item.StorageId!)"
-                               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleDown"></MudIconButton>
+                                               Color="Color.Primary"
+                                               Style="width: 100%; height: 100%"
+                                               OnClick="@(() => SetFromStorageQuantity((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity), (Guid)item.StorageId!))"
+                                               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleDown"/>
                             }
                             @if (EditedQuantity.Contains((Guid)item.StorageId!) & _errorUpdate)
                             {
@@ -99,8 +104,6 @@
                         }
                     </th>
                 </tr>
-
-
             </tbody>
         </table>
     }
@@ -108,8 +111,6 @@
     {
         <MudText Typo="Typo.body1">продукт отсутствует</MudText>
     }
-
-
     @if (NotEquippedExportedProducts != null && NotEquippedExportedProducts.Any())
     {
         <MudText Typo="Typo.h6">Экспорт:</MudText>
@@ -129,29 +130,36 @@
                         <td>@exportedProduct.ExportedOrder?.Number
                             @if (@exportedProduct.ExportedOrderId != null && !IsDoubleNested)
                             {
-                                <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small' OnClick="() => OpenExportedOrderPopover((Guid)exportedProduct.ExportedOrderId)"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                               Size='Size.Small'
+                                               OnClick="@(() => OpenExportedOrderPopover((Guid)exportedProduct.ExportedOrderId))"/>
                                 @if (@exportedProduct.ExportedOrderId == ShowingExportOrderId && _visibleExportedOrder)
                                 {
                                     <MudPopover Open="@_visibleExportedOrder"
                                                 Style="min-width: 550px;"
                                                 Class="px-4 pt-4"
-                                                OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                                                OverflowBehavior="OverflowBehavior.FlipAlways" 
+                                                AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                               
                                         <ExportOrderDetailsComponent Id="(Guid)exportedProduct.ExportedOrderId" 
                                                                      CurrencyDisplay="@(new[] { "Сделки" })" 
                                                                      ShowCompanyInfo="true"
                                                                      IsDoubleNested="true"/>
                                         <div class="text-end mb-2">
-                                            <MudButton OnClick="(() => _visibleExportedOrder = false)" Color="Color.Info">закрыть</MudButton>
+                                            <MudButton OnClick="(() => _visibleExportedOrder = false)"
+                                                       Color="Color.Info">закрыть</MudButton>
                                         </div>
                                     </MudPopover>
                                 }
                             }</td>
                         <td>@notEquippedQuantity</td>
                         <td class="d-flex align-items-center">
-                            @if (ImportedProduct.PurchaseAtExportList != null && ImportedProduct.PurchaseAtExportList.Select(s => s.ExportedProductId).Contains(exportedProduct.Id))
+                            @if (ImportedProduct.PurchaseAtExportList != null 
+                                 && ImportedProduct.PurchaseAtExportList.Select(s => s.ExportedProductId)
+                                     .Contains(exportedProduct.Id))
                             {
-                                var quantityPurchaseAtExport = ImportedProduct.PurchaseAtExportList.FirstOrDefault(f => f.ImportedProductId == ImportedProduct.Id && f.ExportedProductId == exportedProduct.Id)!.Quantity;
+                                var quantityPurchaseAtExport = ImportedProduct.PurchaseAtExportList
+                                    .FirstOrDefault(f => f.ImportedProductId == ImportedProduct.Id && f.ExportedProductId == exportedProduct.Id)!.Quantity;
                                 <MudNumericField T="int" Variant="Variant.Outlined"
                                  For="@(() => quantityPurchaseAtExport)"
                                  Immediate="true"
@@ -192,7 +200,6 @@
     else
     {
         <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
-
     }
 }
 <div class="d-flex justify-content-end mb-3">
@@ -204,7 +211,7 @@
     {
         <MudButton Color="Color.Primary"
                OnClick="() => UpdateSources()"
-               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Check">Сохранить</MudButton>
+               Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Check">Сохранить</MudButton>
     }
     @*    @if (EditedQuantity!.Any())
     {
@@ -235,7 +242,7 @@
     private bool _visibleAddImportedProductDialog;
     private bool _visibleExportedOrder;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         SetBackup();
     }
@@ -413,7 +420,7 @@
         else
             _errorUpdate = true;
     }
-    private async void SaveSoldFromStorage(Guid storageId)
+    private void SaveSoldFromStorage(Guid storageId)
     {
         //var soldFromStorage = ImportedProduct!.SoldFromStorage!.FirstOrDefault(f => f.StorageId == storageId);
         //soldFromStorage!.ExportedProduct = ExportedProduct;
@@ -442,7 +449,7 @@
         _visibleExportedOrder = true;
     }
     
-    private async void CreateImportedProduct()
+    private  void CreateImportedProduct()
     {
         //CreatedImportedProduct = new ImportedProduct()
         //    {

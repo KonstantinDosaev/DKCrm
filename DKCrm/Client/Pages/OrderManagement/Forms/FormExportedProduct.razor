@@ -14,7 +14,7 @@
                 <MudAutocomplete T="Product" Placeholder="Введите партномер или название продукта"
                                  Label="Продукт"
                                  ValueChanged="SetProduct"
-                                 SearchFuncWithCancel="@Search"
+                                 SearchFunc="@Search"
                                  Variant="Variant.Outlined"
                                  ShowProgressIndicator="true"
                                  ToStringFunc="@(e => e == null ? null : $"{e.PartNumber} / {e.Name} / {e.Brand?.Name}")"

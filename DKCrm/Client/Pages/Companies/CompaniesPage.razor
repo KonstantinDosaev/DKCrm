@@ -3,14 +3,20 @@
 @page "/companies/tag/{tagid:guid}"
 
 <MudText Typo="Typo.h4">Компании</MudText>
-<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddCompanyDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+<MudButton Variant="Variant.Filled" Size="Size.Medium" 
+           OnClick="() => _visibleAddCompanyDialog = true" 
+           Style="margin-left: 1rem;" Color="Color.Tertiary">
     Добавить компанию
-    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+    <MudIcon Size="@Size.Medium" Color="Color.Default"
+             Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
 </MudButton>
 
-<MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => VisibleCompanySettingsDrawer = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+<MudButton Variant="Variant.Filled" Size="Size.Medium" 
+           OnClick="() => VisibleCompanySettingsDrawer = true" Style="margin-left: 1rem;" 
+           Color="Color.Tertiary">
     Настройки
-    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
+    <MudIcon Size="@Size.Medium" Color="Color.Default"
+             Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
 </MudButton>
 <div class="d-flex ">
     <div class="flex-grow-1 mr-4">
@@ -36,7 +42,6 @@
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.Country)">Страна</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.City)">Город</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.CompanyType?.Name!)">Тип контрагента</MudTableSortLabel></MudTh>
-
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
@@ -70,34 +75,32 @@
             <MudText Typo="Typo.h4">Теги</MudText>
             @if (TagsCompanies != null)
             {
-                <MudList Style="" Clickable="true" @bind-SelectedItem="_selectedItem" @bind-SelectedValue="_selectedValue" Color="Color.Primary">
+                <MudList Style="" @bind-SelectedValue="_selectedItem" 
+                         Color="Color.Primary" SelectionMode="SelectionMode.SingleSelection">
                     <MudListItem Dense="true" OnClick="GetAllCompanies" >
                         Все компании
                     </MudListItem>
                     @foreach (var tag in TagsCompanies)
                     {
-
                         <MudListItem Dense="true" OnClick="(() => FilterCompanyByTag(tag.Id))" Value="@tag.Name">
                             @tag.Name
                         </MudListItem>
                     }
-
                 </MudList>
             }
         </MudCard>
     </div>
 </div>
 
-
 <CreateCompanyDialog 
     RefreshParent="GetAllCompanies"
                      @bind-VisibleDialog="_visibleAddCompanyDialog" />
 
-<MudDialog @bind-IsVisible="@VisibleCompanySettingsDrawer" Options="new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large}" >
+<MudDialog @bind-Visible="@VisibleCompanySettingsDrawer" 
+           Options="new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large}" >
     <TitleContent> <MudText Typo="Typo.h6">Общие настройки компаний</MudText></TitleContent>
     <DialogContent>
-       
-         <CompanyPageSettings/>
+        <CompanyPageSettings/>
     </DialogContent>
 </MudDialog>
 @*    <MudDrawer @bind-Open="@VisibleCompanySettingsDrawer" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
@@ -116,14 +119,11 @@
     private  List<TagsCompany>? TagsCompanies { get; set; }
     private List<Company>? Companies { get; set; }
     private List<Company>? AllCompanies { get; set; }
- 
     public Company CreatedCompany { get; set; } = new ();
     private string _searchString1 = "";
-
     public bool VisibleCompanySettingsDrawer { get; set; }
-    MudListItem? _selectedItem;
+    MudListItem<TagsCompany>? _selectedItem;
     object _selectedValue = 1;
-
     private bool _visibleAddCompanyDialog;
 
     protected override async Task OnInitializedAsync()
@@ -135,7 +135,8 @@
         if (TagId!= null && TagId!= Guid.Empty)
         {
             //Companies = TagsCompanies.Where(w => w.Id == TagId)!.FirstOrDefault()!.Companies!.ToList();
-            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains((Guid)TagId)).ToList();
+            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies
+                .Select(s => s.Id).Contains((Guid)TagId)).ToList();
             _selectedValue = TagsCompanies!.FirstOrDefault(w => w.Id == TagId)!.Name;
         }
       
@@ -175,7 +176,8 @@
 
         private  void FilterCompanyByTag(Guid tagId)
         {
-            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies.Select(s => s.Id).Contains(tagId)).ToList();
+            Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies
+                .Select(s => s.Id).Contains(tagId)).ToList();
         }
     //private async Task DeleteCompany()
     //{

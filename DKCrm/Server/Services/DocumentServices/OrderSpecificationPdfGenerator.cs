@@ -39,7 +39,7 @@ public class OrderSpecificationPdfGenerator
             if (CreateOrderSpecificationRequest == null) return false;
            
             Order = await _orderService.GetDetailAsync(createOrderSpecificationRequest.OrderId);
-            _mainPathToFiles = _configuration["PathToStaticFiles"];
+            _mainPathToFiles = _configuration[$"{DirectoryType.PrivateFolder}"] ?? throw new InvalidOperationException();
 
         var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);

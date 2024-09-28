@@ -9,7 +9,8 @@
 
 
 <NotCompleteExportedProductsComponent 
-    GetImportOrdersByProductCallback="GetImportOrdersByProduct" AddToOrderModeCallback="SetAddToOrderMode" MergeInOrderModeCallback="SetMergeToOrderMode" />
+    GetImportOrdersByProductCallback="GetImportOrdersByProduct"
+    AddToOrderModeCallback="SetAddToOrderMode" MergeInOrderModeCallback="SetMergeToOrderMode" />
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
         <MudButton Variant="Variant.Filled"
@@ -17,18 +18,25 @@
                    Style="margin-right: 1rem;"
                    OnClick="OnHistory">
             @(!_showHistoryOrders ? "История" : "Текущие")
-            <MudIcon Size="@Size.Medium" Icon="@(_showHistoryOrders ? Icons.Material.Sharp.Article : Icons.Material.Sharp.History)" Class="pa-0 ml-2" />
+            <MudIcon Size="@Size.Medium" 
+                     Icon="@(_showHistoryOrders ? Icons.Material.Sharp.Article : Icons.Material.Sharp.History)" Class="pa-0 ml-2" />
         </MudButton>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleOrderFilter=true" Style="margin-right: 1rem;" Color="@(_filterIsOn?Color.Warning : Color.Default)">
+        <MudButton Variant="Variant.Filled" 
+                   Size="Size.Medium" 
+                   OnClick="() => _visibleOrderFilter=true" 
+                   Style="margin-right: 1rem;" Color="@(_filterIsOn?Color.Warning : Color.Default)">
             Фильтр
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2" />
         </MudButton>
         <div style="width: 228px; margin-right: 1rem;">
             <MudSelect T="ImportedOrderStatus"
-                       @bind-SelectedValue="CurrentOrderStatus" Placeholder="Выбрать статус" Value="CurrentOrderStatus" ValueChanged="OnStatusFilter"
+                       Placeholder="Выбрать статус" 
+                       Value="CurrentOrderStatus" 
+                       ValueChanged="OnStatusFilter"
                        Variant="Variant.Outlined" Dense="true" Style=""
                        Class="select-button"
-                       OnOpen="LoadStatusList" ToStringFunc="status => status?.Value!" Clearable OnClearButtonClick="ResetStatusFilter">
+                       OnOpen="LoadStatusList" ToStringFunc="status => status?.Value!"
+                       Clearable OnClearButtonClick="ResetStatusFilter">
                 @if (StatusList != null)
                 {
                     foreach (var status in StatusList)
@@ -41,7 +49,8 @@
         <div style="width: 228px; margin-right: 0.5rem">
             <MudSelect T="string"
                        MultiSelection="true"
-                       @bind-SelectedValues="_currencyDisplay"   MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
+                       @bind-SelectedValues="_currencyDisplay"   
+                       MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
                        Variant="Variant.Outlined" Dense="true"
                        Class="select-button">
                 <MudSelectItem T="string" Value="@("Продавца")">Продавца</MudSelectItem>
@@ -51,13 +60,17 @@
         </div>
     </div>
     <div>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleAddOrderDialog = true" Style="margin-right: 1rem;" Color="Color.Tertiary">
+        <MudButton Variant="Variant.Filled" 
+                   Size="Size.Medium"
+                   OnClick="() => _visibleAddOrderDialog = true"
+                   Style="margin-right: 1rem;" 
+                   Color="Color.Tertiary">
             Добавить заказ
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0" />
         </MudButton>
     </div>
 </MudPaper>
-<MudTable ServerData="@(new Func<TableState, Task<TableData<ImportedOrder>>>(ServerReload))"
+<MudTable ServerData="ServerReload"
           Dense="false"
           Hover="true"
           ReadOnly="false"
@@ -167,9 +180,17 @@
             </div>
         </MudTd>
         <MudTd DataLabel="">
-
-            <MudIconButton Size="@Size.Medium" OnClick="() => OpenUpdateOrderDialog(context)" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
-            <MudIconButton Size="@Size.Medium" OnClick="() => OpenOrderComments(context.Id)" Color="Color.Default" Icon="@Icons.Material.Sharp.Comment" Class="pa-0 ml-2"/>
+            <MudIconButton 
+                Size="@Size.Medium" 
+                OnClick="() => OpenUpdateOrderDialog(context)" 
+                Color="Color.Default" 
+                Icon="@Icons.Material.Sharp.Edit" 
+                Class="pa-0 ml-2"/>
+            <MudIconButton Size="@Size.Medium" 
+                           OnClick="() => OpenOrderComments(context.Id)" 
+                           Color="Color.Default" 
+                           Icon="@Icons.Material.Sharp.Comment" 
+                           Class="pa-0 ml-2"/>
             @if (isActiveMovingProductToOrder){
             <MudIconButton Size="@Size.Medium"
                           OnClick="() => MovingProductToOrder(context)"
@@ -182,18 +203,12 @@
                                Icon="@Icons.Material.Sharp.JoinFull" Class="pa-0 ml-2"/>}
         </MudTd>
     </RowTemplate>
-    
     <ChildRowContent>
         @if (OrderId==context.Id && _showDetails)
         {
             <MudTr>
                 <td colspan="8" style="text-align: center">
                     <MudCard Style="background: gainsboro;" Elevation="25">
-@*                                <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.body1">Address Details for <strong>@context.Name</strong></MudText>
-                            </CardHeaderContent>
-                        </MudCardHeader>*@
                         <MudCardContent Class="pa-1">
                             <ImportedOrderDetailsComponent Id="OrderId" CurrencyDisplay="_currencyDisplay" />
                         </MudCardContent>
@@ -202,18 +217,20 @@
             </MudTr>
         }
     </ChildRowContent>
-
     <PagerContent>
         <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
     </PagerContent>
 </MudTable>
 
-<MudDrawer @bind-Open="@_visibleOrderFilter" Anchor="@Anchor.Start" Elevation="1" Variant="@DrawerVariant.Temporary"  Height="100VH" Width="350px" Class="px-3" >
+<MudDrawer @bind-Open="@_visibleOrderFilter" Anchor="@Anchor.Start"
+           Elevation="1" 
+           Variant="@DrawerVariant.Temporary"  
+           Height="100VH" Width="350px" 
+           Class="px-3" >
     <MudDrawerHeader Class="d-flex align-items-center justify-content-between p-0">
         <MudText Typo="Typo.h5">Фильтр</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.Close"
                        Size="Size.Large" OnClick="() => _visibleOrderFilter = false" Class="p-0" Color="Color.Default"/>
-        
     </MudDrawerHeader>
     <OrderFilterComponent FilterOrderTuple="@_filterOrderTuple"
                           PartnerTypeName="@TypeCompanyNames.Suppliers"
@@ -221,14 +238,15 @@
 </MudDrawer>
 @if (_visibleOrderComments)
 {
-    <MudDialog @bind-IsVisible="_visibleOrderComments" DisableSidePadding="true" Style="max-width: 700px;padding: 0" Options="new DialogOptions(){CloseButton = true, FullScreen = true,}">
+    <MudDialog @bind-Visible="_visibleOrderComments" Class="no-padding"
+               Style="max-width: 700px;padding: 0" 
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}">
         <DialogContent>
             <OrderCommentComponent CurrentOrderId="OrderId" />
         </DialogContent>
     </MudDialog>
 }
-
-<MudDialog @bind-IsVisible="_visibleSettingsOrderDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+<MudDialog @bind-Visible="_visibleSettingsOrderDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
     <DialogContent>
         
     </DialogContent>
@@ -288,12 +306,8 @@
     {
         isActiveMergeProductToOrder = isOn;
     }
-    protected override async Task OnInitializedAsync()
-    {
-       
-    }
-   
-    private async Task<TableData<ImportedOrder>> ServerReload(TableState state)
+
+    private async Task<TableData<ImportedOrder>> ServerReload(TableState state, CancellationToken token)
     {
         var response = await ImportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
         {

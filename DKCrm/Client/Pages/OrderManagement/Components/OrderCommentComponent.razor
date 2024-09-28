@@ -9,8 +9,9 @@
                 <MudText>@(CurrentChatGroup.IsPrivateGroup ? CurrentChatGroup.ApplicationUsers?.FirstOrDefault(f => f.Id != CurrentUser!.Id)?.UserName : CurrentChatGroup.Name)</MudText>
             }
         </div>*@
-        <MudSwitch T="bool" CheckedChanged="SetMultiSelect" Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
-                   Color="Color.Info" UnCheckedColor="Color.Default" />
+        <MudSwitch T="bool"  ValueChanged="SetMultiSelect" 
+                   Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
+                   Color="Color.Info" UncheckedColor="Color.Default" />
         @_comments.Count
         <div class="d-flex align-items-center">
             @if (SelectedValues.Any())
@@ -48,7 +49,7 @@
     </div>
 
     <div class="d-flex align-items-center justify-content-between">
-        <MudTextField T="string" Placeholder="Введите сообщение..." DisableUnderLine="true" Variant="Variant.Outlined" Lines="3" MaxLines="3" AutoGrow="true" Class="field-item mx-4"
+        <MudTextField T="string" Placeholder="Введите сообщение..." Variant="Variant.Outlined" Lines="3" MaxLines="3" AutoGrow="true" Class="field-item mx-4"
                       @bind-Value="CurrentMessage" For="@(() => CurrentMessage)" />
         <MudIconButton Variant="Variant.Filled" OnClick="SubmitAsync" Icon="@Icons.Material.Outlined.Send"
                        Color="Color.Dark"

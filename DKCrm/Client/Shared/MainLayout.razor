@@ -2,8 +2,9 @@
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject CustomStateProvider AuthStateProvider
-<audio id="notification" src="/media/notification.mp3" />
+<audio id="notification" src="/media/notification.mp3"></audio>
 <MudThemeProvider />
+<MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <div class="page">
@@ -29,7 +30,8 @@
         await _hubConnection.StartAsync();
         _hubConnection.On<string, Guid, string>("ReceiveChatNotification", async (message, chatId, senderUserId) =>
         {
-            if (CurrentUserId != senderUserId && CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(chatId))
+            if (!string.IsNullOrEmpty(CurrentUserId) && CurrentUserId != senderUserId 
+                && CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(chatId))
             {
                await _jsRuntime.InvokeAsync<string>("PlayAudio", "notification");
                 _snackBar.Add(message, MudBlazor.Severity.Info, config =>

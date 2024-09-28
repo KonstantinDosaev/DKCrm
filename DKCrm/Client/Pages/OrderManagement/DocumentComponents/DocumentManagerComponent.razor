@@ -68,13 +68,13 @@ else
 {
     <MudText Class="m-4">Документы не обнаружены</MudText>
 }
-<MudDialog @bind-IsVisible="_visibleCreateSpecificationDialog" @ref="_createSpecificationDialog"
-           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,DisableBackdropClick = true}">
+<MudDialog @bind-Visible="_visibleCreateSpecificationDialog" @ref="_createSpecificationDialog"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}">
     <TitleContent>
         <div style="text-align: right">
             <MudButton Variant="Variant.Outlined" 
                        Size="Size.Small"
-                       OnClick="(() => _createSpecificationDialog.Close())"
+                       OnClick="@(() => _createSpecificationDialog!.CloseAsync())"
                        Color="Color.Info">Закрыть</MudButton>
         </div>
     </TitleContent>
@@ -86,11 +86,11 @@ else
 {
     <DKPdfViewerDialog @bind-VisibleDialog="_visibleViewPdfDialog" 
                        RelativePath="@CurrentInfoSet.Path" 
-                       DirectoryType="DirectoryType.Private" 
+                       DirectoryType="DirectoryType.PrivateFolder" 
                        StamperIsOn="true"></DKPdfViewerDialog>
 }
-@* <MudDialog @bind-IsVisible="_visibleStampPdfDialog" Style="height: 100VH"
-           Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}"  ClassContent="myPdfViewerDialog">
+@* <MudDialog @bind-Visible="_visibleStampPdfDialog" Style="height: 100VH"
+           Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}"  ContentClass="myPdfViewerDialog">
     <TitleContent>
         
     </TitleContent>
@@ -128,7 +128,7 @@ else
 
     private async Task GetImage(Guid id)
     {
-        ImageToOrder = await FilesManager.GetFirstOrDefaultFileInBytArrayAsync( new GetFileRequest(){Path= $"{PathsToDirectories.OrdersImages}\\{id}", DirectoryType = DirectoryType.Private});
+        ImageToOrder = await FilesManager.GetFirstOrDefaultFileInBytArrayAsync( new GetFileRequest(){Path= $"{PathsToDirectories.OrdersImages}\\{id}", DirectoryType = DirectoryType.PrivateFolder});
         var t = $"data:image;base64, @Convert.ToBase64String(item.Value)";
     }
    
@@ -142,13 +142,13 @@ else
 
     private async Task LoadDocInfoList()
     {
-        InfoSets = await FilesManager.GetAllFileInfoInDirectoryAsync(new GetFileRequest(){DirectoryType = DirectoryType.Private,Path = Path.Combine(PathsToDirectories.OrdersDocuments,OrderId.ToString())});
+        InfoSets = await FilesManager.GetAllFileInfoInDirectoryAsync(new GetFileRequest(){DirectoryType = DirectoryType.PrivateFolder,Path = Path.Combine(PathsToDirectories.OrdersDocuments,OrderId.ToString())});
         GroupInfoSet = InfoSets;
 
     }
     private async Task EndCreateSpecification()
     {
-        _createSpecificationDialog!.Close();
+        await _createSpecificationDialog!.CloseAsync();
         await LoadDocInfoList();
     }
     private async Task CreateDocument()
@@ -165,7 +165,7 @@ else
         await DocumentManager.RemoveDocumentAsync(infoSetId);
         await LoadDocInfoList();
     }
-    private async Task OpenDocument(GetFileInfoResponse response)
+    private void OpenDocument(GetFileInfoResponse response)
     {
         CurrentInfoSet = response;
         _visibleViewPdfDialog = true;

@@ -23,7 +23,7 @@ namespace DKCrm.Server.Services
         public async Task<IEnumerable<ApplicationUser>> GetUsersAsync(ClaimsPrincipal user)
         {
             var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
-            var allUsers = await _context.Users.Where(user => user.Id != userId).ToListAsync();
+            var allUsers = await _context.Users.Where(u => u.Id != userId).ToListAsync();
             return allUsers;
         }
 
@@ -99,8 +99,12 @@ namespace DKCrm.Server.Services
         public async Task<Guid> CreateChatGroupAsync(ChatGroup chatGroup, ClaimsPrincipal user)
         {
             var currentUserId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
-            var userInDb = await _userManager.FindByIdAsync(currentUserId);
-            chatGroup.ApplicationUsers = new List<ApplicationUser>() { userInDb };
+            if (currentUserId != null)
+            {
+                var userInDb = await _userManager.FindByIdAsync(currentUserId);
+                if (userInDb != null) chatGroup.ApplicationUsers = new List<ApplicationUser>() { userInDb };
+            }
+
             chatGroup.CreatingUserId = currentUserId;
             chatGroup.DateTimeUpdate = DateTime.Now;
             await _context.ChatGroups.AddAsync(chatGroup);
@@ -110,10 +114,10 @@ namespace DKCrm.Server.Services
         public async Task<int> RemoveChatGroupAsync(Guid chatGroupId, ClaimsPrincipal currentUser)
         {
             var chatGroup = await _context.ChatGroups.FirstOrDefaultAsync(w => w.Id == chatGroupId);
-            var currentUserId = currentUser.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            var currentUserId = currentUser.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier)
+                .Select(a => a.Value).FirstOrDefault();
             if (currentUserId != chatGroup?.CreatingUserId || chatGroup == null) 
                 return 0;
-
             _context.ChatGroups.Remove(chatGroup);
             return await _context.SaveChangesAsync();
         }
@@ -158,11 +162,11 @@ namespace DKCrm.Server.Services
         }
         public async Task<int> RemoveMessageRangeAsync(IEnumerable<Guid> listId, ClaimsPrincipal user)
         {
-            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            //var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
             var messages = _context.ChatMessages.Where(w => listId.Contains(w.Id));
             var count = messages.Count();
             _context.ChatMessages.RemoveRange(messages);
-            var t = await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return count;
         }
         public async Task<int> FoolRemoveMessageRangeAsync(IEnumerable<Guid> listId, ClaimsPrincipal user)
@@ -177,7 +181,7 @@ namespace DKCrm.Server.Services
                 }
                 var count = messages.Count();
                 _context.ChatMessages.RemoveRange(messages);
-                var t = await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
                 return count;
             }
             return 0;

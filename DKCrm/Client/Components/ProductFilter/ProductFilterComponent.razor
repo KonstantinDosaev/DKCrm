@@ -10,7 +10,6 @@
                 <SelectedCategoriesListComponent
                     @bind-SelectedCategory="@Category"
                     IsSetCategory="InitCategoryOptions"/>
-                        
             </div>
         }
         else
@@ -21,7 +20,7 @@
         }
     </MudExpansionPanel>
     
-    <MudExpansionPanel IsExpandedChanged="(async () => await InitBrands())" Text="ПРОИЗВОДИТЕЛИ">
+    <MudExpansionPanel ExpandedChanged="(async () => await InitBrands())" Text="ПРОИЗВОДИТЕЛИ">
         @if (Chapter != ProductFromChapterNames.Brand)
         {
             @if (Brands != null)
@@ -54,12 +53,13 @@
         @if (CategoryOptions != null)
         {
             <div class="d-flex flex-column w-100">
-                <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="ClearSelectedProductOptions">Сбросить</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Warning" 
+                           OnClick="ClearSelectedProductOptions">Сбросить</MudButton>
                 <p>@SelectedProductOptions.Count</p>
                 <MudExpansionPanels Elevation="25" Style="background-color: #cbf0ee" MultiExpansion="true">
                     @foreach (var state in CategoryOptions)
                     {
-                        <MudExpansionPanel  Text="@state.Name">
+                        <MudExpansionPanel Text="@state.Name">
                             @if (state.ProductOption != null)
                             {
                                 @foreach (var option in state.ProductOption.GroupBy(g => g.Value))
@@ -76,15 +76,12 @@
                                         <span>@($"{option.Key} ({option.Count()})")</span>
                                     </div>
                                 }
-
                             }
                         </MudExpansionPanel>
                     }
-                </MudExpansionPanels>              
-            
+                </MudExpansionPanels>
             </div>
         }
-             
         else
         {
             <MudText>Выберите категорию</MudText>
@@ -92,22 +89,15 @@
     </MudExpansionPanel>
 </MudExpansionPanels>
 
-
-
- 
-
 @code {
     [Parameter]
     public object? SelectedValue { get; set; } = 1;
     public bool ProductOptionsCheckBox { get; set; } = false;
     public bool BrandCheckBox { get; set; } = false;
-
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid? ChapterId { get; set; }
-
     public Category? Category { get; set; }
     private ICollection<CategoryOption>? CategoryOptions { get; set; }
-
     [Parameter]public EventCallback<FilterProductTuple> IsSetOption { get; set; }
     public List<Guid>? ProductIdFromOptions { get; set; }
     public List<Guid> SelectedProductOptions { get; set; } = new ();
@@ -178,12 +168,10 @@
                 case ProductFromChapterNames.Brand:
                     SelectedBrands = new List<Brand>() { Brands?.FirstOrDefault(o => o.Id == ChapterId)! };
                     break;
-
             }
         }
     }
-
-
+    
     private async void InitC()
     {
         ProductIdFromOptions = SelectedProductOptions;

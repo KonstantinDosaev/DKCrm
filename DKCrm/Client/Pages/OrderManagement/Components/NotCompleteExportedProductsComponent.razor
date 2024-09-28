@@ -2,11 +2,11 @@
 @using DKCrm.Shared.Constants
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 
-<MudExpansionPanel DisableGutters="true"
+<MudExpansionPanel Gutters="false"
                    Text="Не доукомплектованные заказы на экспорт"
                    Class="my-1"
                    Style="background-color:rgba(0,0,0,0.4);color: white; font-size: 20px; font-weight: bold" 
-                   IsExpandedChanged="LoadNotAddToOrderExportedProducts">
+                   ExpandedChanged="LoadNotAddToOrderExportedProducts">
     @if (NotAddToOrderExportedProducts != null    )
     {
         
@@ -29,8 +29,8 @@
             </ToolBarContent>
             <HeaderContent>
                 <MudTh Class="not-equpped-heder">
-                    <MudSwitch T="bool" CheckedChanged="SetMultiSelect" Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
-                           Color="Color.Info" UnCheckedColor="Color.Default" />
+                    <MudSwitch T="bool" ValueChanged="SetMultiSelect" Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
+                           Color="Color.Info" UncheckedColor="Color.Default" />
                 </MudTh>
                 <MudTh Class="not-equpped-heder"><MudTableSortLabel SortBy="new Func<ExportedProduct, object>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
                 <MudTh Class="not-equpped-heder"><MudTableSortLabel SortBy="new Func<ExportedProduct, object>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
@@ -87,7 +87,7 @@
 
                 <MudTd DataLabel="Редактировать">
                     <MudButton Size="@Size.Small"
-                           OnClick="() => GetImportOrdersByProduct(context.Product?.PartNumber!)"
+                           OnClick="@(() => GetImportOrdersByProduct(context.Product?.PartNumber!))"
                            Style="background-color: rgba(217, 214, 81, 0.431);">
                         Найти заказы
                         <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Search" Class="pa-0 ml-2" />
@@ -242,7 +242,7 @@
                     GroupName = "Заказ на экспорт № ",
                     Indentation = false,
                     Expandable = true,
-                    Selector = (e) => e.ExportedOrder?.Number, 
+                    Selector = (e) => e.ExportedOrder.Number!, 
                     IsInitiallyExpanded = false
                 };
             }
@@ -427,7 +427,7 @@
         var message = selectedItems.Count == successResult ? "Объединение выполнено успешно!" : "Возникли проблемы при объединении!";
         _snackBar.Add(message);
     }
-    public async void MergeProductToOrder(ImportedOrder order)
+    public void MergeProductToOrder(ImportedOrder order)
     {
         
     }

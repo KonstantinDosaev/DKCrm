@@ -2,7 +2,7 @@
 @using DKCrm.Client.Pages.OrderManagement.Forms
 
 
-<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" DisableSidePadding="true"
+<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" ContentClass="no-padding"
            Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, NoHeader = true}" OnBackdropClick="HandleBackdropClick">
         <TitleContent>
            
@@ -30,11 +30,7 @@
     [Parameter] public Guid? Id { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
-    protected override async Task OnInitializedAsync()
-    {
-
-    }
-
+ 
     async Task HandleBackdropClick(MouseEventArgs eArgs)
     {
         await CloseClick();

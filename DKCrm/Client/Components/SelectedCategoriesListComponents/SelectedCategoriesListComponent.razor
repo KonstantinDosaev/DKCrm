@@ -1,5 +1,5 @@
 ﻿<MudPaper Width="100%">
-    <MudList  Style="" Clickable="true" @bind-SelectedItem="SelectedItem" @bind-SelectedValue="SelectedValue" Color="Color.Primary">
+    <MudList Style="" @bind-SelectedValue="SelectedItem" Color="Color.Primary">
         @if (Categories != null)
         {
             foreach (var category in Categories!.Where(w => w.ParentId == null).ToList())
@@ -17,15 +17,15 @@
 
 @code {
 
-    public MudListItem? _selectedItem;
+    public MudListItem<Category>? _selectedItem;
     [Parameter]
-    public MudListItem? SelectedItem
+    public MudListItem<Category>? SelectedItem
     {
         get => _selectedItem;
         set => _selectedItem = value;
     }
     [Parameter]
-    public EventCallback<MudListItem> SelectedItemChanged { get; set; }
+    public EventCallback<MudListItem<Category>> SelectedItemChanged { get; set; }
     [Parameter]
     public object? SelectedValue { get; set; } = 1;
 

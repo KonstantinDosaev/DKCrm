@@ -88,7 +88,7 @@
             DirectoryType = DirectoryType,
             FileCountSkip = 0,
             FileCountTake = _contToWidth,
-            PathToDirectory = RelativePath + PathsToDirectories.Preview
+                PathToDirectory = Path.Combine(RelativePath, PathsToDirectories.Preview)
         });
     }
     private async Task LoadMore()
@@ -101,7 +101,7 @@
                     DirectoryType = DirectoryType,
                     FileCountSkip = Images.FileDictionary.Count,
                     FileCountTake = LoadMoreCount,
-                    PathToDirectory = RelativePath+PathsToDirectories.Preview
+                    PathToDirectory = Path.Combine(RelativePath, PathsToDirectories.Preview)
                 });
           
                 foreach (var item in loadedList.FileDictionary)

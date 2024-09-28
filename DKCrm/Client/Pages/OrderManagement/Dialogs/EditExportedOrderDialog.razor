@@ -1,7 +1,7 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Shared.Models.OrderModels
 
-<MudDialog IsVisibleChanged="VisibleDialogChanged" IsVisible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
+<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
     <TitleContent>
         <div style="text-align: right">
             <MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>

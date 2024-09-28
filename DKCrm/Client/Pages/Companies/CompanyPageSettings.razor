@@ -2,16 +2,19 @@
 @using DKCrm.Shared.Requests.FileService
 @using DKCrm.Shared.Constants
 
-<MudTabs @bind-ActivePanelIndex="_activeIndex" Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
+<MudTabs @bind-ActivePanelIndex="_activeIndex" 
+         Position="Position.Top" Elevation="1" Border="true"
+         ApplyEffectsToContainer="true" ActiveTabClass="border-solid border-2 mud-border-primary"
+         Outlined="true" Rounded="true" PanelClass="pl-2" Style="min-height: 50vh">
     <MudTabPanel OnClick="LoadingData">
-        <ChildContent>
-            <div class="flex-column">
+        <ChildContent >
+            <div class="flex-column mx-2">
                 @if (InternalCompanyData != null)
                 {
                     <MudText>Редактирование внутренних данных</MudText>
-                    <MudCard Class="px-2">
+                 
                         <MudForm @ref="_editInternalDataForm" Model="@InternalCompanyData">
-                            <MudCardContent>
+                      
                                 <MudNumericField  Label="Процент на курс валюты" @bind-Value="InternalCompanyData.CurrencyPercent"
                                                   For="@(() => InternalCompanyData.CurrencyPercent)"
                                                   Variant="Variant.Outlined"
@@ -50,19 +53,18 @@
                                               T="string" Label="Ключ API ЕГРНЮЛ"
                                               Required="true" Variant="Variant.Outlined"
                                               RequiredError="Введите ключ API ЕГРНЮЛ!" Lines="1"/>
-                            </MudCardContent>
+                         
                         </MudForm>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="(() => _visibleStampsDialog = true)">Печати</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="m-auto w-100" OnClick="(() => _visibleStampsDialog = true)">Печати</MudButton>
                         <MudCardActions>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateInternalData())">Применить</MudButton>
                         </MudCardActions>
-                    </MudCard>
                 }
 
             </div >
         </ChildContent>
         <TabContent>
-            <MudText>Типы компании</MudText>
+           Данные
         </TabContent>
     </MudTabPanel> 
     <MudTabPanel OnClick="LoadingData">
@@ -92,11 +94,9 @@
             </div >
         </ChildContent>
         <TabContent>
-            <MudText>Типы компании</MudText>
+           Типы компании
         </TabContent>
     </MudTabPanel>
-             
-            
     <MudTabPanel OnClick="LoadingData">
         <ChildContent>
             <div class="flex-column">
@@ -124,12 +124,12 @@
             </div >
         </ChildContent>
         <TabContent>
-            <MudText>Теги компании</MudText>
+           Теги компании
         </TabContent>
     </MudTabPanel>
 </MudTabs>
 
-<MudDialog @bind-IsVisible="_visibleCompanyTypeUpdateDialog">
+<MudDialog @bind-Visible="_visibleCompanyTypeUpdateDialog">
           <DialogContent>
               <MudText>Редактирование типа компании</MudText>
               <MudCard>
@@ -145,7 +145,7 @@
           </DialogContent>
       </MudDialog>
 
-<MudDialog @bind-IsVisible="_visibleCompanyTypeRemoveDialog">
+<MudDialog @bind-Visible="_visibleCompanyTypeRemoveDialog">
     <DialogContent>
 
 
@@ -166,7 +166,7 @@
     </DialogContent>
 </MudDialog>
 
-<MudDialog @bind-IsVisible="_visibleCompanyTagUpdateDialog">
+<MudDialog @bind-Visible="_visibleCompanyTagUpdateDialog">
         <DialogContent>
             <MudText>Редактирование тега компании</MudText>
             <MudCard>
@@ -182,7 +182,7 @@
         </DialogContent>
     </MudDialog>
 
-<MudDialog @bind-IsVisible="_visibleCompanyTagRemoveDialog">
+<MudDialog @bind-Visible="_visibleCompanyTagRemoveDialog">
     <DialogContent>
 
 
@@ -202,10 +202,15 @@
 
     </DialogContent>
 </MudDialog>
-<DKImageManagerDialog DirectoryType="DirectoryType.Private"
-                         FileType="FileTypes.Stamps"
-                         RelativePath="@PathsToDirectories.Stamps"
-                         LoadMoreCount="5" @bind-VisibleDialog="_visibleStampsDialog" TitleText="Печати"/>
+@if (_visibleStampsDialog)
+{
+    <DKImageManagerDialog DirectoryType="@DirectoryType.PrivateFolder"
+                          FileType="FileTypes.Stamps"
+                          RelativePath="@PathsToDirectories.Stamps"
+                          LoadMoreCount="5" 
+                          TitleText="Печати"
+                          @bind-VisibleDialog="_visibleStampsDialog" />
+}
 
 @code {
     private int _activeIndex = 0;

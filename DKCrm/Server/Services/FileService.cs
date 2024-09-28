@@ -1,13 +1,6 @@
 ﻿using DKCrm.Server.Interfaces;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Requests.FileService;
-using OpenXmlPowerTools;
-using Org.BouncyCastle.Utilities;
-using System.Drawing.Imaging;
-using System.Drawing;
-using DocumentFormat.OpenXml.Office2013.Excel;
-using System.Security.Claims;
-using Microsoft.Extensions.FileProviders;
 
 namespace DKCrm.Server.Services
 {
@@ -22,9 +15,11 @@ namespace DKCrm.Server.Services
 
         public string BuildingPath(string path, DirectoryType directoryType)
         {
-            var mainPath = directoryType == DirectoryType.Public ? _configuration["PathToPublicDirectory"] 
-                : _configuration["PathToStaticFiles"];
-
+            var mainPath = directoryType == DirectoryType.PublicFolder ? _configuration[$"{DirectoryType.PublicFolder}"] 
+                : _configuration[$"{DirectoryType.PrivateFolder}"];
+            if (string.IsNullOrEmpty(mainPath))
+                throw new NullReferenceException();
+            
             return Path.Combine(mainPath,path);
         }
         public IEnumerable<GetFileInfoResponse> GetAllFileInfoInDirectory(GetFileRequest request)
@@ -127,9 +122,7 @@ namespace DKCrm.Server.Services
         }
         public bool RemoveFile(RemoveFileRequest request)
         {
-           
             var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
-
             var fullPath = Path.Combine(path, request.FileName);
             var fileInfo = new FileInfo(fullPath);
             if (fileInfo.Exists)

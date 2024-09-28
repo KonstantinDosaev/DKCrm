@@ -7,7 +7,6 @@
     <MudForm @ref="ProductFormRef">
         <MudCard>
             <MudCardContent>
-
                 <MudTextField Variant="Variant.Outlined"
                               @bind-Value="@Product.Name"
                               For="@(() => Product.Name)"
@@ -21,22 +20,25 @@
                               Immediate="true"
                               Label="Парт-номер" />
                 <div >
-                    <MudPaper Class="d-flex align-items-center justify-content-between" Style="margin: 1rem 0; padding: 1rem;" Outlined="true">
+                    <MudPaper Class="d-flex align-items-center justify-content-between" 
+                              Style="margin: 1rem 0; padding: 1rem;" Outlined="true">
                         <MudText>
                             <span style="color:dimgray">Категория: </span>
                             @if (Product.Category != null)
                             {
                                 @Product.Category.Name
                             }
-
                         </MudText>
-                        <MudButton Variant="Variant.Filled" Style="" Size="Size.Small" OnClick="() => _visibleCategorySelectedList = true" Color="Color.Tertiary">Выбрать</MudButton>
+                        <MudButton Variant="Variant.Filled" Style="" Size="Size.Small" 
+                                   OnClick="() => _visibleCategorySelectedList = true" 
+                                   Color="Color.Tertiary">Выбрать</MudButton>
                     </MudPaper>
                     
                 </div>
                 <MudSelect Variant="Variant.Outlined" @bind-Value="Product.BrandId"
                            Label="Производитель"
-                           T="Guid?" ToStringFunc="b =>  Brands!.Select(b=>b).FirstOrDefault(w=>w.Id==Product.BrandId)!.Name" 
+                           T="Guid?" 
+                           ToStringFunc="b =>  Brands!.Select(b=>b).FirstOrDefault(w=>w.Id==Product.BrandId)!.Name" 
                            CloseIcon="@Icons.Material.Filled.Flag"
                            AdornmentColor="Color.Tertiary">
                     @if (Brands != null)
@@ -45,7 +47,6 @@
                         {
                             <MudSelectItem T="Guid?" Value="@item.Id">@item.Name</MudSelectItem>
                         }
-
                     }
                 </MudSelect>
                 <MudPaper Style="margin: 1rem 0; padding: 1rem" Outlined="true">
@@ -61,7 +62,6 @@
                                               For="@(() => item.Quantity)"
                                               Immediate="true"
                                               Label="Количество" />
-
                                 <MudIconButton Icon="@Icons.Material.Filled.Clear" 
                                                Color="Color.Warning"
                                                OnClick="() => Product.ProductsInStorage.Remove(item)"/>
@@ -74,38 +74,31 @@
                         {
                             @foreach (var item in Storages)
                             {
-                                <MudMenuItem T="Guid?"
-                                             OnClick="() => AddProductInStorage(item) ">
-                                    @item.Name <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
+                                <MudMenuItem OnClick="() => AddProductInStorage(item) ">
+                                    @item.Name <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"/>
                                 </MudMenuItem>
                             }
-
                         }
-                  
                     </MudMenu>
                 </MudPaper>
-                
-                
                 <MudTextField Label="Цена" @bind-Value="Product.Price"
                               For="@(() => Product.Price)"
                               Variant="Variant.Outlined"
-                              Class="mb-3"
-                />
-                
-                <div Class="mt-4 fs-4" Style="flex: 1 1 auto">
+                              Class="mb-3"/>
+                <div class="mt-4 fs-4" style="flex: 1 1 auto">
                     <MudExpansionPanels>
                         <MudExpansionPanel Class="fw-bold"Text="Описание">
                             <div class="">
-
-                                <MudSwitch Label="Развернуть" @bind-Checked="@_checkSizeTextArea" @onclick="() => _sizeTextArea = _sizeTextArea == 5 ? 30 : 5" Color="Color.Primary" />
-                                <MudTextField T="string" Label="Дополнительная информация" Variant="Variant.Outlined" @bind-Value="Product.Description" Lines="@_sizeTextArea"/>
-
+                                <MudSwitch T="bool" Label="Развернуть" @bind-Value="@_checkSizeTextArea"
+                                           @onclick="() => _sizeTextArea = _sizeTextArea == 5 ? 30 : 5" 
+                                           Color="Color.Primary" />
+                                <MudTextField T="string" Label="Дополнительная информация" 
+                                              Variant="Variant.Outlined" @bind-Value="Product.Description" 
+                                              Lines="@_sizeTextArea"/>
                             </div>
                         </MudExpansionPanel>
                     </MudExpansionPanels>
-                    
                 </div>
-
                 <MudPaper Style="margin: 1rem 0; padding: 1rem" Outlined="true">
                     <MudText>Характеристики</MudText>
                     @if (Product.ProductOption != null && Product.ProductOption.Any())
@@ -137,28 +130,25 @@
                                     @item.Name <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Tertiary"></MudIcon>
                                 </MudMenuItem>
                             }
-
                         }
-
                     </MudMenu>
                 </MudPaper>
-               
             </MudCardContent>
-
             <MudCardActions>
-                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="Validation" Color="Color.Info">@ButtonText</MudButton>
+                <MudButton Variant="Variant.Outlined" 
+                           Size="Size.Small" OnClick="Validation"
+                           Color="Color.Info">@ButtonText</MudButton>
             </MudCardActions>
         </MudCard>
     </MudForm>
-    <MudDialog @bind-IsVisible="_visibleCategorySelectedList">
+    <MudDialog @bind-Visible="_visibleCategorySelectedList">
         <DialogContent>
             <SelectedCategoriesListComponent
                 @bind-SelectedCategory="@Product.Category"/>
-            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="ApplyCategory" Color="Color.Tertiary">Применить</MudButton>
+            <MudButton Variant="Variant.Text" Size="Size.Small" 
+                       OnClick="ApplyCategory" Color="Color.Tertiary">Применить</MudButton>
         </DialogContent>
     </MudDialog>
-
-
 }
 
 

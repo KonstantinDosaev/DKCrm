@@ -1,9 +1,9 @@
 ﻿@using MudBlazor.Services
 
 <MudDialog Style="min-width: 300px; min-height: 200px;" Class="fullImage__dialog " 
-           ClassContent="fullImageClass" IsVisibleChanged="VisibleDialogChanged" 
-           IsVisible="VisibleDialog"
-           Options="new DialogOptions() { NoHeader = true, DisableBackdropClick = false, FullScreen = true}">
+           ContentClass="fullImageClass no-margin" VisibleChanged="VisibleDialogChanged" 
+           Visible="VisibleDialog"
+           Options="new DialogOptions() { NoHeader = true,BackdropClick = false, FullScreen = true}">
     <DialogContent>
         <div class="fullScreenImage__closeButton">
             <MudTooltip Text="Закрыть" Arrow="true" Placement="Placement.Right">
@@ -101,7 +101,7 @@
         display: block;
         margin-left: auto;
         margin-right: auto;
-        vert-align: middle;
+     
     }
     .fullScreenImage__closeButton {
         position: absolute;

@@ -7,7 +7,8 @@ namespace DKCrm.Client.Services.OrderServices
     {
         Task<List<ExportedOrder>> GetAsync();
         Task<ExportedOrder> GetDetailsAsync(Guid id);
-        Task<SortPagedResponse<ExportedOrder>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterOrderTuple> request);
+        Task<SortPagedResponse<ExportedOrder>> GetBySortFilterPaginationAsync
+            (SortPagedRequest<FilterOrderTuple> request, CancellationToken token);
         Task<bool> UpdateAsync(ExportedOrder item);
         Task<bool> AddAsync(ExportedOrder item);
         Task<bool> RemoveRangeAsync(IEnumerable<ExportedOrder> items);

@@ -18,7 +18,7 @@
     }
     <div class="m-1">
         <MudFileUpload  MaximumFileCount="10" T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
-            <ButtonTemplate>
+@*             <ButtonTemplate>
                 <MudButton HtmlTag="label"
                            Variant="Variant.Filled"
                            Color="Color.Primary" Size="Size.Medium"
@@ -27,7 +27,14 @@
                     Добавить
                 </MudButton>
                 
-            </ButtonTemplate>
+            </ButtonTemplate> *@
+            <ActivatorContent>
+                <MudButton  Variant="Variant.Filled"
+                            Color="Color.Primary" Size="Size.Medium"
+                            StartIcon="@Icons.Material.Filled.Add">
+                    Добавить
+                </MudButton>
+            </ActivatorContent>
         </MudFileUpload>
     </div>
     <div class="m-1">

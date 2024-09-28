@@ -1,40 +1,45 @@
 ﻿ <MudDrawerContainer Class="mud-height-full">
-
-     <MudDrawer  @bind-Open="@Open" Anchor="Anchor.Left" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
+     <MudDrawer  @bind-Open="@Open" Anchor="Anchor.Left" Elevation="1" 
+                 Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
          <MudDrawerHeader>
              <MudText Typo="Typo.h6">Каталог</MudText>
-
          </MudDrawerHeader>
-
                  @if (Categories != null)
                  {
                      <MudText Typo="Typo.h6">Категории</MudText>
-                     <MudSwitch @bind-Checked="@LabelSwitch1" Label="Перемещение категорий" Color="Color.Info"/>
-
+                     <MudSwitch T="bool" @bind-Value="@LabelSwitch1" Label="Перемещение категорий" Color="Color.Info"/>
                      @if (LabelSwitch1)
                      {
                          @if (RelocatedCategory != null)
                          {
-                             <MudText Style="text-decoration: underline" Typo="Typo.subtitle1">Перемещаемая категория @RelocatedCategory.Name</MudText>
+                             <MudText Style="text-decoration: underline" Typo="Typo.subtitle1">
+                                 Перемещаемая категория @RelocatedCategory.Name
+                             </MudText>
                              @if (ParentToRelocation != null)
                              {
-                                 <MudText Style="text-decoration: underline" Typo="Typo.subtitle1">Место перемещения @(ParentToRelocation.Name ?? "Корневая директория")</MudText>
+                                 <MudText Style="text-decoration: underline" Typo="Typo.subtitle1">
+                                     Место перемещения @(ParentToRelocation.Name ?? "Корневая директория")
+                                 </MudText>
                              }
                              else
                              {
                                  <MudText Typo="Typo.subtitle1">Выберите место для перемещения</MudText>
                              }
-                             <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" Size="Size.Small" OnClick="GetRelocationCategory" Color="Color.Tertiary">Переместить</MudButton>
-                             <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" Size="Size.Small" OnClick="ResetRelocationCategory" Color="Color.Primary">Сбросить</MudButton>
+                             <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" 
+                                        Size="Size.Small" OnClick="GetRelocationCategory" 
+                                        Color="Color.Tertiary">Переместить</MudButton>
+                             <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" 
+                                        Size="Size.Small" OnClick="ResetRelocationCategory" 
+                                        Color="Color.Primary">Сбросить</MudButton>
                          }
                          else
                          {
                              <MudText Typo="Typo.subtitle1">Выберите категорию для перемещения</MudText>
                          }
-
                      }
 
-                     <MudTabs Position="Position.Left" Elevation="1" Outlined="true" Rounded="true" PanelClass="pl-2" Style="height: 100%;">
+                     <MudTabs Position="Position.Left" Elevation="1" Outlined="true"
+                              Rounded="true" PanelClass="pl-2" Style="height: 100%;">
                          @if (@RelocatedOrParent)
                          {
                              <MudTabPanel>
@@ -42,8 +47,7 @@
 
                                  </ChildContent>
                                  <TabContent>
-
-                                     <MudButton OnClick="() => SetParentToRelocation(new Category() { ParentId = null })" Color="Color.Success">
+                                     <MudButton OnClick="@(() => SetParentToRelocation(new Category(){ ParentId = null}))" Color="Color.Success">
                                          <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.ArrowCircleDown"/> В Корневую папку
                                      </MudButton>
                                  </TabContent>
@@ -56,7 +60,7 @@
                                  <MudTabPanel>
                                      <ChildContent>
                                          <MudPaper Width="100%">
-                                             <MudList Style="" Clickable="true" @bind-SelectedItem="_selectedItem" @bind-SelectedValue="_selectedValue" Color="Color.Primary">
+                                             <MudList @bind-SelectedValue="_selectedItem" Color="Color.Primary">
                                                  @foreach (var subCategory in category.Children.OrderBy(o => o.Name))
                                                  {
                                                      <CategoryMenuItemComponent CloseCategoryDrawerCallback="CloseCategoryDrawer"
@@ -70,14 +74,12 @@
                                              </MudList>
                                          </MudPaper>
                                      </ChildContent>
-
                                      <TabContent>
                                          <CategoryRelocatedButtonPanel CurrentCategory="category"
                                                                        CheckedParentCategory="SetParentToRelocation"
                                                                        CheckedRelocatedCategory="SetRelocatedCategory"
                                                                        VisibleButtons="LabelSwitch1"
-                                                                       RelocatedOrParent="RelocatedOrParent"/>
-                                         @category.Name
+                                                                       RelocatedOrParent="RelocatedOrParent"/>@category.Name
                                 <CategorySettingsMenuComponent RefreshCategoryListCallback="GetCategory" CurrentCategory="category" />
                                      </TabContent>
                                  </MudTabPanel>
@@ -89,7 +91,6 @@
                                          <ChildContent>
 
                                          </ChildContent>
-
                                          <TabContent>
                                              <CategoryRelocatedButtonPanel CurrentCategory="category"
                                                                            CheckedParentCategory="SetParentToRelocation"
@@ -100,28 +101,27 @@
                                              <CategorySettingsMenuComponent RefreshCategoryListCallback="GetCategory" CurrentCategory="category"/>
                                          </TabContent>
                                      </MudTabPanel>
-
                                  </div>
                              }
                          }
                          <MudTabPanel>
                              <ChildContent>
                                  <MudForm Style="">
-                                     <MudTextField @bind-Value="_value" T="string" Label="Категория" Required="true" RequiredError="Введите название категории!" Lines="3"/>
-                                     <MudButton Style="height: 30px; margin-top: 1rem" Variant="Variant.Text" Size="Size.Small" OnClick="AddCategory" Color="Color.Tertiary">Создать</MudButton>
+                                     <MudTextField @bind-Value="_value" T="string" Label="Категория" Required="true"
+                                                   RequiredError="Введите название категории!" Lines="3"/>
+                                     <MudButton Style="height: 30px; margin-top: 1rem"
+                                                Variant="Variant.Text" Size="Size.Small" 
+                                                OnClick="AddCategory" Color="Color.Tertiary">Создать</MudButton>
                                  </MudForm>
                              </ChildContent>
                              <TabContent>
-                                 <MudText>Добавить категорию</MudText> <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Add" class="ml-auto"></MudIcon>
+                                 <MudText>Добавить категорию</MudText> 
+                                 <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Add" class="ml-auto"></MudIcon>
                              </TabContent>
                          </MudTabPanel>
                      </MudTabs>
                  }
-          
-            
-       
      </MudDrawer>
-
      @* <MudDrawer @bind-Open="@open" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="600px">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">Производители</MudText>
@@ -133,15 +133,12 @@
  </MudDrawerContainer>
 
 @code {
-    MudListItem? _selectedItem;
+    MudListItem<Category>? _selectedItem;
     object _selectedValue = 1;
     string? _value;
-
     private List<Category>? Categories { get; set; }
     private List<Brand>? Brands { get; set; }
-
     public bool Open { get; set; }
-
     public Category? ParentToRelocation;
     public Category? RelocatedCategory;
     public bool LabelSwitch1 { get; set; } = false;

@@ -14,7 +14,7 @@
                     <MudButton Variant="Variant.Filled" 
                                Color="Color.Dark" 
                                Disabled="@(!_successFormCreateChatGroup)"
-                               Class="mt-4 w-25" OnClick="(args) =>CreateNewGroupUserChatAsync(CreatedChatName!)">Создать</MudButton>
+                               Class="mt-4 w-25" OnClick="@((args) =>CreateNewGroupUserChatAsync(CreatedChatName!))">Создать</MudButton>
                 </div>
             </MudForm>
         </MudMenu>
@@ -25,7 +25,7 @@
                            OnClick="() => _collapseContacts = !_collapseContacts"></MudIconButton></div>
     </MudToolBar>
     <div class="d-flex flex-column px-4" style="max-height:80vh;min-height:80vh;  overflow-y: scroll;">
-        <MudList Clickable="true">
+        <MudList T="string">
             @foreach (var chatGroup in ChatGroups)
             {
                 @if (chatGroup.Name != null)
@@ -146,7 +146,7 @@
             </div>
 
             <div class="message__field">
-                <MudTextField T="string" Placeholder="Введите сообщение..." DisableUnderLine="true" Variant="Variant.Outlined" MaxLines="5" AutoGrow="true" Class="field-item mx-4"
+                <MudTextField T="string" Placeholder="Введите сообщение..." Variant="Variant.Outlined" MaxLines="5" AutoGrow="true" Class="field-item mx-4"
                               @bind-Value="CurrentMessage" For="@(() => CurrentMessage)"/>
                 <MudIconButton Variant="Variant.Filled" OnClick="SubmitAsync" Icon="@Icons.Material.Outlined.Send"  
                                Color="Color.Dark" 
@@ -168,7 +168,7 @@
                                                                                     OnClick="() => _collapseContacts= !_collapseContacts"></MudIconButton></div>
         </MudToolBar>
         <div class="d-flex flex-column px-4 flex-grow-1" style="max-height:80vh;min-height:80vh; overflow-y: scroll;">
-            <MudList Clickable="true">
+            <MudList T="string">
                 @foreach (var user in NotHavePrivateChatUsers)
                 {
                     @if (user.UserName != null)
@@ -202,7 +202,8 @@
 
 @if (CurrentChatId != Guid.Empty)
 {
-    <MudDialog IsVisibleChanged="OpenCloseAddUserDialog" IsVisible="_addUserDialogIsOpen" Options="new DialogOptions() { CloseButton = true, }" C>
+    <MudDialog VisibleChanged="OpenCloseAddUserDialog" Visible="_addUserDialogIsOpen" 
+               Options="new DialogOptions() { CloseButton = true, }">
         <DialogContent>
             <div class="pt-4" style="min-width: 300px">
                 @foreach (var user in AllChatUsers.Where(w =>!CurrentChatGroup!.ApplicationUsers!.Select(s => s.Id).Contains(w.Id)))
@@ -222,7 +223,8 @@
             </div>
         </DialogContent>
     </MudDialog>
-    <MudDialog IsVisibleChanged="OpenCloseUsersInChatDialog" IsVisible="_usersInChatDialogIsOpen" Options="new DialogOptions() { CloseButton = true,}" >
+    <MudDialog VisibleChanged="OpenCloseUsersInChatDialog" Visible="_usersInChatDialogIsOpen" 
+               Options="new DialogOptions() { CloseButton = true,}" >
         <DialogContent>
             <div class="pt-4" style="min-width: 300px">
                 @if (CurrentChatGroup is {ApplicationUsers: { } })

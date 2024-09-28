@@ -4,8 +4,10 @@
 @using MudBlazor.Services
 @implements IBrowserViewportObserver
 @implements IAsyncDisposable
-<MudDialog @ref="_dialog" IsVisible="VisibleDialog" Style="overflow: hidden; max-height: 100%;" IsVisibleChanged="VisibleDialogChanged"
-           DisableSidePadding="true" ClassContent="no-padding" TitleClass=""
+@inject IBrowserViewportService BrowserViewportService
+
+<MudDialog @ref="_dialog" Visible="VisibleDialog" Style="overflow: hidden; max-height: 100%;" VisibleChanged="VisibleDialogChanged"
+         TitleClass=""  ContentClass="no-padding"
            Options="new DialogOptions() { MaxWidth = MaxWidth.Large, NoHeader = true}" OnBackdropClick="CloseClick">
    
     <DialogContent>
@@ -118,7 +120,7 @@
     [Parameter] public bool MultipleSelect { get; set; }
     [Parameter] public EventCallback<string> SelectedImageCallback { get; set; }
     [Parameter] public EventCallback<List<string>> SelectedImageListCallback { get; set; }
-    private string? SelectImageName { get; set; }
+    [Parameter] public string? SelectImageName { get; set; }
     private List<string>? SelectImageNameList { get; set; }
     private MudDialog _dialog = null!;
 
@@ -128,8 +130,7 @@
     private bool _visibleFullScreenImageDialog;
     private GetManyFilesResponse? Images { get; set; }
     private int _contToWidth = 0;
-    [Inject]
-    private IBrowserViewportService BrowserViewportService { get; set; }
+    
     private int _windowWidth = 0;
     private int _windowHeight = 0;
     private bool _loading = false;
@@ -154,7 +155,7 @@
     public async Task CloseClick()
     {
         VisibleDialog = false;
-        _dialog.Close();
+        await _dialog.CloseAsync();
         await VisibleDialogChanged.InvokeAsync(VisibleDialog);
     }
     public async Task ReturnSelectedResult()
@@ -214,7 +215,7 @@
         
     }
    
-    public async Task SelectImage(string imageKey)
+    public void SelectImage(string imageKey)
     {
        
         if (MultipleSelect)

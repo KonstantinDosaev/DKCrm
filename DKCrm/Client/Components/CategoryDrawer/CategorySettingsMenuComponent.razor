@@ -19,7 +19,7 @@
     </ChildContent>
 </MudMenu>
 
-<MudDialog @bind-IsVisible="_visibleAddCategoryDialog">
+<MudDialog @bind-Visible="_visibleAddCategoryDialog">
     <DialogContent>
         <MudText>Создание категории</MudText>
         <MudForm @ref="_createCategoryForm"Style="display: flex">
@@ -29,7 +29,7 @@
     </DialogContent>
 </MudDialog>
 
-<MudDialog @bind-IsVisible="_visibleRemoveCategoryDialog">
+<MudDialog @bind-Visible="_visibleRemoveCategoryDialog">
     <DialogContent>
         <MudText Class="pb-3"><MudIcon Size="Size.Large" Color="Color.Warning" Icon="@Icons.Material.Filled.WarningAmber" />Подтвердите удаление</MudText>
        
@@ -62,7 +62,7 @@
     </DialogContent>
 </MudDialog>
 
-<MudDialog @bind-IsVisible="_visibleUpdateCategoryDialog">
+<MudDialog @bind-Visible="_visibleUpdateCategoryDialog">
     <DialogContent>
         <MudText>Редактирование категории</MudText>
         <MudCard>
