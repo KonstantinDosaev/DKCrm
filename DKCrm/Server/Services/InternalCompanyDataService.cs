@@ -11,7 +11,7 @@ namespace DKCrm.Server.Services
         private readonly ApplicationDBContext _context;
         private readonly UserDbContext _contextUser;
         private readonly IConfiguration _configuration;
-        public InternalCompanyDataService(ApplicationDBContext context, UserDbContext contextUser, , IConfiguration configuration)
+        public InternalCompanyDataService(ApplicationDBContext context, UserDbContext contextUser, IConfiguration configuration)
         {
             _context = context;
             _contextUser = contextUser;
