@@ -33,10 +33,10 @@ public class OrderSpecificationPdfGenerator
             _configuration = configuration;
         }
 
-        public async Task<bool> CreateSpecificationAsync(CreateOrderSpecificationRequest createOrderSpecificationRequest)
+        public async Task<byte[]> CreateSpecificationAsync(CreateOrderSpecificationRequest createOrderSpecificationRequest)
         {
             CreateOrderSpecificationRequest = createOrderSpecificationRequest;
-            if (CreateOrderSpecificationRequest == null) return false;
+            if (CreateOrderSpecificationRequest == null) return new byte[]{};
            
             Order = await _orderService.GetDetailAsync(createOrderSpecificationRequest.OrderId);
             _mainPathToFiles = _configuration[$"{DirectoryType.PrivateFolder}"] ?? throw new InvalidOperationException();
@@ -72,14 +72,14 @@ public class OrderSpecificationPdfGenerator
             FillPdf(pdf, writer);
             pdf.Close();
 
-            return await SaveToFileAsync(memoryStream.ToArray());
+            return memoryStream.ToArray();
         }
 
         private async Task<bool> SaveToFileAsync(byte[] pdfBytes)
         { 
             if (Order == null) return false;
            
-            var pathToSave = Path.Combine(_mainPathToFiles + PathsToDirectories.Documents, Order.Number!);
+            var pathToSave = Path.Combine(_mainPathToFiles, PathsToDirectories.FileContainer, PathsToDirectories.Documents, Order.Number!);
         if (!Directory.Exists(pathToSave))
                 Directory.CreateDirectory(pathToSave);
         var date = DateTime.Now.Date.ToShortDateString();
@@ -108,7 +108,7 @@ public class OrderSpecificationPdfGenerator
 
         private void FillPdf(Document pdf, PdfWriter writer)
         {
-            var ttf = Path.Combine(_mainPathToFiles + PathsToDirectories.Fonts, "times.TTF");
+            var ttf = Path.Combine(_mainPathToFiles, PathsToDirectories.FileContainer, PathsToDirectories.Fonts, "times.TTF");
             var baseFont = BaseFont.CreateFont(ttf, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
             _font = new Font(baseFont, 10, Font.NORMAL);
             _fontBold = new Font(baseFont, 10, Font.BOLD);

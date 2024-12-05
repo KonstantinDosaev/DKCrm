@@ -20,7 +20,7 @@ using System.Net;
 using DKCrm.Shared.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 var connectionStringProduct = builder.Configuration.GetConnectionString("ProductContextConnection") ??
                               throw new InvalidOperationException("Connection string 'ProductContextConnection' not found.");
 var connectionStringUser = builder.Configuration.GetConnectionString("UserContextConnection") ??
@@ -37,7 +37,7 @@ if (pathToStaticFiles == null)
     jsonSettings.Converters.Add(new StringEnumConverter());
 
     dynamic config = JsonConvert.DeserializeObject<ExpandoObject>(json, jsonSettings) ?? throw new InvalidOperationException();
-    var defaultStaticFilesPath = Path.Combine(Directory.GetCurrentDirectory(), @"StaticFiles");
+    var defaultStaticFilesPath = Path.Combine(Directory.GetCurrentDirectory());
     var expando = config as IDictionary<string, object>;
     expando?.Add($"{DirectoryType.PrivateFolder}", defaultStaticFilesPath);
     var newJson = JsonConvert.SerializeObject(config, Formatting.Indented, jsonSettings);
@@ -60,7 +60,7 @@ builder.Services.AddTransient<ICompanyService, CompanyService>();
 builder.Services.AddTransient<IEmployeeService, EmployeeService>();
 builder.Services.AddTransient<ICompanyTagsService, CompanyTagsService>();
 builder.Services.AddTransient<ICompanyTypeService, CompanyTypeService>();
-
+builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IExportedProductService, ExportedProductService>();
 builder.Services.AddTransient<IImportedProductService, ImportedProductService>();
 builder.Services.AddTransient<IExportedOrderService, ExportedOrderService>();
@@ -75,7 +75,10 @@ builder.Services.AddTransient<IInfoSetFromDocumentToOrderService, InfoSetFromDoc
 builder.Services.AddTransient<PaymentInvoicePdfGenerator>();
 builder.Services.AddTransient<OrderSpecificationPdfGenerator>();
 builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryService>();
-builder.Services.AddTransient<IFileService, FileService>();
+builder.Services.AddTransient<IImageService, ImageService>();
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddTransient<ICompanyCommentsService, CompanyCommentsService>();
+builder.Services.AddTransient<IAccessRestrictionService, AccessRestrictionService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));

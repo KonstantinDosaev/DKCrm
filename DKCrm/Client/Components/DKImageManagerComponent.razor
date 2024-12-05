@@ -1,14 +1,15 @@
 ﻿@using DKCrm.Shared.Constants
 @using DKCrm.Shared.Requests.FileService
+@using DKCrm.Shared.Requests.ImageService
 @using MudBlazor.Services
 @implements IBrowserViewportObserver
 @implements IAsyncDisposable
 
-@if (Images != null)
+@if (Images is {FileDictionaryInfIdBytArr: { } } && Images.FileDictionaryInfIdBytArr.Any())
 {
     <MudPaper Elevation="10" Class="my-2 p-2 text-center">
         <div class="d-flex flex-wrap justify-content-around mb-2">
-            @foreach (var file in Images.FileDictionary)
+            @foreach (var file in Images.FileDictionaryInfIdBytArr)
             {
                 <div class="dcImageManager__container">
                     <div class="dcImageManager__buttons">
@@ -33,7 +34,7 @@
         {
             <MudProgressLinear Class="my-2" Color="Color.Info" Rounded="true" Size="Size.Medium" Indeterminate="true"></MudProgressLinear>
         }
-        @if (Images.FileDictionary.Count < Images.FileInDirectoryCount)
+        @if (Images.FileDictionaryInfIdBytArr.Count < Images.FileInDirectoryCount)
         {
             <MudButton Color="Color.Primary" 
                        Variant="Variant.Filled" 
@@ -45,7 +46,9 @@
 <MudPaper Elevation="10" Class="my-2 p-2">
     <FileUploaderComponent DirectoryType="@DirectoryType"
                            FileType="@FileType"
-                           RelativePath="@RelativePath" UploadsFilesCallback="InitImagePreviewListAsync"></FileUploaderComponent>
+                           RelativePath="@RelativePath" UploadsFilesCallback="InitImagePreviewListAsync"
+                           ImageType="@ImageType" 
+                           OwnerId="@OwnerId"></FileUploaderComponent>
 </MudPaper>
 @if (_currentImage != null)
 {
@@ -58,10 +61,13 @@
     [Parameter] public DirectoryType DirectoryType { get; set; }
     [Parameter] public string RelativePath { get; set; } = null!;
     [Parameter] public int LoadMoreCount { get; set; }
+    [Parameter] public ImageTypes ImageType { get; set; }
+    [Parameter] public bool IsPreviewImage { get; set; }
+    [Parameter] public Guid OwnerId { get; set; }
     private string? _currImage;
     private byte[]? _currentImage;
     private bool _visibleFullScreenImageDialog;
-    private GetManyFilesResponse? Images { get; set; }
+    private GetManyImagesResponse? Images { get; set; }
     private int _contToWidth = 0;
     [Inject]
     private IBrowserViewportService BrowserViewportService { get; set; }
@@ -83,30 +89,36 @@
     }
     private async Task InitImagePreviewListAsync()
     {
-        Images = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+        Images = await ImageManager.GetManyImageInBytArrayAsync(new GetManyImagesRequest()
         {
             DirectoryType = DirectoryType,
             FileCountSkip = 0,
-            FileCountTake = _contToWidth,
-                PathToDirectory = Path.Combine(RelativePath, PathsToDirectories.Preview)
+            FileCountTake = _contToWidth, 
+            IsFullPath = false, 
+            ImageType = ImageType, 
+            IsPreviewImage = IsPreviewImage, 
+            OwnerId = OwnerId
         });
     }
     private async Task LoadMore()
     {
-        if (Images != null && Images.FileDictionary.Count < Images.FileInDirectoryCount)
+        if (Images != null && Images.FileDictionaryInfIdBytArr.Count < Images.FileInDirectoryCount)
         {
             _loading = true;
-            var loadedList = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+            var loadedList = await ImageManager.GetManyImageInBytArrayAsync(new GetManyImagesRequest()
                 {
                     DirectoryType = DirectoryType,
-                    FileCountSkip = Images.FileDictionary.Count,
+                    FileCountSkip = Images.FileDictionaryInfIdBytArr.Count,
                     FileCountTake = LoadMoreCount,
-                    PathToDirectory = Path.Combine(RelativePath, PathsToDirectories.Preview)
+                    IsFullPath = false, 
+                    ImageType = ImageType, 
+                    IsPreviewImage = IsPreviewImage, 
+                    OwnerId = OwnerId
                 });
           
-                foreach (var item in loadedList.FileDictionary)
+                foreach (var item in loadedList.FileDictionaryInfIdBytArr)
                 {
-                    Images.FileDictionary.Add(item.Key, item.Value);
+                    Images.FileDictionaryInfIdBytArr.Add(item.Key, item.Value);
                 }
             _loading = false;
         }
@@ -116,10 +128,7 @@
         if (_currImage != imageKey)
         {
             _currImage = imageKey;
-            _currentImage = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest()
-                {
-                    DirectoryType = DirectoryType, Path = Path.Combine(RelativePath, imageKey)
-                }); 
+            _currentImage = await ImageManager.GetOneImageInByteArrAsync(new Guid(imageKey)); 
         }
         _visibleFullScreenImageDialog = true;
     }
@@ -127,15 +136,9 @@
     {
         if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление изображения!"))
             return;
-        if (await FilesManager.RemoveFilesAsync(new RemoveFileRequest()
+        if (await ImageManager.RemoveImageAsync(new Guid(imageKey)))
         {
-            DirectoryType = DirectoryType,
-            FileType = FileTypes.Stamps,
-            Path = RelativePath,
-            FileName = imageKey
-        }))
-        {
-            Images!.FileDictionary.Remove(imageKey);
+            Images!.FileDictionaryInfIdBytArr.Remove(imageKey);
              Images.FileInDirectoryCount -= 1;
         }
         

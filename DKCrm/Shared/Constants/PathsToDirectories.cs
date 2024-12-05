@@ -10,11 +10,12 @@ namespace DKCrm.Shared.Constants
     {
         public const string Documents = @"Documents";
         public static readonly string ProductsDocuments = Path.Combine("Documents","Products");
-        public static readonly string ProductsImages = Path.Combine("Images","Products");
-        public static readonly string OrdersImages = Path.Combine("Images","Orders");
+        public static readonly string Images ="Images";
+       // public static readonly string OrdersImages = Path.Combine("Images","Orders");
         public static readonly string OrdersDocuments = Path.Combine("Documents","Orders");
         public const string Fonts = @"Fonts";
         public const string Stamps = @"Stamps";
         public const string Preview = @"Preview";
+        public const string FileContainer = @"StaticFiles";
     }
 }

@@ -13,7 +13,11 @@ namespace DKCrm.Shared.Models.CompanyModels
         [MaxLength(50)]
         public string BankAccount { get; set; } = null!;
         [MaxLength(50)]
+        public string? Kpp { get; set; } = null!;
+        [MaxLength(50)]
         public string BeneficiaryAccount { get; set; } = null!;
+        [MaxLength(50)]
+        public string KorBeneficiaryAccount { get; set; } = null!;
         [MaxLength(200)]
         public string? Description { get; set; }
 

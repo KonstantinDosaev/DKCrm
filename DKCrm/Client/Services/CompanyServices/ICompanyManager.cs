@@ -13,5 +13,6 @@ namespace DKCrm.Client.Services.CompanyServices
         Task<bool> RemoveAsync(Guid id);
         Task<bool> RemoveBankDetailsAsync(Guid id);
         Task<bool> UpdateTagsAsync(TagsRequest tagsRequest);
+        Task<bool> AddBankAsync(BankDetails bankDetails);
     }
 }

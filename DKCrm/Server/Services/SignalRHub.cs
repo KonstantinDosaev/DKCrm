@@ -1,4 +1,5 @@
 ﻿using DKCrm.Shared.Models.Chat;
+using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
 using Microsoft.AspNetCore.SignalR;
 
@@ -22,6 +23,14 @@ namespace DKCrm.Server.Services
         public async Task ReloadCommentList(Guid orderId)
         {
             await Clients.All.SendAsync("ReceiveCommandToReloadCommentList",orderId);
+        }
+        public async Task SendCompanyCommentAsync(CompanyComment comment, string userName)
+        {
+            await Clients.All.SendAsync("ReceiveCompanyComment", comment, userName);
+        }
+        public async Task ReloadCompanyCommentList(Guid companyId)
+        {
+            await Clients.All.SendAsync("ReceiveCommandToReloadCompanyCommentList", companyId);
         }
     }
 }

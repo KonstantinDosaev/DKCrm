@@ -34,19 +34,22 @@ namespace DKCrm.Client.Services.DocumentService
             var result = await _httpClient.DeleteAsync($"api/Document/RemoveDocument/{infoSetId}");
             return result.IsSuccessStatusCode;
         }
-        public async Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId)
+        public async Task<bool> CreatePaymentInvoicePdfAsync(CreatePaymentInvoiceRequest request)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Document/CreatePaymentInvoicePdf/{orderId}", orderId, JsonOptions.JsonIgnore);
+            var result = await _httpClient
+                .PostAsJsonAsync($"api/Document/CreatePaymentInvoicePdf/{request}", request, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
         public async Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Document/CreateOrderSpecificationPdf/{request}", request, JsonOptions.JsonIgnore);
+            var result = await _httpClient
+                .PostAsJsonAsync($"api/Document/CreateOrderSpecificationPdf/{request}", request, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
         public async Task<byte[]> AddStampToPdfAsync(AddStampToPdfRequest request)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Document/SetStampAndGetDocumentBytArray/{request}", request, JsonOptions.JsonIgnore);
+            var result = await _httpClient
+                .PostAsJsonAsync($"api/Document/SetStampAndGetDocumentBytArray/{request}", request, JsonOptions.JsonIgnore);
             return await result.Content.ReadFromJsonAsync<byte[]>() ?? throw new InvalidOperationException();
         }
     }

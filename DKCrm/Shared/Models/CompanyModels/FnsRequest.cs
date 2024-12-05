@@ -11,6 +11,12 @@ namespace DKCrm.Shared.Models.CompanyModels
         [MaxLength(30)]
         public string INN { get; set; } = null!;
         [MaxLength(30)]
+        public string KPP { get; set; } = null!;
+        [MaxLength(30)]
+        public string PostalCode { get; set; } = null!;
+        [MaxLength(30)]
+        public string Phone { get; set; } = null!;
+        [MaxLength(30)]
         public string ORGN { get; set; } = null!;
         [MaxLength(50)]
         public string Director { get; set; } = null!;

@@ -1,21 +1,29 @@
-﻿using DKCrm.Server.Data;
+﻿using System.Security.Claims;
+using DKCrm.Server.Data;
+using DKCrm.Server.Interfaces;
 using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore;
+using OpenXmlPowerTools;
 
 namespace DKCrm.Server.Services.CompanyServices
 {
     public class CompanyService : ICompanyService
     {
         private readonly ApplicationDBContext _context;
-        public CompanyService(ApplicationDBContext context)
+        private readonly IAccessRestrictionService _accessRestrictionService;
+        public CompanyService(ApplicationDBContext context, IAccessRestrictionService accessRestrictionService)
         {
             _context = context;
+            _accessRestrictionService = accessRestrictionService;
         }
-        public async Task<IEnumerable<Company>> GetAsync()
+        public async Task<IEnumerable<Company>> GetAsync(ClaimsPrincipal user)
         {
-            return await _context.Companies.AsNoTracking().Select(s => new Company()
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            if (userId == null) return Array.Empty<Company>();
+            var companyList = await _context.Companies.AsNoTracking().Select(s => new Company()
             {
                 Id = s.Id,
                 ActualAddress = s.ActualAddress,
@@ -29,11 +37,21 @@ namespace DKCrm.Server.Services.CompanyServices
                 Employees = s.Employees,
                 Inn = s.Inn,
             }).ToListAsync();
+            var result = new List<Company>();
+            foreach (var company in companyList)
+            {
+                if (await _accessRestrictionService.CheckExistAccessAndContainsUserInArrayToComponentAsync(company.Id, user))
+                    result.Add(company);
+            }
+            return result;
         }
-        public async Task<IEnumerable<Company>> GetCompaniesByTypeAsync(string companyType)
+        public async Task<IEnumerable<Company>> GetCompaniesByTypeAsync(string companyType, ClaimsPrincipal user)
         {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            if (userId == null) return Array.Empty<Company>();
+
             var companyTypeId = _context.CompanyTypes.FirstOrDefault(f => f.Name == companyType)!.Id;
-            return await _context.Companies.Where(w=>w.CompanyTypeId==companyTypeId).AsNoTracking().Select(s => new Company()
+            var companyList = await _context.Companies.Where(w=>w.CompanyTypeId==companyTypeId).AsNoTracking().Select(s => new Company()
             {
                 Id = s.Id,
                 ActualAddress = s.ActualAddress,
@@ -47,15 +65,26 @@ namespace DKCrm.Server.Services.CompanyServices
                 Employees = s.Employees,
                 Inn = s.Inn,
             }).ToListAsync();
+            var result = new List<Company>();
+            foreach (var company in companyList)
+            {
+                if(await _accessRestrictionService.CheckExistAccessAndContainsUserInArrayToComponentAsync(company.Id, user))
+                    result.Add(company);
+            }
+            return result;
         }
-        public async Task<Company> GetAsync(Guid id)
+        public async Task<Company> GetAsync(Guid id, ClaimsPrincipal user)
         {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            if (userId == null || !await _accessRestrictionService.CheckExistAccessAndContainsUserInArrayToComponentAsync(id, user)) return new Company();
+
             var company = await _context.Companies.AsNoTracking().Include(i => i.ActualAddress).
                 Include(i => i.CompanyType).
                 Include(i => i.BankDetails).Include(i => i.FnsRequest).
                 Include(i => i.Employees).
                 Include(i => i.TagsCompanies).AsSingleQuery()
                 .FirstOrDefaultAsync(a => a.Id == id);
+
             return company ?? throw new InvalidOperationException();
         }
 
@@ -66,7 +95,12 @@ namespace DKCrm.Server.Services.CompanyServices
             await _context.SaveChangesAsync();
             return company.Id;
         }
-
+        public async Task<Guid> AddBankDetails(BankDetails bankDetails)
+        {
+            _context.BankDetails.Add(bankDetails);
+            await _context.SaveChangesAsync();
+            return bankDetails.Id;
+        }
         public async Task<Guid> PutAsync(Company company)
         {
             _context.Entry(company).State = EntityState.Modified;

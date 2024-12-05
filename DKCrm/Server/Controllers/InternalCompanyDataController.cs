@@ -32,6 +32,16 @@ namespace DKCrm.Server.Controllers
         {
             return Ok(await _internalCompanyDataService.PutAsync(data));
         }
-   
+  
+        [HttpGet("user/{pass}")]
+        public async Task MigrateUser(string pass)
+        {
+           await _internalCompanyDataService.MigrateUser(pass);
+        }
+        [HttpGet("product/{pass}")]
+        public async Task MigrateProd(string pass)
+        {
+           await _internalCompanyDataService.MigrateProd(pass);
+        }
     }
 }

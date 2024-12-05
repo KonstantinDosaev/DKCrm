@@ -36,6 +36,7 @@
             return;
         if (Company != null)
         {
+            Company.Id = (Guid)Id;
 
             if (await CompanyManager.UpdateAsync(Company))
             {

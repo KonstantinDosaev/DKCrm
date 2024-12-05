@@ -1,5 +1,6 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +9,13 @@ namespace DKCrm.Server.Services
     public class InternalCompanyDataService : IInternalCompanyDataService
     {
         private readonly ApplicationDBContext _context;
-
-        public InternalCompanyDataService(ApplicationDBContext context)
+        private readonly UserDbContext _contextUser;
+        private readonly IConfiguration _configuration;
+        public InternalCompanyDataService(ApplicationDBContext context, UserDbContext contextUser, , IConfiguration configuration)
         {
             _context = context;
+            _contextUser = contextUser;
+            _configuration = configuration;
         }
 
         public async Task<InternalCompanyData> GetAsync()
@@ -33,7 +37,18 @@ namespace DKCrm.Server.Services
             await _context.SaveChangesAsync();
             return data.Id;
         }
-
+        public async Task MigrateProd(string pass)
+        {
+            var mPass = _configuration[$"mpass"];
+            if (mPass == pass)
+                await _context.Database.MigrateAsync();
+        }
+        public async Task MigrateUser(string pass)
+        {
+            var mPass = _configuration[$"mpass"];
+            if (mPass == pass)
+                await _contextUser.Database.MigrateAsync();
+        }
         public async Task<Guid> PutAsync(InternalCompanyData data)
         {
             _context.Entry(data).State = EntityState.Modified;

@@ -2,6 +2,7 @@
 @using DKCrm.Shared.Constants
 @using Microsoft.AspNetCore.Components
 @using System.Globalization
+@using DKCrm.Shared.Requests.ImageService
 @using MudBlazor
 
 <div class="d-flex align-items-end flex-wrap" >
@@ -80,6 +81,8 @@
 
 @code {
     [Parameter] public FileTypes FileType { get; set; }
+    [Parameter] public ImageTypes? ImageType { get; set; }
+    [Parameter] public Guid? OwnerId { get; set; }
     [Parameter] public DirectoryType DirectoryType { get; set; }
     [Parameter] public string RelativePath { get; set; } = null!;
     IList<SaveFileRequest> files = new List<SaveFileRequest>();
@@ -95,7 +98,7 @@
             var memSize = SizeImage;
             var temp = new SaveFileRequest()
             {
-                 ContentType = FileType, DirectoryType = DirectoryType, Path = RelativePath
+                 ContentType = FileType, DirectoryType = DirectoryType, PathToDirectory = RelativePath
             };
             var type = file.ContentType;
             if (file.ContentType.Contains("image"))
@@ -121,7 +124,20 @@
     {
         foreach (var file in files)
         {
-            await FilesManager.SaveFileAsync(file);
+            if (file.ContentType is FileTypes.Images or FileTypes.Stamps )
+            {
+                await ImageManager.AddImageAsync(new SaveImageRequest()
+                {
+                    DirectoryType = DirectoryType,
+                    IsFullPath = false, FileName = file.FileName,
+                    ImageType = (ImageTypes)ImageType,
+                    OwnerId = (Guid)OwnerId,
+                    Content = file.Content,
+                    Preview = file.Preview
+                });
+            }
+            else 
+                await FilesManager.SaveFileAsync(file);
         }
         await UploadsFilesCallback.InvokeAsync();
         files.Clear();

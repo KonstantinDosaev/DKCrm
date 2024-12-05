@@ -15,7 +15,8 @@ namespace DKCrm.Server.Services.DocumentServices
 {
     public class PaymentInvoicePdfGenerator
     {
-        private ExportedOrder Order { get; set; } = null!;
+        private CreatePaymentInvoiceRequest CreateRequest { get; set; }
+        private ExportedOrder? Order { get; set; } = null!;
         private Company? OurCompany { get; set; }
         private Company? BuyerCompany { get; set; }
         private readonly IExportedOrderService _orderService;
@@ -27,7 +28,7 @@ namespace DKCrm.Server.Services.DocumentServices
         private Font _fontBigBold = null!;
         private float _stampPosition;
         private float _totalWidth;
-        private int _indexInstanceDocument;
+        private int _indexInstanceDocument = 1;
         private string _mainPathToFiles  = null!;
 
         public PaymentInvoicePdfGenerator(IExportedOrderService orderService, IPriceToStringConverter priceToString, IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService, IConfiguration configuration)
@@ -38,25 +39,30 @@ namespace DKCrm.Server.Services.DocumentServices
             _configuration = configuration;
         }
 
-        public async Task<bool> CreatePaymentAsync(Guid orderId)
+        public async Task<byte[]> CreatePaymentAsync(CreatePaymentInvoiceRequest createRequest)
         {
-            Order = await _orderService.GetDetailAsync(orderId);
+            CreateRequest = createRequest;
+
+            Order = await _orderService.GetDetailAsync(CreateRequest.OrderId);
             _mainPathToFiles = _configuration[$"{DirectoryType.PrivateFolder}"]!;
             //_mainPathToFiles = Directory.GetCurrentDirectory();
             // Order = await _orderService.GetDetailAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));
-            if (Order == null) return false;
+            if (Order == null) return new byte[]{};
             OurCompany = Order.OurCompany;
             BuyerCompany = Order.CompanyBuyer;
             var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);
             var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
-
+            var dateNow = DateTime.Now.Date;
             var infoSetFromPayment = infoSetFromDocumentToOrders
-                .Where(w => w.DocumentType == (int)DocumentTypes.PaymentInvoice).ToArray();
-            _indexInstanceDocument = infoSetFromPayment.Any() ? infoSetFromPayment
-                .Where(w=>w.DateTimeCreated.Date == DateTime.Now.Date)
-                .GroupBy(g => g.FileType)
-                .Select(s => s.Count()).Max(s => s) + 1 : 1;
+                .Where(w => w.DocumentType == (int)DocumentTypes.PaymentInvoice 
+                && w.DateTimeCreated == dateNow).ToArray();
+            if (infoSetFromPayment.Any())
+            {
+                _indexInstanceDocument = infoSetFromPayment.GroupBy(g => g.FileType)
+                    .Select(s => s.Count()).Max(s => s) + 1;
+            }
+           
             var memoryStream = new MemoryStream();
             const float margeLeft = 1.5f;
             const float margeRight = 1.5f;
@@ -80,42 +86,12 @@ namespace DKCrm.Server.Services.DocumentServices
             await FillPdf(pdf, writer);
             pdf.Close();
 
-            return await SaveToFile(memoryStream.ToArray());
-        }
-
-        private async Task<bool> SaveToFile(byte[] pdfBytes)
-        { 
-            if (Order == null) return false;
-            var pathToSave = Path.Combine(_mainPathToFiles + PathsToDirectories.Documents, Order.Number!);
-            if (!Directory.Exists(pathToSave))
-                Directory.CreateDirectory(pathToSave);
-            var date = DateTime.Now.Date.ToShortDateString();
-            var fileOutPdfName = $"Счет на оплату № {Order.Number}-{date}-{_indexInstanceDocument}.pdf";
-            var fullOutPdfPath = Path.Combine(pathToSave, fileOutPdfName);
-
-            await File.WriteAllBytesAsync(fullOutPdfPath, pdfBytes);
-            if (!File.Exists(fullOutPdfPath))
-                throw new FileNotFoundException();
-            
-            var document = new InfoSetFromDocumentToOrder()
-            {
-                Name = fileOutPdfName,
-                FileType = (int)FileTypes.Documents,
-                DateTimeCreated = DateTime.Now,
-                OrderId = Order.Id,
-                DocumentType = (int)DocumentTypes.PaymentInvoice,
-                PathToFile = fullOutPdfPath,
-                StampPosition = _stampPosition
-            };
-            var resultDb = await _infoSetFromDocumentToOrderService.AddInfoSetToOrderAsync(document);
-            if (resultDb == 0)
-             File.Delete(fullOutPdfPath); 
-            return resultDb != 0;
+            return memoryStream.ToArray();
         }
 
         private async Task FillPdf(Document pdf, PdfWriter writer)
         {
-            var ttf = Path.Combine(_mainPathToFiles + PathsToDirectories.Fonts, "Arial.TTF");
+            var ttf = Path.Combine(_mainPathToFiles,PathsToDirectories.FileContainer, PathsToDirectories.Fonts, "Arial.TTF");
             var baseFont = BaseFont.CreateFont(ttf, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
             _font = new Font(baseFont, 10, Font.NORMAL);
             _fontBold = new Font(baseFont, 10, Font.BOLD);
@@ -148,6 +124,8 @@ namespace DKCrm.Server.Services.DocumentServices
 
         private PdfPTable CreateBankTable()
         {
+            var bank = CreateRequest.OurSelectedBank;
+
             var table = new PdfPTable(2)
             {
                 TotalWidth = _totalWidth
@@ -158,8 +136,7 @@ namespace DKCrm.Server.Services.DocumentServices
             table.LockedWidth = true;
 
             var leftTop = new PdfPTable(1);
-            var leftTopTop = new PdfPCell(new Phrase(" .Название банка получателя Название банка получателя" +
-                                                     "Название банка получателя Название банка получателя", _font))
+            var leftTopTop = new PdfPCell(new Phrase($"{bank.Name}", _font))
             {
                 BorderWidthBottom = 0
             };
@@ -180,16 +157,16 @@ namespace DKCrm.Server.Services.DocumentServices
             var rightWidths = new float[] { 50, _totalWidth / 2 - 50 };
             rightTop.SetWidths(rightWidths);
             rightTop.AddCell(new Phrase("БИК", _font));
-            rightTop.AddCell(new Phrase(".бик", _font));
+            rightTop.AddCell(new Phrase($"{bank.BankAccount}", _font));
             rightTop.AddCell(new Phrase("Сч. №", _font));
-            rightTop.AddCell(new Phrase(".сч", _font));
+            rightTop.AddCell(new Phrase($"{bank.KorBeneficiaryAccount}", _font));
             var usingRightTop = new PdfPCell(rightTop);
             table.AddCell(usingRightTop);
 
             var leftBottom = new PdfPTable(2);
-            leftBottom.AddCell(new Phrase("ИНН 354635635", _font));
-            leftBottom.AddCell(new Phrase("КПП  356363633", _font));
-            var middleLeftBottom = new PdfPCell(new Phrase(".название комп.", _font))
+            leftBottom.AddCell(new Phrase($"ИНН {bank.Inn}", _font));
+            leftBottom.AddCell(new Phrase($"КПП {bank.Kpp}", _font));
+            var middleLeftBottom = new PdfPCell(new Phrase($"{OurCompany?.Name}", _font))
             {
                 Colspan = 2,
                 BorderWidthBottom = 0
@@ -208,7 +185,7 @@ namespace DKCrm.Server.Services.DocumentServices
             var rightBottom = new PdfPTable(2);
             rightBottom.SetWidths(rightWidths);
             rightBottom.AddCell(new Phrase("Сч. №", _font));
-            rightBottom.AddCell(new Phrase(".счч", _font));
+            rightBottom.AddCell(new Phrase($"{bank.BeneficiaryAccount}", _font));
             var usingRightBottom = new PdfPCell(rightBottom);
             table.AddCell(usingRightBottom);
             return table;
@@ -243,7 +220,7 @@ namespace DKCrm.Server.Services.DocumentServices
                 rowOne.AddCell(rowOneBottom);
                 var rowOneCellOne = new PdfPCell(rowOne) { Border = Rectangle.NO_BORDER };
                 table.AddCell(rowOneCellOne);
-                var rowOneCellTwo = new PdfPCell(new Phrase($"{ourCompany.Name},ИНН {ourCompany.FnsRequest?.INN},КПП ????, post???,{ourCompany.FnsRequest?.LegalAddress}  ", _fontBold))
+                var rowOneCellTwo = new PdfPCell(new Phrase($"{ourCompany.Name},ИНН {ourCompany.FnsRequest?.INN},КПП {ourCompany.FnsRequest?.KPP}, {ourCompany.FnsRequest?.PostalCode},{ourCompany.FnsRequest?.LegalAddress}  ", _fontBold))
                 { Border = Rectangle.NO_BORDER, BorderWidthTop = 1.5f, PaddingTop = 10 };
                 table.AddCell(rowOneCellTwo);
 
@@ -258,14 +235,14 @@ namespace DKCrm.Server.Services.DocumentServices
                 rowTwo.AddCell(rowTwoBottom);
                 var rowTwoCellOne = new PdfPCell(rowTwo) { Border = Rectangle.NO_BORDER };
                 table.AddCell(rowTwoCellOne);
-                var rowTwoCellTwo = new PdfPCell(new Phrase($"{buyerCompany.Name},ИНН {buyerCompany.FnsRequest?.INN},КПП ????, post???,{buyerCompany.FnsRequest?.LegalAddress}  ", _fontBold))
+                var rowTwoCellTwo = new PdfPCell(new Phrase($"{buyerCompany.Name},ИНН {buyerCompany.FnsRequest?.INN},КПП {buyerCompany.FnsRequest?.KPP}, {buyerCompany.FnsRequest?.PostalCode},{buyerCompany.FnsRequest?.LegalAddress}  ", _fontBold))
                 {
                     Border = Rectangle.NO_BORDER,
                 };
                 table.AddCell(rowTwoCellTwo);
 
                 var rowThreeCellOne = new PdfPCell(new Phrase("Основание:", _font)) { Border = Rectangle.NO_BORDER };
-                var rowThreeCellTwo = new PdfPCell(new PdfPCell(new Phrase($"Договор №???????????? от 00.00.0000", _fontBold))) { Border = Rectangle.NO_BORDER };
+                var rowThreeCellTwo = new PdfPCell(new PdfPCell(new Phrase($"Договор №{CreateRequest.ContractNumber} от {CreateRequest.ContractDate}", _fontBold))) { Border = Rectangle.NO_BORDER };
                 table.AddCell(rowThreeCellOne);
                 table.AddCell(rowThreeCellTwo);
             }
@@ -395,20 +372,20 @@ namespace DKCrm.Server.Services.DocumentServices
                     HorizontalAlignment = Element.ALIGN_RIGHT
                 };
                 table.AddCell(fullPriceToPaymentCellRight);
-
-                table.AddCell(new PdfPCell(new Phrase($"Всего наименований {number - 1}, на сумму {(decimal.Round(fullPrice, round)).ToString(CultureInfo.CurrentCulture).ToString(CultureInfo.CurrentCulture)} руб.", _font))
+                var priceWord =
+                    await _priceToString.ConvertNumber(decimal.Round(fullPrice, round), Order.TransactionCurrency ?? "RUB");
+                table.AddCell(new PdfPCell(new Phrase($"Всего наименований {number - 1}, на сумму {(decimal.Round(fullPrice, round)).ToString(CultureInfo.CurrentCulture).ToString(CultureInfo.CurrentCulture)} {Order.TransactionCurrency?.ToLower()}.", _font))
                 {
                     Colspan = 6,
                     Border = Rectangle.NO_BORDER,
                 });
-                var priceWord =
-                    await _priceToString.ConvertNumber(decimal.Round(fullPrice, round), Order.TransactionCurrency ?? "RUB");
+               
                 table.AddCell(new PdfPCell(new Phrase($"Прописью {priceWord}.", _fontBold))
                 {
                     Colspan = 6,
                     Border = Rectangle.NO_BORDER,
                 });
-                table.AddCell(new PdfPCell(new Phrase($"ИГК ?????{number}.", _font))
+                table.AddCell(new PdfPCell(new Phrase($"ИГК {CreateRequest.IGK}.", _font))
                 {
                     Colspan = 6,
                     Border = Rectangle.NO_BORDER,

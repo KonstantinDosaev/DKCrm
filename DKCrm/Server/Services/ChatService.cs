@@ -35,7 +35,8 @@ namespace DKCrm.Server.Services
         public async Task<IEnumerable<ChatGroup>> GetAllChatGroupsToUser(ClaimsPrincipal user)
         {
             var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
-            var chatGroups = await _context.ChatGroups.Where(w => w.ApplicationUsers!.Select(s => s.Id).Contains(userId))
+            var chatGroups = await _context.ChatGroups.Where(w =>w.IsDeleted == false &&
+                w.ApplicationUsers!.Select(s => s.Id).Contains(userId) )
                 .Include(i => i.ApplicationUsers)
                 .Include(i=>i.LogUsersVisitToChatList).ToListAsync();
             return chatGroups;

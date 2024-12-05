@@ -55,7 +55,7 @@
                                               RequiredError="Введите ключ API ЕГРНЮЛ!" Lines="1"/>
                          
                         </MudForm>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="m-auto w-100" OnClick="(() => _visibleStampsDialog = true)">Печати</MudButton>
+                       
                         <MudCardActions>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await UpdateInternalData())">Применить</MudButton>
                         </MudCardActions>
@@ -202,15 +202,7 @@
 
     </DialogContent>
 </MudDialog>
-@if (_visibleStampsDialog)
-{
-    <DKImageManagerDialog DirectoryType="@DirectoryType.PrivateFolder"
-                          FileType="FileTypes.Stamps"
-                          RelativePath="@PathsToDirectories.Stamps"
-                          LoadMoreCount="5" 
-                          TitleText="Печати"
-                          @bind-VisibleDialog="_visibleStampsDialog" />
-}
+
 
 @code {
     private int _activeIndex = 0;
@@ -224,7 +216,7 @@
     private CompanyType? CurrentCompanyType { get; set; }
     private bool _visibleCompanyTypeUpdateDialog;
     private bool _visibleCompanyTypeRemoveDialog;
-    private bool _visibleStampsDialog;
+ 
 
     private List<TagsCompany>? TagsCompanies { get; set; }
     private TagsCompany? CurrentTagCompany { get; set; }
@@ -234,6 +226,8 @@
 
     MudForm? _updateCompanyTypeForm;
     MudForm? _updateCompanyTagForm;
+
+
     protected override async Task OnInitializedAsync()
     {
         await LoadingData();

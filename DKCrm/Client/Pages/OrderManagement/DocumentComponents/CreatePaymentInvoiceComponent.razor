@@ -1,0 +1,115 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Models.OrderModels
+<h3>CreatePaymentInvoiceComponent</h3>
+@if (_createPaymentInvoiceRequest != null && OurCompany != null && BuyerCompany != null)
+{
+    <div class="d-flex flex-column w-100 my-2">
+        <MudForm @bind-IsValid="@_success">
+            @if (OurCompany.FnsRequest == null)
+            {
+                _success = false;
+                <MudText Color="Color.Error">Внесите данные ЕГР нашей компании!!!</MudText>
+            }
+            @if (BuyerCompany.FnsRequest == null)
+            {
+                _success = false;
+                <MudText Color="Color.Error">Внесите данные ЕГР компании контрагента!!!</MudText>
+            }
+            <MudSelect T="BankDetails"
+                       @bind-Value="_createPaymentInvoiceRequest.OurSelectedBank" Label="Банк нашей компании"
+                       Variant="Variant.Outlined" Dense="true" Style=""
+                       Class="mb-2"
+                       ToStringFunc="_converterBank" Immediate="true" Required="true">
+                @if (OurCompany?.BankDetails != null)
+                {
+                    foreach (var bank in OurCompany.BankDetails)
+                    {
+                        var desc="";
+                        if (bank.Description!=null)
+                        {
+                            desc = $" ({@bank.Description})";
+                        }
+                        <MudSelectItem T="BankDetails" Value="bank">
+                            @($"{bank.Name}{desc}")
+                        </MudSelectItem>
+                    }
+                }
+            </MudSelect>
+            <MudSelect T="BankDetails"
+                       @bind-Value="_createPaymentInvoiceRequest.BuyerSelectedBank" Label="Банк контрагента"
+                       Variant="Variant.Outlined" Dense="true" Style=""
+                       Class="mb-2"
+                       ToStringFunc="_converterBank" Immediate="true" Required="true">
+                @if (BuyerCompany?.BankDetails != null)
+                {
+                    foreach (var bank in BuyerCompany.BankDetails)
+                    {
+                        var desc="";
+                        if (bank.Description!=null)
+                        {
+                            desc = $" ({@bank.Description})";
+                        }
+                        <MudSelectItem T="BankDetails" Value="bank">
+                            @($"{bank.Name}{desc}")
+                        </MudSelectItem>
+                    }
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="@_createPaymentInvoiceRequest.ContractNumber"
+                          Label="Номер договора"
+                          Variant="Variant.Outlined"
+                          Class="mb-2" Required="true"/>
+            <MudTextField @bind-Value="@_createPaymentInvoiceRequest.IGK"
+                          Label="ИГК"
+                          Variant="Variant.Outlined"
+                          Class="mb-2" Required="true"/>
+            <MudDatePicker Label="Дата договора"
+                           Editable="true"
+                           Variant="Variant.Outlined"
+                           @bind-Date="_createPaymentInvoiceRequest.ContractDate"
+                           Class="mb-2" Required="true"/>
+            @* 
+    <div class="d-flex justify-content-end m-2">
+        <MudTooltip Text="@((OurCertifyingPerson == null || BuyerCertifyingPerson == null) ? "Не все поля выбраны" : "Далее")">
+            <MudButton Variant="Variant.Filled"  
+                       Color="Color.Primary" 
+                       Disabled="OurCertifyingPerson == null || BuyerCertifyingPerson == null"
+                       OnClick="InitNamingCondition">применить</MudButton>
+        </MudTooltip>
+    </div> *@
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary"
+                       Disabled="@(!_success)" Class="ml-auto"
+                       OnClick="Create"
+                       >Создать</MudButton>
+        </MudForm>
+    </div>
+}
+@code {
+    [Parameter] public Guid OrderId { get; set; }
+    [Parameter] public EventCallback RefreshParent{ get; set; }
+    CreatePaymentInvoiceRequest _createPaymentInvoiceRequest = new ();
+    Company? OurCompany { get; set; }
+    Company? BuyerCompany { get; set; }
+    ExportedOrder? CurrentOrder { get; set; }
+    public Guid CurrentOrderId { get; set; }
+
+    bool _success;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CurrentOrderId == OrderId)return;
+        CurrentOrderId = OrderId;
+        CurrentOrder = await ExportedOrderManager.GetDetailsAsync(CurrentOrderId);
+        OurCompany = await CompanyManager.GetDetailsAsync((Guid)CurrentOrder.OurCompanyId!);
+        BuyerCompany = await CompanyManager.GetDetailsAsync((Guid)CurrentOrder.CompanyBuyerId!);
+    }
+
+    private async Task Create()
+    {
+        _createPaymentInvoiceRequest.OrderId = OrderId;
+        var result = await DocumentManager.CreatePaymentInvoicePdfAsync(_createPaymentInvoiceRequest);
+        await RefreshParent.InvokeAsync();
+    }
+    Func<BankDetails, string> _converterBank = p => $"{p.Name}";
+}

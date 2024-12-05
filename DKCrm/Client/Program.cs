@@ -1,4 +1,5 @@
 using DKCrm.Client;
+using DKCrm.Client.Services.AccessRestrictionService;
 using DKCrm.Client.Services.Auth;
 using DKCrm.Client.Services.BrandService;
 using DKCrm.Client.Services.CategoryService;
@@ -10,7 +11,9 @@ using DKCrm.Client.Services.CurrencyService;
 using DKCrm.Client.Services.DocumentService;
 using DKCrm.Client.Services.FilesService;
 using DKCrm.Client.Services.FnsRequesting;
+using DKCrm.Client.Services.ImageService;
 using DKCrm.Client.Services.InternalCompanyDataService;
+using DKCrm.Client.Services.MailService;
 using DKCrm.Client.Services.OrderServices;
 using DKCrm.Client.Services.ProductServices;
 using DKCrm.Client.Services.UserService;
@@ -59,7 +62,10 @@ builder.Services.AddTransient<IConfirmationActionService, ConfirmationActionServ
 builder.Services.AddTransient<IDocumentManager, DocumentManager>();
 builder.Services.AddTransient<IFilesManager, FilesManager>();
 builder.Services.AddTransient<ICurrencyDictionaryManager, CurrencyDictionaryManager>();
-
+builder.Services.AddTransient<IImageManager, ImageManager>();
+builder.Services.AddTransient<IMailManager, MailManager>();
+builder.Services.AddTransient<ICompanyCommentsManager, CompanyCommentsManager>();
+builder.Services.AddTransient<IAccessRestrictionManager, AccessRestrictionManager>();
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

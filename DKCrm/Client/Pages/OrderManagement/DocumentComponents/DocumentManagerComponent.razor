@@ -15,7 +15,7 @@
         <MudButton EndIcon="@Icons.Material.Filled.Add" Color="Color.Success" Variant="Variant.Filled">Создать</MudButton>
     </ActivatorContent>
     <ChildContent>
-        <MudButton OnClick="CreateDocument">Счет на оплату</MudButton>
+        <MudButton OnClick="() => _visibleCreatePaymentInvoiceDialog = true">Счет на оплату</MudButton>
         <MudButton OnClick="(() => _visibleCreateSpecificationDialog = true)">Спецификацию</MudButton>
         <MudMenuItem>Armory</MudMenuItem>
     </ChildContent>
@@ -36,7 +36,7 @@ else
         <MudPaper Square="true" Style="background-color: rgba(0, 0, 0, 0.1);" class="d-flex flex-column my-2 p-2">
            
                 <MudPaper Elevation="2" class="d-flex align-items-center justify-content-between p-1 my-1">
-                    <MudLink Class="mr-4 flex-grow-1" OnClick="(() => OpenDocument(set))">@set.FileName</MudLink>
+                    <MudLink Class="mr-4 flex-grow-1" OnClick="(() => OpenDocument(set))">@set.Name</MudLink>
                     <div>
                         @* <MudTooltip Text="Откырть">
                             <MudButton Class="mr-2" 
@@ -49,13 +49,13 @@ else
                         </MudTooltip>
                         <MudTooltip Text="Скачать">
                             <MudIconButton Class="mr-2" Icon="@Icons.Material.Filled.Download"
-                                           OnClick="() => ClickToSave(set.Path, set.FileName)"
+                                           OnClick="() => ClickToSave(set.PathToFile, set.Name)"
                                            Variant="Variant.Outlined"/>
                         </MudTooltip>
                         <MudTooltip Text="Удалить">
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                            Color="Color.Error"
-                                           OnClick="() => RemoveDocument(new Guid())"
+                                           OnClick="() => RemoveDocument(set.Id)"
                                            Variant="Variant.Outlined"/>
                         </MudTooltip>
                     </div>
@@ -82,12 +82,34 @@ else
         <CreateOrderSpecificationComponent OrderId="OrderId" RefreshParent="EndCreateSpecification" />
     </DialogContent>
 </MudDialog>
+<MudDialog @bind-Visible="_visibleCreatePaymentInvoiceDialog" @ref="_createPaymentInvoiceDialog"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined"
+                       Size="Size.Small"
+                       OnClick="@(() => _createPaymentInvoiceDialog!.CloseAsync())"
+                       Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <CreatePaymentInvoiceComponent OrderId="OrderId" RefreshParent="EndCreatePaymentInvoice" />
+    </DialogContent>
+</MudDialog>
 @if (CurrentInfoSet != null && _visibleViewPdfDialog)
 {
     <DKPdfViewerDialog @bind-VisibleDialog="_visibleViewPdfDialog" 
-                       RelativePath="@CurrentInfoSet.Path" 
-                       DirectoryType="DirectoryType.PrivateFolder" 
-                       StamperIsOn="true"></DKPdfViewerDialog>
+                       RelativePath="@CurrentInfoSet.PathToFile" 
+                       DirectoryType="@DirectoryType.PrivateFolder"
+                       StamperIsOn="@true" OrderId="@OrderId"
+                       InfoSet="@CurrentInfoSet" StampedFileChanged="StampedFileDialogAction"></DKPdfViewerDialog>
+}
+@if (CurrentInfoSet != null && _visibleViewPdfToStampDialog)
+{
+    <DKPdfViewerDialog @bind-VisibleDialog="_visibleViewPdfToStampDialog"
+                       DirectoryType="@DirectoryType.PrivateFolder"
+                       StamperIsOn="@true" OrderId="@OrderId"
+                       InfoSet="@CurrentInfoSet" PdfDocument="StampedDocument" StampedFileChanged="StampedFileDialogAction"></DKPdfViewerDialog>
 }
 @* <MudDialog @bind-Visible="_visibleStampPdfDialog" Style="height: 100VH"
            Options="new DialogOptions() {DisableBackdropClick = true,FullWidth = true,FullScreen = true, NoHeader = true}"  ContentClass="myPdfViewerDialog">
@@ -116,48 +138,62 @@ else
 
 
     [Parameter] public Guid OrderId { get; set; }
-    IEnumerable<GetFileInfoResponse>? InfoSets { get; set; }
-    IEnumerable<GetFileInfoResponse>? GroupInfoSet { get; set; }
-    GetFileInfoResponse? CurrentInfoSet { get; set; }
+    IEnumerable<InfoSetFromDocumentToOrder>? InfoSets { get; set; }
+    IEnumerable<InfoSetFromDocumentToOrder>? GroupInfoSet { get; set; }
+    InfoSetFromDocumentToOrder? CurrentInfoSet { get; set; }
     private bool _visibleViewPdfDialog;
- 
-    
+    private bool _visibleViewPdfToStampDialog;
+    private Guid OurCompanyId { get; set; }
     MudDialog? _createSpecificationDialog;
+    MudDialog? _createPaymentInvoiceDialog;
     private bool _visibleCreateSpecificationDialog;
-
+    private bool _visibleCreatePaymentInvoiceDialog;
+    private byte[]? StampedDocument { get; set; }
 
     private async Task GetImage(Guid id)
     {
-        ImageToOrder = await FilesManager.GetFirstOrDefaultFileInBytArrayAsync( new GetFileRequest(){Path= $"{PathsToDirectories.OrdersImages}\\{id}", DirectoryType = DirectoryType.PrivateFolder});
-        var t = $"data:image;base64, @Convert.ToBase64String(item.Value)";
+        // ImageToOrder = await FilesManager.GetFirstOrDefaultFileInBytArrayAsync( 
+        //     new GetFileRequest(){Path= Path.Combine(PathsToDirectories.FileContainer, PathsToDirectories.OrdersImages, id.ToString()),
+        //         DirectoryType = DirectoryType.PrivateFolder});
+        // var t = $"data:image;base64, @Convert.ToBase64String(item.Value)";
     }
    
     protected override async Task OnInitializedAsync()
     {
         await GetImage(OrderId);
-        //imageBytes = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest() { Path = $"{PathsToDirectories.OrdersImages}\\{OrderId}\\1.jpg" });
+       
+
+    //imageBytes = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest() { Path = $"{PathsToDirectories.OrdersImages}\\{OrderId}\\1.jpg" });
         await LoadDocInfoList();
         
     }
 
     private async Task LoadDocInfoList()
     {
-        InfoSets = await FilesManager.GetAllFileInfoInDirectoryAsync(new GetFileRequest(){DirectoryType = DirectoryType.PrivateFolder,Path = Path.Combine(PathsToDirectories.OrdersDocuments,OrderId.ToString())});
+        InfoSets = await DocumentManager.GetAllInfoSetsForOrderAsync(OrderId);
         GroupInfoSet = InfoSets;
 
     }
     private async Task EndCreateSpecification()
     {
-        await _createSpecificationDialog!.CloseAsync();
+        //if (_createSpecificationDialog != null)
+           // await _createSpecificationDialog.CloseAsync();
+        _visibleCreateSpecificationDialog = false;
         await LoadDocInfoList();
     }
-    private async Task CreateDocument()
+    private async Task EndCreatePaymentInvoice()
     {
-        var result = await DocumentManager.CreatePaymentInvoicePdfAsync(OrderId);
+
+        _visibleCreatePaymentInvoiceDialog = false;
+        await LoadDocInfoList();
+    }
+    // private async Task CreateDocument()
+    // {
+    //     var result = await DocumentManager.CreatePaymentInvoicePdfAsync(OrderId);
        
 
-        await LoadDocInfoList();
-    }
+    //     await LoadDocInfoList();
+    // }
     private async Task RemoveDocument(Guid infoSetId)
     {
         if(!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление!!!"))
@@ -165,10 +201,16 @@ else
         await DocumentManager.RemoveDocumentAsync(infoSetId);
         await LoadDocInfoList();
     }
-    private void OpenDocument(GetFileInfoResponse response)
+    private void OpenDocument(InfoSetFromDocumentToOrder response)
     {
         CurrentInfoSet = response;
         _visibleViewPdfDialog = true;
+      
+    }
+    private void StampedFileDialogAction(byte[] stampedFile)
+    {
+        StampedDocument = stampedFile;
+        _visibleViewPdfToStampDialog = true;
       
     }
     private async Task ClickToSave(string path, string name)

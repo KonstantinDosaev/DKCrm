@@ -40,7 +40,10 @@
 @inject IApplicationOrderingManager ApplicationOrderingManager
 @inject IMissingProductConverter MissingProductConverterService
 @inject ICommentOrderManager CommentOrderManager
-
+@inject IImageManager ImageManager
+@inject IMailManager MailManager
+@inject ICompanyCommentsManager CompanyCommentsManager
+@inject IAccessRestrictionManager AccessRestrictionManager
 
 @using DKCrm.Client
 @using DKCrm.Client.Shared
@@ -55,12 +58,15 @@
 @using DKCrm.Client.Services.CategoryService
 @using DKCrm.Client.Services.ProductServices
 @using DKCrm.Client.Components
+@using DKCrm.Client.Services.AccessRestrictionService
 @using DKCrm.Client.Services.CompanyServices
 @using DKCrm.Client.Services.ConfirmationAction
 @using DKCrm.Client.Services.CurrencyService
 @using DKCrm.Client.Services.DocumentService
 @using DKCrm.Client.Services.FilesService
+@using DKCrm.Client.Services.ImageService
 @using DKCrm.Client.Services.InternalCompanyDataService
+@using DKCrm.Client.Services.MailService
 @using DKCrm.Client.Services.OrderServices
 
 

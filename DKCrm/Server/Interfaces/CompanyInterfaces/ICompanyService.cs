@@ -1,12 +1,13 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
+﻿using System.Security.Claims;
+using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Server.Interfaces.CompanyInterfaces
 {
     public interface ICompanyService
     {
-     Task<IEnumerable<Company>> GetAsync();
-     Task<IEnumerable<Company>> GetCompaniesByTypeAsync(string companyType);
-     Task<Company> GetAsync(Guid id);
+     Task<IEnumerable<Company>> GetAsync(ClaimsPrincipal user);
+     Task<IEnumerable<Company>> GetCompaniesByTypeAsync(string companyType,ClaimsPrincipal user);
+     Task<Company> GetAsync(Guid id, ClaimsPrincipal user);
      Task<Guid> PostAsync(Company company);
      Task<Guid> PutAsync(Company company);
      Task<int> PutRangeAsync(IEnumerable<Company> companies);
@@ -15,5 +16,6 @@ namespace DKCrm.Server.Interfaces.CompanyInterfaces
      Task<int> DeleteBankDetailsAsync(Guid id);
      Task<int> UpdateTagsCompanyAsync(TagsRequest tagRequest);
      Task<int> AddEmployeeAsync(Company company);
+     Task<Guid> AddBankDetails(BankDetails bankDetails);
     }
 }

@@ -26,6 +26,11 @@ namespace DKCrm.Server.Services.OrderServices
             _context.DocumentsToOrder.Add(infoSetFromDocumentToOrder);
             return await _context.SaveChangesAsync();
         }
+        public async Task<int> UpdateInfoSetToOrderAsync(InfoSetFromDocumentToOrder infoSetFromDocumentToOrder)
+        {
+            _context.Entry(infoSetFromDocumentToOrder).State = EntityState.Modified;
+            return await _context.SaveChangesAsync();
+        }
         public async Task<int> RemoveInfoSetFromOrderAsync(Guid id)
         {
             var item = await GetOneAsync(id);

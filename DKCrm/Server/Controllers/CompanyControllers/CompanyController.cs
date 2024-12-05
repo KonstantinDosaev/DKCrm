@@ -1,5 +1,6 @@
 ﻿using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Models.CompanyModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -7,6 +8,7 @@ namespace DKCrm.Server.Controllers.CompanyControllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class CompanyController : ControllerBase
     {
         private readonly ICompanyService _companyService;
@@ -18,26 +20,26 @@ namespace DKCrm.Server.Controllers.CompanyControllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _companyService.GetAsync());
+            return Ok(await _companyService.GetAsync(User));
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            return Ok(await _companyService.GetAsync(id));
+            return Ok(await _companyService.GetAsync(id, User));
         }
         [HttpGet("byType/{type}")]
         public async Task<IActionResult> GetCompaniesByType(string type)
         {
-            return Ok(await _companyService.GetCompaniesByTypeAsync(type));
+            return Ok(await _companyService.GetCompaniesByTypeAsync(type, User));
         }
-        [HttpPost]
+        [HttpPost("{company}")]
         public async Task<IActionResult> Post(Company company)
         {
             return Ok(await _companyService.PostAsync(company));
         }
 
-        [HttpPut]
+        [HttpPut("company/{company}")]
         public async Task<IActionResult> Put(Company company)
         {
             return Ok(await _companyService.PutAsync(company));
@@ -76,6 +78,11 @@ namespace DKCrm.Server.Controllers.CompanyControllers
         public async Task<IActionResult> AddEmployee(Company company)
         {
             return Ok(await _companyService.AddEmployeeAsync(company));
+        }
+        [HttpPost("addbank")]
+        public async Task<IActionResult> AddBank(BankDetails bankDetails)
+        {
+            return Ok(await _companyService.AddBankDetails(bankDetails));
         }
     }
 }

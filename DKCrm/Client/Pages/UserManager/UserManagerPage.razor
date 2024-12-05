@@ -87,10 +87,13 @@
 
 <MudDialog @bind-Visible="_visibleRoleDialog" Options="_roleDialogOptions">
     <DialogContent>
-        <MudSelect T="string" Label="US States"  @bind-Value="value" >
-            @foreach (var state in Roles ?? new List<IdentityRole>())
+        <MudSelect T="string" Label="US States" @bind-Value="value">
+            @if (Roles != null && Roles.Any())
             {
-                <MudSelectItem T="string" Value="@state.Name">@state.Name</MudSelectItem>
+                @foreach (var state in Roles)
+                {
+                    <MudSelectItem T="string" Value="@state.Name">@state.Name</MudSelectItem>
+                }
             }
         </MudSelect>
         <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="UpdateRoles" Color="Color.Tertiary" Style="margin-top: 1rem;">Изменить роль</MudButton>

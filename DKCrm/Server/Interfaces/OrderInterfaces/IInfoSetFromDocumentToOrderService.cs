@@ -8,5 +8,6 @@ namespace DKCrm.Server.Interfaces.OrderInterfaces
         Task<IEnumerable<InfoSetFromDocumentToOrder>> GetAllInfoSetsDocumentsToOrderAsync(Guid orderId);
         Task<int> AddInfoSetToOrderAsync(InfoSetFromDocumentToOrder infoSetFromDocumentToOrder);
         Task<int> RemoveInfoSetFromOrderAsync(Guid id);
+        Task<int> UpdateInfoSetToOrderAsync(InfoSetFromDocumentToOrder infoSetFromDocumentToOrder);
     }
 }

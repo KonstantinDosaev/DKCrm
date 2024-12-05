@@ -9,7 +9,7 @@ namespace DKCrm.Client.Services.DocumentService
         Task<IEnumerable<InfoSetFromDocumentToOrder>> GetOneInfoSetFromDocumentFileAsync(Guid infoSetId);
         Task<byte[]> GetDocumentBytArrayAsync(Guid infoSetId);
         Task<bool> RemoveDocumentAsync(Guid infoSetId);
-         Task<bool> CreatePaymentInvoicePdfAsync(Guid orderId);
+         Task<bool> CreatePaymentInvoicePdfAsync(CreatePaymentInvoiceRequest request);
          Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request);
          Task<byte[]> AddStampToPdfAsync(AddStampToPdfRequest request);
     }

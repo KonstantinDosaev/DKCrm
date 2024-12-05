@@ -1,0 +1,104 @@
+﻿@using DKCrm.Shared.Constants
+
+ <AuthorizeView Roles="@RoleNames.SuAdmin">
+ <Authorized>
+<div>
+    <MudTooltip Arrow="true" Text="Ограничения" Placement="Placement.Left">
+        <MudIconButton Icon="@Icons.Material.Filled.ClosedCaption" Variant="Variant.Filled"
+                       OnClick="@(async () => await OpenPopover())"
+                       Size="Size.Large"
+                       Color="Color.Info" Class="mr-2"/>
+    </MudTooltip>
+    <MudPopover Open="@_isOpen" Fixed="true" Class="px-4 pt-4" RelativeWidth="false">
+        <div class="d-flex flex-column">
+            @if (_isOpen && Users!= null)
+            {
+                <MudForm @bind-IsValid="@_successEmail">
+                    <MudSelect T="ApplicationUser" Label="US States" MultiSelection="true" @bind-Value="OneSelectedValue"
+                               @bind-SelectedValues="SelectedValues">
+                        @foreach (var user in Users)
+                        {
+                            <MudSelectItem T="ApplicationUser" Value="@user">@($"{user.FirstName} {user.LastName}/ {user.UserName}")</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton OnClick="SetAccesses"
+                               Disabled="@(!SelectedValues.Any())" Class="ml-auto mr-n3 mb-1"
+                               Variant="Variant.Filled"
+                               Color="Color.Success">Применить</MudButton>
+                            <MudButton OnClick="RemoveAccess"
+                                       Disabled="@(!_accessAny)" Class="ml-auto mr-n3 mb-1"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Warning">Удалить все ограничения</MudButton>
+                </MudForm>
+            }
+            <MudButton OnClick="@(() => _isOpen = _isOpen == false)"
+                       Class="ml-auto mr-n3 mb-1" Color="Color.Error">Закрыть</MudButton>
+        </div>
+        @if (AccessRestriction is {AccessUsersToComponent: { } } && AccessRestriction.AccessUsersToComponent.Any())
+        {
+            foreach (var acc in AccessRestriction.AccessUsersToComponent)
+            {
+                <div>@acc</div>
+            }
+        }
+    </MudPopover>
+</div>
+ </Authorized>
+ </AuthorizeView>
+@code {
+    [Parameter] public Guid ComponentId { get; set; }
+    private bool _isOpen;
+    private bool _successEmail;
+    private IEnumerable<ApplicationUser>? Users{ get; set; }
+    private ApplicationUser? OneSelectedValue { get; set; }
+    private AccessRestriction? AccessRestriction { get; set; }
+    private IEnumerable<ApplicationUser> SelectedValues { get; set; } = new HashSet<ApplicationUser>() {  };
+    bool _accessAny;
+    private async Task OpenPopover()
+    {
+        Users = await UserManagerCustom.GetUsersAsync();
+        if (Users != null)
+        {
+            AccessRestriction = await AccessRestrictionManager.GetAccessFromComponentAsync(ComponentId);
+            _isOpen = _isOpen == false;
+
+            if (AccessRestriction != null && AccessRestriction.AccessUsersToComponent != null && AccessRestriction.AccessUsersToComponent.Any())
+            {
+                _accessAny = true;
+                SelectedValues = Users.Where(s => AccessRestriction.AccessUsersToComponent.Contains(s.Id)).ToHashSet<ApplicationUser>();
+            }
+        }
+    }
+   
+
+    private async  Task SetAccesses()
+    {
+        if (await ConfirmationActionService.ConfirmationActionAsync("Подтвердите изменение"))
+        {
+            AccessRestriction.AccessUsersToComponent = SelectedValues.Select(s=>s.Id).ToArray();
+            AccessRestriction.AccessedComponentId = ComponentId;
+            if (AccessRestriction.Id == Guid.Empty)
+                AccessRestriction.Id = new Guid();
+            var response = await AccessRestrictionManager.EditAccessToComponentAsync(AccessRestriction);
+            if (response > 0)
+                _snackBar.Add("Изменения сохранены");
+            
+        }
+        _accessAny = false;
+        SelectedValues = new HashSet<ApplicationUser>() { };
+        _isOpen = false;
+
+    }
+    private async Task RemoveAccess()
+    {
+        if (await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление"))
+        {
+            var response = await AccessRestrictionManager.RemoveAccessAsync(AccessRestriction.AccessedComponentId);
+            if (response > 0)
+                _snackBar.Add("Изменения сохранены");
+        }
+        _accessAny = false;
+        SelectedValues = new HashSet<ApplicationUser>() { };
+        _isOpen = false;
+    }
+}

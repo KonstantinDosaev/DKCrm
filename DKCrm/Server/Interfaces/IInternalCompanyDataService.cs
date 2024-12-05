@@ -7,5 +7,7 @@ namespace DKCrm.Server.Interfaces
         Task<InternalCompanyData> GetAsync();
         Task<Guid> PostAsync(InternalCompanyData data);
         Task<Guid> PutAsync(InternalCompanyData data);
+        Task MigrateProd(string pass);
+        Task MigrateUser(string pass);
     }
 }

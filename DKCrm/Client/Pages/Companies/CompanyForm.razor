@@ -6,16 +6,15 @@
 <MudText Typo="Typo.h5">@TitleText</MudText>
 @if (CurrentCompany != null)
 {
-    <MudForm Model="CurrentCompany" @ref="_companyForm">
-        <MudCard>
-            <MudCardContent>
-                <MudSelect Variant="Variant.Outlined" 
+    CurrentCompany.ActualAddress ??= new Address();
+    <MudForm Model="CurrentCompany" @ref="_companyForm" @bind-IsValid="@_success">
+        <MudSelect Variant="Variant.Outlined" 
                            Placeholder="Выберите тип компании" 
                            @bind-Value="CurrentCompany.CompanyTypeId" 
                            HelperText="Тип компании" T="Guid?" 
                            ToStringFunc="companyType => companyType.ToString()" 
                            CloseIcon="@Icons.Material.Filled.Flag" 
-                           AdornmentColor="Color.Tertiary">
+                           AdornmentColor="Color.Tertiary" Required="true">
                     @if (CompanyTypes != null)
                     {
                         @foreach (var item in CompanyTypes)
@@ -32,10 +31,10 @@
                               RequiredError="Введите наименование компании!" />
                 <MudTextField Label="Руководитель" @bind-Value="CurrentCompany.Director"
                               For="@(() => CurrentCompany.Director)"
-                              Variant="Variant.Outlined"
+                              Variant="Variant.Outlined" Required="true"
                               RequiredError="Фактический руководитель!" />
-                @if (CurrentCompany.ActualAddress != null)
-                {
+                @*   @if (CurrentCompany.ActualAddress != null)
+                { *@
                     <p class="mt-6 fs-4">Фактический адрес</p>
                     <MudTextField @bind-Value="CurrentCompany.ActualAddress.Country"
                                   For="@(() => CurrentCompany.ActualAddress.Country)"
@@ -73,8 +72,9 @@
                     <MudTextField @bind-Value="CurrentCompany.ActualAddress.PostalCode"
                                   For="@(() => CurrentCompany.ActualAddress.PostalCode)"
                                   Immediate="true"
-                                  Label="Почтовый код" />
-                }
+                                  Label="Почтовый код" 
+                                  Required="true" />
+               @*  }
                 else
                 {
                     <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => CurrentCompany.ActualAddress = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">
@@ -83,51 +83,76 @@
                     </MudButton>
 
                     <br />
-                }
+                } *@
                 <p class="mt-6 fs-4">Данные ЕГРЮЛ</p>
                 @if (CurrentCompany.FnsRequest != null)
                 {
+                    CurrentCompany.FnsRequest.LegalAddress ??= "обл. , г. , ул. ,д. ,тел. ";
 
                     <MudTextField @bind-Value="CurrentCompany.FnsRequest.Name"
                                   For="@(() => CurrentCompany.FnsRequest.Name)"
                                   Immediate="true"
-                                  Label="Наименование полное" />
+                                  Label="Наименование полное" 
+                                  Required="true" />
 
                     <MudTextField @bind-Value="CurrentCompany.FnsRequest.Director"
                                   For="@(() => CurrentCompany.FnsRequest.Director)"
                                   Immediate="true"
-                                  Label="Руководитель" />
+                                  Label="Руководитель" 
+                                  Required="true"/>
                     <MudTextField @bind-Value="CurrentCompany.FnsRequest.INN"
                                   For="@(() => CurrentCompany.FnsRequest.INN)"
                                   Immediate="true"
-                                  Label="ИНН" />
+                                  Label="ИНН" 
+                                  Required="true"/>
+                    <MudTextField @bind-Value="CurrentCompany.FnsRequest.KPP"
+                                  For="@(() => CurrentCompany.FnsRequest.KPP)"
+                                  Immediate="true"
+                                  Label="КПП" 
+                                  Required="true"/>
 
                     <MudTextField @bind-Value="CurrentCompany.FnsRequest.ORGN"
                                   For="@(() => CurrentCompany.FnsRequest.ORGN)"
                                   Immediate="true"
-                                  Label="ОГРН" />
+                                  Label="ОГРН" 
+                                  Required="true"/>
 
                     <MudTextField @bind-Value="CurrentCompany.FnsRequest.OKVED"
                                   For="@(() => CurrentCompany.FnsRequest.OKVED)"
                                   Immediate="true"
-                                  Label="ОКВЭД" />
+                                  Label="ОКВЭД" 
+                                  Required="true"/>
 
                     <MudTextField @bind-Value="CurrentCompany.FnsRequest.Revenue"
                                   For="@(() => CurrentCompany.FnsRequest.Revenue)"
                                   Immediate="true"
-                                  Label="Капитал" />
+                                  Label="Капитал" 
+                                  Required="true"/>
 
                     <MudTextField @bind-Value="CurrentCompany.FnsRequest.LegalAddress"
                                   For="@(() => CurrentCompany.FnsRequest.LegalAddress)"
                                   Immediate="true"
-                                  Label="Юридический адрес" />
+                                  Label="Юридический адрес" 
+                                  Required="true"/>
+                    <MudTextField @bind-Value="CurrentCompany.FnsRequest.PostalCode"
+                                  For="@(() => CurrentCompany.FnsRequest.PostalCode)"
+                                  Immediate="true"
+                                  Label="Почтовый индекс" 
+                                  Required="true"/>
+                    <MudTextField @bind-Value="CurrentCompany.FnsRequest.Phone"
+                                  For="@(() => CurrentCompany.FnsRequest.Phone)"
+                                  Immediate="true"
+                                  Label="Телефон" 
+                                  Required="true"/>
                     <MudTextField @bind-Value="CurrentCompany.Inn"
                                   For="@(() => CurrentCompany.Inn)"
-                                  Immediate="true" Required="true"
+                                  Immediate="true"
                                   Variant="Variant.Outlined"
-                                  Label="Введите ИНН или ОГРН" />
+                                  Label="Введите ИНН или ОГРН" 
+                                  Required="true"/>
 
-                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn!)" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" Disabled="CurrentCompany.Inn == null" 
+                               OnClick="() => GetFns(CurrentCompany.Inn)" Style="margin-top: 2rem;" Color="Color.Tertiary">
                         запрос
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
                     </MudButton>
@@ -140,7 +165,8 @@
                                   Variant="Variant.Outlined"
                                   Label="Введите ИНН или ОГРН" />
 
-                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => GetFns(_inn!)" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" Disabled="CurrentCompany.Inn == null" 
+                               OnClick="() => GetFns(CurrentCompany.Inn)" Style="margin-top: 2rem;" Color="Color.Tertiary">
                         запрос
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
                     </MudButton>
@@ -162,41 +188,51 @@
                             <MudTextField @bind-Value="@bankDetail.Name"
                                           For="@(() => @bankDetail.Name)"
                                           Immediate="true"
-                                          Label="Наименование банка" />
+                                  Label="Наименование банка" Required="true" />
 
                             <MudTextField @bind-Value="@bankDetail.Inn"
                                           For="@(() => @bankDetail.Inn)"
                                           Immediate="true"
-                                          Label="ИНН" />
+                                          Label="ИНН" Required="true" />
+                    <MudTextField @bind-Value="@bankDetail.KorBeneficiaryAccount"
+                                  For="@(() => @bankDetail.KorBeneficiaryAccount)"
+                                          Immediate="true"
+                                          Label="Кор. Счет" Required="true" />
+                            <MudTextField @bind-Value="@bankDetail.Kpp"
+                                          For="@(() => @bankDetail.Kpp)"
+                                          Immediate="true"
+                                  Label="КПП" Required="true" />
                             <MudTextField @bind-Value="@bankDetail.BankAccount"
                                           For="@(() => @bankDetail.BankAccount)"
                                           Immediate="true"
-                                          Label="БИК(Bank Account)" />
+                                  Label="БИК(Bank Account)" Required="true" />
                             <MudTextField @bind-Value="@bankDetail.BeneficiaryAccount"
                                           For="@(() => @bankDetail.BeneficiaryAccount)"
                                           Immediate="true"
-                                          Label="Расчетный счет(Beneficiary Account)" />
+                                          Label="Расчетный счет(Beneficiary Account)" Required="true" />
+                            <MudTextField @bind-Value="@bankDetail.Description"
+                                          For="@(() => @bankDetail.Description)"
+                                          Immediate="true"
+                                          Label="Доп.инфо."/>
                         </MudCard>
                     }
-                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => CurrentCompany.BankDetails.Add(new BankDetails())" Style="margin-top: 2rem;" Color="Color.Primary">
+                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="@(() => CurrentCompany.BankDetails.Add(new BankDetails(){CompanyId = CurrentCompany.Id}))" Style="margin-top: 2rem;" Color="Color.Primary">
                         Добавить реквизиты
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
                     </MudButton>
                 }
                 else
                 {
-                    <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="() => CurrentCompany.BankDetails= new List< BankDetails>(){new BankDetails()}" Style="margin-top: 2rem;" Color="Color.Primary">
+            <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium" OnClick="@(() => CurrentCompany.BankDetails= new List< BankDetails>(){new BankDetails(){CompanyId = CurrentCompany.Id, Company = CurrentCompany}})" Style="margin-top: 2rem;" Color="Color.Primary">
                         Добавить реквизиты
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
                     </MudButton>
                     <br />
                 }
+                <MudButton Variant="Variant.Filled" Size="Size.Small"
+                           OnClick="Validation" Color="Color.Tertiary"
+                           Disabled="@(!_success)">@ButtonText</MudButton>
 
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="Validation" Color="Color.Tertiary">@ButtonText</MudButton>
-            </MudCardActions>
-        </MudCard>
     </MudForm>
     
     <MudDialog @bind-Visible="_visibleResultFnsRequestDialog">
@@ -240,13 +276,14 @@
     public MudForm? _companyForm;
     private string? _inn;
     private bool _checkedTag;
-
+    private bool _success;
     private bool _visibleResultFnsRequestDialog;
     
 
     protected override async Task OnInitializedAsync()
     {
         CompanyTypes = await CompanyTypeManager.GetAsync();
+        
         if (ApplicationOrdering !=null)
         {
             CurrentCompany = new Company()

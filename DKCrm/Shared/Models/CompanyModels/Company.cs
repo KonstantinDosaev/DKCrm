@@ -15,6 +15,10 @@ namespace DKCrm.Shared.Models.CompanyModels
         public string? Director { get; set; }
         [MaxLength(50)]
         public string? Inn { get; set; }
+        [MaxLength(50)]
+        public string? Kpp { get; set; } = null!;
+        [MaxLength(50)]
+        public string? Kbk { get; set; } = null!;
         public virtual Address? ActualAddress { get; set; }
         public  Guid? ActualAddressId { get; set; }
         public virtual CompanyType? CompanyType { get; set; }
@@ -24,6 +28,7 @@ namespace DKCrm.Shared.Models.CompanyModels
         public virtual ICollection<Employee>? Employees { get; set; }
         public virtual ICollection<BankDetails>? BankDetails { get; set; }
         public virtual ICollection<TagsCompany>? TagsCompanies { get; set; }
+        public virtual ICollection<CompanyComment>? Comments { get; set; }
 
         //[InverseProperty(nameof(ExportedOrder.OurCompany))] public virtual ICollection<ExportedOrder>? ExportedOrdersOurCompany { get; set; }
         //[InverseProperty(nameof(ExportedOrder.CompanyBuyer))] public virtual ICollection<ExportedOrder>? ExportedOrdersBuyerCompany { get; set; }

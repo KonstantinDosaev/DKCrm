@@ -1,7 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using DKCrm.Shared.Constants
 @using DKCrm.Shared.Requests.FileService
+@using DKCrm.Shared.Requests.ImageService
 @using MudBlazor.Services
+@using DKCrm.Client.Components
+@using MudBlazor
 @implements IBrowserViewportObserver
 @implements IAsyncDisposable
 @inject IBrowserViewportService BrowserViewportService
@@ -43,7 +46,7 @@
                 </div>
                 <div style="overflow: auto; max-height: 90VH;">
                     <div class="d-flex flex-wrap justify-content-around mb-2" style="">
-                        @foreach (var file in Images.FileDictionary)
+                        @foreach (var file in Images.FileDictionaryInfIdBytArr)
                         {
                             <div class="dcImageManager__container">
                                 @if (_loadFullScreen && _currImage == file.Key)
@@ -56,11 +59,11 @@
                                     <div class="dcImageManager__buttons">
                                         @if (MultipleSelect && SelectImageNameList != null)
                                         {
-                                            toggle = SelectImageNameList.Contains(file.Key);
+                                            toggle = SelectImageNameList.Contains(new Guid(file.Key));
                                         }
                                         else
                                         {
-                                            toggle = SelectImageName == file.Key;
+                                            toggle = SelectImageName == new Guid(file.Key);
                                         }
                                         <MudToggleIconButton Toggled="@toggle" Variant="Variant.Filled"
                                                              Icon="@Icons.Material.Filled.CheckBoxOutlineBlank" Color="@Color.Info"
@@ -85,7 +88,7 @@
                     {
                         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
                     }
-                    @if (Images.FileDictionary.Count < Images.FileInDirectoryCount)
+                    @if (Images.FileDictionaryInfIdBytArr.Count < Images.FileInDirectoryCount)
                     {
                         <MudButton Color="Color.Primary"
                                    Variant="Variant.Filled"
@@ -118,17 +121,20 @@
     [Parameter] public string TitleText { get; set; } = null!;
     [Parameter] public bool IsSelected { get; set; }
     [Parameter] public bool MultipleSelect { get; set; }
-    [Parameter] public EventCallback<string> SelectedImageCallback { get; set; }
-    [Parameter] public EventCallback<List<string>> SelectedImageListCallback { get; set; }
-    [Parameter] public string? SelectImageName { get; set; }
-    private List<string>? SelectImageNameList { get; set; }
+    [Parameter] public EventCallback<Guid> SelectedImageCallback { get; set; }
+    [Parameter] public EventCallback<List<Guid>> SelectedImageListCallback { get; set; }
+    [Parameter] public Guid? SelectImageName { get; set; }
+    [Parameter] public ImageTypes ImageType { get; set; }
+    [Parameter] public bool IsPreviewImage { get; set; }
+    [Parameter] public Guid OwnerId { get; set; }
+    private List<Guid>? SelectImageNameList { get; set; }
     private MudDialog _dialog = null!;
 
     
     private string? _currImage;
     private byte[]? _currentImage;
     private bool _visibleFullScreenImageDialog;
-    private GetManyFilesResponse? Images { get; set; }
+    private GetManyImagesResponse? Images { get; set; }
     private int _contToWidth = 0;
     
     private int _windowWidth = 0;
@@ -164,35 +170,41 @@
         {
             if (SelectImageNameList != null && SelectImageNameList.Any()) await SelectedImageListCallback.InvokeAsync(SelectImageNameList);
         }
-        else if (SelectImageName != null) await SelectedImageCallback.InvokeAsync(SelectImageName);
+        else if (SelectImageName != null) await SelectedImageCallback.InvokeAsync((Guid)SelectImageName);
        await CloseClick();
     }
     private async Task InitImagePreviewListAsync()
     {
-        Images = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
+        Images = await ImageManager.GetManyImageInBytArrayAsync(new GetManyImagesRequest()
             {
                 DirectoryType = DirectoryType,
                 FileCountSkip = 0,
                 FileCountTake = _contToWidth,
-                PathToDirectory = Path.Combine(RelativePath, PathsToDirectories.Preview)
+                IsFullPath = false,
+                ImageType = ImageType,
+                IsPreviewImage = IsPreviewImage,
+                OwnerId = OwnerId
             });
     }
     private async Task LoadMore()
     {
-        if (Images != null && Images.FileDictionary.Count < Images.FileInDirectoryCount)
+        if (Images != null && Images.FileDictionaryInfIdBytArr.Count < Images.FileInDirectoryCount)
         {
             _loading = true;
-            var loadedList = await FilesManager.GetManyFileInBytArrayAsync(new GetManyFileRequest()
-                {
-                    DirectoryType = DirectoryType,
-                    FileCountSkip = Images.FileDictionary.Count,
-                    FileCountTake = LoadMoreCount,
-                    PathToDirectory = Path.Combine(RelativePath, PathsToDirectories.Preview)
-                });
-
-            foreach (var item in loadedList.FileDictionary)
+            var loadedList = await ImageManager.GetManyImageInBytArrayAsync(new GetManyImagesRequest()
             {
-                Images.FileDictionary.Add(item.Key, item.Value);
+                DirectoryType = DirectoryType,
+                FileCountSkip = Images.FileDictionaryInfIdBytArr.Count,
+                FileCountTake = LoadMoreCount,
+                IsFullPath = false, 
+                ImageType = ImageType, 
+                IsPreviewImage = IsPreviewImage, 
+                OwnerId = OwnerId
+            });
+          
+            foreach (var item in loadedList.FileDictionaryInfIdBytArr)
+            {
+                Images.FileDictionaryInfIdBytArr.Add(item.Key, item.Value);
             }
             _loading = false;
         }
@@ -203,11 +215,7 @@
         {
             _currImage = imageKey;
             _loadFullScreen = true;
-            _currentImage = await FilesManager.GetFileInBytArrayAsync(new GetFileRequest()
-                {
-                    DirectoryType = DirectoryType,
-                    Path = Path.Combine(RelativePath, imageKey)
-                });
+            _currentImage = await ImageManager.GetOneImageInByteArrAsync(new Guid(imageKey));
             _loadFullScreen = false;
         }
       
@@ -217,17 +225,17 @@
    
     public void SelectImage(string imageKey)
     {
-       
+        var imageKeyG = new Guid(imageKey);
         if (MultipleSelect)
         {
-            SelectImageNameList ??= new List<string>();
-            if (SelectImageNameList.Contains(imageKey))
-                SelectImageNameList.Remove(imageKey);
+            SelectImageNameList ??= new List<Guid>();
+            if (SelectImageNameList.Contains(imageKeyG))
+                SelectImageNameList.Remove(imageKeyG);
             else
-                SelectImageNameList.Add(imageKey);
+                SelectImageNameList.Add(imageKeyG);
         }
         else
-            SelectImageName = SelectImageName == imageKey ? null : imageKey;
+            SelectImageName = SelectImageName == imageKeyG ? null : imageKeyG;
         
 
     // await SelectedImageCallback.InvokeAsync(imageKey);

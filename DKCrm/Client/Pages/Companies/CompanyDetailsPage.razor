@@ -1,16 +1,30 @@
 ﻿@page "/companies/{CompanyId:guid}"
 @using DKCrm.Shared.Models.CompanyModels
+@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Constants
 
 
 @if (Company != null)
 {
     <div class="d-flex justify-content-between m-4">
         <MudText  Typo="Typo.h4">@Company.Name.ToUpper()</MudText>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" 
-                   OnClick="OpenUpdateCompanyDialog" 
-                   Style="margin-left: 1rem;" Color="Color.Tertiary">Изменить
-            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
-        </MudButton>
+        <div class="d-flex">
+            <MudIconButton Size="@Size.Medium"
+                           OnClick="() => _visibleCommentDialog = !_visibleCommentDialog"
+                           Color="Color.Default"
+                           Icon="@Icons.Material.Sharp.Comment"
+                           Class="pa-0 ml-2"/>
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       OnClick="OpenUpdateCompanyDialog"
+                       Style="margin-left: 1rem;" Color="Color.Tertiary">Изменить
+                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       Color="Color.Primary" Class="ml-1 mr-1"
+                       OnClick="(() => VisibleStampDialogToggle(true))">Печати</MudButton>
+            
+            <AccessRestrictionEditComponent ComponentId="@CompanyId"/>
+        </div>
     </div>
     <div class="d-flex ">
     <div class="flex-grow-1 mr-4">
@@ -137,10 +151,64 @@
                     }
                 }
             </MudPaper>
-            @if (Company.BankDetails != null && Company.BankDetails.Any())
+
+         @*    @if (CurrBankDetails != null)
             {
-                <MudPaper Elevation="12" Class="p-4 m-1">
+                
+                    <MudCard Outlined="true" Class="m-1 pa-3 bg-gradient">
+                        <MudIconButton Icon="@Icons.Material.Sharp.DeleteOutline" Color="Color.Warning" OnClick="() =>RemoveBankDetail(CurrBankDetails) "></MudIconButton>
+                        <MudTextField @bind-Value="@CurrBankDetails.Name"
+                                      For="@(() => @CurrBankDetails.Name)"
+                                      Immediate="true"
+                                      Label="Наименование банка" Required="true" />
+
+                        <MudTextField @bind-Value="@CurrBankDetails.Inn"
+                                  For="@(() => @CurrBankDetails.Inn)"
+                                      Immediate="true"
+                                      Label="ИНН" Required="true" />
+                        <MudTextField @bind-Value="@CurrBankDetails.Kpp"
+                                      For="@(() => @CurrBankDetails.Kpp)"
+                                      Immediate="true"
+                                      Label="КПП" Required="true" />
+                        <MudTextField @bind-Value="@CurrBankDetails.KorBeneficiaryAccount"
+                                      For="@(() => @CurrBankDetails.KorBeneficiaryAccount)"
+                                      Immediate="true"
+                                      Label="Кор. Счет" Required="true" />
+                        <MudTextField @bind-Value="@CurrBankDetails.BankAccount"
+                                      For="@(() => @CurrBankDetails.BankAccount)"
+                                      Immediate="true"
+                                      Label="БИК(Bank Account)" Required="true" />
+                        <MudTextField @bind-Value="@CurrBankDetails.BeneficiaryAccount"
+                                      For="@(() => @CurrBankDetails.BeneficiaryAccount)"
+                                      Immediate="true"
+                                      Label="Расчетный счет(Beneficiary Account)" Required="true" />
+                        <MudTextField @bind-Value="@CurrBankDetails.Description"
+                                  For="@(() => @CurrBankDetails.Description)"
+                                      Immediate="true"
+                                      Label="Доп.инфо." />
+                    </MudCard>
+                
+                <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium"
+                           OnClick="@(()=>AddBankDetail(CurrBankDetails))"
+                           Style="margin-top: 2rem;" Color="Color.Primary">
+                    Cохранить
+                    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Class="m-1" Variant="Variant.Filled" Size="Size.Medium"
+                           OnClick="@(()=> CurrBankDetails = new BankDetails(){CompanyId = Company.Id})"
+                           Style="margin-top: 2rem;" Color="Color.Primary">
+                    Добавить реквизиты
+                    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+                </MudButton>
+                <br />
+            } *@
+            <MudPaper Elevation="12" Class="p-4 m-1">
                     <p class="fs-3 mb-2 ">Банковские реквизиты</p>
+                @if (Company.BankDetails != null && Company.BankDetails.Any())
+                {
                     @foreach (var bankDetailsItem in Company.BankDetails)
                     {
                         <MudCard Outlined="true" Class="m-3 pa-3">
@@ -165,8 +233,9 @@
                             </MudText>
                         </MudCard>
                     }
+                }
                 </MudPaper>
-            }
+            
             <MudButton Variant="Variant.Filled" Size="Size.Small" 
                        OnClick="()=>_visibleRemoveCompanyDialog=true" 
                        Style="margin-top: 2rem;" Color="Color.Warning">Удалить компанию
@@ -276,7 +345,27 @@
         </div>
     </DialogContent>
 </MudDialog>
-
+@if (_visibleStampsDialog)
+{
+    <DKImageManagerDialog DirectoryType="@DirectoryType.PrivateFolder"
+                          FileType="FileTypes.Stamps"
+                          RelativePath="@(Path.Combine(PathsToDirectories.FileContainer,PathsToDirectories.Stamps))"
+                          LoadMoreCount="5"
+                          TitleText="Печати"
+                          @bind-VisibleDialog="_visibleStampsDialog"
+                          ImageType="@ImageTypes.Stamp"
+                          IsPreviewImage="true"
+                          OwnerId="@CompanyId" />
+}
+@if (_visibleCommentDialog)
+{
+    <MudDialog @bind-Visible="_visibleCommentDialog" Style="max-width: 700px;padding: 0"
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+        <DialogContent>
+            <CompanyCommentsComponent CurrentCompanyId="@CompanyId" />
+        </DialogContent>
+    </MudDialog>
+}
 @code {
 
     [Parameter]
@@ -296,11 +385,18 @@
     private bool _visibleRemoveCompanyDialog;
     private bool _visibleEditCompanyDialog;
     public bool Checked;
+    private bool _visibleStampsDialog;
+    private bool _visibleCommentDialog;
     EmployeeForm? _empForm;
+    BankDetails? CurrBankDetails { get; set; }
     protected override async Task OnInitializedAsync()
     {
         await GetCompany();
 
+    }
+    void VisibleStampDialogToggle(bool toggle)
+    {
+        _visibleStampsDialog = toggle;
     }
     private async Task GetCompany()
     {
@@ -418,6 +514,23 @@
         {
             _navigationManager.NavigateTo("/companies");
         }
+    }
+    private async void AddBankDetail(BankDetails bankDetails)
+    {
+        if (await CompanyManager.AddBankAsync(bankDetails))
+        {
+            _snackBar.Add("Реквизиты Добавлены");
+        }
+        
+    }
+    private async void RemoveBankDetail(BankDetails bankDetails)
+    {
+        Company!.BankDetails!.Remove(bankDetails);
+        if (await CompanyManager.RemoveBankDetailsAsync(bankDetails.Id))
+        {
+            _snackBar.Add("Реквизиты удалены");
+        }
+        
     }
 
 }

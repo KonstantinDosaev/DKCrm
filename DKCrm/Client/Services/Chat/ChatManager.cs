@@ -49,7 +49,7 @@ namespace DKCrm.Client.Services.Chat
         }
         public async Task<int> RemoveChatGroupAsync(Guid chatGroupId)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/Chat/remove-group", chatGroupId);
+            var response = await _httpClient.PostAsJsonAsync($"api/Chat/remove-group/{chatGroupId}", chatGroupId);
             return await response.Content.ReadFromJsonAsync<int>();
         }
         public async Task<int> AddUsersToChatAsync(IEnumerable<LogUsersVisitToChat> usersToChat)

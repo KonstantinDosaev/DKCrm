@@ -133,9 +133,10 @@ namespace DKCrm.Client.Pages
             });
             if (createdGroup != Guid.Empty)
                 await AddUsersToChatAsync(new List<string>{userId},createdGroup);
-            
+           
             CurrentChatId = createdGroup;
-            _navigationManager.NavigateTo($"chat/{CurrentChatId}");
+            // _navigationManager.NavigateTo($"chat/{CurrentChatId}");
+            await GetChatGroupsAsync();
             _messages.Clear();
             _messages = await _chatManager.GetConversationAsync(CurrentChatId);
         }
@@ -145,7 +146,8 @@ namespace DKCrm.Client.Pages
             var createdGroup = await _chatManager.CreateChatGroupAsync(new ChatGroup(){Name = chatName});
             if (createdGroup == Guid.Empty)return;
             CurrentChatId = createdGroup;
-            _navigationManager.NavigateTo($"chat/{CurrentChatId}");
+            await GetChatGroupsAsync();
+                //_navigationManager.NavigateTo($"chat/{CurrentChatId}");
             _messages.Clear();
         }
         private void OpenCloseUsersInChatDialog(bool isOpen)
@@ -219,6 +221,14 @@ namespace DKCrm.Client.Pages
         {
             await _chatManager.FoolRemoveMessageAsync(listId);
                 _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
+        }
+        private async Task RemoveChatGroup(Guid groupId)
+        {
+            if (await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление!!!"))
+            {
+                await _chatManager.RemoveChatGroupAsync(groupId);
+                _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
+            }
         }
         private void CheckboxClicked(Guid aSelectedId, object aChecked)
         {

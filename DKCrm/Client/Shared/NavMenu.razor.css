@@ -38,9 +38,14 @@
         display: block;
     }
     .my-navbody {
+        position:sticky;
+        top: 0px;
+        width: 100%;
         display: flex;
         align-items: end;
-    justify-content: space-between
+        justify-content: space-between;
+        
+        z-index: 1000;
         
     }
     .navcontainer {

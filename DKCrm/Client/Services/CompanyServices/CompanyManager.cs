@@ -22,18 +22,18 @@ namespace DKCrm.Client.Services.CompanyServices
         }
         public async Task<Company> GetDetailsAsync(Guid id)
         {
-            return await _httpClient.GetFromJsonAsync<Company>($"api/company/{id}") ?? throw new InvalidOperationException();
+            return await _httpClient.GetFromJsonAsync<Company>($"api/Company/{id}") ?? throw new InvalidOperationException();
         }
 
         public async Task<bool> UpdateAsync(Company company)
         {
-            var result = await _httpClient.PutAsJsonAsync("api/company", company, JsonOptions.JsonIgnore);
+            var result = await _httpClient.PutAsJsonAsync($"api/Company/company/{company}", company, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
         public async Task<bool> AddAsync(Company company)
         {
-            var result = await _httpClient.PostAsJsonAsync($"api/Company", company, JsonOptions.JsonIgnore);
+            var result = await _httpClient.PostAsJsonAsync($"api/Company/{company}", company, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
 
@@ -57,5 +57,11 @@ namespace DKCrm.Client.Services.CompanyServices
             var result = await _httpClient.PostAsJsonAsync($"api/Company/updateTags/{tagRequest}", tagRequest, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
+        public async Task<bool> AddBankAsync(BankDetails bankDetails)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/Company/addbank", bankDetails, JsonOptions.JsonIgnore);
+            return result.IsSuccessStatusCode;
+        }
+
     }
 }

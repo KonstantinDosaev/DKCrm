@@ -1,6 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using DKCrm.Shared.Constants
-<MudDialog Visible="VisibleDialog" VisibleChanged="VisibleDialogChanged"
+<MudDialog Visible="VisibleDialog" VisibleChanged="VisibleDialogChanged" @ref="_dialog"
            ContentClass="no-padding" TitleClass="dilaog__title"
            Options="new DialogOptions() { MaxWidth = MaxWidth.Large }">
     <TitleContent>
@@ -20,7 +20,10 @@
         <DKImageManagerComponent DirectoryType="@DirectoryType"
                                  FileType="@FileType"
                                  RelativePath="@RelativePath"
-                                 LoadMoreCount="@LoadMoreCount" />
+                                 LoadMoreCount="@LoadMoreCount" 
+                                 ImageType="@ImageType" 
+                                 IsPreviewImage="@IsPreviewImage" 
+                                 OwnerId="@OwnerId"/>
     </DialogContent>
 </MudDialog>
 
@@ -32,9 +35,14 @@
     [Parameter] public string RelativePath { get; set; } = null!;
     [Parameter] public int LoadMoreCount { get; set; }
     [Parameter] public string TitleText { get; set; } = null!;
+    [Parameter] public ImageTypes ImageType { get; set; }
+    [Parameter] public bool IsPreviewImage { get; set; }
+    [Parameter] public Guid OwnerId { get; set; }
+    private MudDialog _dialog = null!;
     async Task CloseClick()
     {
         VisibleDialog = false;
+        await _dialog.CloseAsync();
         await VisibleDialogChanged.InvokeAsync(VisibleDialog);
     }
 }

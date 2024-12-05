@@ -38,7 +38,7 @@ namespace DKCrm.Server.Controllers
         {
             return Ok(await _chatService.CreateChatGroupAsync(chatGroup, User));
         }
-        [HttpPost("remove-group")]
+        [HttpPost("remove-group/{chatGroupId}")]
         public async Task<IActionResult> RemoveChatGroup(Guid chatGroupId)
         {
             return Ok(await _chatService.RemoveChatGroupAsync(chatGroupId, User));

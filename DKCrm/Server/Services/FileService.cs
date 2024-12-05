@@ -101,7 +101,7 @@ namespace DKCrm.Server.Services
         {
             var extension = request.FileName.Split('.').Last();
             var trustedFileName = Path.GetRandomFileName();
-            var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
+            var path = request.IsFullPath ? request.PathToDirectory : BuildingPath(request.PathToDirectory, request.DirectoryType);
 
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
@@ -112,37 +112,22 @@ namespace DKCrm.Server.Services
 
             if (request.Preview != null)
             {
-                var prevPath = path + PathsToDirectories.Preview;
+                var prevPath = Path.Combine(path,PathsToDirectories.Preview);
                 if (!Directory.Exists(prevPath))
                     Directory.CreateDirectory(prevPath);
                 var fullPrevPath = Path.Combine(prevPath, name);
                 await File.WriteAllBytesAsync(fullPrevPath, request.Preview);
             }
-            return new SaveFileResponse() { FileName = name };
+            return new SaveFileResponse() { FileName = name, Path = path};
         }
         public bool RemoveFile(RemoveFileRequest request)
         {
             var path = request.IsFullPath ? request.Path : BuildingPath(request.Path, request.DirectoryType);
-            var fullPath = Path.Combine(path, request.FileName);
-            var fileInfo = new FileInfo(fullPath);
-            if (fileInfo.Exists)
-            {
-                fileInfo.Delete();
-            }
-            else
-                return false;
-
-            if (request.FileType is FileTypes.Stamps or FileTypes.Images)
-            {
-                var prevPath = path + PathsToDirectories.Preview;
-                var prevFullPath = Path.Combine(prevPath, request.FileName);
-                var prevFileInfo = new FileInfo(prevFullPath);
-                if (prevFileInfo.Exists)
-                {
-                    prevFileInfo.Delete();
-                }
-            }
-            return !fileInfo.Exists;
+            var fullPath = Path.Combine(path);
+            var fileExist = File.Exists(fullPath);
+            if (fileExist)
+                File.Delete(fullPath);
+            return fileExist;
         }
     }
 }

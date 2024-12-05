@@ -1,11 +1,13 @@
 ﻿using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Models.CompanyModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers.CompanyControllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CompanyTypeController : ControllerBase
     {
         private readonly ICompanyTypeService _companyTypeService;

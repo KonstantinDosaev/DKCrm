@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models;
+﻿using DKCrm.Server.Services;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
@@ -50,7 +51,9 @@ namespace DKCrm.Server.Data
         public DbSet<ApplicationOrderingProductsProduct> ApplicationOrderingProductsProducts { get; set; } = null!;
         public DbSet<CurrencyDictionary> CurrencyDictionaries { get; set; } = null!;
         public DbSet<InfoSetFromDocumentToOrder> DocumentsToOrder { get; set; } = null!;
-
+        public DbSet<InfoSetToImage> InfoSetsToImages { get; set; } = null!;
+        public DbSet<CompanyComment> CompanyComments { get; set; } = null!;
+        public DbSet<AccessRestriction> AccessRestrictions { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -79,6 +82,10 @@ namespace DKCrm.Server.Data
                 entity.HasOne(d => d.FnsRequest)
                     .WithOne(p => p.Company)
                     .HasForeignKey<FnsRequest>(d => d.CompanyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(d => d.Comments)
+                    .WithOne(p => p.Company)
+                    .HasForeignKey(d => d.CompanyId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

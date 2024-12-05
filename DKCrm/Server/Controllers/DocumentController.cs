@@ -1,4 +1,4 @@
-﻿using DKCrm.Server.Interfaces;
+﻿using DKCrm.Server.Interfaces.DocumentInterfaces;
 using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
@@ -34,9 +34,9 @@ namespace DKCrm.Server.Controllers
         public async Task<IActionResult> GetAllDocumentFileInfoSetsForOrder(Guid orderId) 
             => Ok(await _infoSetFromDocumentToOrderService.GetAllInfoSetsDocumentsToOrderAsync(orderId));
 
-        [HttpPost("{orderId:guid}")]
-        public async Task<IActionResult> CreatePaymentInvoicePdf(Guid orderId) 
-            => Ok(await _documentService.CreatePaymentInvoicePdfAsync(orderId));
+        [HttpPost("{request}")]
+        public async Task<IActionResult> CreatePaymentInvoicePdf(CreatePaymentInvoiceRequest request) 
+            => Ok(await _documentService.CreatePaymentInvoicePdfAsync(request));
         [HttpPost("{request}")]
         public async Task<IActionResult> CreateOrderSpecificationPdf(CreateOrderSpecificationRequest request) 
             => Ok(await _documentService.CreateOrderSpecificationPdfAsync(request)); 

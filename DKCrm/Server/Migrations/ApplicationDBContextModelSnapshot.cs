@@ -17,7 +17,7 @@ namespace DKCrm.Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.22")
+                .HasAnnotation("ProductVersion", "8.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -50,6 +50,24 @@ namespace DKCrm.Server.Migrations
                     b.HasIndex("TagsCompaniesId");
 
                     b.ToTable("CompanyTagsCompany");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.AccessRestriction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string[]>("AccessUsersToComponent")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<Guid>("AccessedComponentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AccessRestrictions");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.Address", b =>
@@ -123,6 +141,15 @@ namespace DKCrm.Server.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string>("KorBeneficiaryAccount")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Kpp")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -162,6 +189,14 @@ namespace DKCrm.Server.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Kbk")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Kpp")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -174,6 +209,35 @@ namespace DKCrm.Server.Migrations
                     b.HasIndex("CompanyTypeId");
 
                     b.ToTable("Companies");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.CompanyComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateTimeCreated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("FromUserId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("CompanyComments");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.CompanyType", b =>
@@ -257,6 +321,11 @@ namespace DKCrm.Server.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string>("KPP")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<string>("LegalAddress")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -272,6 +341,16 @@ namespace DKCrm.Server.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<string>("ORGN")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
@@ -354,6 +433,43 @@ namespace DKCrm.Server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CurrencyDictionaries");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.InfoSetToImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateTimeCreated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("DirectoryType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ImageType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PathToFile")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PathToPreviewFile")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InfoSetsToImages");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.InternalCompanyData", b =>
@@ -1308,6 +1424,16 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("CompanyType");
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.CompanyComment", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "Company")
+                        .WithMany("Comments")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.FnsRequest", b =>
                 {
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "Company")
@@ -1640,6 +1766,8 @@ namespace DKCrm.Server.Migrations
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.Company", b =>
                 {
                     b.Navigation("BankDetails");
+
+                    b.Navigation("Comments");
 
                     b.Navigation("ExportedOrdersBuyerCompany");
 
