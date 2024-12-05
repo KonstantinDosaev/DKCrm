@@ -18,8 +18,16 @@ using Newtonsoft.Json;
 using System.Dynamic;
 using System.Net;
 using DKCrm.Shared.Constants;
+using Microsoft.AspNetCore.ResponseCompression;
+
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSignalR();
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        ["application/octet-stream"]);
+});
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 var connectionStringProduct = builder.Configuration.GetConnectionString("ProductContextConnection") ??
                               throw new InvalidOperationException("Connection string 'ProductContextConnection' not found.");
@@ -44,6 +52,29 @@ if (pathToStaticFiles == null)
     File.WriteAllText(appSettingsPath, newJson);
     pathToStaticFiles = defaultStaticFilesPath;
 }
+
+builder.Services.AddDbContext<ApplicationDBContext>(options =>
+    options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
+builder.Services.AddDbContext<UserDbContext>(options =>
+    options.UseNpgsql(connectionStringUser).AddInterceptors(new SoftDeleteInterceptor()));
+
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<UserDbContext>();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = false;
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = 401;
+        return Task.CompletedTask;
+    };
+});
+
+
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(opt => opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
+builder.Services.AddControllersWithViews();
+
 builder.Services.AddTransient<IAuthService, AuthService>();
 
 builder.Services.AddTransient<IUserService, UserService>();
@@ -80,31 +111,10 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddTransient<ICompanyCommentsService, CompanyCommentsService>();
 builder.Services.AddTransient<IAccessRestrictionService, AccessRestrictionService>();
 
-builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseNpgsql(connectionStringProduct).AddInterceptors(new SoftDeleteInterceptor()));
-builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseNpgsql(connectionStringUser).AddInterceptors(new SoftDeleteInterceptor()));
-
-
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<UserDbContext>();
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Cookie.HttpOnly = false;
-    options.Events.OnRedirectToLogin = context =>
-    {
-        context.Response.StatusCode = 401;
-        return Task.CompletedTask;
-    };
-});
-
-builder.Services.AddSignalR();
-builder.Services.AddControllers()
-    .AddNewtonsoftJson(opt=>opt.SerializerSettings.ReferenceLoopHandling=ReferenceLoopHandling.Ignore);
-builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
-
+app.UseResponseCompression();
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -149,5 +159,6 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 app.MapHub<SignalRHub>("/signalRHub");
-
+app.MapHub<OrderCommentHub>("/orderCommentHub");
+app.MapHub<CompanyCommentHub>("/companyCommentHub");
 app.Run();

@@ -15,15 +15,9 @@ namespace DKCrm.Server.Services
         {
             await Clients.All.SendAsync("ReceiveChatNotification", message, receiverChatId, senderUserId);
         }
-
-        public async Task SendCommentAsync(CommentOrder comment, string userName)
-        {
-            await Clients.All.SendAsync("ReceiveComment", comment, userName);
-        }
-        public async Task ReloadCommentList(Guid orderId)
-        {
-            await Clients.All.SendAsync("ReceiveCommandToReloadCommentList",orderId);
-        }
+    }
+    public class CompanyCommentHub : Hub
+    {
         public async Task SendCompanyCommentAsync(CompanyComment comment, string userName)
         {
             await Clients.All.SendAsync("ReceiveCompanyComment", comment, userName);
@@ -31,6 +25,17 @@ namespace DKCrm.Server.Services
         public async Task ReloadCompanyCommentList(Guid companyId)
         {
             await Clients.All.SendAsync("ReceiveCommandToReloadCompanyCommentList", companyId);
+        }
+    }
+    public class OrderCommentHub : Hub
+    {
+       public async Task SendCommentAsync(CommentOrder comment, string userName)
+        {
+            await Clients.All.SendAsync("ReceiveComment", comment, userName);
+        }
+        public async Task ReloadCommentList(Guid orderId)
+        {
+            await Clients.All.SendAsync("ReceiveCommandToReloadCommentList", orderId);
         }
     }
 }

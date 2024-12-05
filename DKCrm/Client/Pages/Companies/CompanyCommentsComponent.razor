@@ -81,7 +81,7 @@
         var user = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
         CurrentUser = await UserManagerCustom.GetUserDetailsAsync(user);
 
-        HubConnection ??= new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).Build();
+        HubConnection ??= new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/companyCommentHub")).Build();
         if (HubConnection.State == HubConnectionState.Disconnected)
             await HubConnection.StartAsync();
 
