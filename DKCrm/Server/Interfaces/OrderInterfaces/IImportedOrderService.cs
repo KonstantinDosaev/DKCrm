@@ -1,14 +1,15 @@
 ﻿using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
+using System.Security.Claims;
 
 namespace DKCrm.Server.Interfaces.OrderInterfaces
 {
     public interface IImportedOrderService
     {
-        Task<IEnumerable<ImportedOrder>> GetAsync();
-        Task<ImportedOrder> GetDetailAsync(Guid id);
+        Task<IEnumerable<ImportedOrder>> GetAsync(ClaimsPrincipal user);
+        Task<ImportedOrder> GetDetailAsync(Guid id, ClaimsPrincipal user);
         Task<SortPagedResponse<ImportedOrder>> GetBySortPagedSearchChapterAsync(
-            SortPagedRequest<FilterOrderTuple> request);
+            SortPagedRequest<FilterOrderTuple> request, ClaimsPrincipal user);
 
         Task<Guid> PostAsync(ImportedOrder importedOrder);
         Task<Guid> PutAsync(ImportedOrder importedOrder);

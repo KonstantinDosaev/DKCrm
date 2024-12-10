@@ -5,6 +5,8 @@ using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Security.Claims;
 
 namespace DKCrm.Server.Services.OrderServices
 {
@@ -16,15 +18,23 @@ namespace DKCrm.Server.Services.OrderServices
         {
             _context = context;
         }
-        public async Task<IEnumerable<ImportedOrder>> GetAsync()
+        public async Task<IEnumerable<ImportedOrder>> GetAsync(ClaimsPrincipal user)
         {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            if (userId == null) return Array.Empty<ImportedOrder>();
+            var accessCollection = _context.AccessRestrictions;
+            var accessedComponents = accessCollection.Select(s => s.AccessedComponentId);
             await _context.Companies
                 .Where(w => w.ImportedOrdersOurCompany!.Any() || w.ImportedOrdersSellersCompany!.Any())
                 .Include(i => i.Employees).LoadAsync();
-            return await _context.ImportedOrders.ToListAsync();
+            return await _context.ImportedOrders.Where(w => (
+                (w.SellersCompanyId != null && (!accessedComponents.Contains((Guid)w.SellersCompanyId) || (
+                    accessedComponents.Contains((Guid)w.SellersCompanyId)
+                    && accessCollection.First(f => f.AccessedComponentId == w.SellersCompanyId).AccessUsersToComponent
+                        .Contains(userId)))))).ToListAsync();
         }
 
-        public async Task<ImportedOrder> GetDetailAsync(Guid id)
+        public async Task<ImportedOrder> GetDetailAsync(Guid id, ClaimsPrincipal user)
         {
             //return await _context.ImportedOrders
             //    .Include(i => i.ImportedProducts!).ThenInclude(t => t.Product).ThenInclude(t => t!.Brand).IgnoreQueryFilters()
@@ -33,7 +43,15 @@ namespace DKCrm.Server.Services.OrderServices
             //    .Include(i => i.OurEmployee)
             //    .Include(i => i.EmployeeSeller).AsSingleQuery()
             //    .FirstOrDefaultAsync(a => a.Id == id) ?? throw new InvalidOperationException();
-            var order = await _context.ImportedOrders.Select(s => new ImportedOrder()
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            if (userId == null) return new ImportedOrder();
+            var accessCollection = _context.AccessRestrictions;
+            var accessedComponents = accessCollection.Select(s => s.AccessedComponentId);
+            var order = await _context.ImportedOrders.Where(w=> (
+                (w.SellersCompanyId != null && (!accessedComponents.Contains((Guid)w.SellersCompanyId) || (
+                    accessedComponents.Contains((Guid)w.SellersCompanyId)
+                    && accessCollection.First(f => f.AccessedComponentId == w.SellersCompanyId).AccessUsersToComponent
+                        .Contains(userId)))))).Select(s => new ImportedOrder()
             {
                 Id = s.Id,
                 Number = s.Number,
@@ -57,8 +75,12 @@ namespace DKCrm.Server.Services.OrderServices
             await _context.Products.Where(w => order!.ImportedProducts!.Select(s => s.ProductId).Contains(w.Id)).Include(i => i.Brand).LoadAsync();
             return order ?? throw new InvalidOperationException();
         }
-        public async Task<SortPagedResponse<ImportedOrder>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request)
+        public async Task<SortPagedResponse<ImportedOrder>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request, ClaimsPrincipal user)
         {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            if (userId == null) return new SortPagedResponse<ImportedOrder>();
+            var accessCollection = _context.AccessRestrictions;
+            var accessedComponents = accessCollection.Select(s => s.AccessedComponentId);
             var data = _context.ImportedOrders.Where(w=>w.OrderIsOver == request.FilterTuple!.IsHistoryOrders).Select(s => new ImportedOrder()
             {
                 Id = s.Id,
@@ -83,6 +105,11 @@ namespace DKCrm.Server.Services.OrderServices
                 ImportedOrderStatus = s.ImportedOrderStatus,
 
             });
+            data = data.Where(w => (
+                (w.SellersCompanyId != null && (!accessedComponents.Contains((Guid)w.SellersCompanyId) || (
+                    accessedComponents.Contains((Guid)w.SellersCompanyId)
+                    && accessCollection.First(f => f.AccessedComponentId == w.SellersCompanyId).AccessUsersToComponent
+                        .Contains(userId))))));
             //if (request.Chapter != null && request.ChapterId != null)
             //{
             //    data = data.Where(o => o.ImportedOrderStatusId == request.ChapterId);

@@ -117,7 +117,7 @@ namespace DKCrm.Client.Pages
             _navigationManager.NavigateTo($"chat/{CurrentChatId}");
             _messages.Clear();
             _messages = await _chatManager.GetConversationAsync(CurrentChatId);
-            await GetChatGroupsAsync();
+           // await GetChatGroupsAsync();
         }
         private async Task OnClickContact(string userId)
         {

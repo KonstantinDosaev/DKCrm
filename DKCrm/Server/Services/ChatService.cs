@@ -7,6 +7,7 @@ using DKCrm.Server.Interfaces;
 using DKCrm.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using DateTime = System.DateTime;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace DKCrm.Server.Services
 {
@@ -35,10 +36,25 @@ namespace DKCrm.Server.Services
         public async Task<IEnumerable<ChatGroup>> GetAllChatGroupsToUser(ClaimsPrincipal user)
         {
             var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            //var chatGroups = await _context.ChatGroups.Where(w =>w.IsDeleted == false &&
+            //    w.ApplicationUsers!.Select(s => s.Id).Contains(userId) )
+            //    .Include(i => i.ApplicationUsers)
+            //    .Include(i=>i.LogUsersVisitToChatList).ToListAsync(); 
             var chatGroups = await _context.ChatGroups.Where(w =>w.IsDeleted == false &&
-                w.ApplicationUsers!.Select(s => s.Id).Contains(userId) )
-                .Include(i => i.ApplicationUsers)
-                .Include(i=>i.LogUsersVisitToChatList).ToListAsync();
+                w.ApplicationUsers!.Select(s => s.Id).Contains(userId) ).Select(s => new ChatGroup()
+            {
+                Id = s.Id, Name = s.Name, 
+                Description = s.Description, 
+                DateTimeUpdate = s.DateTimeUpdate,CreatingUserId = s.CreatingUserId,
+                Image = s.Image,
+                IsPrivateGroup = s.IsPrivateGroup,
+         ApplicationUsers = s.ApplicationUsers,
+       //ChatMessages = s.ChatMessages,
+        LogUsersVisitToChatList = s.LogUsersVisitToChatList,
+        IsDeleted = s.IsDeleted,
+        IsFullDeleted = s.IsFullDeleted,
+        UpdatedUser = s.UpdatedUser,
+            }).ToListAsync();
             return chatGroups;
         }
         public async Task<IEnumerable<ChatMessage>> GetConversationAsync(Guid chatId, ClaimsPrincipal user)

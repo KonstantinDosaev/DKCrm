@@ -3,6 +3,7 @@ using DKCrm.Shared.Models.OrderModels;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Globalization;
+using System.Security.Claims;
 using DKCrm.Shared.Constants;
 using Document = iTextSharp.text.Document;
 using Font = iTextSharp.text.Font;
@@ -33,12 +34,12 @@ public class OrderSpecificationPdfGenerator
             _configuration = configuration;
         }
 
-        public async Task<byte[]> CreateSpecificationAsync(CreateOrderSpecificationRequest createOrderSpecificationRequest)
+        public async Task<byte[]> CreateSpecificationAsync(CreateOrderSpecificationRequest createOrderSpecificationRequest, ClaimsPrincipal user)
         {
             CreateOrderSpecificationRequest = createOrderSpecificationRequest;
             if (CreateOrderSpecificationRequest == null) return new byte[]{};
            
-            Order = await _orderService.GetDetailAsync(createOrderSpecificationRequest.OrderId);
+            Order = await _orderService.GetDetailAsync(createOrderSpecificationRequest.OrderId, user);
             _mainPathToFiles = _configuration[$"{DirectoryType.PrivateFolder}"] ?? throw new InvalidOperationException();
 
         var docs = await _infoSetFromDocumentToOrderService

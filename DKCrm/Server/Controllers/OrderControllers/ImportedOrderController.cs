@@ -17,14 +17,14 @@ namespace DKCrm.Server.Controllers.OrderControllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get() => Ok(await _importedOrderService.GetAsync());
+        public async Task<IActionResult> Get() => Ok(await _importedOrderService.GetAsync(User));
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> Get(Guid id) => Ok(await _importedOrderService.GetDetailAsync(id));
+        public async Task<IActionResult> Get(Guid id) => Ok(await _importedOrderService.GetDetailAsync(id, User));
 
         [HttpPost]
         public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request)
-            => Ok(await _importedOrderService.GetBySortPagedSearchChapterAsync(request));
+            => Ok(await _importedOrderService.GetBySortPagedSearchChapterAsync(request, User));
 
         [HttpPost]
         public async Task<IActionResult> Post(ImportedOrder importedOrder) => Ok(await _importedOrderService.PostAsync(importedOrder));

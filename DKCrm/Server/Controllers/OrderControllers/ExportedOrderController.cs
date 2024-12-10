@@ -18,11 +18,11 @@ namespace DKCrm.Server.Controllers.OrderControllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get() => Ok(await _exportedOrderService.GetAsync());
+        public async Task<IActionResult> Get() => Ok(await _exportedOrderService.GetAsync(User));
         
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> Get(Guid id) => Ok(await _exportedOrderService.GetDetailAsync(id));
+        public async Task<IActionResult> Get(Guid id) => Ok(await _exportedOrderService.GetDetailAsync(id, User));
 
         //[HttpGet("{id}")]
         //public async Task<IActionResult> GetOrder(Guid id)
@@ -51,7 +51,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
         //}
         [HttpPost]
         public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderTuple> request) 
-            => Ok(await _exportedOrderService.GetBySortPagedSearchChapterAsync(request));
+            => Ok(await _exportedOrderService.GetBySortPagedSearchChapterAsync(request, User));
 
         [HttpPost]
         public async Task<IActionResult> Post(ExportedOrder exportedOrder) 

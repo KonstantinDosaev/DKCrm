@@ -4,6 +4,7 @@ using DKCrm.Shared.Models.OrderModels;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Globalization;
+using System.Security.Claims;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.CompanyModels;
 using Document = iTextSharp.text.Document;
@@ -39,11 +40,11 @@ namespace DKCrm.Server.Services.DocumentServices
             _configuration = configuration;
         }
 
-        public async Task<byte[]> CreatePaymentAsync(CreatePaymentInvoiceRequest createRequest)
+        public async Task<byte[]> CreatePaymentAsync(CreatePaymentInvoiceRequest createRequest, ClaimsPrincipal user)
         {
             CreateRequest = createRequest;
 
-            Order = await _orderService.GetDetailAsync(CreateRequest.OrderId);
+            Order = await _orderService.GetDetailAsync(CreateRequest.OrderId, user);
             _mainPathToFiles = _configuration[$"{DirectoryType.PrivateFolder}"]!;
             //_mainPathToFiles = Directory.GetCurrentDirectory();
             // Order = await _orderService.GetDetailAsync(new Guid("f41f77b1-0b1d-4025-b972-d985d742d772"));

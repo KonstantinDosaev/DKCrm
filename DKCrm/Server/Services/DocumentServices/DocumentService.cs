@@ -1,4 +1,5 @@
-﻿using iTextSharp.text;
+﻿using System.Security.Claims;
+using iTextSharp.text;
 using iTextSharp.text.pdf;
 using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces;
@@ -57,9 +58,9 @@ namespace DKCrm.Server.Services.DocumentServices
             return await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> CreatePaymentInvoicePdfAsync(CreatePaymentInvoiceRequest request)
+        public async Task<bool> CreatePaymentInvoicePdfAsync(CreatePaymentInvoiceRequest request, ClaimsPrincipal user)
         {
-            var byteArr = await _generatorPayment.CreatePaymentAsync(request);
+            var byteArr = await _generatorPayment.CreatePaymentAsync(request, user);
             var pathToDirectory = Path.Combine(_mainPathToPrivateDirectory, request.OrderId.ToString());
             if (!Directory.Exists(pathToDirectory))
             {
@@ -104,9 +105,9 @@ namespace DKCrm.Server.Services.DocumentServices
             return resultDb == 1;
         }
 
-        public async Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request)
+        public async Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request, ClaimsPrincipal user)
         {
-            var byteArr = await _generatorSpecification.CreateSpecificationAsync(request);
+            var byteArr = await _generatorSpecification.CreateSpecificationAsync(request, user);
             var pathToDirectory = Path.Combine(_mainPathToPrivateDirectory, request.OrderId.ToString());
             if(!Directory.Exists(pathToDirectory))
             {

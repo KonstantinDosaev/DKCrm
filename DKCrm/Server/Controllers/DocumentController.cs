@@ -36,10 +36,10 @@ namespace DKCrm.Server.Controllers
 
         [HttpPost("{request}")]
         public async Task<IActionResult> CreatePaymentInvoicePdf(CreatePaymentInvoiceRequest request) 
-            => Ok(await _documentService.CreatePaymentInvoicePdfAsync(request));
+            => Ok(await _documentService.CreatePaymentInvoicePdfAsync(request,User));
         [HttpPost("{request}")]
         public async Task<IActionResult> CreateOrderSpecificationPdf(CreateOrderSpecificationRequest request) 
-            => Ok(await _documentService.CreateOrderSpecificationPdfAsync(request)); 
+            => Ok(await _documentService.CreateOrderSpecificationPdfAsync(request, User)); 
 
         [HttpPost("{request}")]
         public async Task<IActionResult> SetStampAndGetDocumentBytArray(AddStampToPdfRequest request) 
