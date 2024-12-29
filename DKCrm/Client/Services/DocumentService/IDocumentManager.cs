@@ -12,5 +12,6 @@ namespace DKCrm.Client.Services.DocumentService
          Task<bool> CreatePaymentInvoicePdfAsync(CreatePaymentInvoiceRequest request);
          Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request);
          Task<byte[]> AddStampToPdfAsync(AddStampToPdfRequest request);
+         Task<bool> CreateCommercialOfferPdfAsync(CreateCommercialOfferPdfRequest request);
     }
 }

@@ -1,0 +1,168 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Requests
+
+<MudTooltip Text="Показать важные комментарии">
+    <MudIconButton OnClick="()=> OpenDialog(true)"
+    Icon="@Icons.Material.Filled.CommentBank" Color="@_mainIconColor"/>
+</MudTooltip>
+@if (_visibleWarningOrderCommentsDialog)
+{
+    <MudDialog @bind-Visible="_visibleWarningOrderCommentsDialog" Style="max-width: 700px; padding: 0"
+               Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding"
+               TitleClass="order_commentWarning">
+        <TitleContent>
+            <MudToolBar Dense="true" Class="d-flex justify-content-between mr-4" >
+                <MudText Typo="Typo.h5">@(_notOpenWarningComment ? "Не прочитанные" : "Прочитанные")</MudText>
+                <MudButton OnClick="GetComments"
+                           Variant="Variant.Filled"
+                           EndIcon="@(_notOpenWarningComment ? Icons.Material.Filled.MarkEmailRead : Icons.Material.Filled.MarkEmailUnread)"
+                           Color="@Color.Tertiary">Показать @(_notOpenWarningComment ? "прочитанные" : "не прочитанные")</MudButton>
+            </MudToolBar>
+        </TitleContent>
+        <DialogContent>
+            <div Class="pb-4 d-flex flex-column" Style="">
+                @if (_comments.Any())
+                {
+                    <div class="d-flex flex-column px-4 flex-grow-1" style="overflow-y: scroll;" id="commentContainer">
+                        @foreach (var message in _comments)
+                        {
+                            var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
+
+                            <div class="my-2" style="padding: 5px 15px; background-color: whitesmoke; border-radius: 5px; border: solid 1px rgba(181, 181, 181, 0.361); overflow-wrap: break-word">
+                                <div class="d-flex justify-content-between">
+
+                                    <MudText Class="px-1" Typo="Typo.body2"
+                                             Style="font-weight: bold; color: gray; background-color: lightsalmon; border-radius: 5px; width: max-content">@user?.UserName</MudText>
+                                    <div>
+                                        @if (!IsDoubleNested)
+                                        {
+                                            <MudIconButton Class="mr-6" Icon="@Icons.Material.Filled.Info"
+                                                           Size='Size.Small'
+                                                           OnClick="@(() => OpenOrderPopover(@message.OrderId, message.Id))"/>
+
+                                        }
+                                        <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment" ToggledChanged="(s) => SetWarningFlagToComment(s, message)"
+                                                             Icon="@Icons.Material.Filled.OutlinedFlag" Color="@Color.Surface" Title="Off"
+                                                             ToggledIcon="@Icons.Material.Filled.Flag" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                                    </div>
+
+                                </div>
+                                <MudText Typo="Typo.body2" Style="">@message.Value</MudText>
+                                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@($"{message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")} / {message.DateTimeUpdate.ToString("dd MMM, yyyy HH:mm")}")</MudText>
+
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div style="text-align: center; padding-top: 60px;"> <MudText Typo="Typo.h5">Список пуст...</MudText></div>
+                }
+            </div>
+        </DialogContent>
+    </MudDialog>
+    @if (_visibleOrder )
+    {
+        <MudDialog @bind-Visible="@_visibleOrder"
+                   Style="padding: 0"
+                   Options="new DialogOptions() { CloseButton = true, FullScreen = true, }"
+                   Class="no-padding">
+            <DialogContent>
+                @if (TypeOrder == typeof(ExportedOrder).ToString())
+                {
+                    <ExportOrderDetailsComponent Id="ShowingOrderId"
+                                                 CurrencyDisplay="@(new[] { "Сделки" })"
+                                                 ShowCompanyInfo="true"
+                                                 IsDoubleNested="true"/>
+                }
+                else
+                {
+                    <ImportedOrderDetailsComponent Id="ShowingOrderId"
+                                                 CurrencyDisplay="@(new[] { "Сделки" })"
+                                                 ShowCompanyInfo="true"
+                                                 IsDoubleNested="true"/>
+                }
+            </DialogContent>
+        </MudDialog>
+    }
+}
+
+
+@code {
+    [Parameter] public bool IsDoubleNested { get; set; }
+    [Parameter] public string? TypeOrder { get; set; }
+    private List<CommentOrder> _comments = new();
+    private bool _notOpenWarningComment; 
+    private bool _visibleWarningOrderCommentsDialog;
+    private bool _renderNotScroll;
+    public List<ApplicationUser>? ChatUsers { get; set; }
+    private bool _isShowAllWarningComment;
+    Color _mainIconColor;
+    private bool _visibleOrder; 
+    private Guid ShowingOrderId { get; set; }
+    private Guid ShowingOrderCommentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetComments();
+        _mainIconColor = _comments.Any() ? Color.Error : Color.Default;
+    }
+    private void OpenDialog(bool toggle)
+    {
+        _visibleWarningOrderCommentsDialog = true;
+    }
+    private async Task GetComments()
+    {
+        ChatUsers ??= await GetUsersAsync();
+        _notOpenWarningComment = !_notOpenWarningComment;
+        _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+        {
+            GetOnlyNotOpen = _notOpenWarningComment,
+            OrderType = TypeOrder
+        });
+    }
+    private async Task SearchNotOpenWarningComments()
+    {
+       
+        _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+        {
+                GetOnlyNotOpen = true,
+                OrderType = TypeOrder
+        });
+       
+    }
+    private async Task SearchAllWarningComments()
+    {
+        _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+        {
+                GetOnlyNotOpen = false,
+                OrderType = TypeOrder
+        });
+   
+    }
+    private async Task SetWarningFlagToComment(bool toggle, CommentOrder comment)
+    {
+        _renderNotScroll = true;
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите смену флага"))
+            return;
+
+        comment.IsWarningComment = toggle;
+
+        await CommentOrderManager.SaveCommentAsync(comment);
+    }
+    private async Task<List<ApplicationUser>> GetUsersAsync()
+    {
+        return await UserManagerCustom.GetUsersAsync();
+    }
+    private void OpenOrderPopover(Guid orderId, Guid messageId)
+    {
+        ShowingOrderCommentId = messageId;
+        ShowingOrderId = orderId;
+        _visibleOrder = true;
+    }
+}
+<style>
+    .order_commentWarning {
+        padding-bottom: 0 !important;
+    }
+</style>

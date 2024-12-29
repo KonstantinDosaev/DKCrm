@@ -5,51 +5,71 @@
     <MudText Typo="Typo.h5" >@TitleText</MudText>
     @if (Employee != null)
     {
-        <EditForm Model="Employee" OnValidSubmit="OnValidSubmit">
-        <DataAnnotationsValidator />
+    <MudForm Model="Employee" @bind-IsValid="@_success">
         <MudCard>
             <MudCardContent>
                 @if (CurrentCompany?.CompanyType?.Name == TypeCompanyNames.OurCompanies)
                 {
                     <div class="d-flex align-items-end ">
-                        <MudSelect Variant="Variant.Outlined" Placeholder="Выберите сотрудника" ValueChanged="@(s => OnChangedEmployee(s))"
-                                   T="Employee" ToStringFunc="companyType => companyType.LastName!.ToString()" CloseIcon="@Icons.Material.Filled.Flag"
-                                   AdornmentColor="Color.Tertiary">
-                            @if (OurEmployees != null)
-                            {
-                                @foreach (var item in OurEmployees)
+                        @if (Employee.Id == Guid.Empty || Employee.Id==null)
+                {
+                            <MudSelect Variant="Variant.Outlined" Placeholder="Выберите сотрудника"
+                                       ValueChanged="@(s => OnChangedEmployee(s))"
+                                       T="Employee" ToStringFunc="companyType => companyType.LastName!.ToString()" CloseIcon="@Icons.Material.Filled.Flag"
+                                       AdornmentColor="Color.Tertiary">
+                                @if (OurEmployees != null)
                                 {
-                                    <MudSelectItem T="Employee" Value="@item">@item.LastName</MudSelectItem>
+                                    @foreach (var item in OurEmployees)
+                                    {
+                                        <MudSelectItem T="Employee" Value="@item">@item.LastName</MudSelectItem>
+                                    }
+
+                                }
+                            </MudSelect>
+                        }
+                        @if (_isDisable)
+                        {
+                            <MudButton Style="height: 100%" Size="Size.Large" Variant="Variant.Outlined" 
+                                       OnClick="ResetEmployee">Сброс</MudButton>
+                        }
+                    </div>
+                    if (Users != null)
+                    {
+                        <MudSelect @bind-Value="@Employee.UserId" Variant="Variant.Outlined" Placeholder="Выберите связанную учетную запись"
+                                   T="string"
+                                   CloseIcon="@Icons.Material.Filled.Flag"
+                                   AdornmentColor="Color.Tertiary" Required="true">
+                            @if (Users != null)
+                            {
+                                @foreach (var item in Users)
+                                {
+                                    <MudSelectItem T="string" Value="@item.Id">@($"{item.LastName} {item.FirstName} / {item.UserName}")</MudSelectItem>
                                 }
 
                             }
                         </MudSelect>
-                        @if (_isDisable)
-                        {
-                            <MudButton Style="height: 100%" Size="Size.Large" Variant="Variant.Outlined" OnClick="ResetEmployee">Ввести вручную</MudButton>
-                        }
-                    </div>
+                    }
                 }
                 <MudTextField @bind-Value="@Employee.Position"
                               For="@(() => Employee.Position)"
                               Immediate="true"
                               Label="Должность"
-                              Disabled="_isDisable"/>
+                              Disabled="_isDisable" Required="true" />
                 <MudTextField @bind-Value="@Employee.LastName"
                               For="@(() => Employee.LastName)"
                               Immediate="true"
                               Label="Фамилия"
-                              Disabled="_isDisable"/>
+                              Disabled="_isDisable" Required="true" />
                 <MudTextField @bind-Value="@Employee.FirstName"
                               For="@(() => Employee.FirstName)"
                               Immediate="true"
                               Label="Имя"
-                              Disabled="_isDisable"/>
+                              Disabled="_isDisable" Required="true" />
                 <MudTextField @bind-Value="@Employee.MiddleName"
                               For="@(() => Employee.MiddleName)"
                               Immediate="true"
                               Label="Отчество"
-                              Disabled="_isDisable"/>
+                              Disabled="_isDisable" Required="true" />
                 <MudTextField @bind-Value="@Employee.Phone"
                               For="@(() => Employee.Phone)"
                               Immediate="true"
@@ -59,14 +79,16 @@
                               For="@(() => Employee.Email)"
                               Immediate="true"
                               Label="E-mail"
-                              Disabled="_isDisable"/>
+                              Disabled="_isDisable" Required="true" />
 
             </MudCardContent>
             <MudCardActions>
-                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="OnValidSubmit" Color="Color.Tertiary">@ButtonText</MudButton>
+                <MudButton Variant="Variant.Filled" Size="Size.Small" 
+                           OnClick="()=> OnValidSubmit.InvokeAsync(Employee)"
+                           Color="Color.Tertiary" Disabled="@(!_success)">@ButtonText</MudButton>
             </MudCardActions>
         </MudCard>
-        </EditForm>
+        </MudForm>
         
     }
 
@@ -75,21 +97,36 @@
     [Parameter] public Employee Employee { get; set; } = null!;
     [Parameter] public string ButtonText { get; set; } = "Save";
     [Parameter] public string TitleText { get; set; } = "";
-    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback<Employee> OnValidSubmit { get; set; }
     [Parameter] public List<Employee>? OurEmployees { get; set; }
     [Parameter] public Company? CurrentCompany { get; set; }
+    private ApplicationUser[]? Users { get; set;}
     private bool _isDisable;
-    protected override void OnParametersSet()
+    private bool _success;
+    protected override async Task OnParametersSetAsync()
     {
-        if (Employee.Companies != null) CurrentCompany = Employee.Companies.FirstOrDefault();
+        //if (Employee.Companies != null) CurrentCompany = Employee.Companies.FirstOrDefault();
         if (CurrentCompany is {CompanyType.Name: TypeCompanyNames.OurCompanies })
         {
             Employee.IsOurEmployee = true;
+            var usersResponse = await UserManagerCustom.GetUsersAsync();
+            Users = usersResponse.ToArray();
         }
         if (CurrentCompany != null)
         {
-            Employee.Companies = new List<Company>() { CurrentCompany! };
+            if (Employee.Companies == null || !Employee.Companies.Any())
+            {
+                Employee.Companies = new List<Company>() { CurrentCompany!};
+            }
+            else
+            {
+                if (!Employee.Companies.Select(s=>s.Id).Contains(CurrentCompany.Id))
+                {
+                    Employee.Companies.Add(CurrentCompany);
+                }
+            }
         }
+        
     }
 
     private void ResetEmployee()
@@ -107,7 +144,17 @@
     private void OnChangedEmployee(Employee employee)
     {
         Employee = employee;
-        Employee.Companies = new List<Company>() { CurrentCompany! };
+        if (Employee.Companies == null || !Employee.Companies.Any())
+        {
+            Employee.Companies = new List<Company>() { CurrentCompany!};
+        }
+        else
+        {
+            if (!Employee.Companies.Select(s=>s.Id).Contains(CurrentCompany.Id))
+            {
+                Employee.Companies.Add(CurrentCompany);
+            }
+        }
         _isDisable = true;
     }
 }

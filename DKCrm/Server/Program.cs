@@ -105,6 +105,7 @@ builder.Services.AddTransient<IPriceToStringConverter, PriceToStringConverter>()
 builder.Services.AddTransient<IInfoSetFromDocumentToOrderService, InfoSetFromDocumentToOrderService>();
 builder.Services.AddTransient<PaymentInvoicePdfGenerator>();
 builder.Services.AddTransient<OrderSpecificationPdfGenerator>();
+builder.Services.AddTransient<CommercialOfferPdfGenerator>();
 builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryService>();
 builder.Services.AddTransient<IImageService, ImageService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();

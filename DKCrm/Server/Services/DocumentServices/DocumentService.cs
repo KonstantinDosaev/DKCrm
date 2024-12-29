@@ -27,10 +27,11 @@ namespace DKCrm.Server.Services.DocumentServices
 
         private readonly PaymentInvoicePdfGenerator _generatorPayment;
         private readonly OrderSpecificationPdfGenerator _generatorSpecification;
+        private readonly CommercialOfferPdfGenerator _generatorOffer;
         private readonly IFileService _fileService;
         private readonly IConfiguration _configuration;
         private readonly string _mainPathToPrivateDirectory;
-        public DocumentService(ApplicationDBContext context, PaymentInvoicePdfGenerator generatorPayment, IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService, OrderSpecificationPdfGenerator generatorSpecification, IFileService fileService, IConfiguration configuration)
+        public DocumentService(ApplicationDBContext context, PaymentInvoicePdfGenerator generatorPayment, IInfoSetFromDocumentToOrderService infoSetFromDocumentToOrderService, OrderSpecificationPdfGenerator generatorSpecification, IFileService fileService, IConfiguration configuration, CommercialOfferPdfGenerator generatorOffer)
         {
             _context = context;
             _generatorPayment = generatorPayment;
@@ -38,6 +39,7 @@ namespace DKCrm.Server.Services.DocumentServices
             _generatorSpecification = generatorSpecification;
             _fileService = fileService;
             _configuration = configuration;
+            _generatorOffer = generatorOffer;
             _mainPathToPrivateDirectory =  Path.Combine(PathsToDirectories.FileContainer, PathsToDirectories.OrdersDocuments);
         }
         public async Task<byte[]> GetDocumentBytArrayAsync(Guid infoSetId)
@@ -149,7 +151,52 @@ namespace DKCrm.Server.Services.DocumentServices
             }
             return resultDb == 1;
         }
-        
+          public async Task<bool> CreateCommercialOfferPdfAsync(CreateCommercialOfferPdfRequest request, ClaimsPrincipal user)
+        {
+            var byteArr = await _generatorOffer.CreateOfferAsync(request, user);
+            var pathToDirectory = Path.Combine(_mainPathToPrivateDirectory, request.OrderId.ToString());
+            if (!Directory.Exists(pathToDirectory))
+            {
+                Directory.CreateDirectory(pathToDirectory);
+            }
+            var countDoc = await GetCountDocumentByType(DocumentTypes.CommercialOffer, request.OrderId);
+            var fileToDbName = $"КП от {DateTime.Now.Date}-{countDoc}.pdf";
+            var saveResult = await _fileService.SaveFileAsync(new SaveFileRequest()
+            {
+                ContentType = FileTypes.Documents,
+                DirectoryType = DirectoryType.PrivateFolder,
+                Content = byteArr,
+                PathToDirectory = pathToDirectory,
+                FileName = fileToDbName,
+                IsFullPath = false,
+            });
+            if (string.IsNullOrEmpty(saveResult.FileName))
+                return false;
+
+            var pathToDb = Path.Combine(pathToDirectory, saveResult.FileName);
+            var document = new InfoSetFromDocumentToOrder()
+            {
+                Name = fileToDbName,
+                FileType = (int)FileTypes.Documents,
+                DateTimeCreated = DateTime.Now,
+                OrderId = request.OrderId,
+                DocumentType = (int)DocumentTypes.CommercialOffer,
+                PathToFile = pathToDb,
+            };
+            var resultDb = await _infoSetFromDocumentToOrderService.AddInfoSetToOrderAsync(document);
+            if (resultDb == 0)
+            {
+                _fileService.RemoveFile(new RemoveFileRequest()
+                {
+                    FileType = FileTypes.Documents,
+                    DirectoryType = DirectoryType.PrivateFolder,
+                    FileName = saveResult.FileName,
+                    IsFullPath = false,
+                    Path = pathToDb
+                });
+            }
+            return resultDb == 1;
+        }
         private async Task<bool> SaveToFile(byte[] pdfBytes, string pathToDirectory,string fullOutPath)
         {
             if (!Directory.Exists(pathToDirectory))
@@ -244,12 +291,12 @@ namespace DKCrm.Server.Services.DocumentServices
              var indexInstanceDocument = 0;
             var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(orderId);
-            var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
-            var infoSetFromPayment = infoSetFromDocumentToOrders
+            var infoSetFromDocumentToOrderCollection = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
+            var infoSetByType = infoSetFromDocumentToOrderCollection
                 .Where(w => w.DocumentType == (int)documentType).ToArray();
-            if (infoSetFromPayment.Any())
+            if (infoSetByType.Any())
             {
-                indexInstanceDocument = infoSetFromPayment.GroupBy(g => g.FileType)
+                indexInstanceDocument = infoSetByType.GroupBy(g => g.FileType)
                     .Select(s => s.Count()).Max(s => s) + 1;
             }
             return indexInstanceDocument;

@@ -9,7 +9,7 @@
 <MudSnackbarProvider />
 <div class="page">
     <main>
-        <NavMenu/>
+        <NavMenu UserProfileIsValid="_userProfileIsValid" />
         <CascadingValue Value="_hubConnection">
              @Body
          </CascadingValue>
@@ -18,53 +18,61 @@
 @functions{
     [CascadingParameter]
     Task<AuthenticationState> AuthenticationState { get; set; } = null!;
-
+    private readonly ApplicationUserModelFluentValidator _applicationUserValidator = new ApplicationUserModelFluentValidator();
     private HubConnection _hubConnection = null!;
     public bool IsConnected => _hubConnection.State == HubConnectionState.Connected;
     private string? CurrentUserId { get; set; }
     private List<Guid>? CurrentUserChatGroupsIds { get; set; }
-
+    private bool _userProfileIsValid = true;
     protected override async Task OnInitializedAsync()
     {
-        _hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).WithAutomaticReconnect().Build();
-        await _hubConnection.StartAsync();
-        _hubConnection.On<string, Guid, string>("ReceiveChatNotification", async (message, chatId, senderUserId) =>
-        {
-            if (!string.IsNullOrEmpty(CurrentUserId) && CurrentUserId != senderUserId 
-                && CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(chatId))
-            {
-               await _jsRuntime.InvokeAsync<string>("PlayAudio", "notification");
-                _snackBar.Add(message, MudBlazor.Severity.Info, config =>
-                {
-                    config.VisibleStateDuration = 100000;
-                    config.HideTransitionDuration = 500;
-                    config.ShowTransitionDuration = 500;
-                    config.Action = "Перейти в чат?";
-                    config.ActionColor = Color.Info;
-                    config.Onclick = snackbar =>
-                    {
-                        _navigationManager.NavigateTo($"chat/{senderUserId}");
-                        return Task.CompletedTask;
-                    };
-                });
-                var currentUser = await UserManagerCustom.GetUserDetailsAsync(CurrentUserId);
-                if (currentUser.AreThereNewMessages == false)
-                {
-                    currentUser.AreThereNewMessages = true;
-                    await UserManagerCustom.UpdateUser(currentUser);
-                }
-            }
-        });
         var state = await _stateProvider.GetAuthenticationStateAsync();
-        if (state == null) throw new ArgumentNullException(nameof(state));
         var user = state.User;
         CurrentUserId = user.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault();
         if (!string.IsNullOrEmpty(CurrentUserId))
         {
-            var currentUserChatGroups = await _chatManager.GetAllChatsToUser();
-             CurrentUserChatGroupsIds = currentUserChatGroups.Select(s => s.Id).ToList();
+            var currentUser = await UserManagerCustom.GetUserDetailsAsync(CurrentUserId);
+  
+            _userProfileIsValid =  (await _applicationUserValidator.ValidateAsync(currentUser)).IsValid;
+            _hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri("/signalRHub")).WithAutomaticReconnect().Build();
+            await _hubConnection.StartAsync();
+            _hubConnection.On<string, Guid, string>("ReceiveChatNotification", async (message, chatId, senderUserId) =>
+            {
+                if (CurrentUserId != senderUserId
+                    && CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(chatId))
+                {
+                    await _jsRuntime.InvokeAsync<string>("PlayAudio", "notification");
+                    _snackBar.Add(message, MudBlazor.Severity.Info, config =>
+                    {
+                        config.VisibleStateDuration = 100000;
+                        config.HideTransitionDuration = 500;
+                        config.ShowTransitionDuration = 500;
+                        config.Action = "Перейти в чат?";
+                        config.ActionColor = Color.Info;
+                        config.Onclick = snackbar =>
+                        {
+                            _navigationManager.NavigateTo($"chat/{senderUserId}");
+                            return Task.CompletedTask;
+                        };
+                    });
+
+                    if (currentUser.AreThereNewMessages == false)
+                    {
+                        currentUser.AreThereNewMessages = true;
+                        await UserManagerCustom.UpdateUser(currentUser);
+                    }
+                }
+            });
+            // var state = await _stateProvider.GetAuthenticationStateAsync();
+            // if (state == null) throw new ArgumentNullException(nameof(state));
+            // var user = state.User;
+            CurrentUserId = user.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault();
+            if (!string.IsNullOrEmpty(CurrentUserId))
+            {
+                var currentUserChatGroups = await _chatManager.GetAllChatsToUser();
+                CurrentUserChatGroupsIds = currentUserChatGroups.Select(s => s.Id).ToList();
+            }
         }
-        
     }
 
     protected override async Task OnParametersSetAsync()

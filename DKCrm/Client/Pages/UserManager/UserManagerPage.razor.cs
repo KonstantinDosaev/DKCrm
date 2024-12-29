@@ -30,14 +30,20 @@ namespace DKCrm.Client.Pages.UserManager
         private DialogOptions _roleDialogOptions = new() { FullWidth = true, CloseButton = true };
         private bool _visibleRoleDialog;
         private string value { get; set; } = "Nothing selected";
-        private async void OpenRoleDialog(ApplicationUser user)
+        private bool _visibleEditUserProfileDialog;
+        private async Task OpenRoleDialog(ApplicationUser user)
         {
             _currentUser = user;
             _currentRoles = await UserManagerCustom.GetRoleFromUser(user.Id);
             value = _currentRoles.FirstOrDefault()!;
             _visibleRoleDialog = true;
         }
-  
+        private void OpenEditUserProfileDialog(ApplicationUser user)
+        {
+            _currentUser = user;
+            _visibleEditUserProfileDialog = true;
+        }
+
         protected override async Task OnInitializedAsync()
         {
            
@@ -63,7 +69,7 @@ namespace DKCrm.Client.Pages.UserManager
             AddEditionEvent($"RowEditPreview event: made a backup of Element {((ApplicationUser)element).UserName}");
         }
 
-        private async void ItemHasBeenCommitted(object element)
+        private async Task ItemHasBeenCommitted(object element)
         {
             _elementBeforeEdit = new()
             {
@@ -100,7 +106,7 @@ namespace DKCrm.Client.Pages.UserManager
 
         [Inject] private IDialogService DialogService { get; set; } = null!;
 
-        private async void OnButtonDeleteClicked()
+        private async  Task OnButtonDeleteClicked()
         {
             bool? result = await DialogService.ShowMessageBox(
                 "Внимание",

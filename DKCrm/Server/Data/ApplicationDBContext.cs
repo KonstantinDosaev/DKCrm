@@ -54,6 +54,8 @@ namespace DKCrm.Server.Data
         public DbSet<InfoSetToImage> InfoSetsToImages { get; set; } = null!;
         public DbSet<CompanyComment> CompanyComments { get; set; } = null!;
         public DbSet<AccessRestriction> AccessRestrictions { get; set; } = null!;
+        public DbSet<LogUsersVisitToOrderComments> LogUsersVisitToOrderComments { get; set; } = null!;
+        public DbSet<LogUsersVisitToCompanyComments> LogUsersVisitToCompanyComments { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

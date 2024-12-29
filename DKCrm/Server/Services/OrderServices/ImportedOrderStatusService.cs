@@ -73,6 +73,7 @@ namespace DKCrm.Server.Services.OrderServices
         {
             _context.ImportedOrderStatus.AddRange(new[]
             {
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = -1,Value = ExportOrderStatusNames.Canceled,IsValueConstant = true},
                 new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,Value = ImportOrderStatusNames.BeginFormed,IsValueConstant = true},
                 new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ImportOrderStatusNames.CompletedFormed,IsValueConstant = true},
                 new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ImportOrderStatusNames.AwaitingConfirmation,IsValueConstant = true},

@@ -1,125 +1,128 @@
 ﻿@page "/userprofile"
 
 <MudText Typo="Typo.h4" Style="margin: 1rem 0 0 1rem;">Профиль пользователя</MudText>
-<MudCard>
-    <MudForm Model="@_user" @ref="@UserProfileForm" Validation="@(_applicationUserValidator.ValidateValue)" ValidationDelay="0">
-        <MudCardContent>
-            <MudTextField @bind-Value="_user.UserName"
-                          For="@(() => _user.UserName)"
-                          Immediate="true"
-                          Label="Ник" />
+@if (User != null)
+{
+    <MudCard>
+        <MudForm Model="@User" @ref="@UserProfileForm" Validation="@(_applicationUserValidator.ValidateValue)" ValidationDelay="0">
+            <MudCardContent>
+                <MudTextField @bind-Value="User.UserName"
+                              For="@(() => User.UserName)"
+                              Immediate="true"
+                              Label="Ник" Required="true"/>
 
-            <MudTextField @bind-Value="_user.Email"
-                          For="@(() => _user.Email)"
-                          Immediate="true"
-                          Label="Email" />
+                <MudTextField @bind-Value="User.Email"
+                              For="@(() => User.Email)"
+                              Immediate="true"
+                              Label="Email" Required="true" />
 
-            <MudTextField @bind-Value="_user.FirstName"
-                          For="@(() => _user.FirstName)"
-                          Immediate="true"
-                          Label="Имя" />
+                <MudTextField @bind-Value="User.FirstName"
+                              For="@(() => User.FirstName)"
+                              Immediate="true"
+                              Label="Имя" Required="true" />
 
-            <MudTextField @bind-Value="_user.LastName"
-                          For="@(() => _user.LastName)"
-                          Immediate="true"
-                          Label="Фамилия" />
+                <MudTextField @bind-Value="User.LastName"
+                              For="@(() => User.LastName)"
+                              Immediate="true"
+                              Label="Фамилия" Required="true" />
 
-            <MudTextField @bind-Value="_user.PhoneNumber"
-                          For="@(() => _user.PhoneNumber)"
-                          Immediate="true"
-                          Label="Телефонный номер" />
+                <MudTextField @bind-Value="User.PhoneNumber"
+                              For="@(() => User.PhoneNumber)"
+                              Immediate="true"
+                              Label="Телефонный номер" Required="true" />
 
-            <MudTextField @bind-Value="_user.LastName"
-                          For="@(() => _user.LastName)"
-                          Immediate="true"
-                          Label="Дополнительный телефонный номер" />
+                <MudTextField @bind-Value="User.AdditionalPhoneNumber"
+                              For="@(() => User.AdditionalPhoneNumber)"
+                              Immediate="true"
+                              Label="Дополнительный телефонный номер"/>
 
 
-            @if (_user.Address != null)
-            {
-                <p class="mt-6 fs-4">Основной адрес</p>
-                <MudTextField @bind-Value="_user.Address.Country"
-                          For="@(() => _user.Address.Country)"
-                          Immediate="true"
-                          Label="Страна" />
+                @if (User.Address != null)
+                {
+                    <p class="mt-6 fs-4">Основной адрес</p>
+                    <MudTextField @bind-Value="User.Address.Country"
+                                  For="@(() => User.Address.Country)"
+                                  Immediate="true"
+                                  Label="Страна"/>
 
-                <MudTextField @bind-Value="_user.Address.City"
-                          For="@(() => _user.Address.City)"
-                          Immediate="true"
-                          Label="Город" />
+                    <MudTextField @bind-Value="User.Address.City"
+                                  For="@(() => User.Address.City)"
+                                  Immediate="true"
+                                  Label="Город"/>
 
-                <MudTextField @bind-Value="_user.Address.Street"
-                          For="@(() => _user.Address.Street)"
-                          Immediate="true"
-                          Label="Улица" />
+                    <MudTextField @bind-Value="User.Address.Street"
+                                  For="@(() => User.Address.Street)"
+                                  Immediate="true"
+                                  Label="Улица"/>
 
-                <MudTextField @bind-Value="_user.Address.Home"
-                          For="@(() => _user.Address.Home)"
-                          Immediate="true"
-                          Label="Дом/Сторение" />
+                    <MudTextField @bind-Value="User.Address.Home"
+                                  For="@(() => User.Address.Home)"
+                                  Immediate="true"
+                                  Label="Дом/Сторение"/>
 
-                <MudTextField @bind-Value="_user.Address.Placement"
-                          For="@(() => _user.Address.Placement)"
-                          Immediate="true"
-                          Label="Помещение/Квартира" />
+                    <MudTextField @bind-Value="User.Address.Placement"
+                                  For="@(() => User.Address.Placement)"
+                                  Immediate="true"
+                                  Label="Помещение/Квартира"/>
 
-                <MudTextField @bind-Value="_user.Address.PostalCode"
-                          For="@(() => _user.Address.PostalCode)"
-                          Immediate="true"
-                          Label="Почтовый код" />
-            }
-            else
-            {
-                <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _user.Address = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">
-                    Добавить основной адрес
-                    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
-                </MudButton>
+                    <MudTextField @bind-Value="User.Address.PostalCode"
+                                  For="@(() => User.Address.PostalCode)"
+                                  Immediate="true"
+                                  Label="Почтовый код"/>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => User.Address = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                        Добавить основной адрес
+                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+                    </MudButton>
 
-                <br />
-            }
-            @if (_user.AdditionalAddress != null)
-            {
-                <p class="mt-6 fs-4">Дополнительный адрес</p>
-                <MudTextField @bind-Value="_user.AdditionalAddress.Country"
-                          For="@(() => _user.AdditionalAddress.Country)"
-                          Immediate="true"
-                          Label="Страна" />
+                    <br/>
+                }
+                @if (User.AdditionalAddress != null)
+                {
+                    <p class="mt-6 fs-4">Дополнительный адрес</p>
+                    <MudTextField @bind-Value="User.AdditionalAddress.Country"
+                                  For="@(() => User.AdditionalAddress.Country)"
+                                  Immediate="true"
+                                  Label="Страна"/>
 
-                <MudTextField @bind-Value="_user.AdditionalAddress.City"
-                          For="@(() => _user.AdditionalAddress.City)"
-                          Immediate="true"
-                          Label="Город" />
+                    <MudTextField @bind-Value="User.AdditionalAddress.City"
+                                  For="@(() => User.AdditionalAddress.City)"
+                                  Immediate="true"
+                                  Label="Город"/>
 
-                <MudTextField @bind-Value="_user.AdditionalAddress.Street"
-                          For="@(() => _user.AdditionalAddress.Street)"
-                          Immediate="true"
-                          Label="Улица" />
+                    <MudTextField @bind-Value="User.AdditionalAddress.Street"
+                                  For="@(() => User.AdditionalAddress.Street)"
+                                  Immediate="true"
+                                  Label="Улица"/>
 
-                <MudTextField @bind-Value="_user.AdditionalAddress.Home"
-                          For="@(() => _user.AdditionalAddress.Home)"
-                          Immediate="true"
-                          Label="Дом/Сторение" />
+                    <MudTextField @bind-Value="User.AdditionalAddress.Home"
+                                  For="@(() => User.AdditionalAddress.Home)"
+                                  Immediate="true"
+                                  Label="Дом/Сторение"/>
 
-                <MudTextField @bind-Value="_user.AdditionalAddress.Placement"
-                          For="@(() => _user.AdditionalAddress.Placement)"
-                          Immediate="true"
-                          Label="Помещение/Квартира" />
+                    <MudTextField @bind-Value="User.AdditionalAddress.Placement"
+                                  For="@(() => User.AdditionalAddress.Placement)"
+                                  Immediate="true"
+                                  Label="Помещение/Квартира"/>
 
-                <MudTextField @bind-Value="_user.AdditionalAddress.PostalCode"
-                          For="@(() => _user.AdditionalAddress.PostalCode)"
-                          Immediate="true"
-                          Label="Почтовый код" />
-            }
-            else
-            {
-                <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _user.AdditionalAddress = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">
-                    Добавить дополнительный адрес
-                    <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
-                </MudButton>
-            }
-        </MudCardContent>
-    </MudForm>
-    <MudCardActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await Submit())">Применить</MudButton>
-    </MudCardActions>
-</MudCard>
+                    <MudTextField @bind-Value="User.AdditionalAddress.PostalCode"
+                                  For="@(() => User.AdditionalAddress.PostalCode)"
+                                  Immediate="true"
+                                  Label="Почтовый код"/>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => User.AdditionalAddress = new Address()" Style="margin-top: 2rem;" Color="Color.Tertiary">
+                        Добавить дополнительный адрес
+                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+                    </MudButton>
+                }
+            </MudCardContent>
+        </MudForm>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await Submit())">Применить</MudButton>
+        </MudCardActions>
+    </MudCard>
+}

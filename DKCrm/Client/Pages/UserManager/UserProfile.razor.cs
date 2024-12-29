@@ -1,5 +1,6 @@
 ﻿using DKCrm.Client.FluentValidation;
 using DKCrm.Shared.Models;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace DKCrm.Client.Pages.UserManager
@@ -12,27 +13,32 @@ namespace DKCrm.Client.Pages.UserManager
 
         AddressModelFluentValidator _addressValidator = new AddressModelFluentValidator();
 
-        private ApplicationUser _user = new ();
+        [Parameter]public ApplicationUser? User { get; set; }
         protected override async Task OnInitializedAsync()
         {
-            var state = await _stateProvider.GetAuthenticationStateAsync();
-            var userId = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault()!;
-            _user = await UserManagerCustom.GetUserDetailsAsync(userId);
+            if (User == null)
+            {
+                var state = await _stateProvider.GetAuthenticationStateAsync();
+                var userId = state.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value)
+                    .FirstOrDefault()!;
+                User = await UserManagerCustom.GetUserDetailsAsync(userId);
+            }
         }
 
 
 
         private async Task Submit()
         {
-            if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
-                return;
             if (UserProfileForm != null)
             {
                 await UserProfileForm.Validate();
 
                 if (UserProfileForm.IsValid)
                 {
-                    await UserManagerCustom.UpdateUser(_user);
+                    if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+                        return;
+
+                    await UserManagerCustom.UpdateUser(User!);
 
                     _snackBar.Add("Изменения применены!");
                 }

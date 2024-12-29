@@ -14,6 +14,8 @@ namespace DKCrm.Shared.Models.OrderModels
         public decimal? PriceInTransactionCurrency { get; set; }
         [MaxLength(10)]
         public string? BuyerCurrency { get; set; }
+        public int? MinDaysForDeliveryPlaned { get; set; }
+        public int? MaxDaysForDeliveryPlaned { get; set; }
         public decimal? PriceInBuyerCurrency { get; set; }
         [MaxLength(200)]
         public string? Description { get; set; }

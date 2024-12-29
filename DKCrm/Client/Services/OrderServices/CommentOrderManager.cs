@@ -1,6 +1,9 @@
 ﻿using System.Net.Http.Json;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.CompanyModels;
+using DKCrm.Shared.Requests;
+using System.Security.Claims;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -30,6 +33,22 @@ namespace DKCrm.Client.Services.OrderServices
         public async Task SaveCommentAsync(CommentOrder comment)
         {
             await _httpClient.PostAsJsonAsync("api/OrderComment/SaveComment", comment);
+        }
+        public async Task<int> SetLogUsersVisitAsync(LogUsersVisitToOrderComments log)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/OrderComment/SetLogUsersVisit", log);
+            return await response.Content.ReadFromJsonAsync<int>();
+        }
+        public async Task<LogUsersVisitToOrderComments?> GetLogUsersVisitAsync(Guid orderId)
+        {
+            return await _httpClient.GetFromJsonAsync<LogUsersVisitToOrderComments>
+                ($"api/OrderComment/GetLogUsersVisit/{orderId}");
+        }   
+        public async Task<List<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/OrderComment/GetWarningComments", request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<List<CommentOrder>>() ?? throw new InvalidOperationException();
+
         }
     }
 }

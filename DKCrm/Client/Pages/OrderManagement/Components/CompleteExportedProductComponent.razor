@@ -133,9 +133,10 @@
                                 @if (@importedProduct.ImportedOrderId == ShowingImportOrderId && _visibleImportOrder )
                                 {
                                     <MudPopover Open="@_visibleImportOrder"
-                                                Style="min-width: 550px;"
+                                                Style=""
                                                 Class="px-4 pt-4"
-                                                OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                                                OverflowBehavior="OverflowBehavior.FlipAlways"
+                                                >
                                         <MudText>@importedProduct.ImportedOrder?.SellersCompany?.Name</MudText>
                                         <ImportedOrderDetailsComponent Id="(Guid)importedProduct.ImportedOrderId" 
                                                                        CurrencyDisplay="@(new[] { "Сделки" })" 

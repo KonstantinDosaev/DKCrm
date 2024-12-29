@@ -17,6 +17,14 @@ namespace DKCrm.Shared.Models.CompanyModels
         public string? Inn { get; set; }
         [MaxLength(50)]
         public string? Kpp { get; set; } = null!;
+        [MaxLength(20)]
+        public string? Phone { get; set; }
+        [MaxLength(20)]
+        public string? Email { get; set; }
+        [MaxLength(20)]
+        public string? PhoneAdditional { get; set; }
+        [MaxLength(20)]
+        public string? EmailAdditional { get; set; }
         [MaxLength(50)]
         public string? Kbk { get; set; } = null!;
         public virtual Address? ActualAddress { get; set; }

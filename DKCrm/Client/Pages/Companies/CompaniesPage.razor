@@ -8,16 +8,17 @@
            Style="margin-left: 1rem;" Color="Color.Tertiary">
     Добавить компанию
     <MudIcon Size="@Size.Medium" Color="Color.Default"
-             Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+             Icon="@Icons.Material.Sharp.Add" Class="pa-0"/>
 </MudButton>
 
 <MudButton Variant="Variant.Filled" Size="Size.Medium" 
-           OnClick="() => VisibleCompanySettingsDrawer = true" Style="margin-left: 1rem;" 
+           OnClick="() => VisibleCompanySettingsDrawer = true" Style="margin-right: 1rem;" 
            Color="Color.Tertiary">
     Настройки
     <MudIcon Size="@Size.Medium" Color="Color.Default"
              Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
 </MudButton>
+<WarningCompanyCommentComponent/>
 <div class="d-flex ">
     <div class="flex-grow-1 mr-4">
         <MudTable Height="" Class="" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" 
@@ -42,6 +43,7 @@
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.Country)">Страна</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.City)">Город</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.CompanyType?.Name!)">Тип контрагента</MudTableSortLabel></MudTh>
+                <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
@@ -63,6 +65,13 @@
                     {
                         @context.CompanyType.Name
                     }
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Size="@Size.Medium" 
+                                   OnClick="() => OpenCompanyComments(context.Id)"
+                                   Color="Color.Default"
+                                   Icon="@Icons.Material.Sharp.Comment"
+                                   Class="pa-0 ml-2"/>
                 </MudTd>
             </RowTemplate>
             <PagerContent>
@@ -103,6 +112,15 @@
         <CompanyPageSettings/>
     </DialogContent>
 </MudDialog>
+@if (_visibleComments)
+{
+    <MudDialog @bind-Visible="_visibleComments" Style="max-width: 700px;padding: 0"
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+        <DialogContent>
+            <CompanyCommentsComponent CurrentCompanyId="CompanyId"/>
+        </DialogContent>
+    </MudDialog>
+}
 @*    <MudDrawer @bind-Open="@VisibleCompanySettingsDrawer" Anchor="Anchor.Right" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100vh" Width="900px">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">Общие настройки компаний</MudText>
@@ -114,7 +132,7 @@
 @code {
 
     [Parameter] public Guid? TagId { get; set; }
-
+    public Guid CompanyId { get; set; } 
     private  List<CompanyType>? CompanyTypes { get; set; }
     private  List<TagsCompany>? TagsCompanies { get; set; }
     private List<Company>? Companies { get; set; }
@@ -125,7 +143,7 @@
     MudListItem<TagsCompany>? _selectedItem;
     object _selectedValue = 1;
     private bool _visibleAddCompanyDialog;
-
+    private bool _visibleComments;
     protected override async Task OnInitializedAsync()
     {
         await GetAllCompanies();
@@ -179,6 +197,12 @@
             Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies
                 .Select(s => s.Id).Contains(tagId)).ToList();
         }
+
+    private void OpenCompanyComments(Guid id)
+    {
+        CompanyId = id;
+        _visibleComments = !_visibleComments;
+    }
     //private async Task DeleteCompany()
     //{
     //    if (await CompanyManager.RemoveAsync(CurrentCategory.Id))

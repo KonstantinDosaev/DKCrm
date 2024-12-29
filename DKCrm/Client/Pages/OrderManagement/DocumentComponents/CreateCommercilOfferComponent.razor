@@ -1,0 +1,113 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Models.OrderModels
+@using Microsoft.AspNetCore.Components
+@using DKCrm.Shared.Constants
+<h3>CreatePaymentInvoiceComponent</h3>
+@if (_createRequest != null && OurCompany != null)
+{
+    <div class="d-flex flex-column w-100 my-2">
+        <MudForm @bind-IsValid="@_success">
+            @if (OurCompany.FnsRequest == null)
+            {
+                _success = false;
+                <MudText Color="Color.Error">Внесите данные ЕГР нашей компании!!!</MudText>
+
+            }
+            @if (_createRequest.Avatar == null)
+            {
+                _success = false;
+                <MudText Color="Color.Error"></MudText>
+
+            }
+      
+            <MudSelect T="BankDetails"
+                       @bind-Value="_createRequest.OurSelectedBank" Label="Банк нашей компании"
+                       Variant="Variant.Outlined" Dense="true" Style=""
+                       Class="mb-2"
+                       ToStringFunc="_converterBank" Immediate="true" Required="true">
+                @if (OurCompany?.BankDetails != null)
+                {
+                    foreach (var bank in OurCompany.BankDetails)
+                    {
+                        var desc = "";
+                        if (bank.Description != null)
+                        {
+                            desc = $" ({@bank.Description})";
+                        }
+                        <MudSelectItem T="BankDetails" Value="bank">
+                            @($"{bank.Name}{desc}")
+                        </MudSelectItem>
+                    }
+                }
+            </MudSelect>
+
+            <MudButton OnClick="()=> _visibleImagesDialog = true"
+                       Class="my-2"
+                       Variant="Variant.Filled"
+                       Color="Color.Success">Выбрать изображение</MudButton>
+            @if (_visibleImagesDialog)
+            {
+                <DKImageViewerDialog DirectoryType="DirectoryType.PrivateFolder"
+                                     FileType="FileTypes.Images"
+                                     RelativePath="@(Path.Combine(PathsToDirectories.FileContainer, PathsToDirectories.Images))"
+                                     LoadMoreCount="5" @bind-VisibleDialog="_visibleImagesDialog" TitleText="Печати"
+                                     IsSelected="true" MultipleSelect="false"
+                                     SelectedImageCallback="SetStampImage" 
+                                     OwnerId="@OurCompany.Id" ImageType="ImageTypes.Image" IsPreviewImage="@true" />
+            }
+@* 
+            <MudTextField @bind-Value="@_createPaymentInvoiceRequest.ContractNumber"
+                          Label="Номер договора"
+                          Variant="Variant.Outlined"
+                          Class="mb-2" Required="true" />
+            <MudTextField @bind-Value="@_createPaymentInvoiceRequest.IGK"
+                          Label="ИГК"
+                          Variant="Variant.Outlined"
+                          Class="mb-2" Required="true" />
+            <MudDatePicker Label="Дата договора"
+                           Editable="true"
+                           Variant="Variant.Outlined"
+                           @bind-Date="_createPaymentInvoiceRequest.ContractDate"
+                           Class="mb-2" Required="true" /> *@
+ 
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="@(!_success)" Class="ml-auto"
+                       OnClick="Create">Создать</MudButton>
+        </MudForm>
+    </div>
+}
+@code {
+    [Parameter] public Guid OrderId { get; set; }
+    [Parameter] public EventCallback RefreshParent { get; set; }
+    CreateCommercialOfferPdfRequest _createRequest = new();
+    Company? OurCompany { get; set; }
+    ExportedOrder? CurrentOrder { get; set; }
+    public Guid CurrentOrderId { get; set; }
+
+    bool _success;
+    bool _visibleImagesDialog;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CurrentOrderId == OrderId) return;
+        CurrentOrderId = OrderId;
+        CurrentOrder = await ExportedOrderManager.GetDetailsAsync(CurrentOrderId);
+        OurCompany = await CompanyManager.GetDetailsAsync((Guid)CurrentOrder.OurCompanyId!);
+    }
+
+    private async Task Create()
+    {
+        _createRequest.OrderId = OrderId;
+        var result = await DocumentManager.CreateCommercialOfferPdfAsync(_createRequest);
+        await RefreshParent.InvokeAsync();
+    }
+    private async Task SetStampImage(Guid id)
+    {
+       _createRequest.Avatar = await ImageManager.GetOneImageInByteArrAsync(id);
+        if (_createRequest.OurSelectedBank != null)
+        {
+            _success = true;
+        }
+    }
+    Func<BankDetails, string> _converterBank = p => $"{p.Name}";
+}

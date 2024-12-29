@@ -7,16 +7,19 @@ using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace DKCrm.Server.Services.OrderServices
 {
     public class ExportedOrderService : IExportedOrderService
     {
         private readonly ApplicationDBContext _context;
+        private readonly IExportedProductService _exportedProductService;
 
-        public ExportedOrderService(ApplicationDBContext context)
+        public ExportedOrderService(ApplicationDBContext context, IExportedProductService exportedProductService)
         {
             _context = context;
+            _exportedProductService = exportedProductService;
         }
 
         public async Task<IEnumerable<ExportedOrder>> GetAsync(ClaimsPrincipal user)
@@ -215,7 +218,7 @@ namespace DKCrm.Server.Services.OrderServices
 
             exportedOrder.DateTimeCreated = DateTime.Now;
             var count = _context.ExportedOrders.Count(w => w.DateTimeCreated!.Value.Date == exportedOrder.DateTimeCreated!.Value.Date);
-            exportedOrder.Number = (exportedOrder.DateTimeCreated!.Value.ToShortDateString()).Replace(".", "") + (count + 1);
+            exportedOrder.Number = (exportedOrder.DateTimeCreated!.Value.ToString("ddMMyyyy")) + (count + 1);
             _context.Entry(exportedOrder).State = EntityState.Added;
 
             //if (exportedOrder.ExportedOrderStatus != null)
@@ -283,18 +286,94 @@ namespace DKCrm.Server.Services.OrderServices
         }
         public async Task<int> DeleteAsync(Guid id)
         {
-            _context.Remove(new ExportedOrder { Id = id });
+            var orderInDb = await _context.ExportedOrders.Include(i=>i.ExportedProducts)
+                .FirstOrDefaultAsync(x => x.Id == id);
+            await _context.SoldFromStorages.Where(w => orderInDb!.ExportedProducts!
+                .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
+            await _context.PurchaseAtExports.Where(w => orderInDb!.ExportedProducts!
+                .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
+
+            if (orderInDb == null) return 0;
+            if (orderInDb.ExportedProducts != null)
+            {
+                foreach (var exportedProduct in orderInDb.ExportedProducts)
+                {
+                    if (exportedProduct.SoldFromStorage != null)
+                    {
+                        var enumerable = exportedProduct.SoldFromStorage.Select(s => s.Quantity = 0);
+                    }
+                    if (exportedProduct.PurchaseAtExports != null)
+                    {
+                        var enumerable = exportedProduct.PurchaseAtExports.Select(s => s.Quantity = 0);
+                    }
+                    var resultUpdSource = await _exportedProductService.UpdateSourcesOrderItems(exportedProduct);
+                }
+            }
+            _context.Entry(orderInDb).State = EntityState.Deleted;
             return await _context.SaveChangesAsync();
         }
         public async Task<int> DeleteRangeAsync(IEnumerable<ExportedOrder> exportedOrders)
         {
-            _context.RemoveRange(exportedOrders);
-
-            return await _context.SaveChangesAsync();
+            var countResult = 0;
+            foreach (var order in exportedOrders)
+            {
+               countResult = await DeleteAsync(order.Id);
+            }
+            return countResult;
         }
         public async Task<int> AddStatusToOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus)
         {
-            _context.Entry(exportedOrderStatus).State = EntityState.Added;
+            var statusItem =
+                await _context.ExportedOrderStatus.FirstOrDefaultAsync(f =>
+                    f.Id == exportedOrderStatus.ExportedOrderStatusId);
+            var orderInDb = await _context.ExportedOrders
+                .Include(i => i.ExportedOrderStatusExported).AsNoTracking()
+                .Include(i => i.ExportedProducts!).ThenInclude(t=>t.SoldFromStorage)
+                .Include(i => i.ExportedProducts!).ThenInclude(t => t.PurchaseAtExports)
+                .FirstOrDefaultAsync(x => x.Id == exportedOrderStatus.ExportedOrderId);
+
+            if (orderInDb!.ExportedOrderStatusExported != null && 
+                orderInDb!.ExportedOrderStatusExported.Select(s=>s.ExportedOrderStatusId)
+                    .Contains(exportedOrderStatus.ExportedOrderStatusId))
+            {
+               //_context.Update(exportedOrderStatus);
+                _context.Entry(exportedOrderStatus).State = EntityState.Modified;
+            }
+            else
+            {
+ 
+                _context.Entry(exportedOrderStatus).State = EntityState.Added;
+            }
+            if (statusItem is { Position: < 0 })
+            {
+
+                //await _context.SoldFromStorages.Where(w => orderInDb!.ExportedProducts!
+                //    .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
+                //await _context.PurchaseAtExports.Where(w => orderInDb!.ExportedProducts!
+                //    .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
+                if (orderInDb == null) return 0;
+                if (orderInDb.ExportedProducts != null)
+                {
+                    foreach (var exportedProduct in orderInDb.ExportedProducts)
+                    {
+                        foreach (var sld in exportedProduct.SoldFromStorage)
+                        {
+                            sld.Quantity = 0;
+                        }
+
+                        if (exportedProduct.PurchaseAtExports != null)
+                        {
+                            foreach (var exp in exportedProduct.PurchaseAtExports)
+                            {
+                                exp.Quantity = 0;
+                            }
+                        }
+
+                        var resultUpdSource = await _exportedProductService.UpdateSourcesOrderItems(exportedProduct);
+                    }
+                }
+            }
+
             return await _context.SaveChangesAsync();
         }
         public async Task<int> RemoveStatusFromOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus)

@@ -5,17 +5,24 @@ using System.Security.Claims;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
+using DKCrm.Shared.Requests;
 using MudBlazor;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using Org.BouncyCastle.Asn1.Ocsp;
+using DKCrm.Shared.Models.UserAuth;
+using Microsoft.AspNetCore.Identity;
+using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Server.Services.OrderServices
 {
     public class OrderCommentsService : IOrderCommentsService
     {
         private readonly ApplicationDBContext _context;
-
-        public OrderCommentsService(ApplicationDBContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public OrderCommentsService(ApplicationDBContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<CommentOrder>> GetAllCommentsFromOrderAsync(Guid orderId, ClaimsPrincipal user)
@@ -29,7 +36,9 @@ namespace DKCrm.Server.Services.OrderServices
                     Value = x.Value,
                     DateTimeCreated = x.DateTimeCreated,
                     Id = x.Id,
-                    OrderId = x.OrderId,
+                    OrderId = x.OrderId, 
+                    IsWarningComment = x.IsWarningComment, 
+                    OrderType = x.OrderType
                 }).ToArrayAsync();
             return comments;
         }
@@ -42,6 +51,8 @@ namespace DKCrm.Server.Services.OrderServices
                 DateTimeCreated = x.DateTimeCreated,
                 Id = x.Id,
                 OrderId = x.OrderId,
+                IsWarningComment = x.IsWarningComment,
+                OrderType = x.OrderType
             });
    
             if (request.FilterTuple != null)
@@ -83,12 +94,84 @@ namespace DKCrm.Server.Services.OrderServices
         }
         public async Task<int> SaveCommentAsync(CommentOrder comment, ClaimsPrincipal user)
         {
-            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
-            if (userId == null) return 0; 
-            
-            comment.FromUserId = userId;
-            comment.DateTimeCreated = DateTime.UtcNow.AddHours(3);
-           _context.Entry(comment).State = EntityState.Added;
+            var commentInDb = await _context.CommentOrders.AsNoTracking()
+                .FirstOrDefaultAsync(w => w.Id == comment.Id);
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value)
+                .FirstOrDefault();
+            if (userId == null) return 0;
+            if (commentInDb == null)
+            {
+                comment.FromUserId = userId;
+                comment.DateTimeCreated = DateTime.UtcNow.AddHours(3);
+                comment.DateTimeUpdate = DateTime.UtcNow.AddHours(3);
+                _context.Entry(comment).State = EntityState.Added;
+            }
+            else
+            {
+                comment.DateTimeUpdate = DateTime.UtcNow.AddHours(3);
+                _context.Entry(comment).State = EntityState.Modified;
+            }
+            await SetLogUserVisit(new LogUsersVisitToOrderComments()
+            {
+                OrderOwnerCommentsId = comment.OrderId,
+                DateTimeVisit = DateTime.Now,
+                UserId = userId
+            }, user);
+
+            if (comment.IsWarningComment)
+            {
+                string employeeId ="";
+                if (comment.OrderType == typeof(ExportedOrder).ToString())
+                {
+                     employeeId = _context.ExportedOrders.
+                         Include(i => i.OurEmployee)
+                         .FirstOrDefault(w => w.Id == comment.OrderId)!.OurEmployee!.UserId!;
+                         
+                }
+                else if(comment.OrderType == typeof(ImportedOrder).ToString())
+                {
+                    employeeId = _context.ImportedOrders.
+                        Include(i=>i.OurEmployee)
+                        .FirstOrDefault(w => w.Id == comment.OrderId)!.OurEmployee!.UserId!;
+                }
+                if (!string.IsNullOrEmpty(employeeId))
+                {
+                    var logInDb = await _context.LogUsersVisitToOrderComments.AsNoTracking()
+                        .FirstOrDefaultAsync(w => w.OrderOwnerCommentsId == comment.OrderId 
+                                                  && w.UserId == employeeId) ?? null;
+                    if (logInDb == null)
+                    {
+                        await SetLogUserVisit(new LogUsersVisitToOrderComments()
+                        {
+                            OrderOwnerCommentsId = comment.OrderId,
+                            DateTimeVisit = DateTime.Now,
+                            UserId = employeeId
+                        }, user);
+                    }
+                }
+
+                var suAdmins = await _userManager.GetUsersInRoleAsync(RoleNames.SuAdmin);
+                var admins = await _userManager.GetUsersInRoleAsync(RoleNames.Admin);
+                var unitCollection = admins.Union(suAdmins).Select(s=>s.Id);
+                foreach (var userAdmId in unitCollection)
+                {
+                    if (userAdmId == userId)
+                        continue;
+                    var logInDb = await _context.LogUsersVisitToOrderComments.AsNoTracking()
+                        .FirstOrDefaultAsync(w => w.OrderOwnerCommentsId == comment.OrderId
+                                                  && w.UserId == employeeId) ?? null;
+                    if (logInDb == null)
+                    {
+                        await SetLogUserVisit(new LogUsersVisitToOrderComments()
+                        {
+                            OrderOwnerCommentsId = comment.OrderId,
+                            DateTimeVisit = DateTime.Now,
+                            UserId = userAdmId
+                        }, user);
+                    }
+                }
+
+            }
             return await _context.SaveChangesAsync();
         }
 
@@ -100,6 +183,93 @@ namespace DKCrm.Server.Services.OrderServices
             _context.CommentOrders.RemoveRange(comments);
             var t = await _context.SaveChangesAsync();
             return count;
+        }
+        public async Task<int> SetLogUserVisit(LogUsersVisitToOrderComments newLog, ClaimsPrincipal user)
+        {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            var logInDb = await _context.LogUsersVisitToOrderComments.AsNoTracking()
+                .FirstOrDefaultAsync(w => w.OrderOwnerCommentsId == newLog.OrderOwnerCommentsId && w.UserId == newLog.UserId) ?? null;
+            if (logInDb != null )
+            {
+                logInDb.DateTimeVisit = newLog.DateTimeVisit;
+                _context.LogUsersVisitToOrderComments.Entry(logInDb).State = EntityState.Modified;
+            }
+            else
+            {
+                _context.LogUsersVisitToOrderComments.Entry(newLog).State = EntityState.Added;
+            }
+          
+            return await _context.SaveChangesAsync();
+        }
+        public async Task<LogUsersVisitToOrderComments> GetLogUserVisitAsync(Guid orderId, ClaimsPrincipal user)
+        {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier)
+                .Select(a => a.Value).FirstOrDefault();
+            var logInDb = await _context.LogUsersVisitToOrderComments.AsNoTracking()
+                .FirstAsync(w => w.OrderOwnerCommentsId == orderId && w.UserId == userId);
+
+            return logInDb;
+        }
+
+        public async Task<IEnumerable<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request,
+            ClaimsPrincipal user)
+        {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier)
+                .Select(a => a.Value).FirstOrDefault();
+            var userRole = user.Claims.Where(a => a.Type == ClaimTypes.Role)
+                .Select(a => a.Value).FirstOrDefault();
+            var comments = _context.CommentOrders.Select(x => new CommentOrder()
+                {
+                    FromUserId = x.FromUserId,
+                    Value = x.Value,
+                    DateTimeCreated = x.DateTimeCreated,
+                    Id = x.Id,
+                    OrderId = x.OrderId,
+                    IsWarningComment = x.IsWarningComment,
+                    OrderType = x.OrderType,
+                    DateTimeUpdate = x.DateTimeUpdate
+                })
+                .Where(w => w.IsWarningComment == true);
+
+            IQueryable<Guid> orderIdList = null;
+            var commentsOrderId = comments.Select(s => s.OrderId);
+            if (request.OrderType == typeof(ExportedOrder).ToString())
+            {
+                orderIdList = userRole is RoleNames.Admin or RoleNames.SuAdmin
+                    ? _context.ExportedOrders.Where(w => commentsOrderId.Contains(w.Id)).Select(s => s.Id)
+                    : _context.ExportedOrders.Where(w => w.OurEmployee!.UserId == userId 
+                                                         && commentsOrderId.Contains(w.Id)).Select(s => s.Id);
+
+            }
+            if (request.OrderType == typeof(ImportedOrder).ToString())
+            {
+                orderIdList = userRole is RoleNames.Admin or RoleNames.SuAdmin
+                    ? _context.ImportedOrders.Where(w => commentsOrderId.Contains(w.Id)).Select(s => s.Id)
+                    : _context.ImportedOrders.Where(w => w.OurEmployee!.UserId == userId
+                                                         && commentsOrderId.Contains(w.Id))
+                        .Select(s => s.Id);
+            }
+            if (orderIdList == null || !orderIdList.Any())
+                return new List<CommentOrder>();
+            if (request.GetOnlyNotOpen == true)
+            {
+                
+                var logInDb = _context.LogUsersVisitToOrderComments
+                    .Where(w => w.UserId == userId && orderIdList.Contains(w.OrderOwnerCommentsId));
+
+                comments = comments.Where(w =>logInDb.FirstOrDefault(f => f.OrderOwnerCommentsId == w.OrderId)!
+                                                   .DateTimeVisit < w.DateTimeUpdate);
+            }
+            else
+            {
+                var logInDb = _context.LogUsersVisitToOrderComments
+                    .Where(w => w.UserId == userId && orderIdList.Contains(w.OrderOwnerCommentsId));
+
+                comments = comments.Where(w => logInDb.FirstOrDefault(f => f.OrderOwnerCommentsId == w.OrderId)!
+                    .DateTimeVisit > w.DateTimeUpdate);
+            }
+
+            return await comments.OrderBy(o=>o.DateTimeUpdate).ToArrayAsync();
         }
     }
 }

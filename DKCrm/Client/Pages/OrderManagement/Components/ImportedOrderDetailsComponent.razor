@@ -5,19 +5,58 @@
 {
     if (ShowCompanyInfo)
     {
-        <div class="p-3">
-            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">№:</span>
-                @Order.Number
-            </MudText>
-            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Дата создания:</span>
-                @Order.DateTimeCreated
-            </MudText>
-            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Компания продавец:</span>
-                @Order.SellersCompany?.Name
-            </MudText>
-            <MudText Typo="Typo.body1"><span class="mr-2 fw-bold">Агент:</span>
-                @Order.EmployeeSeller?.LastName @Order.EmployeeSeller?.FirstName @Order.EmployeeSeller?.MiddleName
-            </MudText>
+        <div class="p-3 d-flex">
+            <MudIconButton Size="@Size.Large"
+                           OnClick="@(() => OpenOrderComments(Order.Id))"
+                           Color="Color.Default"
+                           Icon="@Icons.Material.Sharp.Comment"
+                           Class="pa-0 mr-8" />
+            <div class="mr-8">
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">№:</span>
+                    @Order.Number
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Дата создания:</span>
+                    @Order.DateTimeCreated
+                </MudText>
+            </div>
+            <div class="mr-8">
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Компания покупатель:</span>
+                    @Order.SellersCompany?.Name
+                </MudText>
+                <MudMenu>
+                    <ActivatorContent>
+                        <MudLink Underline="Underline.Hover" Color="Color.Dark">
+                            <MudText Typo="Typo.body1">
+                                <span class="mr-2 fw-bold">Агент:</span>
+                                @Order.EmployeeSeller?.LastName @Order.EmployeeSeller?.FirstName @Order.EmployeeSeller?.MiddleName
+                            </MudText>
+                        </MudLink>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div class="d-flex flex-column p-2">
+                            <MudText Typo="Typo.button">
+                                <span class="text-decoration-underline">Телефон: </span> @Order.EmployeeSeller.Phone
+                            </MudText>
+                            <MudText Typo="Typo.button">
+                                <span class="text-decoration-underline">E-mail: </span> @Order.EmployeeSeller.Email
+                            </MudText>
+                        </div>
+                    </ChildContent>
+                </MudMenu>
+            </div>
+            <div class="mr-8">
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Наша компания:</span>
+                    @Order.OurCompany?.Name
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    <span class="mr-2 fw-bold">Агент:</span>
+                    @Order.OurEmployee?.LastName @Order.OurEmployee?.FirstName @Order.OurEmployee?.MiddleName
+                </MudText>
+            </div>
         </div>
     }
     <div class="d-flex px-3 align-items-center">
@@ -170,8 +209,18 @@
                              Order="Order" />
 
     <EditImportedProductDialog @bind-VisibleDialog="@_visibleEditImportedProductDialog"
-                           RefreshProductList="@OnInitializedAsync"
-                           Id="@ImportedProductId" />
+                               RefreshProductList="@OnInitializedAsync"
+                               Id="@ImportedProductId" />
+    @if (_visibleOrderComments)
+    {
+        <MudDialog @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0" 
+                   Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+            <DialogContent>
+                <OrderCommentComponent CurrentOrderId="Order.Id"
+                                       OrderType="@typeof(ImportedOrder).ToString()"/>
+            </DialogContent>
+        </MudDialog>
+    }
 }
 @code {
     [Parameter] public bool IsDoubleNested { get; set; }
@@ -193,6 +242,7 @@
     private bool _oneQuantityPrice = true;
     private bool _isOpenPricePopover;
     private bool _isOpenCompletePopover;
+    private bool _visibleOrderComments;
 
     protected override async Task OnInitializedAsync()
     {
@@ -241,6 +291,10 @@
     {
         _isOpenPricePopover = false;
         _isOpenCompletePopover = false;
+    }
+    private void OpenOrderComments(Guid orderId)
+    {
+        _visibleOrderComments = !_visibleOrderComments;
     }
 }
 <style>

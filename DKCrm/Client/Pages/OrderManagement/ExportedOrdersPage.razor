@@ -109,7 +109,8 @@
         <MudTh><MudTableSortLabel SortLabel="update_field" T="ExportedOrder">Дата обновления</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status_field" T="ExportedOrder">Статус</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="complete_field" T="ExportedOrder">Укомплектованность</MudTableSortLabel></MudTh>
-        <MudTh></MudTh>
+        <MudTh><WarningOrderCommentComponent 
+                   TypeOrder="@typeof(ExportedOrder).ToString()"/></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd
@@ -125,10 +126,10 @@
         <MudTd DataLabel="Наша компания">
             @if (context.OurCompany != null)
             {
-                <MudText Typo="Typo.button"> @context.OurCompany.Name </MudText>
+                <div><MudText Typo="Typo.button"> @context.OurCompany.Name </MudText></div>
                 @if (context.OurEmployee != null)
                 {
-                    <MudText Typo="Typo.body2">
+                    <MudText Typo="Typo.body1">
                         @context.OurEmployee.LastName
                         @context.OurEmployee.FirstName
                         @context.OurEmployee.MiddleName
@@ -139,14 +140,31 @@
         <MudTd DataLabel="Компания покупатель">
             @if (context.CompanyBuyer != null)
             {
-                <MudText Typo="Typo.button"> @context.CompanyBuyer.Name </MudText>
+                <div><MudText Typo="Typo.button"> @context.CompanyBuyer.Name </MudText></div>
                 @if (context.EmployeeBuyer != null)
                 {
-                    <MudText Typo="Typo.body2">
-                        @context.EmployeeBuyer.LastName
-                        @context.EmployeeBuyer.FirstName
-                        @context.EmployeeBuyer.MiddleName
-                    </MudText>
+                    <MudMenu>
+                        <ActivatorContent>
+                            <MudLink Underline="Underline.Hover" Color="Color.Dark" Typo="Typo.body1">
+                                @context.EmployeeBuyer.LastName
+                                @context.EmployeeBuyer.FirstName
+                                @context.EmployeeBuyer.MiddleName
+                            </MudLink>
+@*                             <MudButton Variant="Variant.Text">@context.EmployeeBuyer.LastName
+                                @context.EmployeeBuyer.FirstName
+                                @context.EmployeeBuyer.MiddleName</MudButton> *@
+                        </ActivatorContent>
+                        <ChildContent>
+                            <div class="d-flex flex-column p-2">
+                                <MudText Typo="Typo.button">
+                                    <span class="text-decoration-underline">Телефон: </span> @context.EmployeeBuyer.Phone
+                                </MudText>
+                                <MudText Typo="Typo.button">
+                                    <span class="text-decoration-underline">E-mail: </span> @context.EmployeeBuyer.Email
+                                </MudText>
+                            </div>
+                        </ChildContent>
+                    </MudMenu>
                 }
             }
         </MudTd>
@@ -155,9 +173,27 @@
         <MudTd DataLabel="Статус">
             @if (context.ExportedOrderStatus != null )
             {
-                <ExportedOrderStatusListComponent
-                    CurrentOrder="context" 
-                    StatusList="StatusList"/>
+                
+                <div class="d-flex align-items-center justify-content-between ">
+                    <ExportedOrderStatusListComponent
+                        CurrentOrder="context" 
+                        StatusList="StatusList"/>
+                    <MudMenu Icon="@Icons.Material.Filled.History">
+                        @if (context.ExportedOrderStatusExported != null)
+                        {
+                            <div class="p-2">
+                                <MudText Typo="Typo.button">История изменения</MudText>
+                                @foreach (var status in context.ExportedOrderStatusExported.OrderBy(o=>o.DateTimeCreate))
+                                {
+                                    <div class="d-flex justify-content-between">
+                                        <MudText>@status.ExportedOrderStatus!.Value</MudText>
+                                        <MudText Class="ml-1">@status.DateTimeCreate</MudText>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </MudMenu>
+                </div>
             }
         </MudTd>
         <MudTd DataLabel="Укомплектованность">
@@ -229,7 +265,8 @@
     <MudDialog @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0" 
                Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
         <DialogContent>
-            <OrderCommentComponent CurrentOrderId="OrderId" />
+            <OrderCommentComponent CurrentOrderId="OrderId"
+                                   OrderType="@typeof(ExportedOrder).ToString()"/>
         </DialogContent>
     </MudDialog>
 }

@@ -37,6 +37,11 @@ namespace DKCrm.Server.Controllers
         [HttpPost("{request}")]
         public async Task<IActionResult> CreatePaymentInvoicePdf(CreatePaymentInvoiceRequest request) 
             => Ok(await _documentService.CreatePaymentInvoicePdfAsync(request,User));
+
+        [HttpPost("{request}")]
+        public async Task<IActionResult> CreateCommercialOfferPdf(CreateCommercialOfferPdfRequest request)
+            => Ok(await _documentService.CreateCommercialOfferPdfAsync(request, User));
+
         [HttpPost("{request}")]
         public async Task<IActionResult> CreateOrderSpecificationPdf(CreateOrderSpecificationRequest request) 
             => Ok(await _documentService.CreateOrderSpecificationPdfAsync(request, User)); 

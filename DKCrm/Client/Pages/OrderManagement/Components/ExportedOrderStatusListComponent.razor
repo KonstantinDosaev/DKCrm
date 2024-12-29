@@ -12,32 +12,53 @@
                 {
                     if (status.Position == CurrentStatus.Position)
                     {
-                    <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
-                    <MudPaper Class="pa-3 d-flex" Style="background: green">
-                    <MudText>@status.Value @status.Position</MudText>
-                    </MudPaper>
-                    </MudMenuItem>
+                        <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                        <MudPaper Class="pa-3 d-flex" Style="background: lightgreen">
+                        <MudText>@status.Value @status.Position</MudText>
+                        </MudPaper>
+                        </MudMenuItem>
                     }
-                    if (status.Position > CurrentStatus.Position)
+                if (status.Position != CurrentStatus.Position)
                     {
-                    <MudMenuItem Disabled="false" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
-                    <MudPaper Class="pa-3 d-flex" Style="background: none">
-                    <MudText>@status.Value @status.Position</MudText>
-                    </MudPaper>
-                    </MudMenuItem>
+                        <MudMenuItem Disabled="false" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                        <MudPaper Class="pa-3 d-flex" Style="background: none">
+                        <MudText>@status.Value @status.Position</MudText>
+                        </MudPaper>
+                        </MudMenuItem>
                     }
-                    if (status.Position < CurrentStatus.Position)
+                   @*  if (status.Position < CurrentStatus.Position)
                     {
-                    <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
-                    <MudPaper Class="pa-3 d-flex" Style="background:lightblue">
-                    <MudText>@status.Value @status.Position</MudText>
-                    </MudPaper>
-                    </MudMenuItem>
+                        <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                        <MudPaper Class="pa-3 d-flex" Style="background:lightblue">
+                        <MudText>@status.Value @status.Position</MudText>
+                        </MudPaper>
+                        </MudMenuItem>
                     }
-
-
+                    if (status.Position < 0 && status.Position == CurrentStatus.Position)
+                    {
+                        <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" 
+                                     Class="p-0">
+                            <MudPaper Class="pa-3 d-flex" Style="background:lightcoral">
+                                <MudText>@status.Value @status.Position</MudText>
+                            </MudPaper>
+                        </MudMenuItem>
+                    } *@
                 }
           
+        </MudMenu>
+    }
+    else
+    {
+        
+        <MudMenu Label="Выбрать статус">
+            @foreach (var status in ParentStatusList)
+            {
+                <MudMenuItem  OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                    <MudPaper Class="pa-3 d-flex">
+                        <MudText>@status.Value @status.Position</MudText>
+                    </MudPaper>
+                </MudMenuItem>
+            }
         </MudMenu>
     }
 </div>
@@ -68,6 +89,8 @@
 
     private async Task UpdateStatusInOrder(ExportedOrder order, ExportedOrderStatus status)
     {
+        if (status.Position < 0 && !await ConfirmationActionService.ConfirmationActionAsync("Вы устанавливаете статус \"Отменен\" для заказа.Будут сброшены зависимости и продукты возвращены по складам."))
+            return;
         var statusToOrder = new ExportedOrderStatusExportedOrder()
         {
             ExportedOrderId = order.Id,

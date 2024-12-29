@@ -108,6 +108,8 @@
         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="create_field" T="ImportedOrder">Дата создания</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="update_field" T="ImportedOrder">Дата обновления</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status_field" T="ImportedOrder">Статус</MudTableSortLabel></MudTh>
+        <MudTh><WarningOrderCommentComponent 
+                   TypeOrder="@typeof(ImportedOrder).ToString()"/></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd
@@ -124,7 +126,7 @@
         <MudTd DataLabel="Наша компания">
             @if (context.OurCompany != null)
             {
-                <MudText Typo="Typo.button"> @context.OurCompany.Name </MudText>
+                <div><MudText Typo="Typo.button"> @context.OurCompany.Name </MudText></div>
                 @if (context.OurEmployee != null)
                 {
                     <MudText Typo="Typo.body2">
@@ -138,14 +140,29 @@
         <MudTd DataLabel="Компания поставщик">
             @if (context.SellersCompany != null)
             {
-                <MudText Typo="Typo.button"> @context.SellersCompany.Name </MudText>
+
+                <div><MudText Typo="Typo.button"> @context.SellersCompany.Name </MudText></div>
                 @if (context.EmployeeSeller != null)
                 {
-                    <MudText Typo="Typo.body2">
-                        @context.EmployeeSeller.LastName
-                        @context.EmployeeSeller.FirstName
-                        @context.EmployeeSeller.MiddleName
-                    </MudText>
+                    <MudMenu>
+                        <ActivatorContent>
+                            <MudLink Underline="Underline.Hover" Color="Color.Dark" Typo="Typo.body1">
+                                @context.EmployeeSeller.LastName
+                                @context.EmployeeSeller.FirstName
+                                @context.EmployeeSeller.MiddleName
+                            </MudLink>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <div class="d-flex flex-column p-2">
+                                <MudText Typo="Typo.button">
+                                    <span class="text-decoration-underline">Телефон: </span> @context.EmployeeSeller.Phone
+                                </MudText>
+                                <MudText Typo="Typo.button">
+                                    <span class="text-decoration-underline">E-mail: </span> @context.EmployeeSeller.Email
+                                </MudText>
+                            </div>
+                        </ChildContent>
+                    </MudMenu>
                 }
             }
         </MudTd>
@@ -242,7 +259,7 @@
                Style="max-width: 700px;padding: 0" 
                Options="new DialogOptions(){CloseButton = true, FullScreen = true,}">
         <DialogContent>
-            <OrderCommentComponent CurrentOrderId="OrderId" />
+            <OrderCommentComponent CurrentOrderId="OrderId" OrderType="@typeof(ImportedOrder).ToString()" />
         </DialogContent>
     </MudDialog>
 }

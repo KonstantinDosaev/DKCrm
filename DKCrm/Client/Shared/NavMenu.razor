@@ -79,6 +79,14 @@
                 <div class="user-nav">
                     <div class="my-navitem">
                         <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/userprofile">
+                            @if (UserProfileIsValid == false)
+                            {
+                                <MudTooltip Text="Заполните профиль пользователя" >
+                                    <MudIcon Size="@Size.Medium"
+                                        Color="Color.Error"
+                                        Icon="@Icons.Material.Filled.Warning" />
+                                </MudTooltip>
+                            }
                             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.PermIdentity" Class="pa-0 mr-2"/>@context.User.Identity.Name
                         </MudNavLink>
                     </div>
@@ -101,9 +109,7 @@
     private bool _collapseNavMenu = true;
     private string? MyNavMenuCssClass => _collapseNavMenu ? "collapse" : null;
     private CategoryDrawerComponent? _categoryDrawerRef;
-
-
-   
+   [Parameter] public bool UserProfileIsValid { get; set; }
     private void ToggleNavMenu()
     {
         _collapseNavMenu = !_collapseNavMenu;

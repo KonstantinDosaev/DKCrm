@@ -82,6 +82,7 @@ namespace DKCrm.Server.Services.OrderServices
         {
             _context.ExportedOrderStatus.AddRange(new[]
             {
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = -1,Value = ExportOrderStatusNames.Canceled,IsValueConstant = true},
                 new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,Value = ExportOrderStatusNames.BeginFormed,IsValueConstant = true},
                 new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ExportOrderStatusNames.ExpectComponents,IsValueConstant = true},
                 new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ExportOrderStatusNames.Formed, IsValueConstant = true},

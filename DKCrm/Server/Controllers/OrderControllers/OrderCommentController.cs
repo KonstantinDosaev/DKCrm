@@ -1,7 +1,9 @@
 ﻿using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
+using DKCrm.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DKCrm.Server.Controllers.OrderControllers
 {
@@ -34,5 +36,16 @@ namespace DKCrm.Server.Controllers.OrderControllers
         {
             return Ok(await _orderCommentsService.RemoveRangeAsync(listId, User));
         }
+        [HttpPost]
+        public async Task<IActionResult> SetLogUsersVisit(LogUsersVisitToOrderComments newLog)
+        {
+            return Ok(await _orderCommentsService.SetLogUserVisit(newLog, User));
+        }
+        [HttpGet("{companyId:guid}")]
+        public async Task<IActionResult> GetLogUsersVisit(Guid companyId) =>
+            Ok(await _orderCommentsService.GetLogUserVisitAsync(companyId, User));      
+        [HttpPost]
+        public async Task<IActionResult> GetWarningComments(GetWarningCommentsToOrderRequest request)
+            => Ok(await _orderCommentsService.GetWarningCommentsAsync(request, User));
     }
 }

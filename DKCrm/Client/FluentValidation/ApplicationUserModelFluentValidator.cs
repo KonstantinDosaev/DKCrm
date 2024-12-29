@@ -18,9 +18,9 @@ namespace DKCrm.Client.FluentValidation
                 .EmailAddress()
                 .MustAsync(async (value, cancellationToken) => await IsUniqueAsync(value));
 
-            RuleFor(x => x.FirstName)
+            RuleFor(x => x.FirstName).NotEmpty()
                 .Length(1, 100);
-            RuleFor(x => x.LastName)
+            RuleFor(x => x.LastName).NotEmpty()
                 .Length(1, 100);
 
             RuleFor(x => x.Address).SetValidator(new AddressModelFluentValidator()!);

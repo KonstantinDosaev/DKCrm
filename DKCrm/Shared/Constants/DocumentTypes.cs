@@ -4,5 +4,6 @@
     {
         PaymentInvoice = 1,
         OrderSpecification = 2,
+        CommercialOffer = 3,
     }
 }

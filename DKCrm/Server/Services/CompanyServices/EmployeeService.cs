@@ -21,7 +21,20 @@ namespace DKCrm.Server.Services.CompanyServices
 
         public async Task<Employee> GetAsync(Guid id)
         {
-            var employee = await _context.Employees.FirstOrDefaultAsync(a => a.Id == id);
+            var employee = await _context.Employees.Select(s=> new Employee()
+            {
+                Id = s.Id,
+                FirstName = s.FirstName,
+                MiddleName  = s.MiddleName,
+                LastName = s.LastName,
+                Position = s.Position,
+                Phone = s.Phone,
+                Email = s.Email,
+                Description = s.Description,
+                IsOurEmployee = s.IsOurEmployee,
+                Companies = s.Companies,
+                UserId = s.UserId,
+            }).FirstOrDefaultAsync(a => a.Id == id);
             return employee ?? throw new InvalidOperationException();
         }
 

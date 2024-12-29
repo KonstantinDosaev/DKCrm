@@ -38,6 +38,8 @@ namespace DKCrm.Server.Services.OrderServices
                     PurchaseAtExports = s.PurchaseAtExports,
                     SoldFromStorage = s.SoldFromStorage,
                     StorageList = s.StorageList,
+                    MinDaysForDeliveryPlaned = s.MinDaysForDeliveryPlaned, 
+                    MaxDaysForDeliveryPlaned = s.MaxDaysForDeliveryPlaned,
                     DateTimeConversionCurrency = s.DateTimeConversionCurrency
                 }).ToListAsync();
         }
@@ -59,6 +61,8 @@ namespace DKCrm.Server.Services.OrderServices
                     PurchaseAtExports = s.PurchaseAtExports,
                     SoldFromStorage = s.SoldFromStorage,
                     StorageList = s.StorageList,
+                    MinDaysForDeliveryPlaned = s.MinDaysForDeliveryPlaned,
+                    MaxDaysForDeliveryPlaned = s.MaxDaysForDeliveryPlaned,
                     DateTimeConversionCurrency = s.DateTimeConversionCurrency
                 }).ToListAsync();
         }
@@ -95,6 +99,8 @@ namespace DKCrm.Server.Services.OrderServices
                 PurchaseAtExports = s.PurchaseAtExports,
                 SoldFromStorage = s.SoldFromStorage,
                 StorageList = s.StorageList,
+                MinDaysForDeliveryPlaned = s.MinDaysForDeliveryPlaned,
+                MaxDaysForDeliveryPlaned = s.MaxDaysForDeliveryPlaned,
                 DateTimeConversionCurrency = s.DateTimeConversionCurrency
             });
            

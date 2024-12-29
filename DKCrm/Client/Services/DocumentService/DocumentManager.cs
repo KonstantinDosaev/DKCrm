@@ -40,6 +40,12 @@ namespace DKCrm.Client.Services.DocumentService
                 .PostAsJsonAsync($"api/Document/CreatePaymentInvoicePdf/{request}", request, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
+        public async Task<bool> CreateCommercialOfferPdfAsync(CreateCommercialOfferPdfRequest request)
+        {
+            var result = await _httpClient
+                .PostAsJsonAsync($"api/Document/CreateCommercialOfferPdf/{request}", request, JsonOptions.JsonIgnore);
+            return result.IsSuccessStatusCode;
+        }
         public async Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest request)
         {
             var result = await _httpClient

@@ -2,6 +2,7 @@
 {
     public static class ExportOrderStatusNames
     {
+        public const string Canceled = "Отменен";
         public const string BeginFormed = "Формируется";
         public const string ExpectComponents = "Ожидаем компоненты";
         public const string Formed = "Сформирован";

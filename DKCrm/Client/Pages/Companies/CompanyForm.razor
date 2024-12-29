@@ -33,6 +33,25 @@
                               For="@(() => CurrentCompany.Director)"
                               Variant="Variant.Outlined" Required="true"
                               RequiredError="Фактический руководитель!" />
+                <MudTextField Label="Телефон" @bind-Value="CurrentCompany.Phone"
+                              For="@(() => CurrentCompany.Phone)"
+                              Required="true"
+                              Variant="Variant.Outlined"
+                              RequiredError="Введите телефон!" />
+        <MudTextField Label="Телефон доп." @bind-Value="CurrentCompany.PhoneAdditional"
+                      For="@(() => CurrentCompany.PhoneAdditional)"
+                    
+                      Variant="Variant.Outlined"
+                      RequiredError="Введите доп. телефон!" />
+                <MudTextField Label="Email" @bind-Value="CurrentCompany.Email"
+                              For="@(() => CurrentCompany.Email)"
+                              Required="true"
+                              Variant="Variant.Outlined"
+                              RequiredError="Введите доп. email компании!" />
+                <MudTextField Label="Email" @bind-Value="CurrentCompany.EmailAdditional"
+                              For="@(() => CurrentCompany.EmailAdditional)"
+                              Variant="Variant.Outlined"
+                              RequiredError="Введите email компании!" />
                 @*   @if (CurrentCompany.ActualAddress != null)
                 { *@
                     <p class="mt-6 fs-4">Фактический адрес</p>

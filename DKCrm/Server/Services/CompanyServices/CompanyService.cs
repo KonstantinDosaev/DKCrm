@@ -35,7 +35,11 @@ namespace DKCrm.Server.Services.CompanyServices
                 FnsRequestId = s.FnsRequestId,
                 CompanyType = s.CompanyType,
                 Employees = s.Employees,
-                Inn = s.Inn,
+                Inn = s.Inn, 
+                Phone = s.Phone,
+                Email = s.Email,
+                PhoneAdditional = s.PhoneAdditional,
+                EmailAdditional = s.EmailAdditional,
             }).ToListAsync();
             var result = new List<Company>();
             foreach (var company in companyList)
@@ -64,6 +68,10 @@ namespace DKCrm.Server.Services.CompanyServices
                 CompanyType = s.CompanyType,
                 Employees = s.Employees,
                 Inn = s.Inn,
+                Phone = s.Phone,
+                Email = s.Email,
+                PhoneAdditional = s.PhoneAdditional,
+                EmailAdditional = s.EmailAdditional,
             }).ToListAsync();
             var result = new List<Company>();
             foreach (var company in companyList)

@@ -182,6 +182,14 @@ namespace DKCrm.Server.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("EmailAdditional")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<Guid?>("FnsRequestId")
                         .HasColumnType("uuid");
 
@@ -202,6 +210,14 @@ namespace DKCrm.Server.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PhoneAdditional")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ActualAddressId");
@@ -217,16 +233,22 @@ namespace DKCrm.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("CompanyId")
+                    b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("DateTimeCreated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("DateTimeUpdate")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("FromUserId")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsWarningComment")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Value")
                         .IsRequired()
@@ -365,6 +387,28 @@ namespace DKCrm.Server.Migrations
                         .IsUnique();
 
                     b.ToTable("FnsRequests");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.LogUsersVisitToCompanyComments", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyOwnerCommentsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateTimeVisit")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LogUsersVisitToCompanyComments");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.CompanyModels.TagsCompany", b =>
@@ -606,13 +650,23 @@ namespace DKCrm.Server.Migrations
                     b.Property<DateTime>("DateTimeCreated")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<DateTime>("DateTimeUpdate")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("FromUserId")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<bool>("IsWarningComment")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("OrderType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Value")
                         .IsRequired()
@@ -801,6 +855,12 @@ namespace DKCrm.Server.Migrations
 
                     b.Property<bool>("IsFullDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("MaxDaysForDeliveryPlaned")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MinDaysForDeliveryPlaned")
+                        .HasColumnType("integer");
 
                     b.Property<decimal?>("PriceInBuyerCurrency")
                         .HasColumnType("numeric");
@@ -1079,6 +1139,28 @@ namespace DKCrm.Server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DocumentsToOrder");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.LogUsersVisitToOrderComments", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateTimeVisit")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("OrderOwnerCommentsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LogUsersVisitToOrderComments");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.PurchaseAtExport", b =>
@@ -1429,7 +1511,8 @@ namespace DKCrm.Server.Migrations
                     b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "Company")
                         .WithMany("Comments")
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Company");
                 });

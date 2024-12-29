@@ -213,7 +213,7 @@ namespace DKCrm.Server.Services.OrderServices
         {
             importedOrder.DateTimeCreated = DateTime.Now;
             var count = _context.ImportedOrders.Count(w => w.DateTimeCreated!.Value.Date == importedOrder.DateTimeCreated!.Value.Date);
-            importedOrder.Number = (importedOrder.DateTimeCreated!.Value.ToShortDateString()).Replace(".", "") + (count + 1);
+            importedOrder.Number = (importedOrder.DateTimeCreated!.Value.ToString("ddMMyyyy")) + (count + 1);
            _context.Entry(importedOrder).State = EntityState.Added;
            var status = _context.ImportedOrderStatus.FirstOrDefault(f => f.Position == 0);
            if (status != null)

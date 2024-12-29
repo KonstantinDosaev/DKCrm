@@ -13,8 +13,7 @@
           CommitEditTooltip="Commit Edit"
           OnCommitEditClick="@(() => Snackbar.Add("Изменения сохранены!"))"
           RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
-          RowEditCommit="ItemHasBeenCommitted"
-          IsEditRowSwitchingBlocked="true"
+         IsEditRowSwitchingBlocked="true"
           ApplyButtonPosition="@applyButtonPosition"
           EditButtonPosition="@editButtonPosition"
           EditTrigger="@editTrigger"
@@ -48,24 +47,31 @@
         }
     </ColGroup>
     <HeaderContent>
-        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Id)">Nr</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Email!)">Sign</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ApplicationUser, object>(x => x.UserName!)">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Id)">Фамилия</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<ApplicationUser, object>(x => x.Email!)">Email</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending"
+                               SortBy="new Func<ApplicationUser, object>(x => x.UserName!)">Login</MudTableSortLabel>
+        </MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Nr">@context.Id</MudTd>
+        <MudTd DataLabel="Фамили">@context.LastName</MudTd>
         <MudTd DataLabel="Email">@context.Email</MudTd>
-        <MudTd DataLabel="Name">@context.UserName</MudTd>
+        <MudTd DataLabel="Login">@context.UserName</MudTd>
         
 
-        <MudTd DataLabel="Role"> <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => OpenRoleDialog(context)" Color="Color.Tertiary">Изменить роль</MudButton> </MudTd>
+        <MudTd DataLabel="Role"> <MudButton Variant="Variant.Filled" Size="Size.Medium" 
+                                            OnClick="() => OpenRoleDialog(context)" 
+                                            Color="Color.Tertiary">Изменить роль</MudButton> 
+                                <MudButton Variant="Variant.Filled" Size="Size.Medium" 
+                                           OnClick="() => OpenEditUserProfileDialog(context)" 
+                                           Color="Color.Tertiary">Редактировать профиль</MudButton></MudTd>
     </RowTemplate>
     <RowEditingTemplate>
-        <MudTd DataLabel="Nr">@context.Id</MudTd>
+        <MudTd DataLabel="Фамили">@context.LastName</MudTd>
         <MudTd DataLabel="Email">
             <MudTextField @bind-Value="@context.Email" Required/>
         </MudTd>
-        <MudTd DataLabel="Name">
+        <MudTd DataLabel="Login">
             <MudTextField @bind-Value="@context.UserName" Required/>
         </MudTd>
 
@@ -100,7 +106,15 @@
     </DialogContent>
 </MudDialog>
 
-
+@if (_visibleEditUserProfileDialog)
+{
+    <MudDialog @bind-Visible="_visibleEditUserProfileDialog" Style="max-width: 700px;padding: 0"
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+        <DialogContent>
+            <UserProfile User="_currentUser"/>
+        </DialogContent>
+    </MudDialog>
+}
 
 
 

@@ -11,5 +11,6 @@ namespace DKCrm.Server.Interfaces.DocumentInterfaces
         Task<bool> CreatePaymentInvoicePdfAsync(CreatePaymentInvoiceRequest request, ClaimsPrincipal user);
         Task<bool> CreateOrderSpecificationPdfAsync(CreateOrderSpecificationRequest createOrderSpecificationRequest, ClaimsPrincipal user);
         Task<byte[]> AddStampToPdfAsync(AddStampToPdfRequest request);
+        Task<bool> CreateCommercialOfferPdfAsync(CreateCommercialOfferPdfRequest request, ClaimsPrincipal user);
     }
 }
