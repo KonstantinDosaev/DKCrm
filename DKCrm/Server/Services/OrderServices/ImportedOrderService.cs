@@ -116,6 +116,19 @@ namespace DKCrm.Server.Services.OrderServices
             //}
             if (request.FilterTuple != null)
             {
+                if (request.FilterTuple.IsOrdersWithUnreadComments == true)
+                {
+                    data = data.Where(wm =>
+                        (_context.CommentOrders.Where(w => w.OrderId == wm.Id)
+                            .Select(s => s.DateTimeUpdate).Any() && _context.LogUsersVisitToOrderComments
+                            .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
+                                                 && f.UserId == userId) == null)
+                        || (_context.LogUsersVisitToOrderComments
+                            .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
+                                                 && f.UserId == userId).DateTimeVisit < _context.CommentOrders
+                            .Where(w => w.OrderId == wm.Id)
+                            .Select(s => s.DateTimeUpdate).Max()));
+                }
                 if (request.FilterTuple.CurrentStatusId != null && request.FilterTuple.CurrentStatusId != Guid.Empty)
                 {
                     data = data.Where(o => o.ImportedOrderStatusImportedOrders!.OrderBy(o=>o.DateTimeCreate!.Value).LastOrDefault()!.ImportedOrderStatusId==request.FilterTuple.CurrentStatusId);

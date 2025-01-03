@@ -31,21 +31,36 @@
     </div>
     <MudTooltip Text="Показать только важные">
         <MudToggleIconButton ToggledChanged="FilterWarningComments" Toggled="_isShowOnlyWarningComment"
-                             Icon="@Icons.Material.Filled.OutlinedFlag" Color="@Color.Surface" Title="Off"
-                             ToggledIcon="@Icons.Material.Filled.Flag" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                             Icon="@Icons.Material.Filled.WarningAmber" Color="@Color.Surface" Title="Off"
+                             ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" ToggledTitle="On"/>
     </MudTooltip>
     </MudToolBar>
     <div class="d-flex flex-column px-4 flex-grow-1" style="  overflow-y: scroll;" id="commentContainer">
         @foreach (var message in _comments)
         {
-            var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
+            var borderColor = message.IsWarningComment ? "solid red" : "solid 1px rgba(181, 181, 181, 0.361)";
+        var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
 
-            <div class="my-2" style="padding: 5px 15px; background-color: whitesmoke; border-radius: 5px; border: solid 1px rgba(181, 181, 181, 0.361); overflow-wrap: break-word">
+            <div class="my-2" style="@($"padding: 5px 15px; background-color: whitesmoke;border-radius: 5px; border: {borderColor}; overflow-wrap: break-word")">
                 <div class="d-flex justify-content-between">
                     <MudText Class="px-1" Typo="Typo.body2" Style="font-weight: bold; color: gray; background-color: lightsalmon; border-radius: 5px; width: max-content">@user?.UserName</MudText>
-                    <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment" ToggledChanged="(s) => SetWarningFlagToComment(s,message)"
-                                         Icon="@Icons.Material.Filled.OutlinedFlag" Color="@Color.Surface" Title="Off"
-                                         ToggledIcon="@Icons.Material.Filled.Flag" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                    <div>
+                        @if (message.IsWarningComment)
+                        {
+                            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.WarningAmber"
+                                                Color="@Color.Error" ToggledTitle="On"/>
+                        }
+                       <MudMenu Dense="true" FullWidth="true">
+                            <ActivatorContent>
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.MoreVert"></MudIconButton>
+                            </ActivatorContent>
+                            <ChildContent>
+                                <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment" ToggledChanged="(s) => SetWarningFlagToComment(s,message)"
+                                                     Icon="@Icons.Material.Filled.WarningAmber" Color="@Color.Surface" Title="Off"
+                                                     ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                            </ChildContent>
+                        </MudMenu>
+                    </div>
                 </div>
                 <MudText Typo="Typo.body2" Style="">@message.Value</MudText>
                 <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")</MudText>

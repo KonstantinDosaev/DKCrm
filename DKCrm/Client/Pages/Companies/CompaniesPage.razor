@@ -1,4 +1,5 @@
 ﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Requests
 @page "/companies"
 @page "/companies/tag/{tagid:guid}"
 
@@ -18,7 +19,10 @@
     <MudIcon Size="@Size.Medium" Color="Color.Default"
              Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
 </MudButton>
-<WarningCompanyCommentComponent/>
+@if (_warnComments != null)
+{
+    <WarningCompanyCommentComponent @ref="_warningCommentComponent" @bind-Comments="_warnComments" MainIconColor="@WarningCommentIconColor"/>
+}
 <div class="d-flex ">
     <div class="flex-grow-1 mr-4">
         <MudTable Height="" Class="" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" 
@@ -69,7 +73,8 @@
                 <MudTd>
                     <MudIconButton Size="@Size.Medium" 
                                    OnClick="() => OpenCompanyComments(context.Id)"
-                                   Color="Color.Default"
+                                   Color="@(NotOpenedCommentIsd!= null && NotOpenedCommentIsd.Contains(context.Id) 
+                                              ? Color.Error : Color.Default)"
                                    Icon="@Icons.Material.Sharp.Comment"
                                    Class="pa-0 ml-2"/>
                 </MudTd>
@@ -132,6 +137,7 @@
 @code {
 
     [Parameter] public Guid? TagId { get; set; }
+    WarningCompanyCommentComponent? _warningCommentComponent;
     public Guid CompanyId { get; set; } 
     private  List<CompanyType>? CompanyTypes { get; set; }
     private  List<TagsCompany>? TagsCompanies { get; set; }
@@ -144,6 +150,9 @@
     object _selectedValue = 1;
     private bool _visibleAddCompanyDialog;
     private bool _visibleComments;
+    private List<Guid>? NotOpenedCommentIsd { get; set; }
+    private List<CompanyComment>? _warnComments;
+    private Color WarningCommentIconColor { get; set; }
     protected override async Task OnInitializedAsync()
     {
         await GetAllCompanies();
@@ -159,13 +168,26 @@
         }
       
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // if (!firstRender)
+        // {
+        //     await CheckNotOpenComments();
+        // }
+    }
+
+  
     private async Task GetAllCompanies()
     {
       
         AllCompanies ??= await CompanyManager.GetAsync();
         Companies = AllCompanies;
-        
+        await CheckNotOpenComments();
+
     }
+
+
     private bool FilterFunc1(Company element) => FilterFunc(element, _searchString1);
 
     private bool FilterFunc(Company element, string searchString)
@@ -198,10 +220,33 @@
                 .Select(s => s.Id).Contains(tagId)).ToList();
         }
 
-    private void OpenCompanyComments(Guid id)
+    private async Task OpenCompanyComments(Guid id)
     {
         CompanyId = id;
         _visibleComments = !_visibleComments;
+        if (_warnComments != null)
+        {
+            var curr = _warnComments.FirstOrDefault(s => s.CompanyId == id);
+            if (curr !=null)
+            {
+                _warnComments.Remove(curr);
+                NotOpenedCommentIsd!.Remove(id);
+                WarningCommentIconColor = _warnComments.Any() ? Color.Error : Color.Default;
+            }
+           
+        }
+    }
+    private async Task CheckNotOpenComments()
+    {
+            _warnComments = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
+            {
+                GetOnlyNotOpen = true
+            });
+
+            WarningCommentIconColor = _warnComments.Any() ? Color.Error : Color.Default;
+            NotOpenedCommentIsd = _warnComments.Select(s => s.CompanyId).ToList();
+            StateHasChanged();
+        
     }
     //private async Task DeleteCompany()
     //{

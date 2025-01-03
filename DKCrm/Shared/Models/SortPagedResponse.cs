@@ -4,5 +4,6 @@
     {
         public IEnumerable<T>? Items { get; set; }
         public int TotalItems { get; set; }
+        public bool AnyUnreadComment { get; set; }
     }
 }

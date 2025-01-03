@@ -33,8 +33,9 @@ namespace DKCrm.Server.Services
         }
         public async Task<AccessRestriction> GetAccessFromComponentAsync(Guid componentId)
         {
-            return await _context.AccessRestrictions
-                .FirstOrDefaultAsync(h => h.AccessedComponentId == componentId) ?? new AccessRestriction();
+            var result = await _context.AccessRestrictions
+                .FirstOrDefaultAsync(h => h.AccessedComponentId == componentId);
+            return result ?? new AccessRestriction();
         }
        
         public async Task<int> EditAccessToComponentAsync(AccessRestriction restriction, ClaimsPrincipal user)

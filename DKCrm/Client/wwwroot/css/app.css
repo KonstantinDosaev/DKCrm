@@ -140,4 +140,8 @@ a, .btn-link {
 .btn-castom {
     margin: 0 !important;
 }
+.content-dialog_noScroll {
+    overflow: hidden !important;
+    padding: 0 5px !important;
+}
 

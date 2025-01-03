@@ -162,12 +162,12 @@ namespace DKCrm.Server.Services.OrderServices
                                                   && w.UserId == employeeId) ?? null;
                     if (logInDb == null)
                     {
-                        await SetLogUserVisit(new LogUsersVisitToOrderComments()
+                        _context.LogUsersVisitToOrderComments.Entry(new LogUsersVisitToOrderComments()
                         {
                             OrderOwnerCommentsId = comment.OrderId,
                             DateTimeVisit = DateTime.Now,
                             UserId = userAdmId
-                        }, user);
+                        }).State = EntityState.Added;
                     }
                 }
 

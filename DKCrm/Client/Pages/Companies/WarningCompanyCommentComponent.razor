@@ -3,29 +3,33 @@
 @using DKCrm.Shared.Models.CompanyModels
 
 <MudTooltip Text="Показать важные комментарии">
-    <MudIconButton OnClick="()=> OpenDialog(true)"
-    Icon="@Icons.Material.Filled.CommentBank" Color="@_mainIconColor"/>
+  
+        <MudIconButton OnClick="() => OpenDialog(true)"
+                       Icon="@Icons.Material.Filled.CommentBank" Color="@MainIconColor" />
+    
+   
 </MudTooltip>
 @if (_visibleWarningCommentsDialog)
 {
     <MudDialog @bind-Visible="_visibleWarningCommentsDialog" Style="max-width: 700px; padding: 0"
                Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding"
-               TitleClass="order_commentWarning">
+               TitleClass="order_commentWarning" >
         <TitleContent>
-            <MudToolBar Dense="true" Class="d-flex justify-content-between mr-4" >
-                <MudText Typo="Typo.h5">@(_notOpenWarningComment ? "Не прочитанные" : "Прочитанные")</MudText>
-                <MudButton OnClick="GetComments"
-                           Variant="Variant.Filled"
-                           EndIcon="@(_notOpenWarningComment ? Icons.Material.Filled.MarkEmailRead : Icons.Material.Filled.MarkEmailUnread)"
-                           Color="@Color.Tertiary">Показать @(_notOpenWarningComment ? "прочитанные" : "не прочитанные")</MudButton>
-            </MudToolBar>
+            
         </TitleContent>
         <DialogContent>
+            <MudToolBar Dense="true" Class="d-flex justify-content-between mr-4">
+                <MudText Typo="Typo.h5">@(NotOpenWarningComment ? "Не прочитанные" : "Прочитанные")</MudText>
+                <MudButton OnClick="GetComments"
+                           Variant="Variant.Filled"
+                           EndIcon="@(NotOpenWarningComment ? Icons.Material.Filled.MarkEmailRead : Icons.Material.Filled.MarkEmailUnread)"
+                           Color="@Color.Tertiary">Показать @(NotOpenWarningComment ? "прочитанные" : "не прочитанные")</MudButton>
+            </MudToolBar>
             <div Class="pb-4 d-flex flex-column" Style="">
-                @if (_comments.Any())
+                @if (Comments.Any())
                 {
                     <div class="d-flex flex-column px-4 flex-grow-1" style="overflow-y: scroll;" id="commentContainer">
-                        @foreach (var message in _comments)
+                        @foreach (var message in Comments)
                         {
                             var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
 
@@ -39,17 +43,21 @@
                                         {
                                             <MudIconButton Class="mr-6" Icon="@Icons.Material.Filled.Info"
                                                            Size='Size.Small'
-                                                           OnClick="@(() => OpenCompanyDialog(@message.CompanyId, message.Id))" />
-
+                                                           OnClick="@(() => OpenCompanyDialog(@message.CompanyId, message.Id))"/>
                                         }
-                                        <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment" ToggledChanged="(s) => SetWarningFlagToComment(s, message)"
-                                                             Icon="@Icons.Material.Filled.OutlinedFlag" Color="@Color.Surface" Title="Off"
-                                                             ToggledIcon="@Icons.Material.Filled.Flag" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                                        <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment"
+                                                             ToggledChanged="(s) => SetWarningFlagToComment(s, message)"
+                                                             Icon="@Icons.Material.Filled.OutlinedFlag"
+                                                             Color="@Color.Surface" Title="Off"
+                                                             ToggledIcon="@Icons.Material.Filled.Flag"
+                                                             ToggledColor="@Color.Error" ToggledTitle="On"/>
                                     </div>
 
                                 </div>
                                 <MudText Typo="Typo.body2" Style="">@message.Value</MudText>
-                                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")</MudText>
+                                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">
+                                    @($"{message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")} / {message.DateTimeUpdate.ToString("dd MMM, yyyy HH:mm")}")
+                                </MudText>
 
                             </div>
                         }
@@ -80,37 +88,56 @@
 
 @code {
     [Parameter] public bool IsDoubleNested { get; set; }
-    private List<CompanyComment> _comments = new();
-    private bool _notOpenWarningComment; 
+   [Parameter] public List<CompanyComment>? Comments { get; set; }
+    public bool NotOpenWarningComment; 
     private bool _visibleWarningCommentsDialog;
     private bool _renderNotScroll;
     public List<ApplicationUser>? ChatUsers { get; set; }
     private bool _isShowAllWarningComment;
-    Color _mainIconColor;
+    [Parameter] public Color MainIconColor { get; set; }
     private bool _visibleCompany; 
+    private bool _isWarnNotOpenAny; 
     private Guid ShowingCompanyId { get; set; }
-   
+    [Parameter]
+    public EventCallback<List<CompanyComment>> CommentsChanged { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await GetComments();
-        _mainIconColor = _comments.Any() ? Color.Error : Color.Default;
+       // await GetOnlyWarningComments();
+      // NotOpenWarningComment = true;
+      // await CheckNotOpen();
+       
     }
     private async Task OpenDialog(bool toggle)
     {
         ChatUsers ??= await GetUsersAsync();
+        await GetOnlyWarningComments();
         _visibleWarningCommentsDialog = true;
+    }
+
+    public async Task CheckNotOpen()
+    {
+
+        _isWarnNotOpenAny = Comments.Any() && NotOpenWarningComment==true;
+        await InvokeAsync(StateHasChanged);
     }
     private async Task GetComments()
     {
-  
-        _notOpenWarningComment = !_notOpenWarningComment;
-        _comments = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
+        NotOpenWarningComment = !NotOpenWarningComment;
+        
+        Comments = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
         {
-                GetOnlyNotOpen = _notOpenWarningComment
+                GetOnlyNotOpen = NotOpenWarningComment
         });
     }
-   
+    private async Task GetOnlyWarningComments()
+    {
+        NotOpenWarningComment = true;
+        Comments ??= await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
+        {
+            GetOnlyNotOpen = true
+        });
+    }
     private async Task SetWarningFlagToComment(bool toggle, CompanyComment comment)
     {
         _renderNotScroll = true;

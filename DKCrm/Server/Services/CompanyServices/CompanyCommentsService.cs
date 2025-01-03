@@ -9,6 +9,8 @@ using MudBlazor;
 using Microsoft.AspNetCore.Identity;
 using DKCrm.Shared.Requests;
 using DKCrm.Server.Interfaces.CompanyInterfaces;
+using DKCrm.Server.Interfaces;
+using DKCrm.Client.Pages.Authentication;
 
 namespace DKCrm.Server.Services.CompanyServices
 {
@@ -16,11 +18,12 @@ namespace DKCrm.Server.Services.CompanyServices
     {
         private readonly ApplicationDBContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly AccessRestrictionService _accessRestrictionService;
-        public CompanyCommentsService(ApplicationDBContext context, UserManager<ApplicationUser> userManager)
+        private readonly IAccessRestrictionService _accessRestrictionService;
+        public CompanyCommentsService(ApplicationDBContext context, UserManager<ApplicationUser> userManager, IAccessRestrictionService accessRestrictionService)
         {
             _context = context;
             _userManager = userManager;
+            _accessRestrictionService = accessRestrictionService;
         }
 
         public async Task<IEnumerable<CompanyComment>> GetAllCommentsFromCompanyAsync(Guid companyId, ClaimsPrincipal user)
@@ -36,7 +39,8 @@ namespace DKCrm.Server.Services.CompanyServices
                     Id = x.Id,
                     CompanyId = x.CompanyId,
                     Company = x.Company,
-                    IsWarningComment = x.IsWarningComment
+                    IsWarningComment = x.IsWarningComment,
+                    DateTimeUpdate = x.DateTimeUpdate
                 }).ToArrayAsync();
             return comments;
         }
@@ -99,11 +103,22 @@ namespace DKCrm.Server.Services.CompanyServices
             {
                 comment.FromUserId = userId;
                 comment.DateTimeCreated = DateTime.UtcNow.AddHours(3);
+                comment.DateTimeUpdate = DateTime.UtcNow.AddHours(3);
                 _context.Entry(comment).State = EntityState.Added;
             }
             else
+            {
+                comment.DateTimeUpdate = DateTime.UtcNow.AddHours(3);
                 _context.Entry(comment).State = EntityState.Modified;
-
+            }
+            var logCurrentUserInDb = await _context.LogUsersVisitToCompanyComments.AsNoTracking()
+                .FirstOrDefaultAsync(w => w.CompanyOwnerCommentsId == comment.CompanyId
+                                          && w.UserId == userId) ?? null;
+            if (logCurrentUserInDb != null)
+            {
+                logCurrentUserInDb.DateTimeVisit = DateTime.Now.AddMinutes(1); 
+                _context.LogUsersVisitToCompanyComments.Entry(logCurrentUserInDb).State = EntityState.Modified;
+            }
             if (comment.IsWarningComment)
             {
                 var re = await  _accessRestrictionService.GetAccessFromComponentAsync(comment.CompanyId);
@@ -121,17 +136,17 @@ namespace DKCrm.Server.Services.CompanyServices
                 {
                     if (userAdmId == userId)
                         continue;
-                    var logInDb = await _context.LogUsersVisitToOrderComments.AsNoTracking()
-                        .FirstOrDefaultAsync(w => w.OrderOwnerCommentsId == comment.CompanyId
+                    var logInDb = await _context.LogUsersVisitToCompanyComments.AsNoTracking()
+                        .FirstOrDefaultAsync(w => w.CompanyOwnerCommentsId == comment.CompanyId
                                                   && w.UserId == userAdmId) ?? null;
                     if (logInDb == null)
                     {
-                        await SetLogUserVisit(new LogUsersVisitToCompanyComments()
+                        _context.LogUsersVisitToCompanyComments.Entry(new LogUsersVisitToCompanyComments()
                         {
                             CompanyOwnerCommentsId = comment.CompanyId,
-                            DateTimeVisit = DateTime.Now,
+                            DateTimeVisit = DateTime.Now.AddMinutes(-5),
                             UserId = userAdmId
-                        }, user);
+                        }).State = EntityState.Added;
                     }
                 }
             }
@@ -176,7 +191,7 @@ namespace DKCrm.Server.Services.CompanyServices
         {
             var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value)
                 .FirstOrDefault();
-            var userRole = user.Claims.Where(a => a.Type == ClaimTypes.Role).Select(a => a.Value).FirstOrDefault();
+           // var userRole = user.Claims.Where(a => a.Type == ClaimTypes.Role).Select(a => a.Value).FirstOrDefault();
             var comments = _context.CompanyComments.Select(x => new CompanyComment()
             {
                 FromUserId = x.FromUserId,
@@ -185,6 +200,7 @@ namespace DKCrm.Server.Services.CompanyServices
                 Id = x.Id,
                 CompanyId = x.CompanyId,
                 IsWarningComment = x.IsWarningComment,
+                DateTimeUpdate = x.DateTimeUpdate
             }).Where(w => w.IsWarningComment == true);
 
             //IQueryable<Guid> orderIdList = null;
@@ -196,26 +212,26 @@ namespace DKCrm.Server.Services.CompanyServices
             //                                             && commentsCompanyId.Contains(w.Id)).Select(s => s.Id);
             //if (companyIdList == null)
             //    return new List<CompanyComment>();
-            var logInDb = _context.LogUsersVisitToCompanyComments
-                .Where(w => w.UserId == userId);
-            if (logInDb == null || !logInDb.Any())
-                return new List<CompanyComment>();
+            var logInDb =  _context.LogUsersVisitToCompanyComments;
+           // if (logInDb == null || !logInDb.Any())
+              //  return new List<CompanyComment>();
 
             if (request.GetOnlyNotOpen == true)
             {
                 comments = comments.Where(w =>
-                    logInDb.FirstOrDefault(f => f.CompanyOwnerCommentsId == w.CompanyId)!
+                    logInDb.FirstOrDefault(f => f.CompanyOwnerCommentsId == w.CompanyId && f.UserId == userId)!
                         .DateTimeVisit < w.DateTimeUpdate);
             
             }
             else
             {
-                comments = comments.Where(w => logInDb.FirstOrDefault(f => f.CompanyOwnerCommentsId == w.CompanyId)!
-                        .DateTimeVisit > w.DateTimeUpdate);
+                comments = comments.Where(w => 
+                    logInDb.FirstOrDefault(f => f.CompanyOwnerCommentsId == w.CompanyId && f.UserId == userId)!
+                        .DateTimeVisit >= w.DateTimeUpdate );
                 
             }
 
-            return await comments.OrderBy(o => o.DateTimeCreated).ToArrayAsync();
+            return await comments.OrderBy(o => o.DateTimeUpdate).ToArrayAsync();
         }
     }
 }

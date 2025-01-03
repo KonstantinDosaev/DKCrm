@@ -26,6 +26,7 @@ namespace DKCrm.Shared.Models.OrderModels
         public virtual ICollection<ExportedOrderStatus>? ExportedOrderStatus { get; set; }
         public virtual ICollection<ExportedOrderStatusExportedOrder>? ExportedOrderStatusExported { get; set; }
 
+
         public virtual Company? OurCompany { get; set; }
         public Guid? OurCompanyId { get; set; }
         public virtual Company? CompanyBuyer { get; set; }

@@ -10,28 +10,40 @@
 <MudText Class="m-3" Typo="Typo.h4">Заказы на продажу</MudText>
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Style="margin-right: 1rem;"
-                   OnClick="OnHistory">
-            @(!_showHistoryOrders ? "История" : "Текущие")
-            <MudIcon Size="@Size.Medium" 
-                     Icon="@(_showHistoryOrders ? Icons.Material.Sharp.Article : Icons.Material.Sharp.History)" 
-                     Class="pa-0 ml-2" />
-        </MudButton>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" 
-                   OnClick="() => _visibleOrderFilter=true" Style="margin-right: 1rem;" 
-                   Color="@(_filterIsOn?Color.Warning : Color.Default)">
-            Фильтр
-            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2" />
-        </MudButton>
-        <div style="width: 228px; margin-right: 1rem;">
+        <MudTooltip Placement="Placement.Right" Text="не прочитанные комментарии">
+            <MudButton Size="@Size.Medium" Style="margin-right: 0.7rem;"
+                       Variant="Variant.Filled" OnClick="() => OnUnreadComments()"
+                       StartIcon="@Icons.Material.Filled.CommentBank"
+                       Color="@(_isOnUnreadComments ? Color.Primary : Color.Default)">
+                <MudIcon Icon="@(_unreadCommentsAny ? Icons.Material.Filled.PlusOne : Icons.Material.Filled.Check)"/>
+
+            </MudButton>
+        </MudTooltip>
+        <MudTooltip Text="история">
+            <MudButton Variant="Variant.Filled"
+                       Color="@(_showHistoryOrders ? Color.Primary : Color.Default)"
+                       Style="margin-right: 0.7rem;"
+                       OnClick="OnHistory">
+                <MudIcon Size="@Size.Medium"
+                         Icon="@Icons.Material.Sharp.History"
+                         Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
+        <MudTooltip Text="фильтр">
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       OnClick="() => _visibleOrderFilter = true" Style="margin-right: 0.7rem;"
+                       Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                <MudIcon Size="@Size.Medium" Color="Color.Default"
+                         Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
+        <div style="width: 228px; margin-right: 0.7rem;">
             <MudSelect T="ExportedOrderStatus"
-                       Placeholder="Статус" Value="CurrentOrderStatus" 
+                       Placeholder="Статус" Value="CurrentOrderStatus"
                        ValueChanged="OnStatusFilter"
                        Variant="Variant.Outlined" Dense="true" Style=""
                        Class="select-button"
-                       OnOpen="LoadStatusList" ToStringFunc="status => status?.Value!" Clearable 
+                       OnOpen="LoadStatusList" ToStringFunc="status => status?.Value!" Clearable
                        OnClearButtonClick="ResetStatusFilter">
                 @if (StatusList != null)
                 {
@@ -42,11 +54,11 @@
                 }
             </MudSelect>
         </div>
-        <div style="width: 228px; margin-right: 1rem;">
+        <div style="width: 228px; margin-right: 0.7rem;">
             <MudSelect T="bool?"
-                        Placeholder="Укомплектованность" Value="OrdersIsCompleted" ValueChanged="OnCompleteOrderFilter"
+                       Placeholder="Укомплектованность" Value="OrdersIsCompleted" ValueChanged="OnCompleteOrderFilter"
                        Variant="Variant.Outlined" Dense="true" Style=""
-                       Class="select-button">
+                       Class="select-button" Clearable="true">
                 <MudSelectItem T="bool?" Value="true">Укомплектованные</MudSelectItem>
                 <MudSelectItem T="bool?" Value="false">Не укомплектованные</MudSelectItem>
                 <MudSelectItem T="bool?" Value="null">Все</MudSelectItem>
@@ -55,7 +67,7 @@
         <div style="width: 228px; margin-right: 0.5rem">
             <MudSelect T="string"
                        MultiSelection="true"
-                       @bind-SelectedValues="_currencyDisplay" 
+                       @bind-SelectedValues="_currencyDisplay"
                        MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
                        Variant="Variant.Outlined" Dense="true"
                        Class="select-button">
@@ -262,7 +274,7 @@
 </MudDrawer>
 @if (_visibleOrderComments)
 {
-    <MudDialog @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0" 
+    <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0"
                Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
         <DialogContent>
             <OrderCommentComponent CurrentOrderId="OrderId"
@@ -321,6 +333,8 @@
     private bool _filterIsOn;  
     private bool _visibleOrderComments;
     private bool _visibleDocumentManagerDialog;
+    private bool _isOnUnreadComments;
+    private bool _unreadCommentsAny;
 
     public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
     protected override void OnParametersSet()
@@ -355,8 +369,9 @@
             SearchInChapter = SelectedOption,
             FilterTuple = _filterOrderTuple
         }, token);
-   
-     
+
+        _unreadCommentsAny = response.AnyUnreadComment;
+        StateHasChanged();
             return new TableData<ExportedOrder>() { TotalItems = response.TotalItems, Items = response.Items };
         
     }
@@ -371,7 +386,14 @@
         _showHistoryOrders = !_showHistoryOrders;
         _filterOrderTuple.IsHistoryOrders = !_filterOrderTuple.IsHistoryOrders;
         _table!.ReloadServerData();
+    } 
+    private void OnUnreadComments()
+    {
+        _isOnUnreadComments = !_isOnUnreadComments;
+        _filterOrderTuple.IsOrdersWithUnreadComments = !_filterOrderTuple.IsOrdersWithUnreadComments;
+        _table!.ReloadServerData();
     }
+
     private void SelectSearchOption(string text)
     {
         SelectedOption = text!="null"? text : null;
@@ -467,5 +489,6 @@
         font-size: 0.85rem !important;
         
     }
+
 </style>
 

@@ -60,13 +60,14 @@
         if (Users != null)
         {
             AccessRestriction = await AccessRestrictionManager.GetAccessFromComponentAsync(ComponentId);
-            _isOpen = _isOpen == false;
+          
 
             if (AccessRestriction != null && AccessRestriction.AccessUsersToComponent != null && AccessRestriction.AccessUsersToComponent.Any())
             {
                 _accessAny = true;
                 SelectedValues = Users.Where(s => AccessRestriction.AccessUsersToComponent.Contains(s.Id)).ToHashSet<ApplicationUser>();
             }
+            _isOpen = _isOpen == false;
         }
     }
    

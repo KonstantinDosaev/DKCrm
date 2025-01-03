@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
+using OpenXmlPowerTools;
 
 namespace DKCrm.Server.Services.OrderServices
 {
@@ -99,17 +101,44 @@ namespace DKCrm.Server.Services.OrderServices
                 ExportedProducts = s.ExportedProducts,
                 ExportedOrderStatus = s.ExportedOrderStatus,
                 ExportedOrderStatusExported = s.ExportedOrderStatusExported,
-               IsAllProductsAreCollected = s.IsAllProductsAreCollected
+               IsAllProductsAreCollected = s.IsAllProductsAreCollected,
+
                 
             });
-   
+            data = data.Where(w => (
+                (w.CompanyBuyerId != null && (!accessedComponents.Contains((Guid)w.CompanyBuyerId) || (
+                    accessedComponents.Contains((Guid)w.CompanyBuyerId)
+                    && accessCollection.First(f => f.AccessedComponentId == w.CompanyBuyerId).AccessUsersToComponent
+                        .Contains(userId))))));
             //if (request.Chapter != null && request.ChapterId != null)
             //{
             //    data = data.Where(o => o.ExportedOrderStatusId == request.ChapterId);
             //}
-
+            var unreadAny = data.Any(wm =>
+                (_context.CommentOrders.Where(w => w.OrderId == wm.Id)
+                    .Select(s => s.DateTimeUpdate).Any() && _context.LogUsersVisitToOrderComments
+                    .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
+                                         && f.UserId == userId) == null)
+                || (_context.LogUsersVisitToOrderComments
+                    .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
+                                         && f.UserId == userId).DateTimeVisit < _context.CommentOrders
+                    .Where(w => w.OrderId == wm.Id)
+                    .Select(s => s.DateTimeUpdate).Max()));
             if (request.FilterTuple != null)
             {
+                if (request.FilterTuple.IsOrdersWithUnreadComments == true)
+                {
+                    data = data.Where(wm =>
+                        ( _context.CommentOrders.Where(w=>w.OrderId == wm.Id)
+                            .Select(s=>s.DateTimeUpdate).Any() && _context.LogUsersVisitToOrderComments
+                            .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id 
+                                                 && f.UserId == userId) == null)
+                    ||(_context.LogUsersVisitToOrderComments
+                            .FirstOrDefault(f=>f.OrderOwnerCommentsId == wm.Id 
+                                               && f.UserId == userId).DateTimeVisit < _context.CommentOrders
+                            .Where(w => w.OrderId == wm.Id)
+                            .Select(s => s.DateTimeUpdate).Max()) );
+                }
                 if (request.FilterTuple.IsCompleteOrders != null)
                 {
                     data = data.Where(w => w.IsAllProductsAreCollected == request.FilterTuple.IsCompleteOrders);
@@ -181,11 +210,7 @@ namespace DKCrm.Server.Services.OrderServices
                     }
                 }
             }
-            data = data.Where(w => (
-                (w.CompanyBuyerId != null && (!accessedComponents.Contains((Guid)w.CompanyBuyerId) || (
-                    accessedComponents.Contains((Guid)w.CompanyBuyerId)
-                    && accessCollection.First(f => f.AccessedComponentId == w.CompanyBuyerId).AccessUsersToComponent
-                        .Contains(userId))))));
+         
             var totalItems = data.Any() ? data.Count() : 0;
             if (request.SortLabel != null)
             {
@@ -206,12 +231,18 @@ namespace DKCrm.Server.Services.OrderServices
                     case "update_field":
                         data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.DateTimeUpdate);
                         break;
+                   
                 }
             }
 
             data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
 
-            return new SortPagedResponse<ExportedOrder>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() };
+            return new SortPagedResponse<ExportedOrder>()
+            {
+                TotalItems = totalItems, 
+                Items = await data.AsSingleQuery().ToListAsync(),
+                AnyUnreadComment = unreadAny
+            };
         }
         public async Task<Guid> PostAsync(ExportedOrder exportedOrder, string userName)
         {

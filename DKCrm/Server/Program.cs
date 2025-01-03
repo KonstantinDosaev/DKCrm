@@ -78,6 +78,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddTransient<IAuthService, AuthService>();
 
 builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IAccessRestrictionService, AccessRestrictionService>();
 builder.Services.AddTransient<IChatService, ChatService>();
 builder.Services.AddTransient<IInternalCompanyDataService, InternalCompanyDataService>();
 builder.Services.AddTransient<IStorageService, StorageService>();
@@ -110,7 +111,7 @@ builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryServ
 builder.Services.AddTransient<IImageService, ImageService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddTransient<ICompanyCommentsService, CompanyCommentsService>();
-builder.Services.AddTransient<IAccessRestrictionService, AccessRestrictionService>();
+
 
 builder.Services.AddRazorPages();
 

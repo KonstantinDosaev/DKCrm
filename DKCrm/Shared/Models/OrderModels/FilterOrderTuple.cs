@@ -15,6 +15,8 @@
         public DateTime? CreateDateLast { get; set; }
         public DateTime? UpdateDateFirst { get; set; }
         public DateTime? UpdateDateLast { get; set; }
+        public bool IsOrdersWithUnreadComments { get; set; }
+        public bool IsOrdersWithUnreadSystemComments { get; set; }
 
     }
 }

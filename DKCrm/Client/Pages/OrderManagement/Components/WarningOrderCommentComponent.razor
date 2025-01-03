@@ -3,11 +3,11 @@
 
 <MudTooltip Text="Показать важные комментарии">
     <MudIconButton OnClick="()=> OpenDialog(true)"
-    Icon="@Icons.Material.Filled.CommentBank" Color="@_mainIconColor"/>
+    Icon="@Icons.Material.Filled.WarningAmber" Color="@_mainIconColor"/>
 </MudTooltip>
 @if (_visibleWarningOrderCommentsDialog)
 {
-    <MudDialog @bind-Visible="_visibleWarningOrderCommentsDialog" Style="max-width: 700px; padding: 0"
+    <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleWarningOrderCommentsDialog" Style="max-width: 700px; padding: 0"
                Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding"
                TitleClass="order_commentWarning">
         <TitleContent>
@@ -41,14 +41,19 @@
                                                            OnClick="@(() => OpenOrderPopover(@message.OrderId, message.Id))"/>
 
                                         }
-                                        <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment" ToggledChanged="(s) => SetWarningFlagToComment(s, message)"
-                                                             Icon="@Icons.Material.Filled.OutlinedFlag" Color="@Color.Surface" Title="Off"
-                                                             ToggledIcon="@Icons.Material.Filled.Flag" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                                        <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment"
+                                                             ToggledChanged="(s) => SetWarningFlagToComment(s, message)"
+                                                             Icon="@Icons.Material.Filled.WarningAmber"
+                                                             Color="@Color.Surface" Title="Off"
+                                                             ToggledIcon="@Icons.Material.Filled.WarningAmber"
+                                                             ToggledColor="@Color.Error" ToggledTitle="On"/>
                                     </div>
 
                                 </div>
                                 <MudText Typo="Typo.body2" Style="">@message.Value</MudText>
-                                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@($"{message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")} / {message.DateTimeUpdate.ToString("dd MMM, yyyy HH:mm")}")</MudText>
+                                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">
+                                    @($"{message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")} / {message.DateTimeUpdate.ToString("dd MMM, yyyy HH:mm")}")
+                                </MudText>
 
                             </div>
                         }

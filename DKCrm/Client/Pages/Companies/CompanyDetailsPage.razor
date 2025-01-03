@@ -445,7 +445,7 @@
     private async Task GetCompany()
     {
         Company = await CompanyManager.GetDetailsAsync(CompanyId);
-       
+        var tags = Company.TagsCompanies;
         if (Company.CompanyType?.Name == TypeCompanyNames.OurCompanies)
         {
             var userIds = Company.Employees?.Where(w=> !string.IsNullOrEmpty(w.UserId)).Select(f => f.UserId).ToArray();
