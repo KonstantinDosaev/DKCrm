@@ -4,6 +4,7 @@ using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Server.Controllers.OrderControllers
 {
@@ -18,8 +19,8 @@ namespace DKCrm.Server.Controllers.OrderControllers
             _orderCommentsService = orderCommentsService;
         }
 
-        [HttpGet("{orderId:guid}")]
-        public async Task<IActionResult> GetAllForOrder(Guid orderId) => Ok(await _orderCommentsService.GetAllCommentsFromOrderAsync(orderId, User));
+        [HttpPost]
+        public async Task<IActionResult> GetAllForOrder(GetCommentsForPaginationRequest request) => Ok(await _orderCommentsService.GetAllCommentsFromOrderAsync(request, User));
 
         [HttpPost]
         public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderCommentTuple> request)

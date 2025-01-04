@@ -4,6 +4,7 @@ using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Requests;
 using System.Security.Claims;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Client.Services.OrderServices
 {
@@ -16,9 +17,10 @@ namespace DKCrm.Client.Services.OrderServices
             _httpClient = httpClient;
         }
 
-        public async Task<List<CommentOrder>> GetAllForOrderAsync(Guid orderId)
+        public async Task<GetCommentsForPaginationResponse<CommentOrder>> GetAllForOrderAsync(GetCommentsForPaginationRequest request)
         {
-            return await _httpClient.GetFromJsonAsync<List<CommentOrder>>($"api/OrderComment/GetAllForOrder/{orderId}") ?? throw new InvalidOperationException();
+            var response = await _httpClient.PostAsJsonAsync($"api/OrderComment/GetAllForOrder", request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<GetCommentsForPaginationResponse<CommentOrder>>() ?? throw new InvalidOperationException();
         }
         public async Task<SortPagedResponse<CommentOrder>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterOrderCommentTuple> request)
         {

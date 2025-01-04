@@ -1,5 +1,7 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client
 @using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Requests
+@using DKCrm.Shared.Requests.OrderService
 @page "/comments/{CurrentOrderId:guid}"
 <div  Class="pb-4 d-flex flex-column" Style="height: 95vh">
     <MudToolBar Dense="true" Class="d-flex justify-content-between">
@@ -16,7 +18,8 @@
        
         @if (SelectedValues.Any())
         {
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnButtonDeleteClicked(SelectedValues)" Style="margin-right: 1rem;">Удалить</MudButton>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                       OnClick="() => OnButtonDeleteClicked(SelectedValues)" Style="margin-right: 1rem;">Удалить</MudButton>
         }
         
         <MudMenu Icon="@Icons.Material.Filled.MoreVert">
@@ -32,14 +35,19 @@
     <MudTooltip Text="Показать только важные">
         <MudToggleIconButton ToggledChanged="FilterWarningComments" Toggled="_isShowOnlyWarningComment"
                              Icon="@Icons.Material.Filled.WarningAmber" Color="@Color.Surface" Title="Off"
-                             ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                             ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" 
+                             ToggledTitle="On"/>
     </MudTooltip>
     </MudToolBar>
-    <div class="d-flex flex-column px-4 flex-grow-1" style="  overflow-y: scroll;" id="commentContainer">
+    <div class="d-flex flex-column px-4 pt-4 flex-grow-1" style="overflow-y: scroll;" id="commentOrderContainer">
+        <MudLink  Color="Color.Dark" Underline="Underline.None"
+                   OnClick="LoadMoreComments" 
+                   Size="Size.Small" Class="link_loadMoreComment"
+                   Disabled="@(_comments.Count >= _totalItems)">загрузить ещё</MudLink>
         @foreach (var message in _comments)
         {
             var borderColor = message.IsWarningComment ? "solid red" : "solid 1px rgba(181, 181, 181, 0.361)";
-        var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
+            var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
 
             <div class="my-2" style="@($"padding: 5px 15px; background-color: whitesmoke;border-radius: 5px; border: {borderColor}; overflow-wrap: break-word")">
                 <div class="d-flex justify-content-between">
@@ -48,28 +56,35 @@
                         @if (message.IsWarningComment)
                         {
                             <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.WarningAmber"
-                                                Color="@Color.Error" ToggledTitle="On"/>
+                                     Color="@Color.Error" ToggledTitle="On"/>
                         }
-                       <MudMenu Dense="true" FullWidth="true">
+                        <MudMenu Dense="true" FullWidth="false">
                             <ActivatorContent>
                                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.MoreVert"></MudIconButton>
                             </ActivatorContent>
                             <ChildContent>
-                                <MudToggleIconButton Size="Size.Small" Toggled="@message.IsWarningComment" ToggledChanged="(s) => SetWarningFlagToComment(s,message)"
-                                                     Icon="@Icons.Material.Filled.WarningAmber" Color="@Color.Surface" Title="Off"
-                                                     ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" ToggledTitle="On"/>
+                                <div class="px-4 py-2">
+                                    <MudToggleIconButton
+                                        Size="Size.Medium" Toggled="@message.IsWarningComment" 
+                                        ToggledChanged="(s) => SetWarningFlagToComment(s, message)"
+                                        Icon="@Icons.Material.Filled.WarningAmber" Color="@Color.Surface"
+                                        ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" 
+                                        нToggledTitle="On"/>
+                                </div>
                             </ChildContent>
                         </MudMenu>
                     </div>
                 </div>
                 <MudText Typo="Typo.body2" Style="">@message.Value</MudText>
-                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">@message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")</MudText>
+                <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">
+                    @($"доб. {message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")} / ред. {message.DateTimeUpdate.ToString("dd MMM, yyyy HH:mm")}")
+                </MudText>
                 @if (_multiSelect && message.FromUserId == CurrentUser?.Id)
                 {
                     <input disabled="@message.IsWarningComment" type="checkbox" @onchange="eventArgs => { CheckboxClicked(message.Id, eventArgs.Value!); }"/>
                 }
             </div>
-          
+
         }
     </div>
 
@@ -89,19 +104,16 @@
 @code {
     [Parameter] public Guid CurrentOrderId { get; set; }
     [CascadingParameter] public HubConnection? HubConnection { get; set; }
-
     [Parameter] public string CurrentMessage { get; set; } = null!;
     [Parameter] public string OrderType { get; set; } = null;
     public ApplicationUser? CurrentUser { get; set; }
-
-
     private List<CommentOrder> _comments = new();
     private List<CommentOrder> _tempComments = new();
     public List<ApplicationUser> ChatUsers = new();
-
-
     public List<Guid> SelectedValues = new();
-
+    private int _pageIndex = 0;
+    private int _totalItems;  
+    private int _pageSize = 3;
     private bool _multiSelect;
     private bool _isWarningComment; 
     private bool _isShowOnlyWarningComment;
@@ -123,7 +135,7 @@
             {
                 _comments.Add(comment); 
                 StateHasChanged();
-                await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentContainer");
+                await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentOrderContainer");
               
             }
             //else if (CurrentUserChatGroupsIds != null && CurrentUserChatGroupsIds.Contains(message.ToChatGroupId))
@@ -138,7 +150,7 @@
             if (CurrentOrderId == orderId)
             {
                 await LoadComments(orderId);
-                await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentContainer");
+                await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentOrderContainer");
                 _snackBar.Add("Изменения в комментариях");
                  StateHasChanged();
             }
@@ -148,9 +160,9 @@
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (CurrentOrderId != Guid.Empty && !SelectedValues.Any() && !_renderNotScroll)
+        if (CurrentOrderId != Guid.Empty && !SelectedValues.Any() && _renderNotScroll == false)
         {
-            await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentContainer");
+            await _jsRuntime.InvokeAsync<string>("ScrollToBottom", "commentOrderContainer");
             _renderNotScroll = false;
         }
     }
@@ -179,25 +191,46 @@
     private async Task LoadComments(Guid orderId)
     {
         CurrentOrderId = orderId;
-        _comments = await CommentOrderManager.GetAllForOrderAsync(CurrentOrderId);
-        if (CurrentUser != null)
-            await CommentOrderManager.SetLogUsersVisitAsync(new LogUsersVisitToOrderComments()
-            {
-                OrderOwnerCommentsId = orderId,
-                DateTimeVisit = DateTime.Now,
-                UserId = CurrentUser.Id
-            });
+        _pageIndex = 0;
+        _totalItems = 0;  
+        var response = await CommentOrderManager.GetAllForOrderAsync(new GetCommentsForPaginationRequest()
+        {
+            ComponentOwnerId = orderId, PageIndex = 0, PageSize = _pageSize, GetOnlyWarningComments = _isShowOnlyWarningComment
+        });
+        if (response.Items != null)
+        {
+            _comments = response.Items.ToList();
+            _totalItems = response.TotalItems;
+            if (CurrentUser != null)
+                await CommentOrderManager.SetLogUsersVisitAsync(new LogUsersVisitToOrderComments()
+                {
+                    OrderOwnerCommentsId = orderId,
+                    DateTimeVisit = DateTime.Now,
+                    UserId = CurrentUser.Id
+                });
+        }
     }
-    private void FilterWarningComments(bool toggle)
+    private async Task LoadMoreComments()
+    {
+        if (_comments.Count >= _totalItems)
+            return;
+        _pageIndex += 1;
+        _renderNotScroll = true;
+        var response = await CommentOrderManager.GetAllForOrderAsync(new GetCommentsForPaginationRequest()
+        {
+            ComponentOwnerId = CurrentOrderId, PageIndex = _pageIndex, PageSize = _pageSize, GetOnlyWarningComments = _isShowOnlyWarningComment
+        });
+        if (response.Items != null)
+        {
+            _comments.InsertRange(0 ,response.Items.ToArray());
+            _totalItems = response.TotalItems;
+        }
+    }
+    private async Task FilterWarningComments(bool toggle)
     {
         _isShowOnlyWarningComment = toggle;
-        if (toggle == true)
-        {
-            _tempComments = _comments;
-            _comments = _comments.Where(w=> w.IsWarningComment == true).ToList();
-        }
-        else
-            _comments = _tempComments;
+
+            await LoadComments(CurrentOrderId);
     }
     private async Task SetWarningFlagToComment(bool toggle, CommentOrder comment)
     {
@@ -261,3 +294,17 @@
         }
     }
 }
+<style>
+    .link_loadMoreComment{
+        margin: 5px auto;
+        border: solid 1px lightskyblue;
+        border-radius: 5px;
+        padding: 3px;
+        
+    }
+    .link_loadMoreComment:hover{
+
+        margin: 4px auto;
+        border-width: 2px;
+    }
+</style>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Requests;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Server.Controllers.CompanyControllers
 {
@@ -22,8 +23,9 @@ namespace DKCrm.Server.Controllers.CompanyControllers
             _companyCommentsService = companyCommentsService;
         }
 
-        [HttpGet("{companyId:guid}")]
-        public async Task<IActionResult> GetAllForCompany(Guid companyId) => Ok(await _companyCommentsService.GetAllCommentsFromCompanyAsync(companyId, User));
+        [HttpPost]
+        public async Task<IActionResult> GetAllForCompany(GetCommentsForPaginationRequest request) => 
+            Ok(await _companyCommentsService.GetAllCommentsFromCompanyAsync(request, User));
 
         [HttpPost]
         public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterOrderCommentTuple> request)

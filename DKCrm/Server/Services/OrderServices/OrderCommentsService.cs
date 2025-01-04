@@ -12,6 +12,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Identity;
 using DKCrm.Shared.Models.CompanyModels;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Server.Services.OrderServices
 {
@@ -25,10 +26,10 @@ namespace DKCrm.Server.Services.OrderServices
             _userManager = userManager;
         }
 
-        public async Task<IEnumerable<CommentOrder>> GetAllCommentsFromOrderAsync(Guid orderId, ClaimsPrincipal user)
+        public async Task<GetCommentsForPaginationResponse<CommentOrder>> GetAllCommentsFromOrderAsync(GetCommentsForPaginationRequest request, ClaimsPrincipal user)
         {
-            var comments = await _context.CommentOrders
-                .Where(h => h.OrderId == orderId)
+            var comments =  _context.CommentOrders
+                .Where(h => h.OrderId == request.ComponentOwnerId)
                 .OrderBy(a => a.DateTimeCreated)
                 .Select(x => new CommentOrder()
                 {
@@ -38,9 +39,18 @@ namespace DKCrm.Server.Services.OrderServices
                     Id = x.Id,
                     OrderId = x.OrderId, 
                     IsWarningComment = x.IsWarningComment, 
-                    OrderType = x.OrderType
-                }).ToArrayAsync();
-            return comments;
+                    OrderType = x.OrderType, 
+                    DateTimeUpdate = x.DateTimeUpdate
+                });
+            if (request.GetOnlyWarningComments == true)
+                comments = comments.Where(h => h.IsWarningComment);
+            
+            var maxCount = comments.Count();
+            comments = comments.OrderByDescending(o=>o.DateTimeUpdate).Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+            return new GetCommentsForPaginationResponse<CommentOrder>()
+            {
+                Items = await comments.Reverse().ToArrayAsync(), TotalItems = maxCount 
+            };
         }
         public async Task<SortPagedResponse<CommentOrder>> GetBySortPagedSearchAsync(SortPagedRequest<FilterOrderCommentTuple> request)
         {

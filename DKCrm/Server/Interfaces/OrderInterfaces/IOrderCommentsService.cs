@@ -2,12 +2,13 @@
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Requests;
 using System.Security.Claims;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Server.Interfaces.OrderInterfaces
 {
     public interface IOrderCommentsService
     {
-        Task<IEnumerable<CommentOrder>> GetAllCommentsFromOrderAsync(Guid orderId, ClaimsPrincipal user);
+        Task<GetCommentsForPaginationResponse<CommentOrder>> GetAllCommentsFromOrderAsync(GetCommentsForPaginationRequest request, ClaimsPrincipal user);
         Task<SortPagedResponse<CommentOrder>> GetBySortPagedSearchAsync(SortPagedRequest<FilterOrderCommentTuple> request);
         Task<int> SaveCommentAsync(CommentOrder comment, ClaimsPrincipal user);
         Task<int> RemoveRangeAsync(IEnumerable<Guid> listId, ClaimsPrincipal user);

@@ -2,12 +2,14 @@
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Requests;
 using System.Net.Http;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Client.Services.CompanyServices
 {
     public interface ICompanyCommentsManager
     {
-        Task<List<CompanyComment>> GetAllForCompanyAsync(Guid companyId);
+        Task<GetCommentsForPaginationResponse<CompanyComment>> GetAllForCompanyAsync(
+            GetCommentsForPaginationRequest request);
         Task RemoveRangeAsync(IEnumerable<Guid> listId);
         Task SaveCommentAsync(CompanyComment comment);
         Task<int> SetLogUsersVisitAsync(LogUsersVisitToCompanyComments log);

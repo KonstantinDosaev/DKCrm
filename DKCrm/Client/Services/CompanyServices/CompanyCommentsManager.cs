@@ -3,6 +3,7 @@ using DKCrm.Shared.Models;
 using System.Net.Http.Json;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Requests;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Client.Services.CompanyServices
 {
@@ -16,9 +17,10 @@ namespace DKCrm.Client.Services.CompanyServices
             _httpClient = httpClient;
         }
 
-        public async Task<List<CompanyComment>> GetAllForCompanyAsync(Guid companyId)
+        public async Task<GetCommentsForPaginationResponse<CompanyComment>> GetAllForCompanyAsync(GetCommentsForPaginationRequest request)
         {
-            return await _httpClient.GetFromJsonAsync<List<CompanyComment>>($"api/CompanyComments/GetAllForCompany/{companyId}") ?? throw new InvalidOperationException();
+            var response = await _httpClient.PostAsJsonAsync($"api/CompanyComments/GetAllForCompany", request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<GetCommentsForPaginationResponse<CompanyComment>>() ?? throw new InvalidOperationException();
         }
        // public async Task<SortPagedResponse<CommentOrder>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterOrderCommentTuple> request)
       //  {

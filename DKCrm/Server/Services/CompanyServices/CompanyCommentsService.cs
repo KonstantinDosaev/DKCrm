@@ -11,6 +11,7 @@ using DKCrm.Shared.Requests;
 using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Server.Interfaces;
 using DKCrm.Client.Pages.Authentication;
+using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Server.Services.CompanyServices
 {
@@ -26,10 +27,10 @@ namespace DKCrm.Server.Services.CompanyServices
             _accessRestrictionService = accessRestrictionService;
         }
 
-        public async Task<IEnumerable<CompanyComment>> GetAllCommentsFromCompanyAsync(Guid companyId, ClaimsPrincipal user)
+        public async Task<GetCommentsForPaginationResponse<CompanyComment>> GetAllCommentsFromCompanyAsync(GetCommentsForPaginationRequest request, ClaimsPrincipal user)
         {
-            var comments = await _context.CompanyComments
-                .Where(h => h.CompanyId == companyId)
+            var comments =  _context.CompanyComments
+                .Where(h => h.CompanyId == request.ComponentOwnerId)
                 .OrderBy(a => a.DateTimeCreated)
                 .Select(x => new CompanyComment()
                 {
@@ -37,12 +38,19 @@ namespace DKCrm.Server.Services.CompanyServices
                     Value = x.Value,
                     DateTimeCreated = x.DateTimeCreated,
                     Id = x.Id,
-                    CompanyId = x.CompanyId,
-                    Company = x.Company,
-                    IsWarningComment = x.IsWarningComment,
+                    CompanyId = x.CompanyId, 
+                    IsWarningComment = x.IsWarningComment, 
                     DateTimeUpdate = x.DateTimeUpdate
-                }).ToArrayAsync();
-            return comments;
+                });
+            if (request.GetOnlyWarningComments == true)
+                comments = comments.Where(h => h.IsWarningComment);
+            
+            var maxCount = comments.Count();
+            comments = comments.OrderByDescending(o=>o.DateTimeUpdate).Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+            return new GetCommentsForPaginationResponse<CompanyComment>()
+            {
+                Items = await comments.Reverse().ToArrayAsync(), TotalItems = maxCount 
+            };
         }
         public async Task<SortPagedResponse<CommentOrder>> GetBySortPagedSearchAsync(SortPagedRequest<FilterOrderCommentTuple> request)
         {
