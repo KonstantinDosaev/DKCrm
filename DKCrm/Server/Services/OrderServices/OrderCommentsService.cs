@@ -5,13 +5,8 @@ using System.Security.Claims;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
-using DKCrm.Shared.Requests;
 using MudBlazor;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using Org.BouncyCastle.Asn1.Ocsp;
-using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Identity;
-using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Shared.Requests.OrderService;
 
 namespace DKCrm.Server.Services.OrderServices
@@ -42,7 +37,7 @@ namespace DKCrm.Server.Services.OrderServices
                     OrderType = x.OrderType, 
                     DateTimeUpdate = x.DateTimeUpdate
                 });
-            if (request.GetOnlyWarningComments == true)
+            if (request.GetOnlyWarningComments)
                 comments = comments.Where(h => h.IsWarningComment);
             
             var maxCount = comments.Count();
@@ -69,11 +64,11 @@ namespace DKCrm.Server.Services.OrderServices
             {
                 if (request.FilterTuple.CreateDateFirst != null)
                 {
-                    data = data.Where(w => w.DateTimeCreated! >= request.FilterTuple.CreateDateFirst.Value.Date);
+                    data = data.Where(w => w.DateTimeCreated >= request.FilterTuple.CreateDateFirst.Value.Date);
                 }
                 if (request.FilterTuple.CreateDateLast != null)
                 {
-                    data = data.Where(w => w.DateTimeCreated! <= request.FilterTuple.CreateDateLast.Value.Date);
+                    data = data.Where(w => w.DateTimeCreated <= request.FilterTuple.CreateDateLast.Value.Date);
                 }
             }
 
@@ -191,12 +186,12 @@ namespace DKCrm.Server.Services.OrderServices
             var comments = _context.CommentOrders.Where(w => listId.Contains(w.Id) && w.FromUserId == userId);
             var count = comments.Count();
             _context.CommentOrders.RemoveRange(comments);
-            var t = await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return count;
         }
         public async Task<int> SetLogUserVisit(LogUsersVisitToOrderComments newLog, ClaimsPrincipal user)
         {
-            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            //var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
             var logInDb = await _context.LogUsersVisitToOrderComments.AsNoTracking()
                 .FirstOrDefaultAsync(w => w.OrderOwnerCommentsId == newLog.OrderOwnerCommentsId && w.UserId == newLog.UserId) ?? null;
             if (logInDb != null )
@@ -221,7 +216,7 @@ namespace DKCrm.Server.Services.OrderServices
             return logInDb;
         }
 
-        public async Task<IEnumerable<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request,
+        public async Task<GetCommentsForPaginationResponse<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request,
             ClaimsPrincipal user)
         {
             var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier)
@@ -241,7 +236,7 @@ namespace DKCrm.Server.Services.OrderServices
                 })
                 .Where(w => w.IsWarningComment == true);
 
-            IQueryable<Guid> orderIdList = null;
+            IQueryable<Guid>? orderIdList = null;
             var commentsOrderId = comments.Select(s => s.OrderId);
             if (request.OrderType == typeof(ExportedOrder).ToString())
             {
@@ -260,8 +255,11 @@ namespace DKCrm.Server.Services.OrderServices
                         .Select(s => s.Id);
             }
             if (orderIdList == null || !orderIdList.Any())
-                return new List<CommentOrder>();
-            if (request.GetOnlyNotOpen == true)
+                return new GetCommentsForPaginationResponse<CommentOrder>()
+                {
+                    Items = new List<CommentOrder>(), TotalItems = 0 
+                };
+            if (request.GetOnlyNotOpen)
             {
                 
                 var logInDb = _context.LogUsersVisitToOrderComments
@@ -278,8 +276,12 @@ namespace DKCrm.Server.Services.OrderServices
                 comments = comments.Where(w => logInDb.FirstOrDefault(f => f.OrderOwnerCommentsId == w.OrderId)!
                     .DateTimeVisit > w.DateTimeUpdate);
             }
-
-            return await comments.OrderBy(o=>o.DateTimeUpdate).ToArrayAsync();
+            var maxCount = comments.Count();
+            comments = comments.OrderByDescending(o=>o.DateTimeUpdate).Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+            return new GetCommentsForPaginationResponse<CommentOrder>()
+            {
+                Items = await comments.Reverse().ToArrayAsync(), TotalItems = maxCount 
+            };
         }
     }
 }

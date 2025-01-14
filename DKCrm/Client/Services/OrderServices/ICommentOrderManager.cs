@@ -13,6 +13,6 @@ namespace DKCrm.Client.Services.OrderServices
         Task SaveCommentAsync(CommentOrder comment);
         Task<int> SetLogUsersVisitAsync(LogUsersVisitToOrderComments log);
         Task<LogUsersVisitToOrderComments?> GetLogUsersVisitAsync(Guid orderId);
-        Task<List<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request);
+        Task<GetCommentsForPaginationResponse<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request);
     }
 }

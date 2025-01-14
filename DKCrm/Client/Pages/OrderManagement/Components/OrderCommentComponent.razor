@@ -5,39 +5,33 @@
 @page "/comments/{CurrentOrderId:guid}"
 <div  Class="pb-4 d-flex flex-column" Style="height: 95vh">
     <MudToolBar Dense="true" Class="d-flex justify-content-between">
-    @*       <div class="d-flex align-items-center">
-            @if (CurrentChatGroup != null)
+        <div class="d-flex align-items-center">
+            <MudSwitch T="bool"  ValueChanged="SetMultiSelect" 
+                       Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
+                       Color="Color.Info" UncheckedColor="Color.Default" Class="mr-2" />
+           
+            @if (SelectedValues.Any())
             {
-                <MudText>@(CurrentChatGroup.IsPrivateGroup ? CurrentChatGroup.ApplicationUsers?.FirstOrDefault(f => f.Id != CurrentUser!.Id)?.UserName : CurrentChatGroup.Name)</MudText>
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                           OnClick="() => OnButtonDeleteClicked(SelectedValues)" Style="margin-right: 1rem;">Удалить</MudButton>
             }
-        </div>*@
-    <div class="d-flex align-items-center">
-        <MudSwitch T="bool"  ValueChanged="SetMultiSelect" 
-                   Size="Size.Medium" ThumbIcon="@Icons.Material.Filled.Check" Label=""
-                   Color="Color.Info" UncheckedColor="Color.Default" Class="mr-2" />
-       
-        @if (SelectedValues.Any())
-        {
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                       OnClick="() => OnButtonDeleteClicked(SelectedValues)" Style="margin-right: 1rem;">Удалить</MudButton>
-        }
-        
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-            <MudMenuItem>
-                <MudButton Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.Delete"
-                           Color="Color.Error"
-                           OnClick="() => OnButtonDeleteClicked(_comments.Select(s => s.Id))"
-                           Style="justify-self: flex-start">Очистить переписку</MudButton>
-            </MudMenuItem>
-        </MudMenu>
-    </div>
-    <MudTooltip Text="Показать только важные">
-        <MudToggleIconButton ToggledChanged="FilterWarningComments" Toggled="_isShowOnlyWarningComment"
-                             Icon="@Icons.Material.Filled.WarningAmber" Color="@Color.Surface" Title="Off"
-                             ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" 
-                             ToggledTitle="On"/>
-    </MudTooltip>
+            
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                <MudMenuItem>
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               OnClick="() => OnButtonDeleteClicked(_comments.Select(s => s.Id))"
+                               Style="justify-self: flex-start">Очистить переписку</MudButton>
+                </MudMenuItem>
+            </MudMenu>
+        </div>
+        <MudTooltip Text="Показать только важные">
+            <MudToggleIconButton ToggledChanged="FilterWarningComments" Toggled="_isShowOnlyWarningComment"
+                                 Icon="@Icons.Material.Filled.WarningAmber" Color="@Color.Surface" Title="Off"
+                                 ToggledIcon="@Icons.Material.Filled.WarningAmber" ToggledColor="@Color.Error" 
+                                 ToggledTitle="On"/>
+        </MudTooltip>
     </MudToolBar>
     <div class="d-flex flex-column px-4 pt-4 flex-grow-1" style="overflow-y: scroll;" id="commentOrderContainer">
         <MudLink  Color="Color.Dark" Underline="Underline.None"
@@ -195,7 +189,10 @@
         _totalItems = 0;  
         var response = await CommentOrderManager.GetAllForOrderAsync(new GetCommentsForPaginationRequest()
         {
-            ComponentOwnerId = orderId, PageIndex = 0, PageSize = _pageSize, GetOnlyWarningComments = _isShowOnlyWarningComment
+            ComponentOwnerId = orderId, 
+            PageIndex = 0, 
+            PageSize = _pageSize, 
+            GetOnlyWarningComments = _isShowOnlyWarningComment
         });
         if (response.Items != null)
         {

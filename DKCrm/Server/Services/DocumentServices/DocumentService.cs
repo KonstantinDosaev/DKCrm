@@ -9,13 +9,7 @@ using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Requests.FileService;
-using iTextSharp.text.pdf.events;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using OpenXmlPowerTools;
-using DocumentFormat.OpenXml.Office2016.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 
 namespace DKCrm.Server.Services.DocumentServices
@@ -197,7 +191,7 @@ namespace DKCrm.Server.Services.DocumentServices
             }
             return resultDb == 1;
         }
-        private async Task<bool> SaveToFile(byte[] pdfBytes, string pathToDirectory,string fullOutPath)
+        /*private async Task<bool> SaveToFile(byte[] pdfBytes, string pathToDirectory,string fullOutPath)
         {
             if (!Directory.Exists(pathToDirectory))
                 Directory.CreateDirectory(pathToDirectory);
@@ -206,83 +200,86 @@ namespace DKCrm.Server.Services.DocumentServices
             
             await File.WriteAllBytesAsync(fullOutPath, pdfBytes);
             return File.Exists(fullOutPath);
-        }
+        }*/
         public async Task<byte[]> AddStampToPdfAsync(AddStampToPdfRequest request)
         {
             try
             {
-                var infoSet = await _infoSetFromDocumentToOrderService.GetOneAsync(request.InfoSetId);
-
+               // var infoSet = await _infoSetFromDocumentToOrderService.GetOneAsync(request.InfoSetId);
                 byte[] byt = new byte[] { };
-                var folderName = Path.Combine("StaticFiles", "Images");
-                var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
+               // var folderName = Path.Combine("StaticFiles", "Images");
+                //var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
                 var firstSt = request.StampPositionList.FirstOrDefault();
-                var image = firstSt.StampImage;
-                var imageGuid = firstSt.StampImageId;
-                //var image = await 
-                // var document = new Document();
-                var mainPath = _configuration[$"{DirectoryType.PrivateFolder}"];
-                var bytDocument = await GetDocumentBytArrayAsync(request.InfoSetId);
-                var pdfReader = new PdfReader(bytDocument);
-                var tempFilePath = Path.Combine(mainPath, "tempPdf.pdf");
-                //var fs = new MemoryStream(byt);
-                var fs = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
-                var stamp = new PdfStamper(pdfReader, fs);
-                var img = iTextSharp.text.Image.GetInstance(image);
-                img.RotationDegrees = 0;
-                var stampWidth = 100f;
-                var stampHeight = 100f;
-                img.ScaleToFit(stampWidth, stampHeight);
-                var pageNumbersToStampLists = request.StampPositionList.Select(s => s.PageNumber).ToArray();
-                var maxPage = pageNumbersToStampLists.Max();
-                for (var page = 1; page <= maxPage; page++)
+                if (firstSt != null)
                 {
-                    var pageSize = pdfReader.GetPageSize(page);
-                    var x = pageSize.Width;
-                    var y = pageSize.Height;
-                    if (pageNumbersToStampLists.Contains(page))
+                    var image = firstSt.StampImage;
+                    var imageGuid = firstSt.StampImageId;
+                    //var image = await 
+                    // var document = new Document();
+                    var mainPath = _configuration[$"{DirectoryType.PrivateFolder}"];
+                    var bytDocument = await GetDocumentBytArrayAsync(request.InfoSetId);
+                    var pdfReader = new PdfReader(bytDocument);
+                    var tempFilePath = Path.Combine(mainPath!, "tempPdf.pdf");
+                    //var fs = new MemoryStream(byt);
+                    var fs = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    var stamp = new PdfStamper(pdfReader, fs);
+                    var img = Image.GetInstance(image);
+                    img.RotationDegrees = 0;
+                    var stampWidth = 100f;
+                    var stampHeight = 100f;
+                    img.ScaleToFit(stampWidth, stampHeight);
+                    var pageNumbersToStampLists = request.StampPositionList.Select(s => s.PageNumber).ToArray();
+                    var maxPage = pageNumbersToStampLists.Max();
+                    for (var page = 1; page <= maxPage; page++)
                     {
-                        var currentStampPositionInPage = request.StampPositionList
-                            .Where(f => f.PageNumber == page)!;
-                        foreach (var stampPos in currentStampPositionInPage)
+                        var pageSize = pdfReader.GetPageSize(page);
+                        var x = pageSize.Width;
+                        var y = pageSize.Height;
+                        if (pageNumbersToStampLists.Contains(page))
                         {
-                            if (imageGuid != stampPos.StampImageId)
+                            var page1 = page;
+                            var currentStampPositionInPage = request.StampPositionList
+                                .Where(f => f.PageNumber == page1);
+                            foreach (var stampPos in currentStampPositionInPage)
                             {
-                                imageGuid = stampPos.StampImageId;
-                                img = Image.GetInstance(image);
-                                img.RotationDegrees = 0;
-                                img.ScaleToFit(stampWidth, stampHeight);
-                            }
-                            var procXSt = (float)stampPos.PercentOfLeftEdge;
-                            var procYSt = (float)stampPos.PercentOfBottomEdge;
-                            var positionX = ((x / 100) * procXSt);
-                            var positionY = ((y / 100) * procYSt);
+                                if (imageGuid != stampPos.StampImageId)
+                                {
+                                    imageGuid = stampPos.StampImageId;
+                                    img = Image.GetInstance(image);
+                                    img.RotationDegrees = 0;
+                                    img.ScaleToFit(stampWidth, stampHeight);
+                                }
+                                var procXSt = (float)stampPos.PercentOfLeftEdge;
+                                var procYSt = (float)stampPos.PercentOfBottomEdge;
+                                var positionX = ((x / 100) * procXSt);
+                                var positionY = ((y / 100) * procYSt);
                            
-                            img.SetAbsolutePosition(positionX, positionY);
+                                img.SetAbsolutePosition(positionX, positionY);
                             
-                            var waterMarkImage = stamp.GetOverContent(page);
+                                var waterMarkImage = stamp.GetOverContent(page);
                            
-                            waterMarkImage.AddImage(img);
-                        }
+                                waterMarkImage.AddImage(img);
+                            }
                        
-                    }
+                        }
 
-                }
+                    }
                 
-                stamp.FormFlattening = true;
-                stamp.Close();
-                // axAcroPDF1.LoadFile(fs.Name);
-                fs.Close();
-                pdfReader.Close();
-                // document.Dispose();
-                byt = await File.ReadAllBytesAsync(tempFilePath);
-               
+                    stamp.FormFlattening = true;
+                    stamp.Close();
+                    // axAcroPDF1.LoadFile(fs.Name);
+                    fs.Close();
+                    pdfReader.Close();
+                    // document.Dispose();
+                    byt = await File.ReadAllBytesAsync(tempFilePath);
+                }
+
                 return byt;
             }
 
             catch
             {
-                throw;
+                throw new InvalidOperationException();
             }
         }
 

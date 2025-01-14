@@ -194,7 +194,7 @@ namespace DKCrm.Server.Services.CompanyServices
             return logInDb;
         }
 
-        public async Task<IEnumerable<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request,
+        public async Task<GetCommentsForPaginationResponse<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request,
     ClaimsPrincipal user)
         {
             var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value)
@@ -239,7 +239,12 @@ namespace DKCrm.Server.Services.CompanyServices
                 
             }
 
-            return await comments.OrderBy(o => o.DateTimeUpdate).ToArrayAsync();
+            var maxCount = comments.Count();
+            comments = comments.OrderByDescending(o=>o.DateTimeUpdate).Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+            return new GetCommentsForPaginationResponse<CompanyComment>()
+            {
+                Items = await comments.Reverse().ToArrayAsync(), TotalItems = maxCount 
+            };
         }
     }
 }

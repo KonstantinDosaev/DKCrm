@@ -1,16 +1,14 @@
-﻿using DKCrm.Server.Data;
+﻿using System.Diagnostics.CodeAnalysis;
+using DKCrm.Server.Data;
 using DKCrm.Shared.Constants;
-using DKCrm.Shared.Models.CompanyModels;
-using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.util;
 using DKCrm.Server.Interfaces;
-using Org.BouncyCastle.Asn1.IsisMtt.X509;
 
 namespace DKCrm.Server.Services
 {
+    [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract")]
     public class AccessRestrictionService :  IAccessRestrictionService
     {
         private readonly ApplicationDBContext _context;
@@ -61,7 +59,7 @@ namespace DKCrm.Server.Services
             {
                 var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
                 var res = restriction.AccessUsersToComponent.Select(s => s).ToList();
-               res.Add(userId);
+                if (userId != null) res.Add(userId);
                 restriction.AccessUsersToComponent = res.ToArray();
                 _context.Entry(restriction).State = EntityState.Added;
             }
@@ -72,11 +70,8 @@ namespace DKCrm.Server.Services
         public async Task<int> RemoveAccessAsync(Guid accessId)
         {
             var currentRestriction = await GetAccessFromComponentAsync(accessId);
-            if (currentRestriction != null)
-            {
-                _context.Entry(currentRestriction).State = EntityState.Deleted;
-            }
-            return await _context.SaveChangesAsync(); ;
+            _context.Entry(currentRestriction).State = EntityState.Deleted;
+            return await _context.SaveChangesAsync();
         }
     }
 }

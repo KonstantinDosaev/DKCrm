@@ -38,9 +38,19 @@ namespace DKCrm.Server.Services.OrderServices
                     PurchaseAtExports = s.PurchaseAtExports,
                     SoldFromStorage = s.SoldFromStorage,
                     StorageList = s.StorageList,
-                    MinDaysForDeliveryPlaned = s.MinDaysForDeliveryPlaned, 
+                    MinDaysForDeliveryPlaned = s.MinDaysForDeliveryPlaned,
                     MaxDaysForDeliveryPlaned = s.MaxDaysForDeliveryPlaned,
-                    DateTimeConversionCurrency = s.DateTimeConversionCurrency
+                    DateTimeConversionCurrency = s.DateTimeConversionCurrency, 
+                    DateTimeUpdate = s.DateTimeUpdate, 
+                    UpdatedUser = s.UpdatedUser, 
+                    Description = s.Description, 
+                    BuyerCurrency = s.BuyerCurrency, 
+                    TransactionCurrency = s.TransactionCurrency, 
+                    PriceInTransactionCurrency = s.PriceInTransactionCurrency, 
+                    PriceInBuyerCurrency = s.PriceInBuyerCurrency, 
+                    PriceLocal = s.PriceLocal, 
+                    IsDeleted = s.IsDeleted, 
+                    IsFullDeleted = s.IsFullDeleted
                 }).ToListAsync();
         }
         public async Task<IEnumerable<ExportedProduct>> GetAllNotEquippedAsync()
@@ -63,7 +73,17 @@ namespace DKCrm.Server.Services.OrderServices
                     StorageList = s.StorageList,
                     MinDaysForDeliveryPlaned = s.MinDaysForDeliveryPlaned,
                     MaxDaysForDeliveryPlaned = s.MaxDaysForDeliveryPlaned,
-                    DateTimeConversionCurrency = s.DateTimeConversionCurrency
+                    DateTimeConversionCurrency = s.DateTimeConversionCurrency, 
+                    DateTimeUpdate = s.DateTimeUpdate, 
+                    UpdatedUser = s.UpdatedUser, 
+                    Description = s.Description, 
+                    BuyerCurrency = s.BuyerCurrency, 
+                    TransactionCurrency = s.TransactionCurrency, 
+                    PriceInTransactionCurrency = s.PriceInTransactionCurrency, 
+                    PriceInBuyerCurrency = s.PriceInBuyerCurrency, 
+                    PriceLocal = s.PriceLocal, 
+                    IsDeleted = s.IsDeleted, 
+                    IsFullDeleted = s.IsFullDeleted
                 }).ToListAsync();
         }
         public async Task<ExportedProduct> GetOneAsync(Guid id)
@@ -101,45 +121,52 @@ namespace DKCrm.Server.Services.OrderServices
                 StorageList = s.StorageList,
                 MinDaysForDeliveryPlaned = s.MinDaysForDeliveryPlaned,
                 MaxDaysForDeliveryPlaned = s.MaxDaysForDeliveryPlaned,
-                DateTimeConversionCurrency = s.DateTimeConversionCurrency
+                DateTimeConversionCurrency = s.DateTimeConversionCurrency, 
+                DateTimeUpdate = s.DateTimeUpdate, 
+                UpdatedUser = s.UpdatedUser, 
+                Description = s.Description, 
+                BuyerCurrency = s.BuyerCurrency, 
+                TransactionCurrency = s.TransactionCurrency, 
+                PriceInTransactionCurrency = s.PriceInTransactionCurrency, 
+                PriceInBuyerCurrency = s.PriceInBuyerCurrency, 
+                PriceLocal = s.PriceLocal, 
+                IsDeleted = s.IsDeleted, 
+                IsFullDeleted = s.IsFullDeleted
             });
            
-            if (request.FilterTuple != null)
+            if (request.FilterTuple is { FilterOrderTuple: not null })
             {
-                if (request.FilterTuple.FilterOrderTuple != null)
+                if (request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId != null && request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId != Guid.Empty)
                 {
-                    if (request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId != null && request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId != Guid.Empty)
+                    data = data.Where(o =>
+                        o.ExportedOrder!.CompanyBuyerId ==
+                        request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId);
+                    if (request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId != null && request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId != Guid.Empty)
                     {
                         data = data.Where(o =>
-                            o.ExportedOrder!.CompanyBuyerId ==
-                            request.FilterTuple.FilterOrderTuple.CurrentPartnerCompanyId);
-                        if (request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId != null && request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId != Guid.Empty)
-                        {
-                            data = data.Where(o =>
-                                o.ExportedOrder!.EmployeeBuyerId ==
-                                request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId);
-                        }
+                            o.ExportedOrder!.EmployeeBuyerId ==
+                            request.FilterTuple.FilterOrderTuple.CurrentPartnerEmployeeId);
                     }
+                }
 
-                    if (request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId != null && request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId != Guid.Empty)
+                if (request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId != null && request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId != Guid.Empty)
+                {
+                    data = data.Where(o =>
+                        o.ExportedOrder!.OurCompanyId == request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId);
+                    if (request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId != null && request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId != Guid.Empty)
                     {
                         data = data.Where(o =>
-                            o.ExportedOrder!.OurCompanyId == request.FilterTuple.FilterOrderTuple.CurrentOurCompanyId);
-                        if (request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId != null && request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId != Guid.Empty)
-                        {
-                            data = data.Where(o =>
-                                o.ExportedOrder!.OurEmployeeId ==
-                                request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId);
-                        }
+                            o.ExportedOrder!.OurEmployeeId ==
+                            request.FilterTuple.FilterOrderTuple.CurrentOurEmployeeId);
                     }
-                    if (request.FilterTuple.FilterOrderTuple.CreateDateFirst != null)
-                    {
-                        data = data.Where(w => w.ExportedOrder!.DateTimeCreated!.Value.Date >= request.FilterTuple.FilterOrderTuple.CreateDateFirst.Value.Date);
-                    }
-                    if (request.FilterTuple.FilterOrderTuple.CreateDateLast != null)
-                    {
-                        data = data.Where(w => w.ExportedOrder!.DateTimeCreated!.Value.Date <= request.FilterTuple.FilterOrderTuple.CreateDateLast.Value.Date);
-                    }
+                }
+                if (request.FilterTuple.FilterOrderTuple.CreateDateFirst != null)
+                {
+                    data = data.Where(w => w.ExportedOrder!.DateTimeCreated!.Value.Date >= request.FilterTuple.FilterOrderTuple.CreateDateFirst.Value.Date);
+                }
+                if (request.FilterTuple.FilterOrderTuple.CreateDateLast != null)
+                {
+                    data = data.Where(w => w.ExportedOrder!.DateTimeCreated!.Value.Date <= request.FilterTuple.FilterOrderTuple.CreateDateLast.Value.Date);
                 }
             }
             if (!string.IsNullOrEmpty(request.SearchString))
@@ -181,7 +208,7 @@ namespace DKCrm.Server.Services.OrderServices
                 totalItems = groupCollection.Count();
                 var pagination = groupCollection.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
                 result = await data.Where(w=> pagination.Contains(w.ExportedOrderId)).AsSingleQuery().ToListAsync();
-                await _context.ExportedOrders.Where(w => result!.Select(s => s.ExportedOrderId).Contains(w.Id))
+                await _context.ExportedOrders.Where(w => result.Select(s => s.ExportedOrderId).Contains(w.Id))
                     .Include(i=>i.CompanyBuyer)
                     .Include(i=>i.OurCompany).LoadAsync();
             }
@@ -190,7 +217,7 @@ namespace DKCrm.Server.Services.OrderServices
                 data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
                 result = await data.AsSingleQuery().ToListAsync();
             }
-            await _context.Products.Where(w => result!.Select(s => s.ProductId).Contains(w.Id)).Include(i => i.Brand).LoadAsync();
+            await _context.Products.Where(w => result.Select(s => s.ProductId).Contains(w.Id)).Include(i => i.Brand).LoadAsync();
             return new SortPagedResponse<ExportedProduct>() { TotalItems = totalItems, Items = result};
         }
         public async Task<Guid> PostAsync(ExportedProduct exportedProduct)
@@ -216,7 +243,7 @@ namespace DKCrm.Server.Services.OrderServices
                 foreach (var soldFromStorage in exportedProduct.SoldFromStorage)
                 {
                     var productInStorage = exportedProduct.Product?.ProductsInStorage?.FirstOrDefault(i =>
-                        i.ProductId == exportedProduct!.ProductId
+                        i.ProductId == exportedProduct.ProductId
                         && i.StorageId == soldFromStorage.StorageId);
 
                     var soldInDb = exportedProductInDb.SoldFromStorage?.FirstOrDefault(f =>

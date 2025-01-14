@@ -52,7 +52,6 @@ namespace DKCrm.Server.Services.OrderServices
         {
             //_context.Entry(product).State = EntityState.Modified;
             _context.ImportedOrderStatus.UpdateRange(importedOrderStatus);
-            await _context.SaveChangesAsync();
             return await _context.SaveChangesAsync();
         }
 

@@ -15,7 +15,7 @@ namespace DKCrm.Server.Interfaces.OrderInterfaces
         Task<int> SetLogUserVisit(LogUsersVisitToOrderComments newLog, ClaimsPrincipal user);
         Task<LogUsersVisitToOrderComments> GetLogUserVisitAsync(Guid orderId, ClaimsPrincipal user);
 
-        Task<IEnumerable<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request,
+        Task<GetCommentsForPaginationResponse<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request,
             ClaimsPrincipal user);
     }
 }

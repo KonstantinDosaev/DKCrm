@@ -1,5 +1,6 @@
 ﻿@using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
+@using DKCrm.Shared.Constants
 
 @if (Order != null)
 {
@@ -100,14 +101,14 @@
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.MinDaysForDeliveryPlaned)">Мин. дней на доставку</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.MaxDaysForDeliveryPlaned)">Макс. дней на доставку</MudTableSortLabel></MudTh>
                 <MudTh Style="text-align: center">
-                    <MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInBuyerCurrency)">Цена в валюте/ </MudTableSortLabel>
+                    <MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.PriceInBuyerCurrency)">Цена</MudTableSortLabel>
                     <div class="d-flex justify-content-center align-items-center">
                         <span class="mr-2 fs-6">ед.</span>
                         <MudSwitch T="bool" ValueChanged="() =>  _oneQuantityPrice = _oneQuantityPrice != true" Size="Size.Medium" Label="все"
                                                                 Color="Color.Success" UncheckedColor="Color.Info" />
                     </div>
                 </MudTh>
-                <MudTh Style="text-align: center">Edit</MudTh>
+                @*<MudTh Style="text-align: center">Edit</MudTh>*@
             </MudTHeadRow>
         </HeaderContent>
         <RowTemplate>
@@ -144,7 +145,9 @@
                         </MudText>
 
                     <div style="margin: 0 -0.5rem 0 1rem">
-                        <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCompletePopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
+                        <MudIconButton Size="Size.Small" 
+                                       OnClick="(() => OpenEditCompletePopover(context.Id))" 
+                                       Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
                     </div>
                     @if (ExportedProductId == context.Id && _isOpenCompletePopover)
                     {
@@ -164,15 +167,47 @@
                 </div>
             </MudTd>
             <MudTd DataLabel="Мин. дней на доставку">
-                @if (context.MinDaysForDeliveryPlaned != null)
+                @if (_editDaysForDeliveryIsOn && ExportedProductId == context.Id)
                 {
-                    @context.MinDaysForDeliveryPlaned
+                        <MudNumericField @bind-Value="context.MinDaysForDeliveryPlaned"
+                                         For="@(() => context.MinDaysForDeliveryPlaned)"
+                                         Variant="Variant.Outlined"
+                                         RequiredError="Введите количество"
+                                         Class="mr-2" Min="1" Margin="Margin.Dense"/>
+                }
+                else
+                {
+                   
+                        @context.MinDaysForDeliveryPlaned
                 }
             </MudTd>
             <MudTd DataLabel="Макс. дней на доставку">
-                @if (context.MaxDaysForDeliveryPlaned != null)
+                @if (_editDaysForDeliveryIsOn && ExportedProductId == context.Id)
                 {
-                    @context.MaxDaysForDeliveryPlaned
+                    <div class="d-flex justify-content-between">
+                        <MudNumericField @bind-Value="context.MaxDaysForDeliveryPlaned"
+                                         For="@(() => context.MaxDaysForDeliveryPlaned)"
+                                         Variant="Variant.Outlined"
+                                         RequiredError="Введите количество"
+                                         Class="mr-2" Min="1" Margin="Margin.Dense"/>
+                        <div>
+                            <MudIconButton Size="Size.Small" Class="mb-1 d-block"
+                                           OnClick="(() => SaveExportedProduct())"
+                                           Icon="@Icons.Material.Filled.Check" Color="@Color.Secondary"/>
+                            <MudIconButton Size="Size.Small"
+                                           OnClick="(() => CloseEditDaysForDelivery())"
+                                           Icon="@Icons.Material.Filled.Close" Color="@Color.Default"/>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex justify-content-between">
+                        @context.MaxDaysForDeliveryPlaned
+                        <MudIconButton Size="Size.Small"
+                                       OnClick="(() => OnEditDaysForDelivery(context.Id))"
+                                       Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
+                    </div>
                 }
             </MudTd>
             <MudTd DataLabel="Цена">
@@ -215,7 +250,7 @@
                     @if (ExportedProductId == context.Id && _isOpenPricePopover)
                     {
                         <MudPopover Open="@_isOpenPricePopover"
-                                    Style="min-width: 320px; background: lig"
+                                    Style="min-width: 320px; background: lightcyan"
                                     AnchorOrigin="Origin.BottomLeft"
                             TransformOrigin="Origin.BottomLeft" Fixed="true" Class="px-4 pt-4" OverflowBehavior="OverflowBehavior.FlipAlways">
                             <CurrencyExportedProductComponent
@@ -226,12 +261,12 @@
                     }
                 </div>
             </MudTd>
-            <MudTd DataLabel="Редактировать">
+            @*<MudTd DataLabel="Редактировать">
                 <MudIconButton Size="@Size.Small"
                                OnClick="() => OpenEditExportedProductDialog(context)"
                                Style="background-color: rgba(217, 214, 81, 0.431);"
                                Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2"/>
-            </MudTd>
+            </MudTd>*@
         </RowTemplate>
        
         <EditButtonContent Context="button">
@@ -283,6 +318,8 @@
     private bool _isOpenPricePopover;
     private bool _isOpenCompletePopover;
     private bool _visibleOrderComments;
+    private bool _itemNotChange;
+    private bool _editDaysForDeliveryIsOn;
 
     protected override async Task OnInitializedAsync()
     {
@@ -291,6 +328,14 @@
     public async Task GetOrder()
     {
         Order = await ExportedOrderManager.GetDetailsAsync(Id);
+        if (Order.ExportedOrderStatusExported != null)
+        {
+            var currentStatusId = Order.ExportedOrderStatusExported
+                .OrderBy(o => o.DateTimeUpdate).FirstOrDefault()!.ExportedOrderStatusId;
+            var currentStatus = Order.ExportedOrderStatus?.FirstOrDefault(f => f.Id == currentStatusId);
+            _itemNotChange = currentStatus!.Value != ExportOrderStatusNames.BeginFormed;
+        }
+
         if (Order.ExportedProducts != null)
         {
             ExportedProducts = Order.ExportedProducts.ToList();
@@ -302,7 +347,7 @@
         if (Order.ExportedProducts != null)
         {
             ImportIsCompleted = Order.ExportedProducts.Where(w=>w.ImportedProducts!=null)
-                .Select(s => s.ImportedProducts!.Select(s => s.ImportedOrder!.IsAllProductsAreCollected).FirstOrDefault());
+                .Select(s => s.ImportedProducts!.Select(sip => sip.ImportedOrder!.IsAllProductsAreCollected).FirstOrDefault());
         }
     }
     private int GetAllReserveQuantity(ExportedProduct exportedProduct)
@@ -342,15 +387,41 @@
     {
         _isOpenPricePopover = false;
         _isOpenCompletePopover = false;
+        _editDaysForDeliveryIsOn = false;
+       
     }
     private void OpenOrderComments(Guid orderId)
     {
         _visibleOrderComments = !_visibleOrderComments;
     }
+    private void OnEditDaysForDelivery(Guid exportedProductId)
+    {
+        CloseAllPopover();
+        _editDaysForDeliveryIsOn = true;
+        ExportedProductId = exportedProductId;
+    }
+    private void CloseEditDaysForDelivery()
+    {
+        _editDaysForDeliveryIsOn = false;
+        ExportedProductId = Guid.Empty;
+    }
+    private async Task SaveExportedProduct()
+    {
+        if (ExportedProducts != null)
+        {
+            var currentExportedProduct = ExportedProducts.FirstOrDefault(f => f.Id == ExportedProductId);
+            if (currentExportedProduct != null)
+                if (await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение!"))
+                    if (await ExportedProductManager.UpdateAsync(currentExportedProduct))
+                        _snackBar.Add("Изменения сохранены");
+            CloseAllPopover();
+        }
+    }
 }
 <style>
-    .mud-table-orderD-header {
-        background-color: rgba(217, 214, 81, 0.431);
+    .mud-table-sticky-header * .mud-table-root .mud-table-orderD-header  * .mud-table-cell
+    {
+        background-color: #1861ac;
         color: white !important;
         font-weight: bold;
     }

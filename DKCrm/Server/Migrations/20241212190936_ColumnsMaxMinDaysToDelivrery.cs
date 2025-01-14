@@ -14,13 +14,13 @@ namespace DKCrm.Server.Migrations
                 name: "MaxDaysForDeliveryPlaned",
                 table: "ExportedProducts",
                 type: "integer",
-                nullable: true);
+                nullable: false);
 
             migrationBuilder.AddColumn<int>(
                 name: "MinDaysForDeliveryPlaned",
                 table: "ExportedProducts",
                 type: "integer",
-                nullable: true);
+                nullable: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "Email",

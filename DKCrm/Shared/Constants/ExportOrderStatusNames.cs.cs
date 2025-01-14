@@ -4,7 +4,6 @@
     {
         public const string Canceled = "Отменен";
         public const string BeginFormed = "Формируется";
-        public const string ExpectComponents = "Ожидаем компоненты";
         public const string Formed = "Сформирован";
         public const string OfferSentClient = "Предложение отправлено клиенту";
         public const string OfferСonfirmedClient = "Предложение подтверждено клиентом";

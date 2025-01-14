@@ -1,5 +1,6 @@
 ﻿@using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Shared.Requests
+@using DKCrm.Shared.Requests.OrderService
 
 <MudTooltip Text="Показать важные комментарии">
     <MudIconButton OnClick="()=> OpenDialog(true)"
@@ -11,19 +12,24 @@
                Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding"
                TitleClass="order_commentWarning">
         <TitleContent>
-            <MudToolBar Dense="true" Class="d-flex justify-content-between mr-4" >
-                <MudText Typo="Typo.h5">@(_notOpenWarningComment ? "Не прочитанные" : "Прочитанные")</MudText>
-                <MudButton OnClick="GetComments"
-                           Variant="Variant.Filled"
-                           EndIcon="@(_notOpenWarningComment ? Icons.Material.Filled.MarkEmailRead : Icons.Material.Filled.MarkEmailUnread)"
-                           Color="@Color.Tertiary">Показать @(_notOpenWarningComment ? "прочитанные" : "не прочитанные")</MudButton>
-            </MudToolBar>
+            
         </TitleContent>
         <DialogContent>
             <div Class="pb-4 d-flex flex-column" Style="">
+                <MudToolBar Dense="true" Class="d-flex justify-content-between mr-4" >
+                    <MudText Typo="Typo.h5">@(_notOpenWarningComment ? "Не прочитанные" : "Прочитанные")</MudText>
+                    <MudButton OnClick="SwitchedReadOrUnreadComments"
+                               Variant="Variant.Filled"
+                               EndIcon="@(_notOpenWarningComment ? Icons.Material.Filled.MarkEmailRead : Icons.Material.Filled.MarkEmailUnread)"
+                               Color="@Color.Tertiary">Показать @(_notOpenWarningComment ? "прочитанные" : "не прочитанные")</MudButton>
+                </MudToolBar>
                 @if (_comments.Any())
                 {
                     <div class="d-flex flex-column px-4 flex-grow-1" style="overflow-y: scroll;" id="commentContainer">
+                        <MudLink Color="Color.Dark" Underline="Underline.None"
+                                 OnClick="LoadMoreComments"
+                                 Size="Size.Small" Class="link_loadMoreComment"
+                                 Disabled="@(_comments.Count >= _totalItems)">загрузить ещё</MudLink>
                         @foreach (var message in _comments)
                         {
                             var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
@@ -52,7 +58,8 @@
                                 </div>
                                 <MudText Typo="Typo.body2" Style="">@message.Value</MudText>
                                 <MudText Typo="Typo.caption" Style="font-size: xx-small !important; margin-right: 1rem;">
-                                    @($"{message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")} / {message.DateTimeUpdate.ToString("dd MMM, yyyy HH:mm")}")
+                                    @($"{message.DateTimeCreated.ToString("dd MMM, yyyy HH:mm")} " +
+                                      $"/ {message.DateTimeUpdate.ToString("dd MMM, yyyy HH:mm")}")
                                 </MudText>
 
                             </div>
@@ -92,7 +99,6 @@
     }
 }
 
-
 @code {
     [Parameter] public bool IsDoubleNested { get; set; }
     [Parameter] public string? TypeOrder { get; set; }
@@ -103,48 +109,84 @@
     public List<ApplicationUser>? ChatUsers { get; set; }
     private bool _isShowAllWarningComment;
     Color _mainIconColor;
+    private int _pageIndex = 0;
+    private int _totalItems;  
+    private int _pageSize = 3;
     private bool _visibleOrder; 
     private Guid ShowingOrderId { get; set; }
     private Guid ShowingOrderCommentId { get; set; }
 
     protected override async Task OnInitializedAsync()
-    {
+    {    
+        _notOpenWarningComment = true;
         await GetComments();
         _mainIconColor = _comments.Any() ? Color.Error : Color.Default;
     }
-    private void OpenDialog(bool toggle)
+    private async Task OpenDialog(bool toggle)
     {
+ 
         _visibleWarningOrderCommentsDialog = true;
+        ChatUsers ??= await GetUsersAsync();
     }
     private async Task GetComments()
     {
-        ChatUsers ??= await GetUsersAsync();
-        _notOpenWarningComment = !_notOpenWarningComment;
-        _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+        var response = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
         {
             GetOnlyNotOpen = _notOpenWarningComment,
-            OrderType = TypeOrder
+            OrderType = TypeOrder,
+             PageIndex = _pageIndex, 
+            PageSize = _pageSize
         });
-    }
-    private async Task SearchNotOpenWarningComments()
-    {
-       
-        _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+        if (response.Items != null)
         {
-                GetOnlyNotOpen = true,
-                OrderType = TypeOrder
-        });
-       
+            _totalItems = response.TotalItems;
+            _comments = response.Items.ToList();
+        }
+        
     }
-    private async Task SearchAllWarningComments()
+    private async Task LoadMoreComments()
     {
-        _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+        if (_comments.Count >= _totalItems)
+            return;
+        _pageIndex += 1;
+        _renderNotScroll = true;
+        var response = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
         {
-                GetOnlyNotOpen = false,
-                OrderType = TypeOrder
+            GetOnlyNotOpen = _notOpenWarningComment,
+            OrderType = TypeOrder,
+            PageIndex = _pageIndex, 
+            PageSize = _pageSize
         });
-   
+        if (response.Items != null)
+        {
+            _comments.InsertRange(0 ,response.Items.ToArray());
+            _totalItems = response.TotalItems;
+        }
     }
+    private async Task SwitchedReadOrUnreadComments()
+    {
+        _notOpenWarningComment = !_notOpenWarningComment;
+        await GetComments();
+    }
+    // private async Task SearchNotOpenWarningComments()
+    // {
+    //    
+    //     _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+    //     {
+    //             GetOnlyNotOpen = true,
+    //             OrderType = TypeOrder
+    //     });
+    //    
+    // }
+    // private async Task SearchAllWarningComments()
+    // {
+    //     _comments = await CommentOrderManager.GetWarningCommentsAsync(new GetWarningCommentsToOrderRequest()
+    //     {
+    //             GetOnlyNotOpen = false,
+    //             OrderType = TypeOrder
+    //     });
+    //
+    // }
     private async Task SetWarningFlagToComment(bool toggle, CommentOrder comment)
     {
         _renderNotScroll = true;
@@ -167,6 +209,18 @@
     }
 }
 <style>
+    .link_loadMoreComment{
+        margin: 5px auto;
+        border: solid 1px lightskyblue;
+        border-radius: 5px;
+        padding: 3px;
+
+    }
+    .link_loadMoreComment:hover{
+
+        margin: 4px auto;
+        border-width: 2px;
+    }
     .order_commentWarning {
         padding-bottom: 0 !important;
     }

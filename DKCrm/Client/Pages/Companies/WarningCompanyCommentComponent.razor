@@ -5,7 +5,7 @@
 <MudTooltip Text="Показать важные комментарии">
   
         <MudIconButton OnClick="() => OpenDialog(true)"
-                       Icon="@Icons.Material.Filled.CommentBank" Color="@MainIconColor" />
+                       Icon="@Icons.Material.Filled.CommentBank" Color="@_mainIconColor" />
     
    
 </MudTooltip>
@@ -18,17 +18,22 @@
             
         </TitleContent>
         <DialogContent>
-            <MudToolBar Dense="true" Class="d-flex justify-content-between mr-4">
-                <MudText Typo="Typo.h5">@(NotOpenWarningComment ? "Не прочитанные" : "Прочитанные")</MudText>
-                <MudButton OnClick="GetComments"
-                           Variant="Variant.Filled"
-                           EndIcon="@(NotOpenWarningComment ? Icons.Material.Filled.MarkEmailRead : Icons.Material.Filled.MarkEmailUnread)"
-                           Color="@Color.Tertiary">Показать @(NotOpenWarningComment ? "прочитанные" : "не прочитанные")</MudButton>
-            </MudToolBar>
+            
             <div Class="pb-4 d-flex flex-column" Style="">
+                <MudToolBar Dense="true" Class="d-flex justify-content-between mr-4">
+                    <MudText Typo="Typo.h5">@(_notOpenWarningComment ? "Не прочитанные" : "Прочитанные")</MudText>
+                    <MudButton OnClick="SwitchedReadOrUnreadComments"
+                               Variant="Variant.Filled"
+                               EndIcon="@(_notOpenWarningComment ? Icons.Material.Filled.MarkEmailRead : Icons.Material.Filled.MarkEmailUnread)"
+                               Color="@Color.Tertiary">Показать @(_notOpenWarningComment ? "прочитанные" : "не прочитанные")</MudButton>
+                </MudToolBar>
                 @if (Comments.Any())
                 {
                     <div class="d-flex flex-column px-4 flex-grow-1" style="overflow-y: scroll;" id="commentContainer">
+                        <MudLink Color="Color.Dark" Underline="Underline.None"
+                                 OnClick="LoadMoreComments"
+                                 Size="Size.Small" Class="link_loadMoreComment"
+                                 Disabled="@(Comments.Count >= _totalItems)">загрузить ещё</MudLink>
                         @foreach (var message in Comments)
                         {
                             var user = ChatUsers.FirstOrDefault(f => f.Id == message.FromUserId);
@@ -88,55 +93,73 @@
 
 @code {
     [Parameter] public bool IsDoubleNested { get; set; }
-   [Parameter] public List<CompanyComment>? Comments { get; set; }
+    private List<CompanyComment>? Comments { get; set; }
     public bool NotOpenWarningComment; 
     private bool _visibleWarningCommentsDialog;
     private bool _renderNotScroll;
     public List<ApplicationUser>? ChatUsers { get; set; }
     private bool _isShowAllWarningComment;
-    [Parameter] public Color MainIconColor { get; set; }
+    //[Parameter] public Color MainIconColor { get; set; }
+    [Parameter] public Color _mainIconColor { get; set; }
     private bool _visibleCompany; 
+    private bool _notOpenWarningComment; 
     private bool _isWarnNotOpenAny; 
     private Guid ShowingCompanyId { get; set; }
     [Parameter]
     public EventCallback<List<CompanyComment>> CommentsChanged { get; set; }
-
+    private int _pageIndex = 0;
+    private int _totalItems;  
+    private int _pageSize = 3;
     protected override async Task OnInitializedAsync()
     {
-       // await GetOnlyWarningComments();
-      // NotOpenWarningComment = true;
-      // await CheckNotOpen();
+        _notOpenWarningComment = true;
+        await GetComments();
+        _mainIconColor = Comments.Any() ? Color.Error : Color.Default;
        
     }
     private async Task OpenDialog(bool toggle)
     {
         ChatUsers ??= await GetUsersAsync();
-        await GetOnlyWarningComments();
         _visibleWarningCommentsDialog = true;
     }
-
-    public async Task CheckNotOpen()
-    {
-
-        _isWarnNotOpenAny = Comments.Any() && NotOpenWarningComment==true;
-        await InvokeAsync(StateHasChanged);
-    }
+    
     private async Task GetComments()
     {
-        NotOpenWarningComment = !NotOpenWarningComment;
+        var response = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
+        {
+            GetOnlyNotOpen = _notOpenWarningComment,
+            PageIndex = _pageIndex, 
+            PageSize = _pageSize
+        });
+        if (response.Items != null)
+        {
+            _totalItems = response.TotalItems;
+            Comments = response.Items.ToList();
+        }
         
-        Comments = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
-        {
-                GetOnlyNotOpen = NotOpenWarningComment
-        });
     }
-    private async Task GetOnlyWarningComments()
+    private async Task LoadMoreComments()
     {
-        NotOpenWarningComment = true;
-        Comments ??= await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
+        if (Comments.Count >= _totalItems)
+            return;
+        _pageIndex += 1;
+        _renderNotScroll = true;
+        var response = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
         {
-            GetOnlyNotOpen = true
+            GetOnlyNotOpen = _notOpenWarningComment,
+            PageIndex = _pageIndex, 
+            PageSize = _pageSize
         });
+        if (response.Items != null)
+        {
+            Comments.InsertRange(0 ,response.Items.ToArray());
+            _totalItems = response.TotalItems;
+        }
+    }
+    private async Task SwitchedReadOrUnreadComments()
+    {
+        _notOpenWarningComment = !_notOpenWarningComment;
+        await GetComments();
     }
     private async Task SetWarningFlagToComment(bool toggle, CompanyComment comment)
     {
@@ -159,6 +182,18 @@
     }
 }
 <style>
+    .link_loadMoreComment{
+        margin: 5px auto;
+        border: solid 1px lightskyblue;
+        border-radius: 5px;
+        padding: 3px;
+
+    }
+    .link_loadMoreComment:hover{
+
+        margin: 4px auto;
+        border-width: 2px;
+    }
     .order_commentWarning {
         padding-bottom: 0 !important;
     }

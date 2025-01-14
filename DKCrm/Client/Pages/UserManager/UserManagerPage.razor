@@ -2,7 +2,7 @@
 @inject ISnackbar Snackbar
 @page "/usermanager"
 @using Microsoft.AspNetCore.Identity
-<MudTable Items="@Elements"
+<MudTable Items="@_elements"
           Dense="true"
           Hover="true"
           ReadOnly="false"
@@ -14,9 +14,9 @@
           OnCommitEditClick="@(() => Snackbar.Add("Изменения сохранены!"))"
           RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
          IsEditRowSwitchingBlocked="true"
-          ApplyButtonPosition="@applyButtonPosition"
-          EditButtonPosition="@editButtonPosition"
-          EditTrigger="@editTrigger"
+          ApplyButtonPosition="@_applyButtonPosition"
+          EditButtonPosition="@_editButtonPosition"
+          EditTrigger="@_editTrigger"
           MultiSelection="true"
           SelectOnRowClick="true">
          
@@ -32,7 +32,7 @@
         <MudTextField @bind-Value="_searchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <ColGroup>
-        @if (applyButtonPosition.DisplayApplyButtonAtStart() || (editButtonPosition.DisplayEditButtonAtStart() && editTrigger == TableEditTrigger.EditButton))
+        @if (_applyButtonPosition.DisplayApplyButtonAtStart() || (_editButtonPosition.DisplayEditButtonAtStart() && _editTrigger == TableEditTrigger.EditButton))
         {
             <col style="width: 50px;"/>
         }
@@ -41,7 +41,7 @@
         <col style="width: 150px;"/>
         <col/>
         <col/>
-        @if (applyButtonPosition.DisplayApplyButtonAtEnd() || (editButtonPosition.DisplayEditButtonAtEnd() && editTrigger == TableEditTrigger.EditButton))
+        @if (_applyButtonPosition.DisplayApplyButtonAtEnd() || (_editButtonPosition.DisplayEditButtonAtEnd() && _editTrigger == TableEditTrigger.EditButton))
         {
             <col style="width: 50px;"/>
         }
@@ -93,10 +93,10 @@
 
 <MudDialog @bind-Visible="_visibleRoleDialog" Options="_roleDialogOptions">
     <DialogContent>
-        <MudSelect T="string" Label="US States" @bind-Value="value">
-            @if (Roles != null && Roles.Any())
+        <MudSelect T="string" Label="US States" @bind-Value="_value">
+            @if (_roles != null && _roles.Any())
             {
-                @foreach (var state in Roles)
+                @foreach (var state in _roles)
                 {
                     <MudSelectItem T="string" Value="@state.Name">@state.Name</MudSelectItem>
                 }

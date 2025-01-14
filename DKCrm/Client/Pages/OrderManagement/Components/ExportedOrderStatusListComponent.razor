@@ -68,6 +68,7 @@
     [Parameter] public List<ExportedOrderStatus>? StatusList { get; set; }
     [Parameter] public List<ExportedOrderStatus>? ParentStatusList { get; set; }
     [Parameter] public ExportedOrder CurrentOrder { get; set; } = null!;
+
     private ExportedOrderStatus CurrentStatus { get; set; } = null!;
     private ExportedOrderStatus CurrentChildStatus { get; set; } = null!;
 

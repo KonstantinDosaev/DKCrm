@@ -46,10 +46,10 @@ namespace DKCrm.Client.Services.CompanyServices
             return await _httpClient.GetFromJsonAsync<LogUsersVisitToCompanyComments?>
                 ($"api/CompanyComments/GetLogUsersVisit/{companyId}");
         }
-        public async Task<List<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request)
+        public async Task<GetCommentsForPaginationResponse<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/CompanyComments/GetWarningComments", request) ?? throw new InvalidOperationException();
-            return await response.Content.ReadFromJsonAsync<List<CompanyComment>>() ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<GetCommentsForPaginationResponse<CompanyComment>>() ?? throw new InvalidOperationException();
 
         }
     }

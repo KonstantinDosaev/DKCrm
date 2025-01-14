@@ -58,7 +58,6 @@ namespace DKCrm.Server.Services.OrderServices
         {
             //_context.Entry(product).State = EntityState.Modified;
             _context.ExportedOrderStatus.UpdateRange(exportedOrderStatus);
-            await _context.SaveChangesAsync();
             return await _context.SaveChangesAsync();
         }
 
@@ -84,12 +83,11 @@ namespace DKCrm.Server.Services.OrderServices
             {
                 new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = -1,Value = ExportOrderStatusNames.Canceled,IsValueConstant = true},
                 new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,Value = ExportOrderStatusNames.BeginFormed,IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ExportOrderStatusNames.ExpectComponents,IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ExportOrderStatusNames.Formed, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,Value = ExportOrderStatusNames.OfferSentClient, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,Value = ExportOrderStatusNames.OfferСonfirmedClient, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,Value = ExportOrderStatusNames.Delivery, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 6,Value = ExportOrderStatusNames.Completed, IsValueConstant = true}
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ExportOrderStatusNames.Formed, IsValueConstant = true},
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ExportOrderStatusNames.OfferSentClient, IsValueConstant = true},
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,Value = ExportOrderStatusNames.OfferСonfirmedClient, IsValueConstant = true},
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,Value = ExportOrderStatusNames.Delivery, IsValueConstant = true},
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,Value = ExportOrderStatusNames.Completed, IsValueConstant = true}
             });
             return _context.SaveChangesAsync().IsCompletedSuccessfully;
         }

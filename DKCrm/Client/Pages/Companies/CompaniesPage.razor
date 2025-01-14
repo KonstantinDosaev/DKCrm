@@ -19,10 +19,9 @@
     <MudIcon Size="@Size.Medium" Color="Color.Default"
              Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
 </MudButton>
-@if (_warnComments != null)
-{
-    <WarningCompanyCommentComponent @ref="_warningCommentComponent" @bind-Comments="_warnComments" MainIconColor="@WarningCommentIconColor"/>
-}
+
+    <WarningCompanyCommentComponent />
+
 <div class="d-flex ">
     <div class="flex-grow-1 mr-4">
         <MudTable Height="" Class="" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" 
@@ -183,7 +182,7 @@
       
         AllCompanies ??= await CompanyManager.GetAsync();
         Companies = AllCompanies;
-        await CheckNotOpenComments();
+       // await CheckNotOpenComments();
 
     }
 
@@ -236,18 +235,18 @@
            
         }
     }
-    private async Task CheckNotOpenComments()
-    {
-            _warnComments = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
-            {
-                GetOnlyNotOpen = true
-            });
-
-            WarningCommentIconColor = _warnComments.Any() ? Color.Error : Color.Default;
-            NotOpenedCommentIsd = _warnComments.Select(s => s.CompanyId).ToList();
-            StateHasChanged();
-        
-    }
+    // private async Task CheckNotOpenComments()
+    // {
+    //         _warnComments = await CompanyCommentsManager.GetWarningCommentsAsync(new GetWarningCommentsToCompanyRequest()
+    //         {
+    //             GetOnlyNotOpen = true
+    //         });
+    //
+    //         WarningCommentIconColor = _warnComments.Any() ? Color.Error : Color.Default;
+    //         NotOpenedCommentIsd = _warnComments.Select(s => s.CompanyId).ToList();
+    //         StateHasChanged();
+    //     
+    // }
     //private async Task DeleteCompany()
     //{
     //    if (await CompanyManager.RemoveAsync(CurrentCategory.Id))

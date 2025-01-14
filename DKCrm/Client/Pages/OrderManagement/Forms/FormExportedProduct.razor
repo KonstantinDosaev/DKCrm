@@ -51,7 +51,7 @@
                                  RequiredError="Введите количество дней"
                                  Class="mb-3" Min="1"/>
                 <MudNumericField Label="Макс. дней на доставку" @bind-Value="ExportedProduct.MaxDaysForDeliveryPlaned"
-                                 For="@(() => (int)ExportedProduct.MaxDaysForDeliveryPlaned)"
+                                 For="@(() => ExportedProduct.MaxDaysForDeliveryPlaned)"
                                  Variant="Variant.Outlined"
                                  RequiredError="Введите количество дней"
                                  Class="mb-3" Min="1"/>

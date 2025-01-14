@@ -59,7 +59,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
 
         [HttpPut]
         public async Task<IActionResult> Put(ExportedOrder exportedOrder) 
-            => Ok(await _exportedOrderService.PutAsync(exportedOrder, User.Identity?.Name!));
+            => Ok(await _exportedOrderService.PutAsync(exportedOrder, User));
 
         [HttpPut("range")]
         public async Task<IActionResult> PutRange(IEnumerable<ExportedOrder> exportedOrders) 
@@ -74,7 +74,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
 
         [HttpPost("add-status")]
         public async Task<IActionResult> AddStatusToOrder(ExportedOrderStatusExportedOrder exportedOrderStatus) 
-            => Ok(await _exportedOrderService.AddStatusToOrderAsync(exportedOrderStatus));
+            => Ok(await _exportedOrderService.AddStatusToOrderAsync(exportedOrderStatus, User));
 
         [HttpPost("remove-status")]
         public async Task<IActionResult> RemoveStatusFromOrder(ExportedOrderStatusExportedOrder exportedOrderStatus) 

@@ -6,10 +6,6 @@ using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.ExcelAc;
-using OpenXmlPowerTools;
 
 namespace DKCrm.Server.Services.OrderServices
 {
@@ -17,11 +13,13 @@ namespace DKCrm.Server.Services.OrderServices
     {
         private readonly ApplicationDBContext _context;
         private readonly IExportedProductService _exportedProductService;
+        private readonly IOrderCommentsService _orderCommentsService;
 
-        public ExportedOrderService(ApplicationDBContext context, IExportedProductService exportedProductService)
+        public ExportedOrderService(ApplicationDBContext context, IExportedProductService exportedProductService, IOrderCommentsService orderCommentsService)
         {
             _context = context;
             _exportedProductService = exportedProductService;
+            _orderCommentsService = orderCommentsService;
         }
 
         public async Task<IEnumerable<ExportedOrder>> GetAsync(ClaimsPrincipal user)
@@ -121,12 +119,12 @@ namespace DKCrm.Server.Services.OrderServices
                                          && f.UserId == userId) == null)
                 || (_context.LogUsersVisitToOrderComments
                     .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
-                                         && f.UserId == userId).DateTimeVisit < _context.CommentOrders
+                                         && f.UserId == userId)!.DateTimeVisit < _context.CommentOrders
                     .Where(w => w.OrderId == wm.Id)
                     .Select(s => s.DateTimeUpdate).Max()));
             if (request.FilterTuple != null)
             {
-                if (request.FilterTuple.IsOrdersWithUnreadComments == true)
+                if (request.FilterTuple.IsOrdersWithUnreadComments)
                 {
                     data = data.Where(wm =>
                         ( _context.CommentOrders.Where(w=>w.OrderId == wm.Id)
@@ -134,8 +132,8 @@ namespace DKCrm.Server.Services.OrderServices
                             .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id 
                                                  && f.UserId == userId) == null)
                     ||(_context.LogUsersVisitToOrderComments
-                            .FirstOrDefault(f=>f.OrderOwnerCommentsId == wm.Id 
-                                               && f.UserId == userId).DateTimeVisit < _context.CommentOrders
+                        .FirstOrDefault(f=>f.OrderOwnerCommentsId == wm.Id 
+                                           && f.UserId == userId)!.DateTimeVisit < _context.CommentOrders
                             .Where(w => w.OrderId == wm.Id)
                             .Select(s => s.DateTimeUpdate).Max()) );
                 }
@@ -145,7 +143,7 @@ namespace DKCrm.Server.Services.OrderServices
                 }
                 if (request.FilterTuple.CurrentStatusId != null && request.FilterTuple.CurrentStatusId != Guid.Empty)
                 {
-                    data = data.Where(o => o.ExportedOrderStatusExported!.OrderBy(o => o.DateTimeCreate!.Value).LastOrDefault()!.ExportedOrderStatusId == request.FilterTuple.CurrentStatusId);
+                    data = data.Where(w => w.ExportedOrderStatusExported!.OrderByDescending(o => o.DateTimeCreate!.Value).FirstOrDefault()!.ExportedOrderStatusId == request.FilterTuple.CurrentStatusId);
                 }
                 if (request.FilterTuple.CurrentPartnerCompanyId != null && request.FilterTuple.CurrentPartnerCompanyId != Guid.Empty)
                 {
@@ -176,11 +174,11 @@ namespace DKCrm.Server.Services.OrderServices
                     data = data.Where(w => w.DateTimeUpdate!.Value.Date >= request.FilterTuple.UpdateDateFirst.Value.Date
                                            && w.DateTimeUpdate.Value.Date <= request.FilterTuple.UpdateDateLast.Value.Date);
                 }
-                if (request.FilterTuple.OurCompanies != null && request.FilterTuple.OurCompanies.Any())
+                if (request.FilterTuple.OurCompanies != null && request.FilterTuple.OurCompanies.Count != 0)
                 {
                     data = data.Where(o => request.FilterTuple.OurCompanies.Contains((Guid)o.OurCompanyId!));
                 }
-                if (request.FilterTuple.ContragentsCompanies != null && request.FilterTuple.ContragentsCompanies.Any())
+                if (request.FilterTuple.ContragentsCompanies != null && request.FilterTuple.ContragentsCompanies.Count != 0)
                 {
                     data = data.Where(o => request.FilterTuple.ContragentsCompanies.Contains((Guid)o.CompanyBuyerId!));
                 }
@@ -197,8 +195,9 @@ namespace DKCrm.Server.Services.OrderServices
                             break;
                         case SearchChapterNames.ProductPartNumber:
                             {
-                                var searchedOrdersId = await _context.ImportedProducts.Where(w => w.Product!.PartNumber!.Contains(request.SearchString))
-                                    .Select(s => s.ImportedOrderId).ToListAsync();
+                                var searchedOrdersId = await _context.ExportedProducts
+                                    .Where(w => w.Product!.PartNumber!.Contains(request.SearchString))
+                                    .Select(s => s.ExportedOrderId).ToListAsync();
                                 data = data.Where(w => searchedOrdersId.Contains(w.Id));
                                 break;
                             }
@@ -280,10 +279,10 @@ namespace DKCrm.Server.Services.OrderServices
             await _context.SaveChangesAsync();
             return exportedOrder.Id;
         }
-        public async Task<Guid> PutAsync(ExportedOrder exportedOrder, string userName)
+        public async Task<Guid> PutAsync(ExportedOrder exportedOrder, ClaimsPrincipal user)
         {
             exportedOrder.DateTimeUpdate = DateTime.Now;
-            exportedOrder.UpdatedUser = userName;
+            exportedOrder.UpdatedUser = user.Identity?.Name!;
             _context.Entry(exportedOrder).State = EntityState.Modified;
 
             if (exportedOrder.ApplicationOrderingProducts != null)
@@ -331,13 +330,13 @@ namespace DKCrm.Server.Services.OrderServices
                 {
                     if (exportedProduct.SoldFromStorage != null)
                     {
-                        var enumerable = exportedProduct.SoldFromStorage.Select(s => s.Quantity = 0);
+                        var unused = exportedProduct.SoldFromStorage.Select(s => s.Quantity = 0);
                     }
                     if (exportedProduct.PurchaseAtExports != null)
                     {
-                        var enumerable = exportedProduct.PurchaseAtExports.Select(s => s.Quantity = 0);
-                    }
-                    var resultUpdSource = await _exportedProductService.UpdateSourcesOrderItems(exportedProduct);
+                        var unused = exportedProduct.PurchaseAtExports.Select(s => s.Quantity = 0);
+                    } 
+                    await _exportedProductService.UpdateSourcesOrderItems(exportedProduct);
                 }
             }
             _context.Entry(orderInDb).State = EntityState.Deleted;
@@ -352,29 +351,28 @@ namespace DKCrm.Server.Services.OrderServices
             }
             return countResult;
         }
-        public async Task<int> AddStatusToOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus)
+        public async Task<int> AddStatusToOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus, ClaimsPrincipal user)
         {
             var statusItem =
                 await _context.ExportedOrderStatus.FirstOrDefaultAsync(f =>
                     f.Id == exportedOrderStatus.ExportedOrderStatusId);
             var orderInDb = await _context.ExportedOrders
                 .Include(i => i.ExportedOrderStatusExported).AsNoTracking()
-                .Include(i => i.ExportedProducts!).ThenInclude(t=>t.SoldFromStorage)
+                .Include(i => i.ExportedProducts!).ThenInclude(t => t.SoldFromStorage)
                 .Include(i => i.ExportedProducts!).ThenInclude(t => t.PurchaseAtExports)
+                .Include(exportedOrder => exportedOrder.CompanyBuyer)
                 .FirstOrDefaultAsync(x => x.Id == exportedOrderStatus.ExportedOrderId);
 
             if (orderInDb!.ExportedOrderStatusExported != null && 
-                orderInDb!.ExportedOrderStatusExported.Select(s=>s.ExportedOrderStatusId)
+                orderInDb.ExportedOrderStatusExported.Select(s=>s.ExportedOrderStatusId)
                     .Contains(exportedOrderStatus.ExportedOrderStatusId))
             {
                //_context.Update(exportedOrderStatus);
                 _context.Entry(exportedOrderStatus).State = EntityState.Modified;
             }
             else
-            {
- 
                 _context.Entry(exportedOrderStatus).State = EntityState.Added;
-            }
+            
             if (statusItem is { Position: < 0 })
             {
 
@@ -382,29 +380,54 @@ namespace DKCrm.Server.Services.OrderServices
                 //    .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
                 //await _context.PurchaseAtExports.Where(w => orderInDb!.ExportedProducts!
                 //    .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
-                if (orderInDb == null) return 0;
-                if (orderInDb.ExportedProducts != null)
+                //if (orderInDb == null) return 0;
+                if (orderInDb.ExportedProducts != null && orderInDb.ExportedProducts.Any())
                 {
+                    var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+                    if (userId == null) return 0;
+                    var ordersFromAddedComment = new List<Guid>();
                     foreach (var exportedProduct in orderInDb.ExportedProducts)
                     {
-                        foreach (var sld in exportedProduct.SoldFromStorage)
-                        {
-                            sld.Quantity = 0;
-                        }
+                        if (exportedProduct.SoldFromStorage != null)
+                            foreach (var sld in exportedProduct.SoldFromStorage)
+                            {
+                                sld.Quantity = 0;
+                            }
 
                         if (exportedProduct.PurchaseAtExports != null)
                         {
                             foreach (var exp in exportedProduct.PurchaseAtExports)
                             {
+                                var impProduct = _context.ImportedProducts.
+                                    Include(i=> i.ImportedOrder)
+                                    .ThenInclude(t=>t!.SellersCompany).FirstOrDefault(f=> f.Id == exp.ImportedProductId);
+                                var impOrder = impProduct?.ImportedOrder;
+                                if (impOrder != null)
+                                {
+                                    var orderId = impOrder.Id;
+                                    if (!ordersFromAddedComment.Contains(orderId))
+                                    {
+                                        ordersFromAddedComment.Add(orderId);
+                                        await _orderCommentsService.SaveCommentAsync(new CommentOrder()
+                                        {
+                                            OrderId = orderId,
+                                            Value = $"Был отмен связанный заказ на экспорт №{orderInDb.Number}, {orderInDb.CompanyBuyer?.Name}, перепроверьте наличие продуктов",
+                                            FromUserId = userId,
+                                            DateTimeCreated = DateTime.Now,
+                                            DateTimeUpdate = DateTime.Now,
+                                            IsWarningComment = true,
+                                            OrderType = typeof(ImportedOrder).ToString(),
+                                        }, user);
+                                    }
+                                }
+
                                 exp.Quantity = 0;
                             }
                         }
-
-                        var resultUpdSource = await _exportedProductService.UpdateSourcesOrderItems(exportedProduct);
+                        await _exportedProductService.UpdateSourcesOrderItems(exportedProduct);
                     }
                 }
             }
-
             return await _context.SaveChangesAsync();
         }
         public async Task<int> RemoveStatusFromOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus)

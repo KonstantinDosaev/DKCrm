@@ -46,10 +46,10 @@ namespace DKCrm.Client.Services.OrderServices
             return await _httpClient.GetFromJsonAsync<LogUsersVisitToOrderComments>
                 ($"api/OrderComment/GetLogUsersVisit/{orderId}");
         }   
-        public async Task<List<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request)
+        public async Task<GetCommentsForPaginationResponse<CommentOrder>> GetWarningCommentsAsync(GetWarningCommentsToOrderRequest request)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/OrderComment/GetWarningComments", request) ?? throw new InvalidOperationException();
-            return await response.Content.ReadFromJsonAsync<List<CommentOrder>>() ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<GetCommentsForPaginationResponse<CommentOrder>>() ?? throw new InvalidOperationException();
 
         }
     }

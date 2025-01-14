@@ -7,7 +7,7 @@
 @page "/export_orders/{OrderNumber}/{OrderId:guid}/{ShowOrder:bool}"
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
-<MudText Class="m-3" Typo="Typo.h4">Заказы на продажу</MudText>
+@*<MudText Class="m-3" Typo="Typo.h4">Заказы на продажу</MudText>*@
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
         <MudTooltip Placement="Placement.Right" Text="не прочитанные комментарии">
@@ -25,7 +25,7 @@
                        Style="margin-right: 0.7rem;"
                        OnClick="OnHistory">
                 <MudIcon Size="@Size.Medium"
-                         Icon="@Icons.Material.Sharp.History"
+                         Icon="@Icons.Material.Sharp.History" 
                          Class="pa-0 ml-2"/>
             </MudButton>
         </MudTooltip>
@@ -43,7 +43,7 @@
                        ValueChanged="OnStatusFilter"
                        Variant="Variant.Outlined" Dense="true" Style=""
                        Class="select-button"
-                       OnOpen="LoadStatusList" ToStringFunc="status => status?.Value!" Clearable
+                       OnOpen="LoadStatusList" ToStringFunc="status => status.Value" Clearable
                        OnClearButtonClick="ResetStatusFilter">
                 @if (StatusList != null)
                 {
@@ -81,7 +81,7 @@
         <MudButton Variant="Variant.Filled" 
                    Size="Size.Medium" 
                    OnClick="() => _visibleAddOrderDialog = true" 
-                   Style="margin-right: 1rem;" Color="Color.Tertiary">
+                   Color="Color.Tertiary">
             Добавить заказ
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
         </MudButton>
@@ -89,18 +89,20 @@
 </MudPaper>
 
 <MudTable ServerData="(async (state, token) => await ServerReload(state, token))"
-          Dense="false"
+          Dense="true"
           Hover="true"
           ReadOnly="false"
           SelectOnRowClick="false"
           Striped="true"
           Bordered="true"
-          HeaderClass="mud-table-header table-head-bordered" T="ExportedOrder" @ref="_table" >
+          FixedHeader="true" Height="@($"{WindowHeight-230}px")" FixedFooter="true"
+          HeaderClass=" table-head-bordered mud-table-header-fix" T="ExportedOrder" @ref="_table" 
+         >
     <ToolBarContent>
         <MudText Typo="Typo.h6">Список заказов</MudText>
         <MudSpacer />
         <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
-                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem;"
+                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0 7px 29px 0; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem;"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
 
@@ -255,7 +257,7 @@
     </ChildRowContent>
 
     <PagerContent>
-        <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
+        <MudTablePager Style="height: 30px;" PageSizeOptions="@(new[] { 10, 20 })" RowsPerPageString="@(" ")"/>
     </PagerContent>
 </MudTable>
 
@@ -299,12 +301,12 @@
   
 </MudDialog>
 <CreateExportedOrderDialog 
-    RefreshProductList="() => _table!.ReloadServerData()"
+    RefreshProductList="() => _table.ReloadServerData()"
     @bind-VisibleDialog="_visibleAddOrderDialog"/>
    
 <EditExportedOrderDialog 
     Id="Order.Id"
-    RefreshProductList="() => _table!.ReloadServerData()"
+    RefreshProductList="() => _table.ReloadServerData()"
     @bind-VisibleDialog="_visibleUpdateOrderDialog"
     ApplicationOrderingProduct="Order.ApplicationOrderingProducts" />
 
@@ -315,14 +317,16 @@
     [Parameter] public string? OrderNumber { get; set; }
     [Parameter] public bool ShowDetails { get; set; }
     [Parameter] public bool ShowOrder { get; set; }
+    [CascadingParameter(Name = "WindowWidth")] private int WindowWidth { get; set; }
+    [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     private List<ExportedOrderStatus>? StatusList { get; set; }
 
     public ExportedOrder Order { get; set; } = new();
-    private string? _searchString = null;
+    private string? _searchString;
     public string? SelectedOption { get; set; } = SearchChapterNames.OrderNumber;
     private FilterOrderTuple _filterOrderTuple = new FilterOrderTuple();
-    private MudTable<ExportedOrder> _table;
-    private MudTable<ExportedOrder> _tables;
+    private MudTable<ExportedOrder> _table = null!;
+    //private MudTable<ExportedOrder> _tables;
     private ExportedOrderStatus? CurrentOrderStatus { get; set; }
     private bool? OrdersIsCompleted { get; set; }
 
@@ -336,7 +340,7 @@
     private bool _isOnUnreadComments;
     private bool _unreadCommentsAny;
 
-    public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
+    private IEnumerable<string> _currencyDisplay = new HashSet<string>() { "Сделки" };
     protected override void OnParametersSet()
     {
         
@@ -346,7 +350,7 @@
     {
         if (firstRender)
         {
-            if (_table != null && OrderNumber != null && ShowOrder)
+            if (OrderNumber != null && ShowOrder)
             {
                 ShowDetails = true;
                 OnSearch(OrderNumber);
@@ -379,25 +383,25 @@
     {
         _searchString = text;
         SelectedOption = SelectedOption != "null" ? SelectedOption : null;
-        _table!.ReloadServerData();
+        _table.ReloadServerData();
     }
     private void OnHistory()
     {
         _showHistoryOrders = !_showHistoryOrders;
         _filterOrderTuple.IsHistoryOrders = !_filterOrderTuple.IsHistoryOrders;
-        _table!.ReloadServerData();
+        _table.ReloadServerData();
     } 
     private void OnUnreadComments()
     {
         _isOnUnreadComments = !_isOnUnreadComments;
         _filterOrderTuple.IsOrdersWithUnreadComments = !_filterOrderTuple.IsOrdersWithUnreadComments;
-        _table!.ReloadServerData();
+        _table.ReloadServerData();
     }
 
-    private void SelectSearchOption(string text)
+    /*private void SelectSearchOption(string text)
     {
         SelectedOption = text!="null"? text : null;
-    }
+    }*/
     private void OnFilter(FilterOrderTuple filterTuple)
     {
         if (filterTuple.CurrentPartnerEmployeeId != null 
@@ -414,7 +418,7 @@
             _filterIsOn = false;
         }
         _filterOrderTuple = filterTuple;
-        _table!.ReloadServerData();
+        _table.ReloadServerData();
     }
     
     private void OpenUpdateOrderDialog(ExportedOrder order)
@@ -447,26 +451,36 @@
         CurrentOrderStatus = status;
         _filterOrderTuple.CurrentStatusId = status?.Id;
 
-        await _table!.ReloadServerData();
+        await _table.ReloadServerData();
     }
     private void OnCompleteOrderFilter(bool? isCompleteOrder)
     {
         OrdersIsCompleted = isCompleteOrder;
         _filterOrderTuple.IsCompleteOrders = isCompleteOrder;
-        _table!.ReloadServerData();
+        _table.ReloadServerData();
     }
 
     private void ResetStatusFilter()
     {
         CurrentOrderStatus = null;
         _filterOrderTuple.CurrentStatusId = null;
-        _table!.ReloadServerData();
+        _table.ReloadServerData();
     }
     private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
 
 }
 <style>
-    .mud-table-header {
+    .mud-table-sticky-header * .mud-table-root .mud-table-header-fix * .mud-table-cell {
+        background-color: dodgerblue;
+        font-weight: bold;
+        color: white;
+    }
+    /*.mud-table-header {
+        background-color: #cbf0ee;
+        color: white !important;
+        font-weight: bold;
+    }
+    .mud-table-header-fix {
         background-color: #cbf0ee;
         color: white !important;
         font-weight: bold;
@@ -477,7 +491,7 @@
     .my-table-row-w {
         background: white;
     }
-
+*/
     .select-button {
         margin: 0 !important;
   

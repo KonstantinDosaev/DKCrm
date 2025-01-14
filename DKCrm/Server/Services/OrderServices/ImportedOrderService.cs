@@ -5,7 +5,6 @@ using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
-using DocumentFormat.OpenXml.Spreadsheet;
 using System.Security.Claims;
 
 namespace DKCrm.Server.Services.OrderServices
@@ -116,7 +115,7 @@ namespace DKCrm.Server.Services.OrderServices
             //}
             if (request.FilterTuple != null)
             {
-                if (request.FilterTuple.IsOrdersWithUnreadComments == true)
+                if (request.FilterTuple.IsOrdersWithUnreadComments)
                 {
                     data = data.Where(wm =>
                         (_context.CommentOrders.Where(w => w.OrderId == wm.Id)
@@ -125,13 +124,15 @@ namespace DKCrm.Server.Services.OrderServices
                                                  && f.UserId == userId) == null)
                         || (_context.LogUsersVisitToOrderComments
                             .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
-                                                 && f.UserId == userId).DateTimeVisit < _context.CommentOrders
+                                                 && f.UserId == userId)!.DateTimeVisit < _context.CommentOrders
                             .Where(w => w.OrderId == wm.Id)
                             .Select(s => s.DateTimeUpdate).Max()));
                 }
                 if (request.FilterTuple.CurrentStatusId != null && request.FilterTuple.CurrentStatusId != Guid.Empty)
                 {
-                    data = data.Where(o => o.ImportedOrderStatusImportedOrders!.OrderBy(o=>o.DateTimeCreate!.Value).LastOrDefault()!.ImportedOrderStatusId==request.FilterTuple.CurrentStatusId);
+                    data = data.Where(w => w.ImportedOrderStatusImportedOrders!
+                        .OrderByDescending(o=>o.DateTimeCreate!.Value)
+                        .FirstOrDefault()!.ImportedOrderStatusId==request.FilterTuple.CurrentStatusId);
                 }
                 if (request.FilterTuple.CurrentPartnerCompanyId != null && request.FilterTuple.CurrentPartnerCompanyId != Guid.Empty)
                 {
@@ -180,7 +181,8 @@ namespace DKCrm.Server.Services.OrderServices
                     {
                         case SearchChapterNames.ProductPartNumber:
                             {
-                                var searchedOrdersId = await _context.ImportedProducts.Where(w => w.Product!.PartNumber!.Contains(request.SearchString))
+                                var searchedOrdersId = await _context.ImportedProducts
+                                    .Where(w => w.Product!.PartNumber!.Contains(request.SearchString))
                                     .Select(s => s.ImportedOrderId).ToListAsync();
                                 data = data.Where(w => searchedOrdersId.Contains(w.Id));
                                 break;

@@ -5,9 +5,6 @@
 @page "/imported_orders"
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
-<MudText Class="m-3" Typo="Typo.h4">Заказы от поставщиков</MudText>
-
-
 <NotCompleteExportedProductsComponent 
     GetImportOrdersByProductCallback="GetImportOrdersByProduct"
     AddToOrderModeCallback="SetAddToOrderMode" MergeInOrderModeCallback="SetMergeToOrderMode" />
@@ -35,7 +32,7 @@
                        ValueChanged="OnStatusFilter"
                        Variant="Variant.Outlined" Dense="true" Style=""
                        Class="select-button"
-                       OnOpen="LoadStatusList" ToStringFunc="status => status?.Value!"
+                       OnOpen="LoadStatusList" ToStringFunc="status => status.Value"
                        Clearable OnClearButtonClick="ResetStatusFilter">
                 @if (StatusList != null)
                 {
@@ -77,7 +74,8 @@
           SelectOnRowClick="false"
           Striped="true"
           Bordered="true"
-          HeaderClass="mud-table-header table-head-bordered"
+          HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
+          FixedHeader="true" Height="@($"{WindowHeight-290}px")"
          T="ImportedOrder"
           @ref="_table">
     <ToolBarContent>
@@ -85,7 +83,7 @@
         <MudSpacer/>
 
         <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
-                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem;"
+                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0 7px 29px 0; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem;"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0 ml-2" Value="_searchString"></MudTextField>
 
@@ -208,12 +206,12 @@
                            Color="Color.Default" 
                            Icon="@Icons.Material.Sharp.Comment" 
                            Class="pa-0 ml-2"/>
-            @if (isActiveMovingProductToOrder){
+            @if (_isActiveMovingProductToOrder){
             <MudIconButton Size="@Size.Medium"
                           OnClick="() => MovingProductToOrder(context)"
                            Style="background-color: rgba(217, 214, 81, 0.431);"
                            Icon="@Icons.Material.Sharp.ArrowDownward" Class="pa-0 ml-2"/>}
-            @if (isActiveMergeProductToOrder){
+            @if (_isActiveMergeProductToOrder){
                 <MudIconButton Size="@Size.Medium"
                                OnClick="() => MergeProductToOrder(context)"
                                Style="background-color: rgba(217, 214, 81, 0.431);"
@@ -235,7 +233,7 @@
         }
     </ChildRowContent>
     <PagerContent>
-        <MudTablePager PageSizeOptions="new int[] { 10, 20 }" />
+        <MudTablePager PageSizeOptions="new [] { 10, 20 }" RowsPerPageString="@(" ")" Style="height: 30px;"/>
     </PagerContent>
 </MudTable>
 
@@ -280,9 +278,10 @@
 @code {
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
-    private NotCompleteExportedProductsComponent?_completeExportedProductsComponent;
+    [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
+    private NotCompleteExportedProductsComponent? _completeExportedProductsComponent = null!;
     private Guid OrderId { get; set; }
-    public IEnumerable<string> _currencyDisplay { get; set; } = new HashSet<string>() { "Сделки" };
+    private IEnumerable<string> _currencyDisplay = new HashSet<string>() { "Сделки" };
 
     private  List<ImportedOrderStatus>? StatusList { get; set; }
     private ImportedOrderStatus? CurrentOrderStatus { get; set; }
@@ -290,10 +289,10 @@
     public ImportedOrder Order { get; set; } = new ();
 
     private MudTable<ImportedOrder>? _table;
-    private string? _searchString = null;
+    private string? _searchString;
     public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
     private FilterOrderTuple _filterOrderTuple= new FilterOrderTuple();
-    private string _widthCommentForOrderDriver = "350px";
+    //private string _widthCommentForOrderDriver = "350px";
 
     private bool _showDetails;
     private bool _visibleAddOrderDialog;
@@ -304,8 +303,8 @@
     private bool _filterIsOn; 
     private bool _visibleOrderComments;
 
-    private bool isActiveMovingProductToOrder;
-    private bool isActiveMergeProductToOrder;
+    private bool _isActiveMovingProductToOrder;
+    private bool _isActiveMergeProductToOrder;
 
     private void MovingProductToOrder(ImportedOrder order)
     {
@@ -317,11 +316,11 @@
     }
     private void SetAddToOrderMode(bool isOn)
     {
-        isActiveMovingProductToOrder = isOn;
+        _isActiveMovingProductToOrder = isOn;
     }  
     private void SetMergeToOrderMode(bool isOn)
     {
-        isActiveMergeProductToOrder = isOn;
+        _isActiveMergeProductToOrder = isOn;
     }
 
     private async Task<TableData<ImportedOrder>> ServerReload(TableState state, CancellationToken token)
@@ -390,10 +389,10 @@
         _table!.ReloadServerData();
     }
 
-    private void SelectSearchOption(string text)
+    /*private void SelectSearchOption(string text)
     {
         SelectedOption = text!="null"? text : null;
-    }
+    }*/
 
     private void OpenUpdateOrderDialog(ImportedOrder order)
     {
@@ -418,10 +417,10 @@
         await _table!.ReloadServerData();
         StateHasChanged();
     }
-    private void ResizeOrderCommentDrawer()
+    /*private void ResizeOrderCommentDrawer()
     {
         _widthCommentForOrderDriver = _widthCommentForOrderDriver == "350px" ? "700px" : "350px";
-    }
+    }*/
     private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
 
 }
@@ -435,6 +434,11 @@
         margin: 0 !important;
   
         
+    }
+    .mud-table-sticky-header * .mud-table-root .mud-table-header-fix * .mud-table-cell {
+        background-color: dodgerblue;
+        font-weight: bold;
+        color: white;
     }
     .select-button .mud-input-slot.mud-input-root-outlined {
         padding: 0.67rem 0.8rem !important;

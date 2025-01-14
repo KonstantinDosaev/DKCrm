@@ -8,19 +8,17 @@ namespace DKCrm.Client.Pages.UserManager
 {
     partial class UserManagerPage
     {
-        private List<ApplicationUser> Elements = new List<ApplicationUser>();
-        private List<IdentityRole> Roles = new List<IdentityRole>();
+        private List<ApplicationUser> _elements = new List<ApplicationUser>();
+        private List<IdentityRole> _roles = new List<IdentityRole>();
 
-        private List<string> _editEvents = new();
         private string _searchString = "";
         private ApplicationUser? _elementBeforeEdit;
 
         private HashSet<ApplicationUser> _selectedItems = new HashSet<ApplicationUser>();
-        private TableApplyButtonPosition applyButtonPosition = TableApplyButtonPosition.Start;
-        private TableEditButtonPosition editButtonPosition = TableEditButtonPosition.Start;
-        private TableEditTrigger editTrigger = TableEditTrigger.EditButton;
-
-
+        private TableApplyButtonPosition _applyButtonPosition = TableApplyButtonPosition.Start;
+        private TableEditButtonPosition _editButtonPosition = TableEditButtonPosition.Start;
+        private TableEditTrigger _editTrigger = TableEditTrigger.EditButton;
+        
         private void OpenDialog() => _visibleRegisterDialog = true;
         private DialogOptions _registerDialogOptions = new() { FullWidth = true, CloseButton = true };
         private bool _visibleRegisterDialog;
@@ -29,13 +27,13 @@ namespace DKCrm.Client.Pages.UserManager
         private static List<string>? _currentRoles;
         private DialogOptions _roleDialogOptions = new() { FullWidth = true, CloseButton = true };
         private bool _visibleRoleDialog;
-        private string value { get; set; } = "Nothing selected";
+        private string _value = "Nothing selected";
         private bool _visibleEditUserProfileDialog;
         private async Task OpenRoleDialog(ApplicationUser user)
         {
             _currentUser = user;
             _currentRoles = await UserManagerCustom.GetRoleFromUser(user.Id);
-            value = _currentRoles.FirstOrDefault()!;
+            _value = _currentRoles.FirstOrDefault()!;
             _visibleRoleDialog = true;
         }
         private void OpenEditUserProfileDialog(ApplicationUser user)
@@ -46,17 +44,8 @@ namespace DKCrm.Client.Pages.UserManager
 
         protected override async Task OnInitializedAsync()
         {
-           
-            Elements = await UserManagerCustom.GetUsersAsync();
-            Roles = await UserManagerCustom.GetAllRolesAsync();
-
-           
-        }
-
-        private void AddEditionEvent(string message)
-        {
-            _editEvents.Add(message);
-            StateHasChanged();
+            _elements = await UserManagerCustom.GetUsersAsync();
+            _roles = await UserManagerCustom.GetAllRolesAsync();
         }
 
         private void BackupItem(object element)
@@ -66,10 +55,9 @@ namespace DKCrm.Client.Pages.UserManager
                 Email = ((ApplicationUser)element).Email,
                 UserName = ((ApplicationUser)element).UserName,
             };
-            AddEditionEvent($"RowEditPreview event: made a backup of Element {((ApplicationUser)element).UserName}");
         }
 
-        private async Task ItemHasBeenCommitted(object element)
+        /*private async Task ItemHasBeenCommitted(object element)
         {
             _elementBeforeEdit = new()
             {
@@ -78,7 +66,7 @@ namespace DKCrm.Client.Pages.UserManager
             };
             await UserManagerCustom.UpdateUser(_elementBeforeEdit);
            AddEditionEvent($"RowEditCommit event: Changes to Element {((ApplicationUser)element).UserName} committed");
-        }
+        }*/
 
         private void ResetItemToOriginalValues(object element)
         {
@@ -87,17 +75,15 @@ namespace DKCrm.Client.Pages.UserManager
                 ((ApplicationUser)element).Email = _elementBeforeEdit.Email;
                 ((ApplicationUser)element).UserName = _elementBeforeEdit.UserName;
             }
-
-            AddEditionEvent($"RowEditCancel event: Editing of Element {((ApplicationUser)element).UserName} canceled");
         }
 
         private bool FilterFunc(ApplicationUser element)
         {
             if (string.IsNullOrWhiteSpace(_searchString))
                 return true;
-            if (element.Email.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            if (element.Email != null && element.Email.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
-            if (element.UserName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            if (element.UserName != null && element.UserName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
             if ($"{element.Id}".Contains(_searchString))
                 return true;
@@ -128,7 +114,7 @@ namespace DKCrm.Client.Pages.UserManager
 
         private async Task UpdateRoles()
         {
-            var request = new RoleRequest() { RoleName = value, UserName = _currentUser?.UserName };
+            var request = new RoleRequest() { RoleName = _value, UserName = _currentUser?.UserName };
             await UserManagerCustom.UpdateUserRole(request);
             _visibleRoleDialog = false;
         }

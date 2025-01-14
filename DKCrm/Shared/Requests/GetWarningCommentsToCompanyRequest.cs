@@ -9,5 +9,7 @@ namespace DKCrm.Shared.Requests
     public class GetWarningCommentsToCompanyRequest
     {
         public bool GetOnlyNotOpen { get; set; }
+        public int PageIndex { get; set;}
+        public int PageSize { get; set;}
     }
 }

@@ -18,7 +18,7 @@ namespace DKCrm.Server.Interfaces.CompanyInterfaces
         Task<int> RemoveRangeAsync(IEnumerable<Guid> listId, ClaimsPrincipal user);
         Task<int> SetLogUserVisit(LogUsersVisitToCompanyComments newLog, ClaimsPrincipal user);
         Task<LogUsersVisitToCompanyComments> GetLogUserVisitAsync(Guid companyId, ClaimsPrincipal user);
-        Task<IEnumerable<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request,
+        Task<GetCommentsForPaginationResponse<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request,
             ClaimsPrincipal user);
     }
 }

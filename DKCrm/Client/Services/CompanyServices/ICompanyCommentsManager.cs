@@ -14,6 +14,6 @@ namespace DKCrm.Client.Services.CompanyServices
         Task SaveCommentAsync(CompanyComment comment);
         Task<int> SetLogUsersVisitAsync(LogUsersVisitToCompanyComments log);
         Task<LogUsersVisitToCompanyComments?> GetLogUsersVisitAsync(Guid companyId);
-        Task<List<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request);
+        Task<GetCommentsForPaginationResponse<CompanyComment>> GetWarningCommentsAsync(GetWarningCommentsToCompanyRequest request);
     }
 }

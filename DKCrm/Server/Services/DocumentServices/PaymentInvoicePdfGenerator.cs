@@ -92,7 +92,7 @@ namespace DKCrm.Server.Services.DocumentServices
 
         private async Task FillPdf(Document pdf, PdfWriter writer)
         {
-            var ttf = Path.Combine(_mainPathToFiles,PathsToDirectories.FileContainer, PathsToDirectories.Fonts, "Arial.TTF");
+            var ttf = Path.Combine(_mainPathToFiles,PathsToDirectories.FileContainer, PathsToDirectories.Fonts, "Arial.ttf");
             var baseFont = BaseFont.CreateFont(ttf, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
             _font = new Font(baseFont, 10, Font.NORMAL);
             _fontBold = new Font(baseFont, 10, Font.BOLD);
