@@ -44,6 +44,6 @@ namespace DKCrm.Server.Controllers.OrderControllers
 
         [HttpPost("add-status")]
         public async Task<IActionResult> AddStatusToOrder(ImportedOrderStatusImportedOrder statusImportedOrder)
-            => Ok(await _importedOrderService.AddStatusToOrderAsync(statusImportedOrder));
+            => Ok(await _importedOrderService.AddStatusToOrderAsync(statusImportedOrder, User));
     }
 }

@@ -11,7 +11,7 @@ namespace DKCrm.Server.Interfaces.OrderInterfaces
         Task<ImportedProduct> GetOneAsync(Guid id);
         Task<Guid> PostAsync(ImportedProduct importedProduct);
         Task<Guid> PutAsync(ImportedProduct importedProduct);
-        Task<int> UpdateSourcesOrderItems(ImportedProduct importedProduct);
+        Task<int> UpdateSourcesOrderItems(ImportedProduct importedProduct, bool isOrderOver = false);
         Task<Guid> MergeImportedProductsAsync(MergeImportedProductsRequest mergeRequest);
         Task<IEnumerable<Guid>> PutRangeAsync(IEnumerable<ImportedProduct> importedProduct);
         Task<int> DeleteAsync(Guid id);

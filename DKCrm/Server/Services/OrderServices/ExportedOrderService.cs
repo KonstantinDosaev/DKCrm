@@ -375,13 +375,12 @@ namespace DKCrm.Server.Services.OrderServices
             
             if (statusItem is { Position: < 0 })
             {
-
                 //await _context.SoldFromStorages.Where(w => orderInDb!.ExportedProducts!
                 //    .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
                 //await _context.PurchaseAtExports.Where(w => orderInDb!.ExportedProducts!
                 //    .Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
                 //if (orderInDb == null) return 0;
-                if (orderInDb.ExportedProducts != null && orderInDb.ExportedProducts.Any())
+                if (orderInDb.ExportedProducts != null && orderInDb.ExportedProducts.Count != 0)
                 {
                     var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
                     if (userId == null) return 0;
@@ -428,6 +427,12 @@ namespace DKCrm.Server.Services.OrderServices
                     }
                 }
             }
+            if (statusItem!.Value == ExportOrderStatusNames.Completed)
+            {
+                orderInDb.OrderIsOver = true;
+                _context.Entry(orderInDb).State = EntityState.Modified;
+            }
+            
             return await _context.SaveChangesAsync();
         }
         public async Task<int> RemoveStatusFromOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus)
@@ -436,6 +441,27 @@ namespace DKCrm.Server.Services.OrderServices
             return await _context.SaveChangesAsync();
         }
 
+        public async Task<int> CheckOrderToOverImport(Guid id)
+        {
+            var result = await _context.ExportedOrders.Where(f => f.Id == id)
+                .Include(i => i.ExportedProducts)!.ThenInclude(t => t.ImportedProducts)!
+                .ThenInclude(t => t.ImportedOrder).FirstOrDefaultAsync();
+            var notOverImportOrder = 0;
+            if (result!.ExportedProducts != null)
+                foreach (var exportedProduct in result.ExportedProducts)
+                {
+                    if (exportedProduct.ImportedProducts != null)
+                        foreach (var importedProduct in exportedProduct.ImportedProducts)
+                        {
+                            if (importedProduct.ImportedOrder!.OrderIsOver == false)
+                            {
+                                notOverImportOrder++;
+                            }
+                        }
+                }
+
+            return notOverImportOrder;
+        }
         //public async Task<IActionResult> GetOrder(Guid id)
         //{
         //    //var dev = await _context.ExportedOrders.Select(s => new

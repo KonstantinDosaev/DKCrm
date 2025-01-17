@@ -147,38 +147,53 @@ namespace DKCrm.Server.Services.OrderServices
         //    return Ok(soldFromStorage.ExportedProductId);
         //}
 
-        public async Task<int> UpdateSourcesOrderItems(ImportedProduct importedProduct)
+        public async Task<int> UpdateSourcesOrderItems(ImportedProduct importedProduct, bool isOrderOver = false)
         {
-            var exportedProductInDb = await GetOneAsync(importedProduct.Id);
+            var importedProductInb = await GetOneAsync(importedProduct.Id);
             if (importedProduct.PurchaseAtStorageList != null)
             {
                 foreach (var purchaseAtStorage in importedProduct.PurchaseAtStorageList)
                 {
-                    var soldInDb = exportedProductInDb.PurchaseAtStorageList?.FirstOrDefault(f =>
+                    var purchInDb = importedProductInb.PurchaseAtStorageList?.FirstOrDefault(f =>
                         f.ImportedProductId == purchaseAtStorage.ImportedProductId && f.StorageId == purchaseAtStorage.StorageId);
+                    if (purchInDb != null)
+                    {
+                        if (isOrderOver)
+                        {
+                            var productInStorage = importedProduct.Product?.ProductsInStorage?.FirstOrDefault(i =>
+                                i.ProductId == importedProduct.ProductId
+                                && i.StorageId == purchaseAtStorage.StorageId);
+                            if (productInStorage != null)
+                            {
+                                productInStorage.Quantity += purchInDb.Quantity;
+                                _context.Entry(productInStorage).State = EntityState.Modified;
+                            }
+                        }
+                        else
+                        {
 
-                    
-                    if (soldInDb != null)
-                    {
-                        if (soldInDb.Quantity == purchaseAtStorage.Quantity)
-                            continue;
+                            if (purchInDb.Quantity == purchaseAtStorage.Quantity)
+                                continue;
+
+
+                            if (purchaseAtStorage.Quantity == 0)
+                            {
+                                _context.Entry(purchaseAtStorage).State = EntityState.Deleted;
+                                continue;
+                            }
+
+                            _context.Entry(purchaseAtStorage).State =
+                                purchInDb != null ? EntityState.Modified : EntityState.Added;
+                        }
                     }
-                        
-                    if (purchaseAtStorage.Quantity == 0)
-                    {
-                        _context.Entry(purchaseAtStorage).State = EntityState.Deleted;
-                        continue;
-                    }
-                    _context.Entry(purchaseAtStorage).State = soldInDb != null ? EntityState.Modified : EntityState.Added;
                 }
-
             }
 
             if (importedProduct.PurchaseAtExportList != null)
             {
                 foreach (var purchaseAtExport in importedProduct.PurchaseAtExportList)
                 {
-                    var purchaseAtExportInDb = exportedProductInDb.PurchaseAtExportList?.FirstOrDefault(f =>
+                    var purchaseAtExportInDb = importedProductInb.PurchaseAtExportList?.FirstOrDefault(f =>
                         f.ExportedProductId == purchaseAtExport.ExportedProductId && f.ImportedProductId == purchaseAtExport.ImportedProductId);
                     if (purchaseAtExportInDb != null)
                     {

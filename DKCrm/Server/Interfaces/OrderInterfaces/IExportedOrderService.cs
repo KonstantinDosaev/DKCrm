@@ -16,5 +16,6 @@ namespace DKCrm.Server.Interfaces.OrderInterfaces
         Task<int> DeleteRangeAsync(IEnumerable<ExportedOrder> exportedOrders);
         Task<int> AddStatusToOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus, ClaimsPrincipal user);
         Task<int> RemoveStatusFromOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus);
+        Task<int> CheckOrderToOverImport(Guid id);
     }
 }
