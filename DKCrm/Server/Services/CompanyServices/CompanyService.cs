@@ -96,7 +96,6 @@ namespace DKCrm.Server.Services.CompanyServices
             return company ?? throw new InvalidOperationException();
         }
 
-
         public async Task<Guid> PostAsync(Company company)
         {
             _context.Add(company);

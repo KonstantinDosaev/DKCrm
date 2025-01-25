@@ -3,6 +3,43 @@
 @using DKCrm.Client.Components.ProductFilter
 @using DKCrm.Shared.Constants
 
+<MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
+    <div class="d-flex">
+        <MudButton Variant="Variant.Filled" Size="Size.Medium" 
+                   OnClick="() => _visibleProductFilter=true" 
+                   Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+            Фильтр
+            <MudIcon Size="@Size.Medium" Color="Color.Default" 
+                     Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                   OnClick="() => _storageSettings.OpenStorageDialog()"
+                   Style="margin-left: 1rem;" Color="Color.Default">
+            Склады
+            <MudIcon Size="@Size.Medium" Color="Color.Default"
+                     Icon="@Icons.Material.Sharp.FilterAlt"
+                     Class="pa-0 ml-2"/>
+        </MudButton>
+    </div>
+    <div>
+        
+        <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                   OnClick="()=> _visibleCreatedProductDialog =true" Style="margin-left: 1rem;"
+                   Color="Color.Tertiary">
+            Добавить продукт
+            <MudIcon Size="@Size.Medium" Color="Color.Default"
+                     Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+        </MudButton>
+        @if (_selectedItems.Any())
+        {
+            <MudButton Variant="Variant.Filled" 
+                       StartIcon="@Icons.Material.Filled.Delete" 
+                       Color="Color.Error" OnClick="OnButtonDeleteClicked" 
+                       Style="margin-left: 1rem;">Удалить</MudButton>
+        }
+    </div>
+</MudPaper>
+
 <MudTable ServerData="ServerReload"
           Dense="false"
           Hover="true"
@@ -19,22 +56,7 @@
 
     <ToolBarContent>
         <MudText Typo="Typo.h4">@(_currentCategoryName ?? "Список продуктов")</MudText>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="()=> _visibleCreatedProductDialog =true" Style="margin-left: 1rem;" Color="Color.Tertiary">
-            Добавить продукт
-            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
-        </MudButton>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _visibleProductFilter=true" Style="margin-left: 1rem;" Color="Color.Warning">
-            Фильтр
-            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
-        </MudButton>
-            <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="() => _storageSettings.OpenStorageDialog()" Style="margin-left: 1rem;" Color="Color.Warning">
-            Склады
-            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
-        </MudButton>
-        @if (_selectedItems.Any())
-        {
-            <MudButton Variant="Variant.Filled"  StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnButtonDeleteClicked" Style="margin-left: 1rem;">Удалить</MudButton>
-        }
+
 
         <MudSpacer />
         <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
@@ -124,6 +146,8 @@
 
 
 @code {
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
     [Parameter] public Guid? ChapterId { get; set; }
     [Parameter] public string? Chapter { get; set; }
     public Guid ProductId;
@@ -133,6 +157,7 @@
     bool _visibleDetailProductDialog;
     private bool _visibleProductFilter;
 
+    private bool _filterIsOn; 
     bool _isOpenQuantityAtStorages;
 
     private HashSet<ProductsDto> _selectedItems = new();
@@ -160,7 +185,9 @@
                 Chapter = Chapter,
                 ChapterId = ChapterId,
                 SortDirection = state.SortDirection,
-                FilterTuple = _filterProductTuple
+                FilterTuple = _filterProductTuple,
+                GlobalFilterValue = GlobalFilterValue,
+                GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
 
             });
           //  pagedData = response.Items;
@@ -183,6 +210,16 @@
     }
     private void OnFilter(FilterProductTuple filterProductTuple)
     {
+        if (filterProductTuple.ProductOptions != null 
+            || filterProductTuple.BrandIdList != null 
+            || filterProductTuple.CategoryId != null)
+        {
+            _filterIsOn = true;
+        }
+        else
+        {
+            _filterIsOn = false;
+        }
         _filterProductTuple = filterProductTuple;
         _table!.ReloadServerData();
     }

@@ -38,10 +38,10 @@
                     <ChildContent>
                         <div class="d-flex flex-column p-2">
                             <MudText Typo="Typo.button">
-                                <span class="text-decoration-underline">Телефон: </span> @Order.EmployeeSeller.Phone
+                                <span class="text-decoration-underline">Телефон: </span> @Order!.EmployeeSeller.Phone
                             </MudText>
                             <MudText Typo="Typo.button">
-                                <span class="text-decoration-underline">E-mail: </span> @Order.EmployeeSeller.Email
+                                <span class="text-decoration-underline">E-mail: </span> @Order!.EmployeeSeller.Email
                             </MudText>
                         </div>
                     </ChildContent>
@@ -137,7 +137,8 @@
                         <CompleteImportedProductComponent ImportedProduct="EditedImportedProduct"
                                                           CancelEditCallback="() => _isOpenCompletePopover = false"
                                                           RefreshParentCallback="OnInitializedAsync"
-                                                          IsDoubleNested="IsDoubleNested"/>
+                                                          IsDoubleNested="IsDoubleNested"
+                                                          OrderIsLock="context.ImportedOrder!.OrderIsLock"/>
                         <div class="text-end mb-2">
                             <MudButton OnClick="(() => _isOpenCompletePopover = false)" Color="Color.Info">закрыть</MudButton>
                         </div>

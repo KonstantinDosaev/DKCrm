@@ -177,7 +177,7 @@
                 <ImportedOrderStatusListComponent
                     CurrentOrder="context"
                     StatusList="StatusList" 
-                    RefreshParentCallback="() => _table!.ReloadServerData()" />
+                    RefreshParentCallback="@(() => _table!.ReloadServerData())" />
                 <MudMenu Icon="@Icons.Material.Filled.History">
                     @if (context.ImportedOrderStatusImportedOrders != null)
                     {
@@ -277,6 +277,8 @@
     Id="Order.Id"/>
     
 @code {
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
@@ -306,7 +308,10 @@
 
     private bool _isActiveMovingProductToOrder;
     private bool _isActiveMergeProductToOrder;
-
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatusList();
+    }
     private void MovingProductToOrder(ImportedOrder order)
     {
         _completeExportedProductsComponent?.MovingProductToOrder(order);
@@ -336,7 +341,9 @@
             ChapterId = ChapterId,
             SortDirection = state.SortDirection,
              SearchInChapter = SelectedOption,
-                FilterTuple = _filterOrderTuple
+                FilterTuple = _filterOrderTuple,
+                GlobalFilterValue = GlobalFilterValue,
+                GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
         });
         return new TableData<ImportedOrder>() { TotalItems = response.TotalItems, Items = response.Items };
     }   

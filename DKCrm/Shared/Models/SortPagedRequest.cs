@@ -1,4 +1,5 @@
-﻿using MudBlazor;
+﻿using DKCrm.Shared.Constants;
+using MudBlazor;
 
 namespace DKCrm.Shared.Models
 {
@@ -13,5 +14,7 @@ namespace DKCrm.Shared.Models
         public string? Chapter { get; set; }
         public Guid? ChapterId { get; set; }
         public T? FilterTuple{ get; set; }
+        public string? GlobalFilterValue { get; set;}
+        public GlobalFilterTypes GlobalFilterType { get; set;}
     }
 }

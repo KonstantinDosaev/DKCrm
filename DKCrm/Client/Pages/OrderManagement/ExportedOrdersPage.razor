@@ -137,7 +137,24 @@
                            Icon="@(ShowDetails && OrderId == context.Id? Icons.Material.Filled.KeyboardArrowUp : Icons.Material.Filled.KeyboardArrowDown)"
                            Class="pa-0 ml-2" />
         </MudTd>
-        <MudTd DataLabel="Номер заказа">@context.Number</MudTd>
+        <MudTd DataLabel="Номер заказа">@context.Number 
+            @if (context.OrderIsWarn)
+            {
+                <MudMenu FullWidth="false" ActivationEvent="@MouseEvent.MouseOver">
+                    <ActivatorContent>
+                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div style="max-width: 370px; padding: 10px;">
+                            <MudText>Произошли критические изменения! Обратитесь к комментариям</MudText>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Info"
+                                       OnClick="() => WarningToWorked(context)">обработано</MudButton>
+                        </div>
+                    </ChildContent>
+                </MudMenu>
+            }
+        </MudTd>
         <MudTd DataLabel="Наша компания">
             @if (context.OurCompany != null)
             {
@@ -188,7 +205,6 @@
         <MudTd DataLabel="Статус">
             @if (context.ExportedOrderStatus != null )
             {
-                
                 <div class="d-flex align-items-center justify-content-between ">
                     <ExportedOrderStatusListComponent
                         CurrentOrder="context" 
@@ -249,7 +265,7 @@
                
                     <MudCard Style="background: gainsboro;" Elevation="25">
                         <MudCardContent Class="pa-1">
-                            <ExportOrderDetailsComponent Id="OrderId" CurrencyDisplay="_currencyDisplay" />
+                            <ExportOrderDetailsComponent  Id="OrderId" CurrencyDisplay="_currencyDisplay" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -318,6 +334,8 @@
     [Parameter] public string? OrderNumber { get; set; }
     [Parameter] public bool ShowDetails { get; set; }
     [Parameter] public bool ShowOrder { get; set; }
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
     [CascadingParameter(Name = "WindowWidth")] private int WindowWidth { get; set; }
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     private List<ExportedOrderStatus>? StatusList { get; set; }
@@ -342,11 +360,11 @@
     private bool _unreadCommentsAny;
 
     private IEnumerable<string> _currencyDisplay = new HashSet<string>() { "Сделки" };
-    protected override void OnParametersSet()
+    protected override async Task OnInitializedAsync()
     {
-        
+        await LoadStatusList();
     }
-    
+
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
@@ -372,7 +390,9 @@
             ChapterId = ChapterId,
             SortDirection = state.SortDirection,
             SearchInChapter = SelectedOption,
-            FilterTuple = _filterOrderTuple
+            FilterTuple = _filterOrderTuple,
+            GlobalFilterValue = GlobalFilterValue,
+            GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
         }, token);
 
         _unreadCommentsAny = response.AnyUnreadComment;
@@ -466,6 +486,11 @@
         CurrentOrderStatus = null;
         _filterOrderTuple.CurrentStatusId = null;
         _table.ReloadServerData();
+    }
+    private async Task WarningToWorked(ExportedOrder order)
+    {
+        order.OrderIsWarn = false;
+        await ExportedOrderManager.UpdateAsync(order);
     }
     private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
 

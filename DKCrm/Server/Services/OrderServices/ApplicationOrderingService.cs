@@ -1,5 +1,6 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces.OrderInterfaces;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -54,24 +55,50 @@ namespace DKCrm.Server.Services.OrderServices
                 UpdatedUser = s.UpdatedUser,
                 MissingProductsInCatalog = s.MissingProductsInCatalog,
                 Phone = s.Phone,
-                UserId = s.UserId
+                UserId = s.UserId,
+                ExportedOrder = s.ExportedOrder, 
+                ExportedOrderId = s.ExportedOrderId
             }).Select(s => s);
+            if (!string.IsNullOrEmpty(request.GlobalFilterValue))
+            {
+                    switch (request.GlobalFilterType)
+                    {
+                        case GlobalFilterTypes.ExportedOrder:
+                            data = data.Where(w =>
+                                w.ExportedOrder != null && w.ExportedOrder.Number!.ToLower().Contains(request.GlobalFilterValue.ToLower()));
+                            break;
+                        case GlobalFilterTypes.Product:
+                        {
+                            var searchedOrdersId = await _context.ApplicationOrderingProductsProducts
+                                .Where(w => w.Product != null && w.Product.PartNumber!.Contains(request.GlobalFilterValue))
+                                .Select(s => s.ApplicationOrderingId).ToListAsync();
+                            data = data.Where(w => searchedOrdersId.Contains(w.Id));
+                            break;
+                        }
+                        case GlobalFilterTypes.Company:
+                            data = data.Where(w =>
+                                w.CompanyName != null && w.CompanyName.ToLower().Contains(request.GlobalFilterValue.ToLower()) ||
+                                w.ExportedOrder != null && w.ExportedOrder.CompanyBuyer != null && w.ExportedOrder.CompanyBuyer.Name.ToLower().Contains(request.GlobalFilterValue.ToLower()));
+                            break;
+                    }
+            }
             if (request.FilterTuple is { UserId: { } })
             {
                 data = data.Where(w => w.UserId == request.FilterTuple.UserId);
             }
+            
             if (!string.IsNullOrEmpty(request.SearchString))
             {
                 data = data.Where(w =>
                     w.Number.Contains(request.SearchString)
                     || w.CompanyName!.ToLower().Contains(request.SearchString.ToLower()));
-                if (request.FilterTuple != null)
-                {
-                    request.FilterTuple.CreateDateFirst = null;
-                    request.FilterTuple.CreateDateLast = null;
-                    request.FilterTuple.UpdateDateFirst = null;
-                    request.FilterTuple.UpdateDateLast = null;
-                }
+                // if (request.FilterTuple != null)
+                // {
+                //     request.FilterTuple.CreateDateFirst = null;
+                //     request.FilterTuple.CreateDateLast = null;
+                //     request.FilterTuple.UpdateDateFirst = null;
+                //     request.FilterTuple.UpdateDateLast = null;
+                // }
             }
             if (request.FilterTuple != null)
             {

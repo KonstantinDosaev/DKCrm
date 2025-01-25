@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.SignalR.Client
+﻿@using DKCrm.Shared.Constants
+@using Microsoft.AspNetCore.SignalR.Client
 @using MudBlazor.Services
 @inherits LayoutComponentBase
 @implements IBrowserViewportObserver
@@ -14,12 +15,17 @@
 <MudSnackbarProvider />
 <div class="page">
     <main>
-        <NavMenu UserProfileIsValid="_userProfileIsValid" />
+        <NavMenu UserProfileIsValid="_userProfileIsValid" OnGlobalFilter="@OnGlobalFilter"
+                 ResetGlobalFilter="@ResetGlobalFilter"/>
         <CascadingValue Value="_hubConnection">
             <CascadingValue Value="@WindowHeight" Name="WindowHeight">
                 <CascadingValue Value="@WindowWidth" Name="WindowWidth">
-                    @Body
-                </CascadingValue> 
+                    <CascadingValue Value="@GlobalFilterType" Name="GlobalFilterType">
+                        <CascadingValue Value="@GlobalFilterValue" Name="GlobalFilterValue">
+                            @Body
+                        </CascadingValue>
+                    </CascadingValue>
+                </CascadingValue>
             </CascadingValue>
         </CascadingValue>
     </main>
@@ -35,6 +41,8 @@
     private bool _userProfileIsValid = true;
     private int WindowWidth { get; set; }
     private int WindowHeight { get; set; }
+    private string? GlobalFilterValue { get; set;}
+    private int GlobalFilterType { get; set;}
     protected override async Task OnInitializedAsync()
     {
         await BrowserViewportService.SubscribeAsync(this, fireImmediately: true);
@@ -114,5 +122,30 @@
         WindowWidth = browserViewportEventArgs.BrowserWindowSize.Width;
         WindowHeight = browserViewportEventArgs.BrowserWindowSize.Height;
         return InvokeAsync(StateHasChanged);
+    }
+
+    private void OnGlobalFilter((int, string) globalFilter)
+    {
+        GlobalFilterType = globalFilter.Item1;
+        GlobalFilterValue = globalFilter.Item2;
+        var nawUri = "";
+        switch (GlobalFilterType)
+        {
+            case (int)GlobalFilterTypes.Product : nawUri = "/product";
+                break;
+            case (int)GlobalFilterTypes.ExportedOrder : nawUri = "/export_orders";
+                break;
+            case (int)GlobalFilterTypes.ImportedOrder : nawUri = "/imported_orders";
+                break;
+            case (int)GlobalFilterTypes.Company : nawUri = "/companies";
+                break;
+        }
+        
+        _navigationManager.NavigateTo(nawUri, false);
+    }
+    private void ResetGlobalFilter()
+    {
+        GlobalFilterValue = null;
+        _navigationManager.NavigateTo(_navigationManager.Uri, true);
     }
 }

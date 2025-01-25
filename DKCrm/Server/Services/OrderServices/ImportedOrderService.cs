@@ -77,7 +77,19 @@ namespace DKCrm.Server.Services.OrderServices
                 SupplierCurrency = s.SupplierCurrency,
                 LocalCurrency = s.LocalCurrency,
                 CurrencyPercent = s.CurrencyPercent,
-                Nds = s.Nds
+                Nds = s.Nds,
+                OrderIsWarn = s.OrderIsWarn,
+                
+                OrderIsOver = s.OrderIsOver,
+                OrderIsLock = s.OrderIsLock,
+                IsAllProductsAreCollected = s.IsAllProductsAreCollected,
+                IsDeleted = s.IsDeleted,
+                IsFullDeleted = s.IsFullDeleted,
+                ImportedOrderStatusImportedOrders = s.ImportedOrderStatusImportedOrders,
+                ImportedOrderStatus = s.ImportedOrderStatus,
+                
+                
+                
             }).FirstOrDefaultAsync(a => a.Id == id);
             await _context.PurchaseAtStorages
                 .Where(w => order!.ImportedProducts!.Select(s => s.Id).Contains(w.ImportedProductId)).LoadAsync();
@@ -117,6 +129,12 @@ namespace DKCrm.Server.Services.OrderServices
                     LocalCurrency = s.LocalCurrency,
                     CurrencyPercent = s.CurrencyPercent,
                     Nds = s.Nds,
+                    OrderIsWarn = s.OrderIsWarn,
+                    OrderIsOver = s.OrderIsOver,
+                    OrderIsLock = s.OrderIsLock,
+                    IsAllProductsAreCollected = s.IsAllProductsAreCollected,
+                    IsDeleted = s.IsDeleted,
+                    IsFullDeleted = s.IsFullDeleted,
                     ImportedOrderStatusImportedOrders = s.ImportedOrderStatusImportedOrders,
                     ImportedOrderStatus = s.ImportedOrderStatus,
 
@@ -126,10 +144,31 @@ namespace DKCrm.Server.Services.OrderServices
                     accessedComponents.Contains((Guid)w.SellersCompanyId)
                     && accessCollection.First(f => f.AccessedComponentId == w.SellersCompanyId).AccessUsersToComponent
                         .Contains(userId))))));
-            //if (request.Chapter != null && request.ChapterId != null)
-            //{
-            //    data = data.Where(o => o.ImportedOrderStatusId == request.ChapterId);
-            //}
+            if (!string.IsNullOrEmpty(request.GlobalFilterValue))
+            {
+                    switch (request.GlobalFilterType)
+                    {
+                        case GlobalFilterTypes.ImportedOrder:
+                            data = data.Where(w =>
+                                w.Number != null && w.Number.ToLower().Contains(request.GlobalFilterValue.ToLower()));
+                            break;
+                        case GlobalFilterTypes.Product:
+                        {
+                            var searchedOrdersId = await _context.ImportedProducts
+                                .Where(w => w.Product!.PartNumber!.Contains(request.GlobalFilterValue))
+                                .Select(s => s.ImportedOrderId).ToListAsync();
+                            data = data.Where(w => searchedOrdersId.Contains(w.Id));
+                            break;
+                        }
+                        case GlobalFilterTypes.Company:
+                            data = data.Where(w =>
+                                w.OurCompany != null &&
+                                w.OurCompany.Name.ToLower().Contains(request.GlobalFilterValue.ToLower()) ||
+                                w.SellersCompany != null && w.SellersCompany.Name.ToLower()
+                                    .Contains(request.GlobalFilterValue.ToLower()));
+                            break;
+                    }
+            }
             if (request.FilterTuple != null)
             {
                 if (request.FilterTuple.IsOrdersWithUnreadComments)
@@ -332,6 +371,8 @@ namespace DKCrm.Server.Services.OrderServices
             var statusItem =
                 await _context.ImportedOrderStatus.FirstOrDefaultAsync(f =>
                     f.Id == statusOrder.ImportedOrderStatusId);
+            if (statusItem == null) return 0;
+        
             var orderInDb = await _context.ImportedOrders
                 .Include(i => i.ImportedOrderStatusImportedOrders).AsNoTracking()
                 .Include(i => i.ImportedProducts!).ThenInclude(t => t.PurchaseAtStorageList)
@@ -370,7 +411,7 @@ namespace DKCrm.Server.Services.OrderServices
                         {
                             foreach (var exp in importedProduct.PurchaseAtExportList)
                             {
-                                var expProduct = _context.ExportedProducts.Include(i => i.ExportedOrder)
+                                var expProduct = _context.ExportedProducts.AsNoTracking().Include(i => i.ExportedOrder)
                                     .ThenInclude(t => t!.CompanyBuyer)
                                     .FirstOrDefault(f => f.Id == exp.ExportedProductId);
                                 var expOrder = expProduct?.ExportedOrder;
@@ -380,6 +421,8 @@ namespace DKCrm.Server.Services.OrderServices
                                     if (!ordersFromAddedComment.Contains(orderId))
                                     {
                                         ordersFromAddedComment.Add(orderId);
+                                        expOrder.OrderIsWarn = true;
+                                        _context.Entry(expOrder).State = EntityState.Modified;
                                         await _orderCommentsService.SaveCommentAsync(new CommentOrder()
                                         {
                                             OrderId = orderId,
@@ -403,20 +446,14 @@ namespace DKCrm.Server.Services.OrderServices
                 }
             }
 
-            if (statusItem != null && statusItem.Value == ImportOrderStatusNames.Completed)
+            if (statusItem.Value == ImportOrderStatusNames.Completed)
             {
                 orderInDb.OrderIsOver = true;
-                _context.Entry(orderInDb).State = EntityState.Modified;
+               // _context.Entry(orderInDb).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-                var exL =  new ImportedProduct[orderInDb.ImportedProducts.Count];;
-               orderInDb.ImportedProducts.CopyTo(exL,0);
-                /*if (exL != null)
-                    foreach (var importedProduct in exL)
-                    {
-                        await _importedProductService.UpdateSourcesOrderItems(exL
-                            .FirstOrDefault(s => s.Id == importedProduct.Id)!, true);
-                    }*/
-
+                var exL =  new ImportedProduct[orderInDb.ImportedProducts!.Count];
+                orderInDb.ImportedProducts.CopyTo(exL,0);
+        
                 foreach (var importedProduct in exL)
                 {
                     if (importedProduct.PurchaseAtExportList == null) continue;
@@ -437,9 +474,13 @@ namespace DKCrm.Server.Services.OrderServices
                                _context.Entry(expOrder).State = EntityState.Modified;
                            }
                         }
+                        await _importedProductService.UpdateSourcesOrderItems(importedProduct, true);
                     }
                 }
             }
+            
+            orderInDb.OrderIsLock = statusItem.Value != ImportOrderStatusNames.BeginFormed;
+            _context.Entry(orderInDb).State = EntityState.Modified;
             return await _context.SaveChangesAsync();
         }
     }

@@ -726,6 +726,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("Number")
                         .HasColumnType("text");
 
+                    b.Property<bool>("OrderIsLock")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("OrderIsOver")
                         .HasColumnType("boolean");
 
@@ -856,10 +859,10 @@ namespace DKCrm.Server.Migrations
                     b.Property<bool>("IsFullDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<int?>("MaxDaysForDeliveryPlaned")
+                    b.Property<int>("MaxDaysForDeliveryPlaned")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("MinDaysForDeliveryPlaned")
+                    b.Property<int>("MinDaysForDeliveryPlaned")
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("PriceInBuyerCurrency")
@@ -935,6 +938,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<string>("Number")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("OrderIsLock")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("OrderIsOver")
                         .HasColumnType("boolean");

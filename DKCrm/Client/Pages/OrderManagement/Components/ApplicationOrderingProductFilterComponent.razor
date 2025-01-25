@@ -1,0 +1,124 @@
+@using DKCrm.Shared.Models.OrderModels
+
+    <MudPaper Class="p-3"
+              Outlined="true">
+        <MudText Typo="Typo.button" Class=" fs-6">Созданы</MudText>
+        <div class="d-flex align-items-center justify-content-between w-100">
+            @*<MudIconButton 
+            Icon="@(_sortDirection==SortDirection.Descending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+            OnClick="Sorted"
+            Variant="Variant.Filled"
+            Class="mr-2"></MudIconButton>*@
+            <MudText Typo="Typo.button" Class=" fs-6">С</MudText>
+            <div>
+                <MudDatePicker Editable="true"
+                               Date="FilterOrderTuple.CreateDateFirst"
+                               DateChanged="OnFirstDateTimeCreatedFilter"
+                               Mask="@(new DateMask("dd/MM/yyyy"))"
+                               DateFormat="dd/MM/yyyy"
+                               Placeholder="день/месяц/год"
+                               Variant="Variant.Outlined"
+                               Style=" margin: 0 1rem;"
+                               Clearable/>
+            </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <MudText Typo="Typo.button" Class=" fs-6">По</MudText>
+            <div>
+                <MudDatePicker Editable="true"
+                               Date="FilterOrderTuple.CreateDateLast"
+                               DateChanged="OnLastDateTimeCreatedFilter"
+                               Mask="@(new DateMask("dd/MM/yyyy"))"
+                               DateFormat="dd/MM/yyyy"
+                               Placeholder="день/месяц/год"
+                               Variant="Variant.Outlined"
+                               Style="margin: 0 1rem"
+                               Clearable/>
+            </div>
+        </div>
+    </MudPaper>
+
+<MudPaper Class="p-3"
+          Outlined="true">
+    <MudText Typo="Typo.button" Class=" fs-6">Обновлены</MudText>
+    <div class="d-flex align-items-center justify-content-between w-100">
+        @*<MudIconButton 
+            Icon="@(_sortDirection==SortDirection.Descending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+            OnClick="Sorted"
+            Variant="Variant.Filled"
+            Class="mr-2"></MudIconButton>*@
+        <MudText Typo="Typo.button" Class=" fs-6">С</MudText>
+        <div>
+            <MudDatePicker Editable="true"
+                           Date="FilterOrderTuple.UpdateDateFirst"
+                           DateChanged="OnFirstDateTimeUpdateFilter"
+                           Mask="@(new DateMask("dd/MM/yyyy"))"
+                           DateFormat="dd/MM/yyyy"
+                           Placeholder="день/месяц/год"
+                           Variant="Variant.Outlined"
+                           Style="margin: 0 1rem;"
+                           Clearable />
+        </div>
+    </div>
+    <div class="d-flex align-items-center justify-content-between w-100">
+        <MudText Typo="Typo.button" Class=" fs-6">По</MudText>
+        <div>
+            <MudDatePicker Editable="true"
+                           Date="FilterOrderTuple.UpdateDateLast"
+                           DateChanged="OnLastDateTimeUpdateFilter"
+                           Mask="@(new DateMask("dd/MM/yyyy"))"
+                           DateFormat="dd/MM/yyyy"
+                           Placeholder="день/месяц/год"
+                           Variant="Variant.Outlined"
+                           Style="margin: 0 1rem"
+                           Clearable />
+        </div>
+    </div>
+</MudPaper>
+<MudButton Variant="Variant.Outlined" Color="Color.Warning" Class="mt-4" OnClick="ClearAll">Сбросить</MudButton>
+
+@code {
+    [Parameter] public FilterApplicationOrderTuple FilterOrderTuple { get; set; } = null!;
+    [Parameter] public EventCallback<FilterApplicationOrderTuple> IsSetOption { get; set; }
+    [Parameter]public bool IsHistory { get; set; }
+    
+    private async Task OnFirstDateTimeCreatedFilter(DateTime? dateTime)
+    {
+        FilterOrderTuple.CreateDateFirst = dateTime;
+        //await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+
+    private async Task OnLastDateTimeCreatedFilter(DateTime? dateTime)
+    {
+        FilterOrderTuple.CreateDateLast = dateTime;
+        if (FilterOrderTuple.CreateDateFirst != null)
+            await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+    
+    private async Task OnFirstDateTimeUpdateFilter(DateTime? dateTime)
+    {
+        FilterOrderTuple.UpdateDateFirst = dateTime;
+        //await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+
+    private async Task OnLastDateTimeUpdateFilter(DateTime? dateTime)
+    {
+        FilterOrderTuple.UpdateDateLast = dateTime;
+        if (FilterOrderTuple.UpdateDateFirst != null)
+             await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+    private async Task ClearAll()
+    {
+        FilterOrderTuple.CreateDateLast = null;
+        FilterOrderTuple.CreateDateLast = null;
+        FilterOrderTuple.UpdateDateFirst = null;
+        FilterOrderTuple.UpdateDateLast = null;
+        await IsSetOption.InvokeAsync(FilterOrderTuple);
+    }
+
+}
+<style>
+    .order-filter-field {
+        margin: 0 0 20px 0;
+    }
+</style>

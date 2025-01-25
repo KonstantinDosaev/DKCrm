@@ -22,6 +22,10 @@
                     </MudNavLink>
                 </div>*@
                 <div class="my-navitem">
+                    <GlobalFilterComponent OnGlobalFilter="@OnGlobalFilter"
+                                           ResetGlobalFilter="@ResetGlobalFilter"/>
+                </div>
+                <div class="my-navitem">
                     <MudNavLink ActiveClass="nav-active"  Class="my-navlink" Match="NavLinkMatch.All" Href="/companies"> 
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.AssuredWorkload" Class="pa-0 mr-2" />Компании
                     </MudNavLink>
@@ -109,6 +113,8 @@
     private bool _collapseNavMenu = true;
     private string? MyNavMenuCssClass => _collapseNavMenu ? "collapse" : null;
     private CategoryDrawerComponent? _categoryDrawerRef;
+    [Parameter] public EventCallback<(int, string)> OnGlobalFilter { get; set; }
+    [Parameter] public EventCallback ResetGlobalFilter { get; set; }
    [Parameter] public bool UserProfileIsValid { get; set; }
     private void ToggleNavMenu()
     {

@@ -27,7 +27,25 @@ namespace DKCrm.Server.Migrations
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
-         
+            migrationBuilder.AlterColumn<int>(
+                name: "MinDaysForDeliveryPlaned",
+                table: "ExportedProducts",
+                type: "integer",
+                nullable: false,
+                defaultValue: 0,
+                oldClrType: typeof(int),
+                oldType: "integer",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<int>(
+                name: "MaxDaysForDeliveryPlaned",
+                table: "ExportedProducts",
+                type: "integer",
+                nullable: false,
+                defaultValue: 0,
+                oldClrType: typeof(int),
+                oldType: "integer",
+                oldNullable: true);
         }
 
         /// <inheritdoc />
@@ -41,7 +59,21 @@ namespace DKCrm.Server.Migrations
                 name: "DateTimeUpdate",
                 table: "CommentOrders");
 
-           
+            migrationBuilder.AlterColumn<int>(
+                name: "MinDaysForDeliveryPlaned",
+                table: "ExportedProducts",
+                type: "integer",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "integer");
+
+            migrationBuilder.AlterColumn<int>(
+                name: "MaxDaysForDeliveryPlaned",
+                table: "ExportedProducts",
+                type: "integer",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "integer");
         }
     }
 }

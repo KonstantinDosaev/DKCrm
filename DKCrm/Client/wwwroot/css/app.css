@@ -144,4 +144,8 @@ a, .btn-link {
     overflow: hidden !important;
     padding: 0 5px !important;
 }
-
+.myBoxShadow {
+    min-width: 14rem; 
+    box-shadow: rgba(100, 100, 111, 0.6) 0 7px 29px 0;
+    border-radius: 6px;
+}

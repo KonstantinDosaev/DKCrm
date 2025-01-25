@@ -8,7 +8,7 @@
             <MudMenu Label="@CurrentStatus.Value">
                 @foreach (var status in ParentStatusList)
                 {
-                    if (status.Position == CurrentStatus.Position)
+                    @*if (status.Position == CurrentStatus.Position)
                     {
                         <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
                             <MudPaper Class="pa-3 d-flex" Style="background: green">
@@ -28,6 +28,23 @@
                     {
                         <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
                             <MudPaper Class="pa-3 d-flex" Style="background:lightblue">
+                                <MudText>@status.Value @status.Position</MudText>
+                            </MudPaper>
+                        </MudMenuItem>
+                    }*@
+                    
+                    if (status.Position == CurrentStatus.Position)
+                    {
+                        <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                            <MudPaper Class="pa-3 d-flex" Style="background: lightgreen">
+                                <MudText>@status.Value @status.Position</MudText>
+                            </MudPaper>
+                        </MudMenuItem>
+                    }
+                    if (status.Position != CurrentStatus.Position)
+                    {
+                        <MudMenuItem Disabled="false" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                            <MudPaper Class="pa-3 d-flex" Style="background: none">
                                 <MudText>@status.Value @status.Position</MudText>
                             </MudPaper>
                         </MudMenuItem>

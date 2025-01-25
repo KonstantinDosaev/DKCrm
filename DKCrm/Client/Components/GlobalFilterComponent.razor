@@ -1,0 +1,87 @@
+@using DKCrm.Shared.Constants
+<MudMenu>
+    <ActivatorContent>
+        <MudTooltip Text="Глобальный фильтр">
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.AutoFixHigh"
+
+                Style="@(FilterIsOn ? $"color:{Colors.Orange.Default};" : $"color:{Colors.Gray.Lighten3};")"/>
+        </MudTooltip>
+    </ActivatorContent>
+    <ChildContent>
+        <MudPaper Style="background-color: rgba(255, 255, 255, 0.1);"
+                  Class="p-3"
+                  Elevation="20">
+            <div class="mb-3 d-flex justify-content-between">
+                <MudText Typo="Typo.button" Class="mr-4 fs-6">Глобальный фильтр</MudText>
+                @if (FilterIsOn)
+                {
+                    <MudIconButton Variant="Variant.Filled" Class="myBoxShadow"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Close"
+                                   OnClick="() => CloseFilter()"
+                                   Color="Color.Error"/>
+                }
+            </div>
+            <div class="d-flex justify-content-center align-items-center flex-wrap">
+                <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
+                              Style="padding: 0.5rem;" Value="_searchString"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"
+                              Class="mt-0 mr-2 myBoxShadow"></MudTextField>
+
+                <div>
+                    <MudSelect Variant="Variant.Text" Dense="true"
+                               Style="" Class="mr-2 select-buttonGlobal myBoxShadow"
+                               T="int" @bind-Value="SelectedOption">
+                        <MudSelectItem Value="@((int)GlobalFilterTypes.Product)">партномер</MudSelectItem>
+                        <MudSelectItem Value="@((int)GlobalFilterTypes.ExportedOrder)">импорт(номер заказа)</MudSelectItem>
+                        <MudSelectItem Value="@((int)GlobalFilterTypes.ImportedOrder)">экспорт(номер заказа)</MudSelectItem>
+                        <MudSelectItem Value="@((int)GlobalFilterTypes.Company)">компания</MudSelectItem>
+                    </MudSelect>
+                </div>
+                <div>
+                    <MudIconButton Variant="Variant.Filled" Class="myBoxShadow"
+                                   Size="Size.Large"
+                                   Icon="@Icons.Material.Outlined.Send"
+                                   OnClick="() => OnFilter()"
+                                    Style="color: #26b050"/>
+
+                </div>
+            </div>
+        </MudPaper>
+    </ChildContent>
+</MudMenu>
+
+@code {
+    [Parameter] public EventCallback<(int, string)> OnGlobalFilter { get; set; }
+    [Parameter] public EventCallback ResetGlobalFilter { get; set; }
+    private string? _searchString;
+    public bool FilterIsOn { get; set; }
+    public int SelectedOption { get; set; } = 0;
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+       // SelectedOption = SelectedOption != "null" ? SelectedOption : null;
+        //_table.ReloadServerData();
+    }
+    private async Task OnFilter()
+    {
+        if (string.IsNullOrEmpty(_searchString))
+            return;
+        FilterIsOn = true;
+        await OnGlobalFilter.InvokeAsync((SelectedOption,_searchString));
+
+    }
+    private async Task CloseFilter()
+    {
+        FilterIsOn = false;
+        await ResetGlobalFilter.InvokeAsync();
+    }
+}
+<style>
+    .select-buttonGlobal .mud-input>input.mud-input-root, div.mud-input-slot.mud-input-root {
+       
+        padding: 14px 10px !important;
+    }
+</style>

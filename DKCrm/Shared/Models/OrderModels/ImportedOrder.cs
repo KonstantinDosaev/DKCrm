@@ -15,6 +15,8 @@ namespace DKCrm.Shared.Models.OrderModels
         public string? Images { get; set; }
         public bool OrderIsOver { get; set; }
         public bool IsAllProductsAreCollected { get; set; }
+        public bool OrderIsLock { get; set; }
+        public bool OrderIsWarn { get; set; }
         public double? CurrencyPercent { get; set; }
         [MaxLength(10)]
         public string? TransactionCurrency { get; set; }

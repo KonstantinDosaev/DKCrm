@@ -66,7 +66,9 @@ namespace DKCrm.Server.Services.ProductServices
                 PartNumber = s.PartNumber,
                 CategoryId = s.CategoryId,
                 BrandId = s.BrandId,
-                ProductOption = s.ProductOption,
+                ProductOption = s.ProductOption, 
+                ExportedProducts = s.ExportedProducts, 
+                ImportedProducts = s.ImportedProducts,
             }).Select(s => s);
             if (request.Chapter != null && request.ChapterId != null)
             {
@@ -81,6 +83,44 @@ namespace DKCrm.Server.Services.ProductServices
                     case ProductFromChapterNames.Storage:
                         data = data.Where(o => o.Storage!.Select(s => s.Id).Contains((Guid)request.ChapterId));
                         break;
+                }
+            }
+            if (!string.IsNullOrEmpty(request.GlobalFilterValue))
+            {
+                switch (request.GlobalFilterType)
+                {
+                    case GlobalFilterTypes.Product:
+                        data = data.Where(w =>
+                            w.PartNumber != null && w.PartNumber.ToLower().Contains(request.GlobalFilterValue.ToLower()));
+                        break;
+                    case GlobalFilterTypes.ExportedOrder:
+                    {
+                        var searchedListId = await _context.ExportedProducts
+                            .Where(w => w.ExportedOrder != null && w.ExportedOrder.Number!.Contains(request.GlobalFilterValue))
+                            .Select(s => s.ProductId).ToListAsync();
+                        data = data.Where(w => searchedListId.Contains(w.Id));
+                        break;
+                    }
+                    case GlobalFilterTypes.ImportedOrder:
+                    {
+                        var searchedListId = await _context.ImportedProducts
+                            .Where(w => w.ImportedOrder != null && w.ImportedOrder.Number!.Contains(request.GlobalFilterValue))
+                            .Select(s => s.ProductId).ToListAsync();
+                        data = data.Where(w => searchedListId.Contains(w.Id));
+                        break;
+                    }
+                    case GlobalFilterTypes.Company:
+                    {
+                        var searchedExportedListId = await _context.ExportedProducts
+                            .Where(w => w.ExportedOrder != null && w.ExportedOrder.CompanyBuyer!.Name!.Contains(request.GlobalFilterValue))
+                            .Select(s => s.ProductId).ToListAsync();
+                        var searchedImportedListId = await _context.ImportedProducts
+                            .Where(w => w.ImportedOrder != null && w.ImportedOrder.SellersCompany!.Name!.Contains(request.GlobalFilterValue))
+                            .Select(s => s.ProductId).ToListAsync();
+                        data = data.Where(w => searchedExportedListId.Contains(w.Id) 
+                                               || searchedImportedListId.Contains(w.Id));
+                        break;
+                    }
                 }
             }
             if (!string.IsNullOrEmpty(request.SearchString))

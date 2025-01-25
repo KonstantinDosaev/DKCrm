@@ -65,13 +65,22 @@ namespace DKCrm.Server.Services.OrderServices
                 OurEmployee = s.OurEmployee,
                 EmployeeBuyerId = s.EmployeeBuyerId,
                 OurEmployeeId = s.OurEmployeeId,
+                
+                IsAllProductsAreCollected = s.IsAllProductsAreCollected,
+                DateTimeCreated = s.DateTimeCreated,
+                DateTimeUpdate = s.DateTimeUpdate,
+                OrderIsOver = s.OrderIsOver,
+                IsDeleted = s.IsDeleted,
+                IsFullDeleted = s.IsFullDeleted,
+                OrderIsWarn = s.OrderIsWarn,
                 ApplicationOrderingProducts = s.ApplicationOrderingProducts,
                 ExportedProducts = s.ExportedProducts,
                 TransactionCurrency = s.TransactionCurrency,
                 BuyerCurrency = s.BuyerCurrency,
                 LocalCurrency = s.LocalCurrency,
                 CurrencyPercent = s.CurrencyPercent,
-                Nds = s.Nds
+                Nds = s.Nds,
+                OrderIsLock = s.OrderIsLock,
             }).FirstOrDefaultAsync(a => a.Id == id);
             await _context.SoldFromStorages.Where(w => order!.ExportedProducts!.Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
             await _context.PurchaseAtExports.Where(w => order!.ExportedProducts!.Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
@@ -90,17 +99,28 @@ namespace DKCrm.Server.Services.OrderServices
                 Number = s.Number,
                 CurrencyPercent = s.CurrencyPercent,
                 Nds = s.Nds,
-                OurCompany = s.OurCompany,OurCompanyId = s.OurCompanyId,
-                CompanyBuyer = s.CompanyBuyer,CompanyBuyerId = s.CompanyBuyerId,
-                OurEmployee = s.OurEmployee, OurEmployeeId = s.OurEmployeeId,
-                EmployeeBuyer = s.EmployeeBuyer, EmployeeBuyerId = s.EmployeeBuyerId,
+                BuyerCurrency = s.BuyerCurrency,
+                LocalCurrency = s.LocalCurrency,
+                IsAllProductsAreCollected = s.IsAllProductsAreCollected,
                 DateTimeCreated = s.DateTimeCreated,
                 DateTimeUpdate = s.DateTimeUpdate,
+                TransactionCurrency = s.TransactionCurrency, 
                 ExportedProducts = s.ExportedProducts,
+                OrderIsOver = s.OrderIsOver,
+                OurCompanyId = s.OurCompanyId, 
+                IsDeleted = s.IsDeleted,
+                IsFullDeleted = s.IsFullDeleted,
+                CompanyBuyerId = s.CompanyBuyerId,
+                OrderIsLock = s.OrderIsLock,
+                OrderIsWarn = s.OrderIsWarn,
+                
                 ExportedOrderStatus = s.ExportedOrderStatus,
                 ExportedOrderStatusExported = s.ExportedOrderStatusExported,
-               IsAllProductsAreCollected = s.IsAllProductsAreCollected,
-
+               OurCompany = s.OurCompany,
+               CompanyBuyer = s.CompanyBuyer,
+               OurEmployee = s.OurEmployee, OurEmployeeId = s.OurEmployeeId,
+               EmployeeBuyer = s.EmployeeBuyer, EmployeeBuyerId = s.EmployeeBuyerId,
+               ApplicationOrderingProducts = s.ApplicationOrderingProducts,
                 
             });
             data = data.Where(w => (
@@ -108,10 +128,31 @@ namespace DKCrm.Server.Services.OrderServices
                     accessedComponents.Contains((Guid)w.CompanyBuyerId)
                     && accessCollection.First(f => f.AccessedComponentId == w.CompanyBuyerId).AccessUsersToComponent
                         .Contains(userId))))));
-            //if (request.Chapter != null && request.ChapterId != null)
-            //{
-            //    data = data.Where(o => o.ExportedOrderStatusId == request.ChapterId);
-            //}
+           
+            if (!string.IsNullOrEmpty(request.GlobalFilterValue))
+            {
+                    switch (request.GlobalFilterType)
+                    {
+                        case GlobalFilterTypes.ExportedOrder:
+                            data = data.Where(w =>
+                                w.Number != null && w.Number.ToLower().Contains(request.GlobalFilterValue.ToLower()));
+                            break;
+                        case GlobalFilterTypes.Product:
+                        {
+                            var searchedOrdersId = await _context.ExportedProducts
+                                .Where(w => w.Product!.PartNumber!.Contains(request.GlobalFilterValue))
+                                .Select(s => s.ExportedOrderId).ToListAsync();
+                            data = data.Where(w => searchedOrdersId.Contains(w.Id));
+                            break;
+                        }
+                        case GlobalFilterTypes.Company:
+                            data = data.Where(w =>
+                                w.OurCompany != null && w.OurCompany.Name.ToLower().Contains(request.GlobalFilterValue.ToLower()) ||
+                                w.CompanyBuyer != null && w.CompanyBuyer.Name.ToLower().Contains(request.GlobalFilterValue.ToLower()));
+                            break;
+                    }
+            }
+            
             var unreadAny = data.Any(wm =>
                 (_context.CommentOrders.Where(w => w.OrderId == wm.Id)
                     .Select(s => s.DateTimeUpdate).Any() && _context.LogUsersVisitToOrderComments
@@ -296,6 +337,10 @@ namespace DKCrm.Server.Services.OrderServices
                     _context.Entry(status).State = EntityState.Modified;
                 }
             }
+            if (exportedOrder.ExportedOrderStatusExported != null)
+            {
+                exportedOrder.ExportedOrderStatusExported = null;
+            }
             if (exportedOrder.ExportedProducts != null)
             {
                 foreach (var item in exportedOrder.ExportedProducts)
@@ -407,6 +452,8 @@ namespace DKCrm.Server.Services.OrderServices
                                     if (!ordersFromAddedComment.Contains(orderId))
                                     {
                                         ordersFromAddedComment.Add(orderId);
+                                        impOrder.OrderIsWarn = true;
+                                        _context.Entry(impOrder).State = EntityState.Modified;
                                         await _orderCommentsService.SaveCommentAsync(new CommentOrder()
                                         {
                                             OrderId = orderId,
@@ -427,12 +474,13 @@ namespace DKCrm.Server.Services.OrderServices
                     }
                 }
             }
-            if (statusItem!.Value == ExportOrderStatusNames.Completed)
-            {
-                orderInDb.OrderIsOver = true;
-                _context.Entry(orderInDb).State = EntityState.Modified;
-            }
             
+
+            if (statusItem!.Value == ExportOrderStatusNames.Completed)
+                orderInDb.OrderIsOver = true;
+            
+            orderInDb.OrderIsLock = statusItem.Value != ExportOrderStatusNames.BeginFormed;
+            _context.Entry(orderInDb).State = EntityState.Modified;
             return await _context.SaveChangesAsync();
         }
         public async Task<int> RemoveStatusFromOrderAsync(ExportedOrderStatusExportedOrder exportedOrderStatus)

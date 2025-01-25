@@ -18,14 +18,14 @@ namespace DKCrm.Server.Services.OrderServices
 
         public async Task<IEnumerable<ImportedProduct>> GetAsync()
         {
-            return await _context.ImportedProducts
+            return await _context.ImportedProducts.AsNoTracking()
                 .Include(i => i.ImportedOrder)
                 .Include(i => i.Product).IgnoreQueryFilters().AsSplitQuery().ToListAsync();
         }
         
         public async Task<ImportedProduct> GetOneAsync(Guid id)
         {
-            return await _context.ImportedProducts
+            return await _context.ImportedProducts.AsNoTracking()
                 .Include(i => i.ImportedOrder)
                 .Include(i=>i.PurchaseAtStorageList)
                 .Include(i => i.PurchaseAtExportList)
@@ -206,7 +206,10 @@ namespace DKCrm.Server.Services.OrderServices
                             _context.Entry(purchaseAtExport).State = EntityState.Deleted;
                             continue;
                         }
-                        _context.Entry(purchaseAtExport).State = EntityState.Modified;
+                        else
+                        {
+                            _context.Entry(purchaseAtExport).State = EntityState.Modified;
+                        }
                     }
                     else
                     {
