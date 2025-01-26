@@ -1,19 +1,20 @@
 ﻿@page "/product"
 @page "/product/{chapter}/{chapterid:guid}"
-@using DKCrm.Client.Components.ProductFilter
 @using DKCrm.Shared.Constants
+@using DKCrm.Client.Pages.ProductManagement.Components
 
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
-        <MudButton Variant="Variant.Filled" Size="Size.Medium" 
-                   OnClick="() => _visibleProductFilter=true" 
-                   Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
-            Фильтр
-            <MudIcon Size="@Size.Medium" Color="Color.Default" 
-                     Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
-        </MudButton>
+        <MudTooltip Text="фильтр">
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       OnClick="() => _visibleProductFilter = true"
+                       Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                <MudIcon Size="@Size.Medium" Color="Color.Default"
+                         Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
         <MudButton Variant="Variant.Filled" Size="Size.Medium"
-                   OnClick="() => _storageSettings.OpenStorageDialog()"
+                   OnClick="() => _storageSettings!.OpenStorageDialog()"
                    Style="margin-left: 1rem;" Color="Color.Default">
             Склады
             <MudIcon Size="@Size.Medium" Color="Color.Default"
@@ -41,7 +42,7 @@
 </MudPaper>
 
 <MudTable ServerData="ServerReload"
-          Dense="false"
+          Dense="true"
           Hover="true"
           ReadOnly="false"
           @bind-SelectedItems="_selectedItems"
@@ -50,12 +51,14 @@
           SelectOnRowClick="false"
           Striped="true" 
           Bordered="true" 
-          HeaderClass="mud-table-header table-head-bordered"
-          OnRowClick="RowClickEvent" T="ProductsDto" 
+          OnRowClick="RowClickEvent" T="ProductsDto"
+          AllowUnsorted="true"
+          HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
+          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.69)}px")"
           @ref="_table">
 
     <ToolBarContent>
-        <MudText Typo="Typo.h4">@(_currentCategoryName ?? "Список продуктов")</MudText>
+        <MudText Typo="Typo.h6">@(_currentCategoryName ?? "Список продуктов")</MudText>
 
 
         <MudSpacer />
@@ -68,31 +71,32 @@
 
     </ColGroup>
     <HeaderContent>
-        <MudTh><MudTableSortLabel SortLabel="category_field" T="ProductsDto">Категория</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="name_field" T="ProductsDto">Name</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="partNumber_field" T="ProductsDto">P/N</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="name_field" T="ProductsDto">Name</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="brand_field" T="ProductsDto">Производитель</MudTableSortLabel></MudTh>
-        <MudTh Style="max-width: 4rem; text-align: center">Количество
+        <MudTh><MudTableSortLabel SortLabel="category_field" T="ProductsDto">Категория</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center">Количество
             <MudIconButton Icon="@Icons.Material.Filled.FormatLineSpacing"
                            OnClick="() => _isOpenQuantityAtStorages = _isOpenQuantityAtStorages != true"></MudIconButton>
         </MudTh>
+        <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Категория">
-            @if (context.CategoryName != null)
-            {
-                @context.CategoryName
-            }
-        </MudTd>
+        <MudTd DataLabel="pn">@context.PartNumber</MudTd>
         <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Email">@context.PartNumber</MudTd>
         <MudTd DataLabel="Brand">
             @if (context.BrandName != null)
             {
                 @context.BrandName
             }
         </MudTd>
-        <MudTd Style="max-width: 4rem; text-align: center" DataLabel="Quntity">
+        <MudTd DataLabel="Категория">
+            @if (context.CategoryName != null)
+            {
+                @context.CategoryName
+            }
+        </MudTd>
+        <MudTd Style="text-align: center" DataLabel="Quntity">
             @if (context.ProductsInStorage != null)
             {
                 @if (_isOpenQuantityAtStorages)
@@ -108,7 +112,7 @@
                 }
             }
         </MudTd>
-        <MudTd Style="max-width: 2rem; text-align: center" DataLabel="Edit">
+        <MudTd Style="text-align: center" DataLabel="Edit">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenUpdateProductDialog(context.Id)"></MudIconButton>
         </MudTd>
     </RowTemplate>
@@ -119,11 +123,14 @@
         <MudText>Загрузка...</MudText>
     </LoadingContent>
     <PagerContent>
-        <MudTablePager PageSizeOptions="new int[] { 4, 10, 100, int.MaxValue }" HidePageNumber="true" RowsPerPageString="Строк на странице" />
+        <MudTablePager PageSizeOptions="new int[] { 10, 20, int.MaxValue }" Style="height: 30px;" RowsPerPageString="Строк на странице" />
     </PagerContent>
 </MudTable>
 
-<MudDrawer @bind-Open="@_visibleProductFilter" Anchor="@Anchor.Start" Elevation="1" Variant="@DrawerVariant.Temporary" Height="100VH" Width="50VW">
+<MudDrawer @bind-Open="@_visibleProductFilter"
+           Anchor="@Anchor.Start" Elevation="1" 
+           Variant="@DrawerVariant.Temporary" 
+           Height="@(WindowHeight.ToString())" Width="350px">
     <MudDrawerHeader>
         <MudText Typo="Typo.h6">Фильтр</MudText>
     </MudDrawerHeader>
@@ -143,9 +150,8 @@
 
 <StorageSettings @ref="_storageSettings"/>
 
-
-
 @code {
+    [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
     [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
     [Parameter] public Guid? ChapterId { get; set; }
@@ -210,9 +216,9 @@
     }
     private void OnFilter(FilterProductTuple filterProductTuple)
     {
-        if (filterProductTuple.ProductOptions != null 
-            || filterProductTuple.BrandIdList != null 
-            || filterProductTuple.CategoryId != null)
+        if (filterProductTuple.ProductOptions != null && filterProductTuple.ProductOptions.Count() != 0
+            || filterProductTuple.BrandIdList != null && filterProductTuple.BrandIdList.Count != 0
+            || filterProductTuple.CategoryId != null && filterProductTuple.CategoryId != Guid.Empty)
         {
             _filterIsOn = true;
         }
@@ -267,5 +273,10 @@
         background-color: #cbf0ee;
         color: white !important;
         font-weight: bold;
+    }
+    .mud-table-sticky-header * .mud-table-root .mud-table-header-fix * .mud-table-cell {
+        background-color: dodgerblue;
+        font-weight: bold;
+        color: white;
     }
 </style>

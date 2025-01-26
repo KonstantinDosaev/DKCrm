@@ -10,6 +10,14 @@
 @*<MudText Class="m-3" Typo="Typo.h4">Заказы на продажу</MudText>*@
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
+        <MudTooltip Text="фильтр">
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       OnClick="() => _visibleOrderFilter = true" Style="margin-right: 0.7rem;"
+                       Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                <MudIcon Size="@Size.Medium" Color="Color.Default"
+                         Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
         <MudTooltip Placement="Placement.Right" Text="не прочитанные комментарии">
             <MudButton Size="@Size.Medium" Style="margin-right: 0.7rem;"
                        Variant="Variant.Filled" OnClick="() => OnUnreadComments()"
@@ -25,18 +33,11 @@
                        Style="margin-right: 0.7rem;"
                        OnClick="OnHistory">
                 <MudIcon Size="@Size.Medium"
-                         Icon="@Icons.Material.Sharp.History" 
+                         Icon="@Icons.Material.Sharp.History"
                          Class="pa-0 ml-2"/>
             </MudButton>
         </MudTooltip>
-        <MudTooltip Text="фильтр">
-            <MudButton Variant="Variant.Filled" Size="Size.Medium"
-                       OnClick="() => _visibleOrderFilter = true" Style="margin-right: 0.7rem;"
-                       Color="@(_filterIsOn ? Color.Warning : Color.Default)">
-                <MudIcon Size="@Size.Medium" Color="Color.Default"
-                         Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
-            </MudButton>
-        </MudTooltip>
+
         <div style="width: 228px; margin-right: 0.7rem;">
             <MudSelect T="ExportedOrderStatus"
                        Placeholder="Статус" Value="CurrentOrderStatus"
@@ -96,7 +97,8 @@
           Striped="true"
           Bordered="true"
           AllowUnsorted="true"
-          FixedHeader="true" Height="@($"{WindowHeight-230}px")" FixedFooter="true"
+          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.69)}px")" 
+          FixedFooter="true"
           HeaderClass=" table-head-bordered mud-table-header-fix" T="ExportedOrder" @ref="_table" 
          >
     <ToolBarContent>

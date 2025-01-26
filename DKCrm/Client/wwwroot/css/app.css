@@ -149,3 +149,6 @@ a, .btn-link {
     box-shadow: rgba(100, 100, 111, 0.6) 0 7px 29px 0;
     border-radius: 6px;
 }
+.myDataPicker_filter .mud-input>input.mud-input-root-outlined, div.mud-input-slot.mud-input-root-outlined{
+    padding: 12px 14px!important;
+}

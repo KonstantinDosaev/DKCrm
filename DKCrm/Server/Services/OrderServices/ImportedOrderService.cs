@@ -226,13 +226,15 @@ namespace DKCrm.Server.Services.OrderServices
                         w.DateTimeCreated!.Value.Date <= request.FilterTuple.CreateDateLast.Value.Date);
                 }
 
-                if (request.FilterTuple.UpdateDateFirst != null && request.FilterTuple.UpdateDateLast != null)
+                if (request.FilterTuple.UpdateDateFirst != null)
                 {
                     data = data.Where(w =>
-                        w.DateTimeUpdate!.Value.Date >= request.FilterTuple.UpdateDateFirst.Value.Date
-                        && w.DateTimeUpdate.Value.Date <= request.FilterTuple.UpdateDateLast.Value.Date);
+                        w.DateTimeUpdate!.Value.Date >= request.FilterTuple.UpdateDateFirst.Value.Date);
                 }
-
+                if (request.FilterTuple.UpdateDateLast != null)
+                {
+                    data = data.Where(w => w.DateTimeUpdate!.Value.Date <= request.FilterTuple.UpdateDateLast.Value.Date);
+                }
                 if (request.FilterTuple.OurCompanies != null && request.FilterTuple.OurCompanies.Any())
                 {
                     data = data.Where(o => request.FilterTuple.OurCompanies.Contains((Guid)o.OurCompanyId!));

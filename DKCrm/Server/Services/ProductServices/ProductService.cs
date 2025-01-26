@@ -47,9 +47,12 @@ namespace DKCrm.Server.Services.ProductServices
                 Description = s.Description,
                 CategoryId = s.CategoryId,
                 BrandId = s.BrandId,
+                ExportedProducts = s.ExportedProducts, 
+                ImportedProducts = s.ImportedProducts, DateTimeCreated = s.DateTimeCreated,
+                DateDelivery = s.DateDelivery,
             }).FirstOrDefaultAsync(f => f.Id == id);
-            if (product?.Category != null)
-                await _context.Entry(product.Category).Collection(c => c.CategoryOptions!).LoadAsync();
+            // if (product?.Category != null)
+            //     await _context.Entry(product.Category).Collection(c => c.CategoryOptions!).LoadAsync();
             return product ?? throw new InvalidOperationException();
         }
 
@@ -63,6 +66,8 @@ namespace DKCrm.Server.Services.ProductServices
                 Storage = s.Storage,
                 BrandName = s.Brand!.Name,
                 CategoryName = s.Category!.Name,
+               // Brand = s.Brand,
+               // Category = s.Category,
                 PartNumber = s.PartNumber,
                 CategoryId = s.CategoryId,
                 BrandId = s.BrandId,
@@ -70,6 +75,7 @@ namespace DKCrm.Server.Services.ProductServices
                 ExportedProducts = s.ExportedProducts, 
                 ImportedProducts = s.ImportedProducts,
             }).Select(s => s);
+
             if (request.Chapter != null && request.ChapterId != null)
             {
                 switch (request.Chapter)

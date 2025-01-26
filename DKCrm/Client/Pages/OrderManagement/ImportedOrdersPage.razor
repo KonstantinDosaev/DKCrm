@@ -10,25 +10,27 @@
     AddToOrderModeCallback="SetAddToOrderMode" MergeInOrderModeCallback="SetMergeToOrderMode" />
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
+        <MudTooltip Text="фильтр">
+            <MudButton Variant="Variant.Filled"
+                       Size="Size.Medium"
+                       OnClick="() => _visibleOrderFilter = true"
+                       Style="margin-right: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    Style="margin-right: 1rem;"
                    OnClick="OnHistory">
             @(!_showHistoryOrders ? "История" : "Текущие")
-            <MudIcon Size="@Size.Medium" 
-                     Icon="@(_showHistoryOrders ? Icons.Material.Sharp.Article : Icons.Material.Sharp.History)" Class="pa-0 ml-2" />
+            <MudIcon Size="@Size.Medium"
+                     Icon="@(_showHistoryOrders ? Icons.Material.Sharp.Article : Icons.Material.Sharp.History)" Class="pa-0 ml-2"/>
         </MudButton>
-        <MudButton Variant="Variant.Filled" 
-                   Size="Size.Medium" 
-                   OnClick="() => _visibleOrderFilter=true" 
-                   Style="margin-right: 1rem;" Color="@(_filterIsOn?Color.Warning : Color.Default)">
-            Фильтр
-            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2" />
-        </MudButton>
+
         <div style="width: 228px; margin-right: 1rem;">
             <MudSelect T="ImportedOrderStatus"
-                       Placeholder="Выбрать статус" 
-                       Value="CurrentOrderStatus" 
+                       Placeholder="Выбрать статус"
+                       Value="CurrentOrderStatus"
                        ValueChanged="OnStatusFilter"
                        Variant="Variant.Outlined" Dense="true" Style=""
                        Class="select-button"
@@ -46,7 +48,7 @@
         <div style="width: 228px; margin-right: 0.5rem">
             <MudSelect T="string"
                        MultiSelection="true"
-                       @bind-SelectedValues="_currencyDisplay"   
+                       @bind-SelectedValues="_currencyDisplay"
                        MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
                        Variant="Variant.Outlined" Dense="true"
                        Class="select-button">
@@ -68,7 +70,7 @@
     </div>
 </MudPaper>
 <MudTable ServerData="ServerReload"
-          Dense="false"
+          Dense="true"
           Hover="true"
           ReadOnly="false"
           SelectOnRowClick="false"
@@ -76,7 +78,7 @@
           Bordered="true"
           AllowUnsorted="true"
           HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
-          FixedHeader="true" Height="@($"{WindowHeight-290}px")"
+          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.61)}px")"
          T="ImportedOrder"
           @ref="_table">
     <ToolBarContent>
@@ -241,7 +243,7 @@
 <MudDrawer @bind-Open="@_visibleOrderFilter" Anchor="@Anchor.Start"
            Elevation="1" 
            Variant="@DrawerVariant.Temporary"  
-           Height="100VH" Width="350px" 
+           Height="@(WindowHeight.ToString())" Width="350px" 
            Class="px-3" >
     <MudDrawerHeader Class="d-flex align-items-center justify-content-between p-0">
         <MudText Typo="Typo.h5">Фильтр</MudText>
@@ -277,11 +279,12 @@
     Id="Order.Id"/>
     
 @code {
+    [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
     [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
     [Parameter] public string? Chapter { get; set; }
     [Parameter] public Guid ChapterId { get; set; }
-    [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
+   
     private NotCompleteExportedProductsComponent? _completeExportedProductsComponent = null!;
     private Guid OrderId { get; set; }
     private IEnumerable<string> _currencyDisplay = new HashSet<string>() { "Сделки" };
