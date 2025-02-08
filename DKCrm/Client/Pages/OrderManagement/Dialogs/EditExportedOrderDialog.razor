@@ -1,7 +1,8 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
 @using DKCrm.Shared.Models.OrderModels
 
-<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
+<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" 
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
     <TitleContent>
         <div style="text-align: right">
             <MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
@@ -25,7 +26,7 @@
     [Parameter]public bool VisibleDialog { get; set; }
     [Parameter]public ExportedOrder? Order { get; set; }
     [Parameter]public Guid? Id { get; set; }
-    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback RefreshParentItem { get; set; }
     [Parameter] public EventCallback Close { get; set; }
     [Parameter] public ApplicationOrderingProducts? ApplicationOrderingProduct { get; set; }
 
@@ -43,7 +44,7 @@
         if (await ExportedOrderManager.UpdateAsync(Order!))
         {
             _snackBar.Add("Данные обновлены");
-            await RefreshProductList.InvokeAsync();
+            await RefreshParentItem.InvokeAsync();
             await CloseClick();
             VisibleDialog = false;
         }

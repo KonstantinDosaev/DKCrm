@@ -104,18 +104,25 @@ namespace DKCrm.Server.Services.OrderServices
             {
                 if (request.FilterTuple.InWork != null)
                 {
-                    data = request.FilterTuple.InWork == true ? data.Where(w => w.InWork == true) : data.Where(w => w.InWork == false);
+                    data = request.FilterTuple.InWork == true ? data.Where(w => w.InWork == true)
+                        : data.Where(w => w.InWork == false);
                 }
-
-                if (request.FilterTuple.CreateDateFirst != null && request.FilterTuple.CreateDateLast != null)
+                
+                if (request.FilterTuple.CreateDateFirst != null)
                 {
-                    data = data.Where(w => w.DateTimeCreated!.Value.Date >= request.FilterTuple.CreateDateFirst.Value.Date
-                                           && w.DateTimeCreated.Value.Date <= request.FilterTuple.CreateDateLast.Value.Date);
+                    data = data.Where(w => w.DateTimeCreated!.Value.Date >= request.FilterTuple.CreateDateFirst.Value.Date);
                 }
-                if (request.FilterTuple.UpdateDateFirst != null && request.FilterTuple.UpdateDateLast != null)
+                if (request.FilterTuple.CreateDateLast != null)
                 {
-                    data = data.Where(w => w.DateTimeTake!.Value.Date >= request.FilterTuple.UpdateDateFirst.Value.Date
-                                           && w.DateTimeTake.Value.Date <= request.FilterTuple.UpdateDateLast.Value.Date);
+                    data = data.Where(w => w.DateTimeCreated!.Value.Date <= request.FilterTuple.CreateDateLast.Value.Date);
+                }
+                if (request.FilterTuple.UpdateDateFirst != null)
+                {
+                    data = data.Where(w => w.DateTimeUpdate!.Value.Date >= request.FilterTuple.UpdateDateFirst.Value.Date);
+                }
+                if (request.FilterTuple.UpdateDateLast != null)
+                {
+                    data = data.Where(w => w.DateTimeUpdate!.Value.Date <= request.FilterTuple.UpdateDateLast.Value.Date);
                 }
             }
 

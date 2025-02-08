@@ -1,0 +1,262 @@
+@using BlazorBootstrap
+@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Models.ReportModels
+@using DKCrm.Shared.Requests.ReportService
+
+<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" 
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <MudTextField Clearable="true" T="string" @bind-Value="@PartNumber" Placeholder="Парт-номер"
+                          Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 300px;"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium" Class="mt-0 mr-2"></MudTextField>
+            <div style="width: 228px; margin-right: 1rem">
+                <MudSelect T="Guid" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
+                           MultiSelection="true"
+                           @bind-SelectedValues="_selectedCompanies"
+                           Variant="Variant.Outlined" Dense="true"
+                           Class="select-button">
+                    @if (_companyList != null)
+                    {
+                        foreach (var company in _companyList)
+                        {
+                            <MudSelectItem T="Guid" Value="@company.Id">@company.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </div>
+            <div style="width: 228px; margin-right: 1rem">
+                <MudSelect T="int"
+                           MultiSelection="true"
+                           @bind-SelectedValues="_selectedYears"
+                           Variant="Variant.Outlined" Dense="true"
+                           Class="select-button">
+                    @foreach (var dtms in _dateTimes)
+                    {
+                        <MudSelectItem T="int" Value="@dtms">@dtms</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Size="Size.Medium"
+                       Disabled="@(!_selectedCompanies.Any())"
+                       OnClick="ShowChart"
+                       Style="margin-right: 1rem;"
+                       Color="Color.Tertiary">
+                Применить
+            </MudButton>
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+@if (_visibleChart)
+{
+<BarChart @ref="_barChart" Width="500" Height="300"/>
+
+    <div class="mt-5">
+        <div class="d-flex">
+      
+            <MudButton Variant="Variant.Filled"
+                       Size="Size.Medium"
+                       OnClick="@(()=> VisibleDialog = !VisibleDialog)"
+                       Style="margin-right: 1rem;"
+                       Color="Color.Tertiary">
+                Настроить
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Size="Size.Medium"
+                       OnClick="LoadData"
+                       Style="margin-right: 1rem;"
+                       Color="Color.Tertiary">
+                Расчитать
+                <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Refresh" Class="pa-0"/>
+            </MudButton>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter]public EventCallback<bool> VisibleDialogChanged { get; set; }
+    [Parameter] public string? TypeOrder { get; set; }
+    [Parameter] public string PartNumber { get; set; } = null!;
+    private List<string> _companyLabels = new ();
+    List<IChartDataset> _datasets = new ();
+    private List<int> _dateTimes = [ DateTime.Now.Year, ];
+    private IEnumerable<int> _selectedYears = new HashSet<int>() { DateTime.Now.Year };
+    private IEnumerable<Guid> _selectedCompanies = new HashSet<Guid>() {};
+    private List<Company>? _companyList;
+    //private List<ExportedProduct> _listData;
+    private FilterExportedProductTuple _filterOrderTuple = new FilterExportedProductTuple();
+    private BarChart _barChart = null!;
+    private BarChartOptions _barChartOptions = default!;
+    private ChartData _chartData = default!;
+
+
+    private bool _visibleChart;
+    private bool _chartIsInit;
+    protected override async Task OnInitializedAsync()
+    {
+        if (GlobalFilterType == (int)GlobalFilterTypes.Product)
+            PartNumber = GlobalFilterValue!;
+        
+        var companyType = TypeOrder == nameof(ExportedOrder) ? TypeCompanyNames.Customers : TypeCompanyNames.Suppliers;
+   
+        _companyList = await CompanyManager.GetCompaniesByTypeAsync(companyType);
+        _companyList = _companyList.OrderBy(o => o.Name).ToList();
+
+
+    }
+
+    private async Task ShowChart()
+    {
+        _visibleChart = true;
+        await CloseClick();
+        await LoadData();
+        await _barChart.InitializeAsync(_chartData, _barChartOptions);
+        _chartIsInit = true;
+
+        StateHasChanged();
+        
+    }
+    private async Task LoadData()
+    { 
+        var response = await ReportManager.GetProductFromYearByCompanyAtChartAsync(
+            new GetProductInPeriodByCompanyAtChartRequest
+            {
+                TypeOrder = TypeOrder,
+                PartNumber = PartNumber, 
+                OrderIsOver = false, 
+                CompaniesIds = _selectedCompanies.ToList(),
+                PeriodMonthsYearNumbers = _selectedYears.Select(s=> new DateTime(s,1 ,1, 0,0,0))
+                    .OrderBy(o=>o.Year).ToList()
+            });
+      
+        var datasets = new List<IChartDataset>();
+        
+        var getProductReportByCompanyAtChartResponses = response as GetProductReportByCompanyAtChartResponse[] ?? response.ToArray();
+        var datesYear =getProductReportByCompanyAtChartResponses.Select(s=>s.PeriodMonthYearNumber.Year.ToString());
+            Equalization(getProductReportByCompanyAtChartResponses);
+            var tt = getProductReportByCompanyAtChartResponses.SelectMany(s => s.ProductsInPeriodList)
+                .GroupBy(g => g.CompanyName).ToList();
+            var countColor = tt.Count();
+            foreach (var gr in tt)
+            {
+                datasets.Add(GetBarChartDataset(gr,ref countColor));
+            }
+
+        _companyLabels = (datesYear.ToList());
+        _companyLabels = _companyLabels.Distinct().ToList();
+        _datasets = (datasets);
+        _chartData = new ChartData
+        {
+            Labels = _companyLabels, 
+            Datasets = _datasets
+        };
+        _barChartOptions = new BarChartOptions
+        {
+            Responsive = true, 
+            Interaction = new Interaction { Mode = InteractionMode.Index }
+        };
+        if (_dateTimes.Count() == 1)
+        {
+            var dtTemp = getProductReportByCompanyAtChartResponses.FirstOrDefault()!.OldsYears.Year;
+            var listDtTemp = new List<int>(){dtTemp};
+            while (dtTemp != DateTime.Now.Year)
+            {
+                dtTemp++;
+                listDtTemp.Add(dtTemp);
+            }
+
+            _dateTimes = listDtTemp;
+        }
+
+        if (_chartIsInit)
+            await _barChart.UpdateAsync(_chartData, _barChartOptions);
+    }
+    private BarChartDataset GetBarChartDataset(IGrouping<string,ProductInPeriodByCompanyAtChartDto> itemsInPer, ref int count)
+    {
+        var c = ColorUtility.CategoricalTwelveColors[count].ToColor();
+       
+        count += 1; 
+        
+    
+
+        return new BarChartDataset()
+        {
+            Label = itemsInPer.Key,
+            Data = itemsInPer.Select(s=>(double?)s.SumQuantity).ToList(),
+            BackgroundColor = new List<string> { c.ToRgbString() },
+            BorderColor = new List<string> { c.ToRgbString() },
+            BorderWidth = new List<double> { 0 },
+        };
+    }
+
+    void Equalization(IEnumerable<GetProductReportByCompanyAtChartResponse> resp)
+    {
+        var getProductReportByCompanyAtChartResponses = resp.ToList();
+        var maxResp = getProductReportByCompanyAtChartResponses.SelectMany(s => s.ProductsInPeriodList)
+            .Select(s=>s.CompanyName).Distinct().ToList();
+        foreach (var rItem in getProductReportByCompanyAtChartResponses)
+        {
+            var company = rItem.ProductsInPeriodList.Select(s => s.CompanyName);
+            var ex = maxResp.Except(company).ToList();
+            if (ex.Count() != 0)
+            {
+                foreach (var exItem in ex)
+                {
+                    var tt = rItem.ProductsInPeriodList.FirstOrDefault();
+                    if (tt != null)
+                        rItem.ProductsInPeriodList.Add(new ProductInPeriodByCompanyAtChartDto()
+                        {
+                            CompanyName = exItem,
+                            ProductName = tt.ProductName, ProductId = tt.ProductId, SumQuantity = 0, MonthYearPeriodNumber = tt.MonthYearPeriodNumber
+                        });
+                }
+            }
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _visibleChart)
+        {
+            await _barChart.InitializeAsync(_chartData, _barChartOptions);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    private string GetMultiSelectionText(List<string> selectedValues)
+    {
+        var result = "";
+        foreach (var item in selectedValues)
+        {
+            result +=_companyList!.FirstOrDefault(f => f.Id.ToString() == item)?.Name +", " ;
+        }
+
+        return result;
+    }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+}<style>
+    .select-button {
+        margin: 0 !important;
+    }
+    .select-button .mud-input-slot.mud-input-root-outlined {
+        padding: 0.67rem 0.8rem !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+
+    }
+</style>

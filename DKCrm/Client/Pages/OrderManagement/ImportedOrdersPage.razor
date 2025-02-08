@@ -18,54 +18,79 @@
                 <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
             </MudButton>
         </MudTooltip>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Style="margin-right: 1rem;"
-                   OnClick="OnHistory">
-            @(!_showHistoryOrders ? "История" : "Текущие")
-            <MudIcon Size="@Size.Medium"
-                     Icon="@(_showHistoryOrders ? Icons.Material.Sharp.Article : Icons.Material.Sharp.History)" Class="pa-0 ml-2"/>
-        </MudButton>
-
-        <div style="width: 228px; margin-right: 1rem;">
-            <MudSelect T="ImportedOrderStatus"
-                       Placeholder="Выбрать статус"
-                       Value="CurrentOrderStatus"
-                       ValueChanged="OnStatusFilter"
-                       Variant="Variant.Outlined" Dense="true" Style=""
-                       Class="select-button"
-                       OnOpen="LoadStatusList" ToStringFunc="status => status.Value"
-                       Clearable OnClearButtonClick="ResetStatusFilter">
-                @if (StatusList != null)
-                {
-                    foreach (var status in StatusList)
-                    {
-                        <MudSelectItem T="ImportedOrderStatus" Value="@(status)">@status.Value</MudSelectItem>
-                    }
-                }
-            </MudSelect>
-        </div>
-        <div style="width: 228px; margin-right: 0.5rem">
-            <MudSelect T="string"
-                       MultiSelection="true"
-                       @bind-SelectedValues="_currencyDisplay"
-                       MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
-                       Variant="Variant.Outlined" Dense="true"
-                       Class="select-button">
-                <MudSelectItem T="string" Value="@("Продавца")">Продавца</MudSelectItem>
-                <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
-                <MudSelectItem T="string" Value="@("Локальная")">Локальная</MudSelectItem>
-            </MudSelect>
-        </div>
+        <MudTooltip Text="история">
+            <MudButton Variant="Variant.Filled"
+                       Color="@(_showHistoryOrders ? Color.Primary : Color.Default)"
+                       Style="margin-right: 0.7rem;"
+                       OnClick="OnHistory">
+                <MudIcon Size="@Size.Medium"
+                         Icon="@Icons.Material.Sharp.History"
+                         Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
+        <MudMenu>
+            <ActivatorContent>
+                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings"
+                               Color="@(CurrentOrderStatus != null ? Color.Warning : Color.Default)"/>
+            </ActivatorContent>
+            <ChildContent>
+                <div style="width: 228px; margin: 0.2rem 0;">
+                    <MudSelect T="ImportedOrderStatus"
+                               Placeholder="Выбрать статус"
+                               Value="CurrentOrderStatus"
+                               ValueChanged="OnStatusFilter"
+                               Variant="Variant.Outlined" Dense="true" Style=""
+                               Class="select-button"
+                               OnOpen="LoadStatusList" ToStringFunc="status => status.Value"
+                               Clearable OnClearButtonClick="ResetStatusFilter">
+                        @if (StatusList != null)
+                        {
+                            foreach (var status in StatusList)
+                            {
+                                <MudSelectItem T="ImportedOrderStatus" Value="@(status)">@status.Value</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </div>
+                <div style="width: 228px; margin-bottom: 0.2rem">
+                    <MudSelect T="string"
+                               MultiSelection="true"
+                               @bind-SelectedValues="_currencyDisplay"
+                               MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
+                               Variant="Variant.Outlined" Dense="true"
+                               Class="select-button">
+                        <MudSelectItem T="string" Value="@("Продавца")">Продавца</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Локальная")">Локальная</MudSelectItem>
+                    </MudSelect>
+                </div>
+            </ChildContent>
+        </MudMenu>
+       
     </div>
-    <div>
-        <MudButton Variant="Variant.Filled" 
+    <div class="d-flex">
+        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
+                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 300px;"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium" Class="mt-0 mr-2"></MudTextField>
+
+        <div class="mr-2">
+            <MudSelect Variant="Variant.Outlined" Style=""
+                       Class="select-button" T="string"
+                       @bind-Value="SelectedOption">
+                <MudSelectItem Value="@(SearchChapterNames.OrderNumber)">по номеру заказа</MudSelectItem>
+                <MudSelectItem Value="@(SearchChapterNames.CompanyName)">по компании</MudSelectItem>
+                <MudSelectItem Value="@(SearchChapterNames.ProductPartNumber)">по парт-номеру</MudSelectItem>
+            </MudSelect>
+        </div>
+        <MudButton Variant="Variant.Filled"
                    Size="Size.Medium"
                    OnClick="() => _visibleAddOrderDialog = true"
-                   Style="margin-right: 1rem;" 
+                   Style="margin-right: 1rem;"
                    Color="Color.Tertiary">
             Добавить заказ
-            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0" />
+            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0"/>
         </MudButton>
     </div>
 </MudPaper>
@@ -78,25 +103,9 @@
           Bordered="true"
           AllowUnsorted="true"
           HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
-          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.61)}px")"
+          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.70)}px")"
          T="ImportedOrder"
           @ref="_table">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Список заказов: @(_showHistoryOrders ? "История" : "Текущие")</MudText>
-        <MudSpacer/>
-
-        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
-                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0 7px 29px 0; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.5rem;"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0 ml-2" Value="_searchString"></MudTextField>
-
-        <div>
-            <MudSelect Style="min-width: 14rem" Class="ml-2" T="string" @bind-Value="SelectedOption">
-                <MudSelectItem Value="@(SearchChapterNames.CompanyName)">по компании</MudSelectItem>
-                <MudSelectItem Value="@(SearchChapterNames.ProductPartNumber)">по парт-номеру</MudSelectItem>
-            </MudSelect>
-        </div>
-    </ToolBarContent>
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh><MudTableSortLabel SortLabel="number_field" T="ImportedOrder">Номер заказа</MudTableSortLabel></MudTh>
@@ -106,8 +115,8 @@
         <MudTh>Поставщик
             <MudTableSortLabel Enabled="true" SortLabel="conterCompany_field" T="ImportedOrder"></MudTableSortLabel>
         </MudTh>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="create_field" T="ImportedOrder">Дата создания</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortLabel="update_field" T="ImportedOrder">Дата обновления</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="create_field" T="ImportedOrder">Дата создания</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending"  SortLabel="update_field" T="ImportedOrder">Дата обновления</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status_field" T="ImportedOrder">Статус</MudTableSortLabel></MudTh>
         <MudTh><WarningOrderCommentComponent 
                    TypeOrder="@typeof(ImportedOrder).ToString()"/></MudTh>
@@ -198,12 +207,12 @@
             </div>
         </MudTd>
         <MudTd DataLabel="">
-            <MudIconButton 
+            @*<MudIconButton 
                 Size="@Size.Medium" 
                 OnClick="() => OpenUpdateOrderDialog(context)" 
                 Color="Color.Default" 
                 Icon="@Icons.Material.Sharp.Edit" 
-                Class="pa-0 ml-2"/>
+                Class="pa-0 ml-2"/>*@
             <MudIconButton Size="@Size.Medium" 
                            OnClick="() => OpenOrderComments(context.Id)" 
                            Color="Color.Default" 
@@ -228,13 +237,18 @@
                 <td colspan="8" style="text-align: center">
                     <MudCard Style="background: gainsboro;" Elevation="25">
                         <MudCardContent Class="pa-1">
-                            <ImportedOrderDetailsComponent Id="OrderId" CurrencyDisplay="_currencyDisplay" />
+                            <ImportedOrderDetailsComponent 
+                                RefreshParentItem="() => _table!.ReloadServerData()" 
+                                Id="OrderId" CurrencyDisplay="_currencyDisplay" />
                         </MudCardContent>
                     </MudCard>
                 </td>
             </MudTr>
         }
     </ChildRowContent>
+    <NoRecordsContent>
+        <MudText>Нет данных в списке</MudText>
+    </NoRecordsContent>
     <PagerContent>
         <MudTablePager PageSizeOptions="new [] { 10, 20 }" RowsPerPageString="@(" ")" Style="height: 30px;"/>
     </PagerContent>
@@ -273,10 +287,12 @@
 <CreateImportedOrderDialog
     @bind-VisibleDialog="_visibleAddOrderDialog"
                            RefreshProductList="() => _table!.ReloadServerData()" />
+@*
 <EditImportedOrderDialog
     @bind-VisibleDialog="_visibleUpdateOrderDialog"
     RefreshProductList="() => _table!.ReloadServerData()"
     Id="Order.Id"/>
+    *@
     
 @code {
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
@@ -296,7 +312,7 @@
 
     private MudTable<ImportedOrder>? _table;
     private string? _searchString;
-    public string? SelectedOption { get; set; } = SearchChapterNames.CompanyName;
+    public string? SelectedOption { get; set; } = SearchChapterNames.ProductPartNumber;
     private FilterOrderTuple _filterOrderTuple= new FilterOrderTuple();
     //private string _widthCommentForOrderDriver = "350px";
 
@@ -314,6 +330,10 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadStatusList();
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_table != null) await _table.ReloadServerData();
     }
     private void MovingProductToOrder(ImportedOrder order)
     {

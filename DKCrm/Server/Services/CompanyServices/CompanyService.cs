@@ -3,9 +3,12 @@ using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces;
 using DKCrm.Server.Interfaces.CompanyInterfaces;
 using DKCrm.Shared.Constants;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
+using DKCrm.Shared.Models.Products;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor;
 using OpenXmlPowerTools;
 
 namespace DKCrm.Server.Services.CompanyServices
@@ -95,7 +98,114 @@ namespace DKCrm.Server.Services.CompanyServices
 
             return company ?? throw new InvalidOperationException();
         }
+        public async Task<SortPagedResponse<Company>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterCompanyTuple> request, ClaimsPrincipal user)
+        {
+            var userId = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            if (userId == null) return new SortPagedResponse<Company>();
+            var accessCollection =  _context.AccessRestrictions;
+            var accessedComponents = accessCollection.Select(s => s.AccessedComponentId);
+            var data =  _context.Companies.AsNoTracking().Select(s => new Company()
+            {
+                Id = s.Id,
+                ActualAddress = s.ActualAddress,
+                ActualAddressId = s.ActualAddressId,
+                Name = s.Name,
+                Director = s.Director,
+                TagsCompanies = s.TagsCompanies,
+                CompanyTypeId = s.CompanyTypeId,
+                FnsRequestId = s.FnsRequestId,
+                CompanyType = s.CompanyType,
+                Employees = s.Employees,
+                Inn = s.Inn, 
+                Phone = s.Phone,
+                Email = s.Email,
+                PhoneAdditional = s.PhoneAdditional,
+                EmailAdditional = s.EmailAdditional,
+            });
+            data = data.Where(w => (
+                ((!accessedComponents.Contains((Guid)w.Id) || (
+                    accessedComponents.Contains((Guid)w.Id)
+                    && accessCollection.First(f => f.AccessedComponentId == w.Id).AccessUsersToComponent
+                        .Contains(userId))))));
+            if (!string.IsNullOrEmpty(request.GlobalFilterValue))
+            {
+                switch (request.GlobalFilterType)
+                {
+                    case GlobalFilterTypes.Company:
+                        data = data.Where(w => w.Name.ToLower().Contains(request.GlobalFilterValue.ToLower()));
+                        break;
+                    /*case GlobalFilterTypes.ExportedOrder:
+                    {
+                        var searchedListId = await _context.ExportedProducts
+                            .Where(w => w.ExportedOrder != null && w.ExportedOrder.Number!.Contains(request.GlobalFilterValue))
+                            .Select(s => s.ProductId).ToListAsync();
+                        data = data.Where(w => searchedListId.Contains(w.Id));
+                        break;
+                    }
+                    case GlobalFilterTypes.ImportedOrder:
+                    {
+                        var searchedListId = await _context.ImportedProducts
+                            .Where(w => w.ImportedOrder != null && w.ImportedOrder.Number!.Contains(request.GlobalFilterValue))
+                            .Select(s => s.ProductId).ToListAsync();
+                        data = data.Where(w => searchedListId.Contains(w.Id));
+                        break;
+                    }*/
+                }
+            }
+            if (!string.IsNullOrEmpty(request.SearchString))
+            {
+                request.SearchString = request.SearchString.Trim().ToLower();
+                data = data.Where(w =>  (w.Name.ToLower().Contains(request.SearchString)
+                                                              ||w.Director!.ToLower().Contains(request.SearchString))||
+                                       w.ActualAddress!.City.ToLower().Contains(request.SearchString) 
+                                       || w.ActualAddress.Country.ToLower().Contains(request.SearchString));
+            }
 
+            if (request.FilterTuple != null)
+            {
+                if (request.FilterTuple.CompanyTypeId != null)
+                {
+                    data = data.Where(o => o.CompanyTypeId == request.FilterTuple.CompanyTypeId);
+                }
+                /*if (request.FilterTuple.CategoryId != null && request.FilterTuple.CategoryId != Guid.Empty && request.Chapter != ProductFromChapterNames.Category)
+                {
+                    data = data.Where(o => o.CategoryId == request.FilterTuple.CategoryId);
+                }
+                if (request.FilterTuple.BrandIdList != null && request.FilterTuple.BrandIdList.Any() && request.Chapter != ProductFromChapterNames.Brand)
+                {
+                    data = data.Where(o => request.FilterTuple.BrandIdList.Contains((Guid)o.BrandId!));
+                }
+                if (request.FilterTuple.ProductOptions != null && request.FilterTuple.ProductOptions.Any())
+                {
+                    var productsId = _context.ProductOptions
+                        .Where(w => request.FilterTuple.ProductOptions.Contains(w.Id))
+                        .Select(o => o.ProductId).Distinct();
+                    data = data.Where(w => productsId.Contains(w.Id));
+                }*/
+            }
+
+            var totalItems = data.Count();
+
+            switch (request.SortLabel)
+            {
+                case "name_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Name);
+                    break;
+                case "director_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.Director);
+                    break;
+                case "country_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.ActualAddress!.Country);
+                    break;
+                case "city_field":
+                    data = data.OrderByDirection((SortDirection)request.SortDirection!, o => o.ActualAddress!.City);
+                    break;
+            }
+            data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
+
+            return new SortPagedResponse<Company>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() };
+
+        }
         public async Task<Guid> PostAsync(Company company)
         {
             _context.Add(company);

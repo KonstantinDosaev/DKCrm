@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Server.Interfaces.CompanyInterfaces
@@ -8,6 +9,9 @@ namespace DKCrm.Server.Interfaces.CompanyInterfaces
      Task<IEnumerable<Company>> GetAsync(ClaimsPrincipal user);
      Task<IEnumerable<Company>> GetCompaniesByTypeAsync(string companyType,ClaimsPrincipal user);
      Task<Company> GetAsync(Guid id, ClaimsPrincipal user);
+
+     Task<SortPagedResponse<Company>> GetBySortPagedSearchChapterAsync(
+         SortPagedRequest<FilterCompanyTuple> request, ClaimsPrincipal user);
      Task<Guid> PostAsync(Company company);
      Task<Guid> PutAsync(Company company);
      Task<int> PutRangeAsync(IEnumerable<Company> companies);

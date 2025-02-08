@@ -291,8 +291,9 @@ namespace DKCrm.Server.Services.OrderServices
         {
 
             exportedOrder.DateTimeCreated = DateTime.Now;
+            exportedOrder.DateTimeUpdate = DateTime.Now;
             var count = _context.ExportedOrders.Count(w => w.DateTimeCreated!.Value.Date == exportedOrder.DateTimeCreated!.Value.Date);
-            exportedOrder.Number = (exportedOrder.DateTimeCreated!.Value.ToString("ddMMyyyy")) + (count + 1);
+            exportedOrder.Number = (exportedOrder.DateTimeCreated!.Value.ToString("yyyyMMdd")) + (count + 1);
             _context.Entry(exportedOrder).State = EntityState.Added;
 
             //if (exportedOrder.ExportedOrderStatus != null)

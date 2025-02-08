@@ -2,6 +2,7 @@
 @page "/product/{chapter}/{chapterid:guid}"
 @using DKCrm.Shared.Constants
 @using DKCrm.Client.Pages.ProductManagement.Components
+@using DKCrm.Client.Components.CategoryDrawer
 
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
@@ -13,6 +14,8 @@
                          Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
             </MudButton>
         </MudTooltip>
+        <MudButton Variant="Variant.Filled" Style="margin-left: 1rem;"
+                   OnClick="@(() =>_categoryDrawerRef!.OpenCategoryDrawer())">Категории</MudButton>
         <MudButton Variant="Variant.Filled" Size="Size.Medium"
                    OnClick="() => _storageSettings!.OpenStorageDialog()"
                    Style="margin-left: 1rem;" Color="Color.Default">
@@ -22,8 +25,12 @@
                      Class="pa-0 ml-2"/>
         </MudButton>
     </div>
-    <div>
-        
+    <div class="d-flex">
+        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
+                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; margin-left: 1rem; width: 300px;"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" 
+                      IconSize="Size.Medium" Class="mt-0"></MudTextField>
         <MudButton Variant="Variant.Filled" Size="Size.Medium"
                    OnClick="()=> _visibleCreatedProductDialog =true" Style="margin-left: 1rem;"
                    Color="Color.Tertiary">
@@ -31,7 +38,7 @@
             <MudIcon Size="@Size.Medium" Color="Color.Default"
                      Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
         </MudButton>
-        @if (_selectedItems.Any())
+        @if (_selectedItemsId.Any())
         {
             <MudButton Variant="Variant.Filled" 
                        StartIcon="@Icons.Material.Filled.Delete" 
@@ -45,32 +52,24 @@
           Dense="true"
           Hover="true"
           ReadOnly="false"
-          @bind-SelectedItems="_selectedItems"
+          
           ApplyButtonPosition="@_applyButtonPosition"
-          MultiSelection="true"
           SelectOnRowClick="false"
           Striped="true" 
           Bordered="true" 
           OnRowClick="RowClickEvent" T="ProductsDto"
           AllowUnsorted="true"
           HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
-          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.69)}px")"
+          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.78)}px")"
           @ref="_table">
-
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">@(_currentCategoryName ?? "Список продуктов")</MudText>
-
-
-        <MudSpacer />
-        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
-                      Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;border-radius: 6px;padding: 0.5rem; margin-bottom: 0.5rem"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-    </ToolBarContent>
     <ColGroup>
 
     </ColGroup>
     <HeaderContent>
+        <MudTh><MudCheckBox Value="@(_selectedItemsId.Count!= 0)"
+                            Dense="true" 
+                            ValueChanged="(s)=>CheckboxAllChange(s)"
+                            T="bool"></MudCheckBox></MudTh>
         <MudTh><MudTableSortLabel SortLabel="partNumber_field" T="ProductsDto">P/N</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="name_field" T="ProductsDto">Name</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="brand_field" T="ProductsDto">Производитель</MudTableSortLabel></MudTh>
@@ -82,6 +81,13 @@
         <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
+        <MudTd>
+            <MudCheckBox Value="_selectedItemsId.Contains(context.Id)"
+                         Dense="true" Size="Size.Small"
+                         ValueChanged="(s)=>CheckboxBrandClicked(context, s)" 
+                         T="bool"></MudCheckBox>
+            
+        </MudTd>
         <MudTd DataLabel="pn">@context.PartNumber</MudTd>
         <MudTd DataLabel="Name">@context.Name</MudTd>
         <MudTd DataLabel="Brand">
@@ -108,7 +114,7 @@
                 }
                 else
                 {
-                    <b>@context.ProductsInStorage.Select(s=>s.Quantity).Sum()</b>
+                    <b>@context.ProductsInStorage.Select(s => s.Quantity).Sum()</b>
                 }
             }
         </MudTd>
@@ -123,7 +129,7 @@
         <MudText>Загрузка...</MudText>
     </LoadingContent>
     <PagerContent>
-        <MudTablePager PageSizeOptions="new int[] { 10, 20, int.MaxValue }" Style="height: 30px;" RowsPerPageString="Строк на странице" />
+        <MudTablePager PageSizeOptions="new [] { 10, 20, int.MaxValue }" Style="height: 30px;" RowsPerPageString="Строк на странице" />
     </PagerContent>
 </MudTable>
 
@@ -149,7 +155,7 @@
                    ProductId="ProductId"/>
 
 <StorageSettings @ref="_storageSettings"/>
-
+<CategoryDrawerComponent @ref="_categoryDrawerRef"/>
 @code {
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
@@ -157,7 +163,8 @@
     [Parameter] public Guid? ChapterId { get; set; }
     [Parameter] public string? Chapter { get; set; }
     public Guid ProductId;
-    private string? _currentCategoryName;
+    private CategoryDrawerComponent? _categoryDrawerRef;
+    //private string? _currentCategoryName;
     bool _visibleCreatedProductDialog; 
     bool _visibleEditProductDialog;
     bool _visibleDetailProductDialog;
@@ -165,12 +172,11 @@
 
     private bool _filterIsOn; 
     bool _isOpenQuantityAtStorages;
-
-    private HashSet<ProductsDto> _selectedItems = new();
+    private HashSet<Guid> _selectedItemsId = new();
     private MudTable<ProductsDto>? _table;
     private StorageSettings? _storageSettings;
 
-    private string? _searchString = null;
+    private string? _searchString;
     private FilterProductTuple? _filterProductTuple;
 
     private TableApplyButtonPosition _applyButtonPosition = TableApplyButtonPosition.Start;
@@ -238,7 +244,7 @@
   
     private void RowClickEvent(TableRowClickEventArgs<ProductsDto> tableRowClickEventArgs)
     {
-        ProductId = tableRowClickEventArgs.Item.Id;
+        if (tableRowClickEventArgs.Item != null) ProductId = tableRowClickEventArgs.Item.Id;
         _visibleDetailProductDialog = true;
     }
 
@@ -246,27 +252,47 @@
 
     private async void OnButtonDeleteClicked()
     {
-        bool? result = await DialogService.ShowMessageBox(
+        var result = await DialogService.ShowMessageBox(
             "Внимание",
-            "Подтвердите удаление!",
+            $"Подтвердите удаление!",
             yesText: "Удалить!  ", cancelText: "  Отменить");
 
         if (result != null && (bool)result)
         {
-            RemoveElement(_selectedItems);
+            RemoveElement(_selectedItemsId);
         }
         StateHasChanged();
     }
-    private async void RemoveElement(IEnumerable<ProductsDto> selectedItems)
+    private async void RemoveElement(IEnumerable<Guid> selectedItems)
     {
-        var tempList = new List<ProductsDto>(selectedItems);
-        foreach (var item in tempList)
+        foreach (var item in selectedItems)
         {
-            await ProductManager.RemoveAsync(item.Id);
+            await ProductManager.RemoveAsync(item);
         }
         await _table!.ReloadServerData();
     }
-
+    private void CheckboxBrandClicked(ProductsDto aSelected, object aChecked)
+    {
+        if ((bool)aChecked)
+        {
+            if (!_selectedItemsId.Contains(aSelected.Id))
+            {
+                _selectedItemsId.Add(aSelected.Id);
+            }
+        }
+        else
+        {
+            if (_selectedItemsId.Contains(aSelected.Id))
+            {
+                _selectedItemsId.Remove(aSelected.Id);
+            }
+        }
+    }    
+    private void CheckboxAllChange(bool aChecked)
+    {
+        if (aChecked == false)
+            _selectedItemsId.Clear();
+    }
 }
 <style>
     .mud-table-header {

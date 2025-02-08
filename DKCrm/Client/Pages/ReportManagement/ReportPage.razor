@@ -1,0 +1,30 @@
+@page "/r"
+@using DKCrm.Client.Pages.ReportManagement.Components
+@using DKCrm.Shared.Models.OrderModels
+
+<MudButton Variant="Variant.Filled"
+           Size="Size.Medium"
+           OnClick="@(()=> _visibleChartOneProductCompanyInYearExp = !_visibleChartOneProductCompanyInYearExp)"
+           Style="margin-right: 1rem;"
+           Color="Color.Tertiary">
+    Компании
+</MudButton>
+<ChartOneProductCompanyInYear TypeOrder="@nameof(ExportedOrder)"
+                              @bind-VisibleDialog="_visibleChartOneProductCompanyInYearExp"/>
+
+<MudButton Variant="Variant.Filled"
+           Size="Size.Medium"
+           OnClick="@(()=> _visibleChartOneProductCompanyInYearImp = !_visibleChartOneProductCompanyInYearImp)"
+           Style="margin-right: 1rem;"
+           Color="Color.Tertiary">
+    Компании
+</MudButton>
+<ChartOneProductCompanyInYear TypeOrder="@nameof(ImportedOrder)"
+                              @bind-VisibleDialog="_visibleChartOneProductCompanyInYearImp"/>
+@code {
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
+    
+    bool _visibleChartOneProductCompanyInYearExp;
+    bool _visibleChartOneProductCompanyInYearImp;
+}

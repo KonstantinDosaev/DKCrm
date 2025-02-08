@@ -253,6 +253,10 @@ namespace DKCrm.Server.Services.OrderServices
                 {
                     switch (request.SearchInChapter)
                     {
+                        case SearchChapterNames.OrderNumber:
+                            data = data.Where(w =>
+                                w.Number != null && w.Number.ToLower().Contains(request.SearchString.ToLower()));
+                            break;
                         case SearchChapterNames.ProductPartNumber:
                         {
                             var searchedOrdersId = await _context.ImportedProducts
@@ -306,9 +310,10 @@ namespace DKCrm.Server.Services.OrderServices
         public async Task<Guid> PostAsync(ImportedOrder importedOrder)
         {
             importedOrder.DateTimeCreated = DateTime.Now;
+            importedOrder.DateTimeUpdate = DateTime.Now;
             var count = _context.ImportedOrders.Count(w =>
                 w.DateTimeCreated!.Value.Date == importedOrder.DateTimeCreated!.Value.Date);
-            importedOrder.Number = (importedOrder.DateTimeCreated!.Value.ToString("ddMMyyyy")) + (count + 1);
+            importedOrder.Number = (importedOrder.DateTimeCreated!.Value.ToString("yyyyMMdd")) + (count + 1);
             _context.Entry(importedOrder).State = EntityState.Added;
             var status = _context.ImportedOrderStatus.FirstOrDefault(f => f.Position == 0);
             if (status != null)

@@ -62,6 +62,14 @@
     <div class="d-flex px-3 align-items-center">
         <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
         <MudSpacer />
+        <MudTooltip Text="Редактировать заказ">
+            <MudIconButton Size="@Size.Medium"
+                           OnClick="@(() =>  _visibleUpdateOrderDialog = true)"
+                           Color="Color.Tertiary"
+                           Icon="@Icons.Material.Sharp.Edit"
+                           Variant="Variant.Filled"
+                           Class="pa-1 mr-2"/>
+        </MudTooltip>
         <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddImportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
             Добавить продукт <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
         </MudButton>
@@ -222,11 +230,17 @@
             </DialogContent>
         </MudDialog>
     }
+    <EditImportedOrderDialog
+        @bind-VisibleDialog="_visibleUpdateOrderDialog"
+        RefreshParentItem="RefreshParentItem"
+        Id="Order.Id"/>
+    
 }
 @code {
     [Parameter] public bool IsDoubleNested { get; set; }
     [Parameter] public Guid Id { get; set; }
     [Parameter]public bool ShowCompanyInfo { get; set; }
+    [Parameter] public EventCallback RefreshParentItem { get; set; }
     [Parameter] public IEnumerable<string> CurrencyDisplay { get; set; } = null!;
     public ImportedOrder? Order { get; set; }
     private List<ImportedProduct>? ImportedProducts { get; set; }
@@ -244,7 +258,8 @@
     private bool _isOpenPricePopover;
     private bool _isOpenCompletePopover;
     private bool _visibleOrderComments;
-
+    private bool _visibleUpdateOrderDialog;
+    
     protected override async Task OnInitializedAsync()
     {
         Order = await ImportedOrderManager.GetDetailsAsync(Id);

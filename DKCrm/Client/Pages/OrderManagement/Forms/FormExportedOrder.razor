@@ -10,7 +10,8 @@
     <MudForm @ref="OrderForm" @bind-IsValid="@_success">
         <MudCard>
             <MudCardContent>
-                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашу компанию" @bind-Value="ExportedOrder.OurCompany"
+                <MudSelect Variant="Variant.Outlined" Placeholder="Выберите нашу компанию" 
+                           @bind-Value="ExportedOrder.OurCompany"
                            Label="Наша компания"
                            T="Company" ToStringFunc="companyType => companyType.Name.ToString()"
                            CloseIcon="@Icons.Material.Filled.Flag"

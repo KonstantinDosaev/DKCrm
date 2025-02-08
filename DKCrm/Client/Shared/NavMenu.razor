@@ -27,79 +27,117 @@
                 </div>
                 <div class="my-navitem">
                     <MudNavLink ActiveClass="nav-active"  Class="my-navlink" Match="NavLinkMatch.All" Href="/companies"> 
-                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.AssuredWorkload" Class="pa-0 mr-2" />Компании
+                        <MudIcon  Color="Color.Default" Icon="@Icons.Material.Sharp.AssuredWorkload" Class="pa-0 mr-2" />Компании
                     </MudNavLink>
                 </div>
                 <div class="my-navitem">
                     <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/imported_orders">
-                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.SwipeDownAlt" Class="pa-0 mr-2" />Импорт
+                        <MudIcon  Color="Color.Default" Icon="@Icons.Material.Sharp.SwipeDownAlt" Class="pa-0 mr-2" />Импорт
                     </MudNavLink>
                 </div>
                 <div class="my-navitem">
                     <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/export_orders">
-                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.SwipeUpAlt" Class="pa-0 mr-2" />Экспорт
+                        <MudIcon  Color="Color.Default" Icon="@Icons.Material.Sharp.SwipeUpAlt" Class="pa-0 mr-2" />Экспорт
                     </MudNavLink>
                 </div>
                 <div class="my-navitem">
                     <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/product">
-                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.ProductionQuantityLimits" Class="pa-0 mr-2"/>Product
+                        <MudIcon Color="Color.Default" Icon="@Icons.Material.Sharp.ProductionQuantityLimits" Class="pa-0 mr-2"/>Продукты
                     </MudNavLink>
                 </div>
                 <div class="my-navitem">
                     <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/chat">
-                        <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Chat" Class="pa-0 mr-2"/>Chat
+                        <MudIcon  Color="Color.Default" Icon="@Icons.Material.Sharp.Chat" Class="pa-0 mr-2"/>Чат
                     </MudNavLink>
                 </div>
                 <AuthorizeView Roles="@RoleNames.SuAdmin">
                     <Authorized>
                         <div class="my-navitem">
-                            <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/usermanager">
-                                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.SupervisedUserCircle" Class="pa-0 mr-2"/>User Manager
+                            <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/orders-admin">
+                                <MudIcon  Color="Color.Default" Icon="@Icons.Material.Sharp.SupervisedUserCircle" Class="pa-0 mr-2" />Заявки
                             </MudNavLink>
                         </div>
                         <div class="my-navitem">
-                            <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/orders-admin">
-                                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.SupervisedUserCircle" Class="pa-0 mr-2" />Заявки
+                            <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/usermanager">
+                                <MudIcon Color="Color.Default" Icon="@Icons.Material.Sharp.SupervisedUserCircle" Class="pa-0 mr-2"/>Пользователи
                             </MudNavLink>
                         </div>
                     </Authorized>
                 </AuthorizeView>
            
                 <div class="my-navitem">
-                    <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/ddd">
+                    <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/r">
                         <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.SupervisedUserCircle" Class="pa-0 mr-2"/>ddd
                     </MudNavLink>
                 </div>               
-                <MudButton Variant="Variant.Text" OnClick="@(() =>_categoryDrawerRef!.OpenCategoryDrawer())">End</MudButton>
-
             </div>
         </div>
     </div>
-    <CategoryDrawerComponent @ref="_categoryDrawerRef"/>
     <AuthorizeView>
         <Authorized>
             @if (context.User.Identity != null)
             {
-                <div class="user-nav">
+                <MudMenu>
+                    <ActivatorContent>
+                        <div class="user-nav">
+                            <div class="my-navitem">
+                                <MudIconButton ActiveClass="nav-active" Class="my-navlink">
+                                    @if (UserProfileIsValid == false)
+                                    {
+                                        <MudTooltip Text="Заполните профиль пользователя" >
+                                            <MudIcon
+                                                Color="Color.Error"
+                                                Icon="@Icons.Material.Filled.Warning" />
+                                        </MudTooltip>
+                                    }
+                                    <MudIcon  Color="Color.Tertiary" Icon="@Icons.Material.Sharp.PermIdentity" Class="pa-0 mr-2"/>
+                                </MudIconButton>
+                            </div>
+                        </div>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div style="background: gray">
+                        <div class="my-navitem">
+                            <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/userprofile">
+                                @if (UserProfileIsValid == false)
+                                {
+                                    <MudTooltip Text="Заполните профиль пользователя">
+                                        <MudIcon
+                                            Color="Color.Error"
+                                            Icon="@Icons.Material.Filled.Warning"/>
+                                    </MudTooltip>
+                                }
+                                <MudIcon Color="Color.Default" Icon="@Icons.Material.Sharp.PermIdentity" Class="pa-0 mr-2"/>@context.User.Identity.Name
+                            </MudNavLink>
+                        </div>
+                        <div class="my-navitem">
+                            <MudNavLink Class="my-navlink" OnClick="@LogoutClick">
+                                <MudIcon Color="Color.Default" Icon="@Icons.Material.Sharp.DirectionsRun" Class="pa-0 mr-2"/>Выход
+                            </MudNavLink>
+                        </div>
+                        </div>
+                    </ChildContent>
+                </MudMenu>
+                @*<div class="user-nav">
                     <div class="my-navitem">
                         <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/userprofile">
                             @if (UserProfileIsValid == false)
                             {
                                 <MudTooltip Text="Заполните профиль пользователя" >
-                                    <MudIcon Size="@Size.Medium"
+                                    <MudIcon 
                                         Color="Color.Error"
                                         Icon="@Icons.Material.Filled.Warning" />
                                 </MudTooltip>
                             }
-                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.PermIdentity" Class="pa-0 mr-2"/>@context.User.Identity.Name
+                            <MudIcon  Color="Color.Default" Icon="@Icons.Material.Sharp.PermIdentity" Class="pa-0 mr-2"/>@context.User.Identity.Name
                         </MudNavLink>
                     </div>
                     <div class="my-navitem">
                         <MudNavLink Class="my-navlink" OnClick="@LogoutClick">
-                            <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.DirectionsRun" Class="pa-0 mr-2"/>Выход
+                            <MudIcon Color="Color.Default" Icon="@Icons.Material.Sharp.DirectionsRun" Class="pa-0 mr-2"/>Выход
                         </MudNavLink>
                     </div>
-                </div>
+                </div>*@
             }
         </Authorized>
         <Authorizing>
@@ -112,7 +150,6 @@
    
     private bool _collapseNavMenu = true;
     private string? MyNavMenuCssClass => _collapseNavMenu ? "collapse" : null;
-    private CategoryDrawerComponent? _categoryDrawerRef;
     [Parameter] public EventCallback<(int, string)> OnGlobalFilter { get; set; }
     [Parameter] public EventCallback ResetGlobalFilter { get; set; }
    [Parameter] public bool UserProfileIsValid { get; set; }
@@ -154,10 +191,14 @@
     }
     .my-navlink{
         color: azure;
-        font-size: 1.1rem;
+        font-size: 1rem;
         border-top-left-radius: 5px;
         border-top-right-radius: 5px;
 
+    }
+    .my-navlink .mud-nav-link .mud-nav-link-text{
+        overflow: hidden;
+        text-wrap: nowrap;
     }
     .my-navlink:hover {
      background-color: rgba(38, 227, 161, 0.239);

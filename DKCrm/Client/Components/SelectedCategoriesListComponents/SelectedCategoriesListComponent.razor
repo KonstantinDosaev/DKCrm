@@ -1,4 +1,65 @@
 ﻿<MudPaper Width="100%">
+    <MudList T="string" Style="" Color="Color.Primary">
+        @if (Categories != null)
+        {
+            foreach (var category in Categories!.Where(w => w.ParentId == null).ToList())
+            {
+                <SelectedCategoriesListReqursion CloseCategoryDrawerCallback="CloseCategory"
+                                           Category="category"
+                                           RefreshCategoryListCallback="GetCategories"
+                                           IsSetCategory="ChangeValue"
+                                           SelectedCategoryId="@SelectedCategoryId"
+                                           />
+            }
+        }
+    </MudList>
+</MudPaper>
+
+@code {
+    [Parameter] public Guid? SelectedCategoryId { get; set; }
+    [Parameter] public List<Category>? Categories { get; set; }
+    [Parameter] public Category? SelectedCategory { get; set; }
+    [Parameter] public EventCallback<Category> SelectedCategoryChanged { get; set; }
+    [Parameter] public EventCallback<Category> IsSetCategory { get; set; }
+    private List<Category>? CategoriesUpLevel { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (Categories==null)
+        {
+          await GetCategories();
+        }
+    }
+
+    async Task ChangeValue(Category category)
+    {
+        SelectedCategoryId = category.Id;
+        SelectedCategory = category;
+        await SelectedCategoryChanged.InvokeAsync(SelectedCategory);
+        await IsSetCategory.InvokeAsync(SelectedCategory);
+    }
+
+    private async Task GetCategories()
+    {
+        Categories ??= await CategoryManager.GetAsync();
+        CategoriesUpLevel ??= Categories.Where(w => w.ParentId == null).ToList();
+        Categories = Categories!.OrderBy(o => o.Name).ToList();
+
+    }
+    public void CloseCategory()
+    {
+        SelectedCategoryId = null;
+        SelectedCategory = null;
+        StateHasChanged();
+    }
+
+}
+
+
+
+
+@*
+<MudPaper Width="100%">
     <MudList Style="" @bind-SelectedValue="SelectedItem" Color="Color.Primary">
         @if (Categories != null)
         {
@@ -80,3 +141,4 @@
     }
 
 }
+*@

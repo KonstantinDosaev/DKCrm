@@ -128,8 +128,8 @@
     {
         GlobalFilterType = globalFilter.Item1;
         GlobalFilterValue = globalFilter.Item2;
-        var nawUri = "";
-        switch (GlobalFilterType)
+        //var nawUri = "";
+        /*switch (GlobalFilterType)
         {
             case (int)GlobalFilterTypes.Product : nawUri = "/product";
                 break;
@@ -139,13 +139,13 @@
                 break;
             case (int)GlobalFilterTypes.Company : nawUri = "/companies";
                 break;
-        }
+        }*/
         
-        _navigationManager.NavigateTo(nawUri, false);
+        _navigationManager.NavigateTo(_navigationManager.Uri, false);
     }
     private void ResetGlobalFilter()
     {
         GlobalFilterValue = null;
-        _navigationManager.NavigateTo(_navigationManager.Uri, true);
+        _navigationManager.NavigateTo(_navigationManager.Uri, false);
     }
 }

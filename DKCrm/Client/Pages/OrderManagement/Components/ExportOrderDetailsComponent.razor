@@ -63,7 +63,17 @@
     <div class="d-flex px-3 align-items-center">
         <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
         <MudSpacer/>
-        <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddExportedProductDialog = true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+        <MudTooltip Text="Редактировать заказ">
+            <MudIconButton Size="@Size.Medium"
+                           OnClick="@(() =>  _visibleUpdateOrderDialog = true)"
+                           Color="Color.Tertiary"
+                           Icon="@Icons.Material.Sharp.Edit"
+                           Variant="Variant.Filled"
+                           Class="pa-1 mr-2"/>
+        </MudTooltip>
+        <MudButton Variant="Variant.Filled"
+                   Size="Size.Small" OnClick="() => _visibleAddExportedProductDialog = true" Style="" 
+                   Color="Color.Tertiary">
             Добавить продукт<MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
         </MudButton>
     </div>
@@ -294,6 +304,11 @@
             </DialogContent>
         </MudDialog>
     }
+    <EditExportedOrderDialog 
+        Id="Order.Id"
+        RefreshParentItem="RefreshParentItem"
+        @bind-VisibleDialog="_visibleUpdateOrderDialog"
+        ApplicationOrderingProduct="Order.ApplicationOrderingProducts" />
 }
 @code {
     [Parameter] public bool IsDoubleNested { get; set; }
@@ -301,6 +316,7 @@
     [Parameter]public bool ShowCompanyInfo { get; set; }
     [Parameter] public IEnumerable<string> CurrencyDisplay { get; set; } = null!;
     [Parameter]public ExportedOrder? Order { get; set; }
+    [Parameter] public EventCallback RefreshParentItem { get; set; }
     private List<ExportedProduct>? ExportedProducts { get; set; }
     public ExportedProduct? EditedExportedProduct { get; set; }
     public Guid ExportedProductId { get; set; }
@@ -320,7 +336,7 @@
     private bool _visibleOrderComments;
     private bool _itemNotChange;
     private bool _editDaysForDeliveryIsOn;
-
+    private bool _visibleUpdateOrderDialog;
     protected override async Task OnInitializedAsync()
     {
         await GetOrder();
@@ -417,6 +433,7 @@
             CloseAllPopover();
         }
     }
+    
 }
 <style>
     .mud-table-sticky-header * .mud-table-root .mud-table-orderD-header  * .mud-table-cell

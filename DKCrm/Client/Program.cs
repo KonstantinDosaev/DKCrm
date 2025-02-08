@@ -16,6 +16,7 @@ using DKCrm.Client.Services.InternalCompanyDataService;
 using DKCrm.Client.Services.MailService;
 using DKCrm.Client.Services.OrderServices;
 using DKCrm.Client.Services.ProductServices;
+using DKCrm.Client.Services.ReportManager;
 using DKCrm.Client.Services.UserService;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -66,6 +67,7 @@ builder.Services.AddTransient<IImageManager, ImageManager>();
 builder.Services.AddTransient<IMailManager, MailManager>();
 builder.Services.AddTransient<ICompanyCommentsManager, CompanyCommentsManager>();
 builder.Services.AddTransient<IAccessRestrictionManager, AccessRestrictionManager>();
+builder.Services.AddTransient<IReportManager, ReportManager>();
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

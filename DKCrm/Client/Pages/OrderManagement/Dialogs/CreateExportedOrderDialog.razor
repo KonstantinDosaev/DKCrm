@@ -22,7 +22,7 @@
 
 @code {
     [Parameter] public bool VisibleDialog { get; set; }
-    [Parameter] public EventCallback RefreshProductList { get; set; }
+    [Parameter] public EventCallback RefreshParentItem { get; set; }
     [Parameter] public EventCallback Close { get; set; }
     [Parameter] public ApplicationOrderingProducts? ApplicationOrderingProduct { get; set; }
     public ExportedOrder Order { get; set; } = null!;
@@ -57,7 +57,7 @@
         }
         if(await ExportedOrderManager.AddAsync(Order))
         {
-            await RefreshProductList.InvokeAsync();
+            await RefreshParentItem.InvokeAsync();
             _snackBar.Add("Заказ создан");
             await CloseClick();
         }

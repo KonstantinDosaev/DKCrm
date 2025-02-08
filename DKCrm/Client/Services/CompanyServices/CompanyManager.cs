@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using DKCrm.Shared.Models.CompanyModels;
 using DKCrm.Client.Constants;
+using DKCrm.Shared.Models;
 
 namespace DKCrm.Client.Services.CompanyServices
 {
@@ -19,6 +20,12 @@ namespace DKCrm.Client.Services.CompanyServices
         public async Task<List<Company>> GetCompaniesByTypeAsync(string type)
         {
             return await _httpClient.GetFromJsonAsync<List<Company>>($"api/Company/byType/{type}") ?? throw new InvalidOperationException();
+        }
+        public async Task<SortPagedResponse<Company>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterCompanyTuple> request)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/Company/getBySortPagedSearchChapterAsync", request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<SortPagedResponse<Company>>() ?? throw new InvalidOperationException();
+
         }
         public async Task<Company> GetDetailsAsync(Guid id)
         {

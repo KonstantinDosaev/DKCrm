@@ -1,14 +1,14 @@
 ﻿@using DKCrm.Shared.Constants
 @using DKCrm.Client.Components.SelectedCategoriesListComponents
 
-<div style="position: absolute">
+<div style="position: relative">
     <MudExpansionPanels Dense="false" Elevation="25" Style="background-color: #cbf0ee" MultiExpansion="false">
         <MudExpansionPanel Text="КАТЕГОРИИ">
             @if (Chapter != ProductFromChapterNames.Category)
             {
                 <div class="d-flex flex-column w-100">
                     <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="ClearSelectedCategory">Сбросить</MudButton>
-                    <SelectedCategoriesListComponent
+                    <SelectedCategoriesListComponent @ref="_selectedCategoryList"
                         @bind-SelectedCategory="@Category"
                         IsSetCategory="InitCategoryOptions"/>
                 </div>
@@ -181,7 +181,7 @@
     private List<Category>? Categories { get; set; }
     public List<Brand>? Brands { get; set; }
     private List<Brand> SelectedBrands { get; set; } = new();
-
+    SelectedCategoriesListComponent _selectedCategoryList = null!;
     private void CheckboxOptionClicked(IGrouping<string, ProductOption> aSelectedId, object aChecked)
     {
         if ((bool)aChecked)
@@ -219,10 +219,14 @@
             }
         }
     }
-   
-    private void InitCategoryOptions()
+
+    private async Task InitCategoryOptions()
     {
-        if (Category != null) CategoryOptions = Category.CategoryOptions;
+        if (Category != null)
+        {
+            Category = await CategoryManager.GetDetailsAsync(Category.Id);
+            CategoryOptions = Category.CategoryOptions;
+        }
     }
     private async Task InitBrands()
     {
@@ -261,17 +265,21 @@
     private void ClearSelectedProductOptions()
     {
         SelectedProductOptions.Clear();
-    
+        FilterTuple.ProductOptions = null;
+        CategoryOptions = null;
     }
     private  void ClearSelectedBrands()
     {
         SelectedBrands.Clear();
-  
+        FilterTuple.BrandIdList = null;
+        ProductIdFromOptions = null;
     }
     private void ClearSelectedCategory()
     {
        Category=null;
        ClearSelectedProductOptions();
+       FilterTuple.CategoryId = null;
+       _selectedCategoryList.CloseCategory();
     }
     private void OnFirstDateTimeCreatedFilter(DateTime? dateTime)
     {
@@ -300,10 +308,6 @@
         FilterTuple.CreateDateFirst = null;
         FilterTuple.UpdateDateFirst = null;
         FilterTuple.UpdateDateLast = null;
-        ProductIdFromOptions = null;
-        FilterTuple.BrandIdList = null;
-        FilterTuple.ProductOptions = null;
-        FilterTuple.CategoryId = null;
         await IsSetOption.InvokeAsync(FilterTuple);
     }
 

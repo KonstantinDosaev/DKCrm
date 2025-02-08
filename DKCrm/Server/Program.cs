@@ -17,6 +17,8 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 using System.Dynamic;
 using System.Net;
+using DKCrm.Server.Interfaces.ReportInterfaces;
+using DKCrm.Server.Services.ReportServices;
 using DKCrm.Shared.Constants;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -111,6 +113,7 @@ builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryServ
 builder.Services.AddTransient<IImageService, ImageService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddTransient<ICompanyCommentsService, CompanyCommentsService>();
+builder.Services.AddTransient<IReportService, ReportService>();
 
 
 builder.Services.AddRazorPages();

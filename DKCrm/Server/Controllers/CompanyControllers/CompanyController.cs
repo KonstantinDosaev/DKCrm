@@ -1,4 +1,5 @@
 ﻿using DKCrm.Server.Interfaces.CompanyInterfaces;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,11 @@ namespace DKCrm.Server.Controllers.CompanyControllers
         {
             return Ok(await _companyService.PostAsync(company));
         }
-
+        [HttpPost("getBySortPagedSearchChapterAsync")]
+        public async Task<IActionResult> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterCompanyTuple> request)
+        {
+            return Ok(await _companyService.GetBySortPagedSearchChapterAsync(request, User));
+        }
         [HttpPut("company/{company}")]
         public async Task<IActionResult> Put(Company company)
         {

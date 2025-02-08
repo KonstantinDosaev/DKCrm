@@ -1,0 +1,219 @@
+@using BlazorBootstrap
+@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Models.OrderModels
+@using ButtonType = BlazorBootstrap.ButtonType
+
+<BarChart @ref="barChart" Width="500" Height="300" />
+
+<div class="mt-5">
+    <div class="d-flex">
+        <div style="width: 228px; margin-right: 1rem">
+            <MudSelect T="int"
+                       MultiSelection="true"
+                       @bind-SelectedValues="_selectedMonths"
+                       MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
+                       Variant="Variant.Outlined" Dense="true"
+                       Class="select-button">
+                @foreach (var month in _months)
+                {
+                    <MudSelectItem T="int" Value="@month.Key">@month.Value</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Size="Size.Medium"
+                   OnClick="Refresh"
+                   Style="margin-right: 1rem;"
+                   Color="Color.Tertiary">
+            Расчитать
+            <MudIcon Size="@Size.Small" Color="Color.Default" Icon="@Icons.Material.Sharp.Refresh" Class="pa-0"/>
+        </MudButton>
+    </div>
+ 
+    <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="async () => await AddDatasetAsync()"> Add Dataset </Button>
+
+    <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="async () => await ShowHorizontalBarChartAsync()">Horizontal Bar Chart</Button>
+    <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="async () => await ShowVerticalBarChartAsync()">Vertical Bar Chart</Button>
+</div>
+
+@code {
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
+    private IEnumerable<int> _selectedMonths = new HashSet<int>() { DateTime.Now.Month };
+    private List<ExportedProduct> _listData;
+    private FilterExportedProductTuple _filterOrderTuple = new FilterExportedProductTuple();
+    private BarChart barChart = default!;
+    private BarChartOptions barChartOptions = default!;
+    private ChartData chartData = default!;
+
+    private int datasetsCount = 0;
+    private int labelsCount = 0;
+    private Dictionary<int, string> _months = new Dictionary<int, string>(){ {1, "Январь"}, {2, "Февраль"}, 
+        {3, "Март"}, {4, "Апрель"}, {5, "Май"}, {6, "Июнь"}, {7, "Июль"}, {8, "Август"}, {9, "Сентябрь"}, 
+        {10, "Октябрь"}, {11, "Ноябрь"}, {12, "Декабрь"},};
+    private Random random = new();
+
+    private void Refresh()
+    {
+        
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        labelsCount = _selectedMonths.Count();
+       
+        
+        var response = await ExportedProductManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterExportedProductTuple>()
+        {
+            PageIndex = 0,
+            PageSize = 30,
+            FilterTuple = _filterOrderTuple,
+            GlobalFilterValue = GlobalFilterValue,
+            GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
+        });
+        _listData = response.Items.Where(w => w.ProductId == new Guid("2579252c-6e52-4270-98f3-9d6eade7b7c9")).ToList();
+        chartData = new ChartData
+        {
+            Labels = GetDefaultDataLabels(6), 
+            Datasets = GetDefaultDataSets(_listData.Count)
+        };
+        barChartOptions = new BarChartOptions
+        {
+            Responsive = true, 
+            Interaction = new Interaction { Mode = InteractionMode.Index }
+        };
+        
+        await barChart.InitializeAsync(chartData, barChartOptions);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await barChart.InitializeAsync(chartData, barChartOptions);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+   
+    private async Task AddDatasetAsync()
+    {
+        if (chartData is null || chartData.Datasets is null) return;
+
+        if (datasetsCount >= 12)
+            return;
+
+        var chartDataset = GetRandomBarChartDataset(0);
+        chartData = await barChart.AddDatasetAsync(chartData, chartDataset, barChartOptions);
+    }
+
+    /*private async Task AddDataAsync()
+    {
+        if (chartData is null || chartData.Datasets is null)
+            return;
+
+        if (labelsCount >= 12)
+            return;
+
+        var data = new List<IChartDatasetData>();
+        foreach (var dataset in chartData.Datasets)
+        {
+            if (dataset is BarChartDataset barChartDataset)
+                data.Add(new BarChartDatasetData(barChartDataset.Label, random.Next(200)));
+        }
+
+        chartData = await barChart.AddDataAsync(chartData, GetNextDataLabel(), data);
+    }*/
+
+    private async Task ShowHorizontalBarChartAsync()
+    {
+        barChartOptions.IndexAxis = "y";
+        await barChart.UpdateAsync(chartData, barChartOptions);
+    }
+
+    private async Task ShowVerticalBarChartAsync()
+    {
+        barChartOptions.IndexAxis = "x";
+        await barChart.UpdateAsync(chartData, barChartOptions);
+    }
+
+
+
+    private List<IChartDataset> GetDefaultDataSets(int numberOfDatasets)
+    {
+        var datasets = new List<IChartDataset>();
+
+        for (var index = 0; index < numberOfDatasets; index++)
+        {
+            datasets.Add(GetRandomBarChartDataset(index));
+        }
+
+        return datasets;
+    }
+
+    private BarChartDataset GetRandomBarChartDataset(int index)
+    {
+        var c = ColorUtility.CategoricalTwelveColors[datasetsCount].ToColor();
+
+        datasetsCount += 1;
+
+        return new BarChartDataset()
+        {
+            Label = _listData[index].ExportedOrderId.ToString(),
+            Data = GetCountProduct(),
+            BackgroundColor = new List<string> { c.ToRgbString() },
+            BorderColor = new List<string> { c.ToRgbString() },
+            BorderWidth = new List<double> { 0 },
+        };
+    }
+
+    private List<double?> GetCountProduct()
+    {
+        var data = new List<double?>();
+        for (var index = 0; index < _listData.Count; index++)
+        {
+            data.Add(_listData[index].Quantity);
+        }
+
+        return data;
+    }
+
+    private List<string> GetDefaultDataLabels(int numberOfLabels)
+    {
+        var labels = new List<string>();
+        /*for (var index = 0; index < numberOfLabels; index++)
+        {
+            labels.Add(GetNextDataLabel());
+        }*/
+        labels = _months.Where(w => _selectedMonths.Contains(w.Key))
+            .Select(s => s.Value).ToList();
+        return labels;
+    }
+
+    private string LoadMonthsData(int monthNumber)
+    {
+        labelsCount += 1;
+        return _months[labelsCount - 1];
+    }
+
+    private string GetMultiSelectionText(List<string> selectedValues)
+    {
+        var result = "";
+        foreach (var item in selectedValues)
+        {
+            result +=_months.FirstOrDefault(f => f.Key == Convert.ToInt32(item)).Value +", " ;
+        }
+
+        return result;
+    }
+}
+<style>
+    .select-button {
+        margin: 0 !important;
+    }
+    .select-button .mud-input-slot.mud-input-root-outlined {
+        padding: 0.67rem 0.8rem !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+
+    }
+</style>

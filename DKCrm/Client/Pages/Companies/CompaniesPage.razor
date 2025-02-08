@@ -1,53 +1,78 @@
 ﻿@using DKCrm.Shared.Constants
 @using DKCrm.Shared.Models.CompanyModels
 @using DKCrm.Shared.Requests
+
 @page "/companies"
 @page "/companies/tag/{tagid:guid}"
 
-<MudText Typo="Typo.h4">Компании</MudText>
-<MudButton Variant="Variant.Filled" Size="Size.Medium" 
-           OnClick="() => _visibleAddCompanyDialog = true" 
-           Style="margin-left: 1rem;" Color="Color.Tertiary">
-    Добавить компанию
-    <MudIcon Size="@Size.Medium" Color="Color.Default"
-             Icon="@Icons.Material.Sharp.Add" Class="pa-0"/>
-</MudButton>
 
-<MudButton Variant="Variant.Filled" Size="Size.Medium" 
-           OnClick="() => VisibleCompanySettingsDrawer = true" Style="margin-right: 1rem;" 
-           Color="Color.Tertiary">
-    Настройки
-    <MudIcon Size="@Size.Medium" Color="Color.Default"
-             Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
-</MudButton>
 
-    <WarningCompanyCommentComponent />
+<MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
+    <div class="d-flex">
+        @*<MudTooltip Text="фильтр">
+            <MudButton Variant="Variant.Filled"
+                       Size="Size.Medium"
+                       OnClick="() => _visibleOrderFilter = true"
+                       Style="margin-right: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>*@
+        <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                   OnClick="() => VisibleCompanySettingsDrawer = true" Style="margin-right: 1rem;"
+                   Color="Color.Tertiary">
+            Настройки
+            <MudIcon Size="@Size.Small" Color="Color.Default"
+                     Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
+        </MudButton>
+
+
+    </div>
+    <div class="d-flex">
+        <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
+                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 300px;"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium" Class="mt-0 mr-2"></MudTextField>
+
+        @*<div class="mr-2">
+            <MudSelect Variant="Variant.Outlined" Style=""
+                       Class="select-button" T="string"
+                       @bind-Value="SelectedOption">
+                <MudSelectItem Value="@(SearchChapterNames.OrderNumber)">по номеру заказа</MudSelectItem>
+                <MudSelectItem Value="@(SearchChapterNames.CompanyName)">по компании</MudSelectItem>
+                <MudSelectItem Value="@(SearchChapterNames.ProductPartNumber)">по парт-номеру</MudSelectItem>
+            </MudSelect>
+        </div>*@
+        <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                   OnClick="() => _visibleAddCompanyDialog = true"
+                   Style="margin-left: 1rem;" Color="Color.Tertiary">
+            Добавить компанию
+            <MudIcon Size="@Size.Medium" Color="Color.Default"
+                     Icon="@Icons.Material.Sharp.Add" Class="pa-0"/>
+        </MudButton>
+    </div>
+</MudPaper>
 
 <div class="d-flex ">
     <div class="flex-grow-1 mr-4">
-        <MudTable Height="" Class="" Items="@Companies" Hover="true" SortLabel="Sort By" T="Company" 
+        <MudTable SortLabel="Sort By" T="Company" 
                   OnRowClick="RowClickEvent" Filter="new Func<Company,bool>(FilterFunc1)"
-                  Striped="true" 
-                  Bordered="true" 
-                  HeaderClass="mud-table-header table-head-bordered">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Periodic Elements</MudText>
-                <MudSpacer />
-                <MudTextField @bind-Value="_searchString1" 
-                              Placeholder="Поиск" 
-                              Style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;border-radius: 6px;padding: 0.5rem; margin-bottom: 0.5rem"
-                              Clearable=" true"
-                              Adornment="Adornment.Start" 
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              IconSize="Size.Medium" Class="mt-0"></MudTextField>
-            </ToolBarContent>
+                  ServerData="ServerReload"
+                  Dense="true"
+                  Hover="true"
+                  Striped="true"
+                  Bordered="true"
+                  AllowUnsorted="true"
+                  HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
+                  FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.76)}px")"
+                  @ref="_table">
             <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x => x.Name)">Наименование компании</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<Company, object>(x => x.Director!)">Руководитель</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.Country)">Страна</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Address, object>(x => x.City)">Город</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel Enabled="false" SortBy="new Func<Company, object>(x => x.CompanyType?.Name!)">Тип контрагента</MudTableSortLabel></MudTh>
-                <MudTh></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="name_field"  T="Company">Наименование компании</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortLabel="director_field"  T="Company">Руководитель</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortLabel="country_field"  T="Company">Страна</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortLabel="city_field"  T="Company">Город</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel Enabled="true" SortLabel="" T="Company">Тип контрагента</MudTableSortLabel></MudTh>
+                <MudTh>        <WarningCompanyCommentComponent /></MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Наименование компании">@context.Name</MudTd>
@@ -135,7 +160,8 @@
     </MudDrawer>*@
 
 @code {
-    [CascadingParameter(Name = "GlobalFilterType")] private GlobalFilterTypes GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
     [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
     [Parameter] public Guid? TagId { get; set; }
     WarningCompanyCommentComponent? _warningCommentComponent;
@@ -154,28 +180,42 @@
     private List<Guid>? NotOpenedCommentIsd { get; set; }
     private List<CompanyComment>? _warnComments;
     private Color WarningCommentIconColor { get; set; }
+    private MudTable<Company> _table = null!;
+    private FilterCompanyTuple _filterTuple= new FilterCompanyTuple();
     protected override async Task OnInitializedAsync()
     {
-        await GetAllCompanies();
+       // await GetAllCompanies();
         CompanyTypes = await CompanyTypeManager.GetAsync();
         TagsCompanies = await CompanyTagsManager.GetAsync();
 
-        if (TagId!= null && TagId!= Guid.Empty)
+        /*if (TagId!= null && TagId!= Guid.Empty)
         {
             //Companies = TagsCompanies.Where(w => w.Id == TagId)!.FirstOrDefault()!.Companies!.ToList();
             Companies = AllCompanies!.Where(w => w.TagsCompanies != null && w.TagsCompanies
                 .Select(s => s.Id).Contains((Guid)TagId)).ToList();
             _selectedValue = TagsCompanies!.FirstOrDefault(w => w.Id == TagId)!.Name;
-        }
+        }*/
       
     }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task<TableData<Company>> ServerReload(TableState state, CancellationToken token)
     {
-        // if (!firstRender)
-        // {
-        //     await CheckNotOpenComments();
-        // }
+        var response = await CompanyManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterCompanyTuple>()
+        {
+            PageIndex = state.Page,
+            PageSize = state.PageSize,
+            SearchString = _searchString1,
+            SortLabel = state.SortLabel,
+            SortDirection = state.SortDirection,
+          //  SearchInChapter = SelectedOption,
+            FilterTuple = _filterTuple,
+            GlobalFilterValue = GlobalFilterValue,
+            GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
+        });
+        return new TableData<Company>() { TotalItems = response.TotalItems, Items = response.Items };
+    }   
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_table != null) await _table.ReloadServerData();
     }
 
   
@@ -187,7 +227,12 @@
        // await CheckNotOpenComments();
 
     }
-
+    private void OnSearch(string text)
+    {
+        _searchString1 = text;
+       // SelectedOption = SelectedOption != "null" ? SelectedOption : null;
+        _table!.ReloadServerData();
+    }
 
     private bool FilterFunc1(Company element) => FilterFunc(element, _searchString1);
 
@@ -269,4 +314,28 @@
         color: white !important;
         font-weight: bold;
     }
+    .select-button {
+        margin: 0 !important;
+
+
+    }
+    .mud-table-sticky-header * .mud-table-root .mud-table-header-fix * .mud-table-cell {
+        background-color: dodgerblue;
+        font-weight: bold;
+        color: white;
+    }
+    .select-button .mud-input-slot.mud-input-root-outlined {
+        padding: 0.67rem 0.8rem !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+
+    }
+
+    .not-equpped-heder {
+        border-right: solid 1px rgba(0,0,0,0.1)
+    }
+    .mud-table-notequpped-header {
+
+    }
 </style>
+

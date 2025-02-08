@@ -30,7 +30,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
         public async Task<IActionResult> Post(ImportedOrder importedOrder) => Ok(await _importedOrderService.PostAsync(importedOrder));
 
         [HttpPut]
-        public async Task<IActionResult> Put(ImportedOrder importedOrder) => Ok(await _importedOrderService.PostAsync(importedOrder));
+        public async Task<IActionResult> Put(ImportedOrder importedOrder) => Ok(await _importedOrderService.PutAsync(importedOrder));
 
         [HttpPut("range")]
         public async Task<IActionResult> PutRange(IEnumerable<ImportedOrder> importedOrders) => Ok(await _importedOrderService.PutRangeAsync(importedOrders));

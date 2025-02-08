@@ -1,4 +1,5 @@
-﻿using DKCrm.Shared.Models.CompanyModels;
+﻿using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.CompanyModels;
 
 namespace DKCrm.Client.Services.CompanyServices
 {
@@ -6,6 +7,7 @@ namespace DKCrm.Client.Services.CompanyServices
     {
         Task<List<Company>> GetAsync();
         Task<List<Company>> GetCompaniesByTypeAsync(string type);
+        Task<SortPagedResponse<Company>> GetBySortFilterPaginationAsync(SortPagedRequest<FilterCompanyTuple> request);
         Task<Company> GetDetailsAsync(Guid id);
         Task<bool> UpdateAsync(Company company);
         Task<bool> AddAsync(Company company);

@@ -2,6 +2,55 @@
 
 @if (Category!.Children == null || !Category.Children.Any())
 {
+    <MudListItem T="string" Dense="true" OnClick="@(()=>SetCategory(Category))"  
+                 Style="@(SelectedCategoryId == Category.Id ? $"background:lightblue" : "background:white")">
+        @Category.Name
+    </MudListItem>
+}
+else
+{
+    <MudListItem T="Category" Text="">
+        <ChildContent>
+            @Category.Name
+        </ChildContent>
+        <NestedList>
+            @foreach (var subCategory in @Category.Children.OrderBy(o => o.Name))
+            {
+                <SelectedCategoriesListReqursion CloseCategoryDrawerCallback="@CloseCategoryDrawerCallback"
+                                                 Category="@subCategory"
+                                                 IsSetCategory = "IsSetCategory"
+                                                 
+                                                 SelectedCategoryId = "@SelectedCategoryId"/>
+            }
+        </NestedList>
+    </MudListItem>
+}
+@code {
+    [Parameter] public Category? Category { get; set; }
+    [Parameter] public Guid? SelectedCategoryId { get; set; }
+    [Parameter] public EventCallback CloseCategoryDrawerCallback { get; set; }
+    [Parameter] public EventCallback ChangeValue { get; set; }
+    [Parameter] public EventCallback<Category> IsSetCategory { get; set; }
+    
+    private async Task SetCategory(Category category)
+    {
+            SelectedCategoryId = category.Id;
+            await IsSetCategory.InvokeAsync(category);
+    }
+    [Parameter]
+    public EventCallback RefreshCategoryListCallback { get; set; }
+}
+
+
+
+
+
+
+
+
+@*
+@if (Category!.Children == null || !Category.Children.Any())
+{
 
     <MudListItem Dense="true" OnClick="ChangeValue"  Value="@Category">
         @Category.Name
@@ -20,7 +69,7 @@ else
                 <SelectedCategoriesListReqursion CloseCategoryDrawerCallback="@CloseCategoryDrawerCallback"
                                                  Category="@subCategory"
                                                  ChangeValue = "ChangeValue"
-                                         SelectedItem="SelectedItem" />
+                                                 SelectedItem="SelectedItem" />
             }
         </NestedList>
 
@@ -47,3 +96,4 @@ else
     [Parameter]
     public EventCallback RefreshCategoryListCallback { get; set; }
 }
+*@
