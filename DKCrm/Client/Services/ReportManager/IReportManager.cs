@@ -5,5 +5,8 @@ namespace DKCrm.Client.Services.ReportManager;
 
 public interface IReportManager
 {
-    Task<IEnumerable<GetProductReportByCompanyAtChartResponse>> GetProductFromYearByCompanyAtChartAsync(GetProductInPeriodByCompanyAtChartRequest request);
+    Task<IEnumerable<GetProductReportByCompanyAtChartResponse>> GetProductInPeriodByCompanyAtChartAsync(
+        GetProductInPeriodByCompanyAtChartRequest request);
+    Task<IEnumerable<GetProductReportByCompanyAtChartResponse>> GetProductFromYearByCompanyAtChartAsync(
+        GetProductInPeriodByCompanyAtChartRequest request);
 }

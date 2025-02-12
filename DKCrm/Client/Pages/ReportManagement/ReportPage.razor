@@ -2,17 +2,72 @@
 @using DKCrm.Client.Pages.ReportManagement.Components
 @using DKCrm.Shared.Models.OrderModels
 
-<MudButton Variant="Variant.Filled"
-           Size="Size.Medium"
-           OnClick="@(()=> _visibleChartOneProductCompanyInYearExp = !_visibleChartOneProductCompanyInYearExp)"
-           Style="margin-right: 1rem;"
-           Color="Color.Tertiary">
-    Компании
-</MudButton>
-<ChartOneProductCompanyInYear TypeOrder="@nameof(ExportedOrder)"
-                              @bind-VisibleDialog="_visibleChartOneProductCompanyInYearExp"/>
+<MudTabs Elevation="24" Outlined="true" ActivePanelIndex="_activeIndex"  ActivePanelIndexChanged="ChangeIndex">
+    <MudTabPanel Text="График год по месяцам" ID='"pn_one"'></MudTabPanel>
+    <MudTabPanel Text="График по годам" ID='"pn_two"'></MudTabPanel>
+</MudTabs>
 
-<MudButton Variant="Variant.Filled"
+<MudPaper Class=" p-3" Style="@($"display:{_displayOne};")">
+    <div class="mb-2">
+        <MudText Typo="Typo.h5">График год по месяцам</MudText>
+    </div>
+
+    <div class="d-flex flex-wrap">
+        <div class="d-flex">
+            <ChartOneProductCompanyPeriod/>
+
+            @if (_initTwoChartOneProductCompanyInPeriodExp)
+            {
+                <ChartOneProductCompanyPeriod/>
+            }
+        </div>
+
+        @if (!_initTwoChartOneProductCompanyInPeriodExp)
+        {
+            <div>
+                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Add"
+                               Size="Size.Medium"
+                               OnClick="@(() => { _initTwoChartOneProductCompanyInPeriodExp = !_initTwoChartOneProductCompanyInPeriodExp; })"
+                               Style="margin-right: 1rem;"
+                               Color="Color.Tertiary">
+                </MudIconButton>
+            </div>
+        }
+    </div>
+
+</MudPaper>
+
+<MudPaper Class=" p-3" Style="@($"display:{_displayTwo};")">
+    <div class="mb-2">
+        <MudText Typo="Typo.h5">График по годам</MudText>
+    </div>
+
+    <div class="d-flex flex-wrap">
+        <div class="d-flex">
+            <ChartOneProductCompanyInYear/>
+
+            @if (_initTwoChartOneProductCompanyInYearExp)
+            {
+                <ChartOneProductCompanyInYear/>
+            }
+        </div>
+
+        @if (!_initTwoChartOneProductCompanyInYearExp)
+        {
+            <div>
+                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Add"
+                               Size="Size.Medium"
+                               OnClick="@(() => { _initTwoChartOneProductCompanyInYearExp = !_initTwoChartOneProductCompanyInYearExp; })"
+                               Style="margin-right: 1rem;"
+                               Color="Color.Tertiary">
+                </MudIconButton>
+            </div>
+        }
+    </div>
+
+</MudPaper>
+
+@*<MudButton Variant="Variant.Filled"
            Size="Size.Medium"
            OnClick="@(()=> _visibleChartOneProductCompanyInYearImp = !_visibleChartOneProductCompanyInYearImp)"
            Style="margin-right: 1rem;"
@@ -20,11 +75,22 @@
     Компании
 </MudButton>
 <ChartOneProductCompanyInYear TypeOrder="@nameof(ImportedOrder)"
-                              @bind-VisibleDialog="_visibleChartOneProductCompanyInYearImp"/>
+                              @bind-VisibleDialog="_visibleChartOneProductCompanyInYearImp"/>*@
 @code {
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
     [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
-    
+    int _activeIndex = 0;
+    string _displayOne = "block";
+    string _displayTwo = "none";
     bool _visibleChartOneProductCompanyInYearExp;
-    bool _visibleChartOneProductCompanyInYearImp;
+    bool _initTwoChartOneProductCompanyInYearExp;
+    bool _initTwoChartOneProductCompanyInPeriodExp;
+    bool _visibleTwoChartOneProductCompanyInYearExp;
+
+    private void ChangeIndex(int indexNum)
+    {
+        _activeIndex = indexNum;
+        _displayOne = indexNum == 0 ? "block" : "none";
+        _displayTwo = indexNum == 1 ? "block" : "none";
+    }
 }

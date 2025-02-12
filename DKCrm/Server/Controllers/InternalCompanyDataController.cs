@@ -1,11 +1,14 @@
 ﻿using DKCrm.Server.Interfaces;
+using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class InternalCompanyDataController: ControllerBase
     {
         private readonly IInternalCompanyDataService _internalCompanyDataService;
@@ -32,13 +35,15 @@ namespace DKCrm.Server.Controllers
         {
             return Ok(await _internalCompanyDataService.PutAsync(data));
         }
-  
+
         [HttpGet("user/{pass}")]
+        [Authorize(Roles = $"{RoleNames.Admin}, {RoleNames.SuAdmin}")]
         public async Task MigrateUser(string pass)
         {
            await _internalCompanyDataService.MigrateUser(pass);
         }
         [HttpGet("product/{pass}")]
+        [Authorize(Roles = $"{RoleNames.Admin}, {RoleNames.SuAdmin}")]
         public async Task MigrateProd(string pass)
         {
            await _internalCompanyDataService.MigrateProd(pass);

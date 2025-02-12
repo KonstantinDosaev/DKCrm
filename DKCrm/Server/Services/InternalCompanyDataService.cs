@@ -1,5 +1,7 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces;
+using DKCrm.Server.Interfaces.DocumentInterfaces;
+using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Constants;
 using DKCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +13,7 @@ namespace DKCrm.Server.Services
         private readonly ApplicationDBContext _context;
         private readonly UserDbContext _contextUser;
         private readonly IConfiguration _configuration;
+        private readonly IInfoSetFromDocumentToOrderService _infoSetFromDocument;
         public InternalCompanyDataService(ApplicationDBContext context, UserDbContext contextUser, IConfiguration configuration)
         {
             _context = context;
@@ -47,6 +50,16 @@ namespace DKCrm.Server.Services
         {
             var mPass = _configuration[$"mpass"];
             if (mPass == pass)
+                await _contextUser.Database.MigrateAsync();
+        }
+        public async Task RePathAsync(string pass)
+        {
+            var mPass = _configuration[$"mpass"];
+            if (mPass != pass) return;
+            var systemPathChar = Path.Combine("o", "o").Replace("o","");
+            var currentPathChar = systemPathChar == @"\" ? @"/" : @"\";
+            
+            
                 await _contextUser.Database.MigrateAsync();
         }
         public async Task<Guid> PutAsync(InternalCompanyData data)

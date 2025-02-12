@@ -57,7 +57,8 @@
           SelectOnRowClick="false"
           Striped="true" 
           Bordered="true" 
-          OnRowClick="RowClickEvent" T="ProductsDto"
+          
+          OnRowClick="RowClickEvent" T="ProductsDto" 
           AllowUnsorted="true"
           HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
           FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.78)}px")"
@@ -169,7 +170,7 @@
     bool _visibleEditProductDialog;
     bool _visibleDetailProductDialog;
     private bool _visibleProductFilter;
-
+    private bool _thisSecondClickOnRow;
     private bool _filterIsOn; 
     bool _isOpenQuantityAtStorages;
     private HashSet<Guid> _selectedItemsId = new();
@@ -242,12 +243,38 @@
         _visibleEditProductDialog = true;
     }
   
-    private void RowClickEvent(TableRowClickEventArgs<ProductsDto> tableRowClickEventArgs)
+    private async Task RowClickEvent(TableRowClickEventArgs<ProductsDto> tableRowClickEventArgs)
     {
-        if (tableRowClickEventArgs.Item != null) ProductId = tableRowClickEventArgs.Item.Id;
-        _visibleDetailProductDialog = true;
+
+        if (tableRowClickEventArgs.Item != null)
+        {
+            if (_thisSecondClickOnRow == false)
+            {
+                _thisSecondClickOnRow = true;
+                ProductId = tableRowClickEventArgs.Item.Id;
+                await Timer();
+                return;
+            }
+
+            if (_thisSecondClickOnRow && ProductId == tableRowClickEventArgs.Item.Id)
+            {
+                _visibleDetailProductDialog = true;
+                _thisSecondClickOnRow = false;
+            }
+            else
+            {
+                ProductId = tableRowClickEventArgs.Item.Id;
+            }
+            
+         
+        }
     }
 
+    private async Task Timer()
+    {
+        await Task.Delay(500);
+        _thisSecondClickOnRow = false;
+    }
     [Inject] private IDialogService DialogService { get; set; } = null!;
 
     private async void OnButtonDeleteClicked()

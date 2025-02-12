@@ -298,7 +298,7 @@
                        OnClick="() => _visibleOrderFilter = false" 
                        Class="p-0" Color="Color.Default"/>
     </MudDrawerHeader>
-    <OrderFilterComponent FilterOrderTuple="@_filterOrderTuple"
+    <OrderFilterComponent FilterOrderTuple="@FilterOrderTuple"
                           PartnerTypeName="@TypeCompanyNames.Customers"
                           IsSetOption="OnFilter"/>
 </MudDrawer>
@@ -345,15 +345,15 @@
     [Parameter] public string? OrderNumber { get; set; }
     [Parameter] public bool ShowDetails { get; set; }
     [Parameter] public bool ShowOrder { get; set; }
+    [Parameter] public FilterOrderTuple FilterOrderTuple { get; set; } = new FilterOrderTuple();
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
     [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
     [CascadingParameter(Name = "WindowWidth")] private int WindowWidth { get; set; }
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     private List<ExportedOrderStatus>? StatusList { get; set; }
-    private FilterOrderTuple _filterOrderTuple = new FilterOrderTuple();
     public ExportedOrder Order { get; set; } = new();
-    private string? _searchString;
-    public string? SelectedOption { get; set; } = SearchChapterNames.OrderNumber;
+    [Parameter]public string? SearchString { get; set; }
+    [Parameter] public string? SelectedOption { get; set; } = SearchChapterNames.ProductPartNumber;
  
     private MudTable<ExportedOrder> _table = null!;
     //private MudTable<ExportedOrder> _tables;
@@ -394,17 +394,21 @@
 
     private async Task<TableData<ExportedOrder>> ServerReload(TableState state, CancellationToken token)
     {
+        if (WindowHeight == 0)
+        {
+            WindowHeight = 900;
+        }
         var response = await ExportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
         {
             PageIndex = state.Page,
             PageSize = state.PageSize,
-            SearchString = _searchString,
+            SearchString = SearchString,
             SortLabel = state.SortLabel,
             Chapter = Chapter,
             ChapterId = ChapterId,
             SortDirection = state.SortDirection,
             SearchInChapter = SelectedOption,
-            FilterTuple = _filterOrderTuple,
+            FilterTuple = FilterOrderTuple,
             GlobalFilterValue = GlobalFilterValue,
             GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
         }, token);
@@ -416,20 +420,20 @@
     }
     private void OnSearch(string text)
     {
-        _searchString = text;
+        SearchString = text;
         SelectedOption = SelectedOption != "null" ? SelectedOption : null;
         _table.ReloadServerData();
     }
     private void OnHistory()
     {
         _showHistoryOrders = !_showHistoryOrders;
-        _filterOrderTuple.IsHistoryOrders = !_filterOrderTuple.IsHistoryOrders;
+        FilterOrderTuple.IsHistoryOrders = !FilterOrderTuple.IsHistoryOrders;
         _table.ReloadServerData();
     } 
     private void OnUnreadComments()
     {
         _isOnUnreadComments = !_isOnUnreadComments;
-        _filterOrderTuple.IsOrdersWithUnreadComments = !_filterOrderTuple.IsOrdersWithUnreadComments;
+        FilterOrderTuple.IsOrdersWithUnreadComments = !FilterOrderTuple.IsOrdersWithUnreadComments;
         _table.ReloadServerData();
     }
 
@@ -452,7 +456,7 @@
         {
             _filterIsOn = false;
         }
-        _filterOrderTuple = filterTuple;
+        FilterOrderTuple = filterTuple;
         _table.ReloadServerData();
     }
     
@@ -484,21 +488,21 @@
     private async Task OnStatusFilter(ExportedOrderStatus? status)
     {
         CurrentOrderStatus = status;
-        _filterOrderTuple.CurrentStatusId = status?.Id;
+        FilterOrderTuple.CurrentStatusId = status?.Id;
 
         await _table.ReloadServerData();
     }
     private void OnCompleteOrderFilter(bool? isCompleteOrder)
     {
         OrdersIsCompleted = isCompleteOrder;
-        _filterOrderTuple.IsCompleteOrders = isCompleteOrder;
+        FilterOrderTuple.IsCompleteOrders = isCompleteOrder;
         _table.ReloadServerData();
     }
 
     private void ResetStatusFilter()
     {
         CurrentOrderStatus = null;
-        _filterOrderTuple.CurrentStatusId = null;
+        FilterOrderTuple.CurrentStatusId = null;
         _table.ReloadServerData();
     }
     private async Task WarningToWorked(ExportedOrder order)

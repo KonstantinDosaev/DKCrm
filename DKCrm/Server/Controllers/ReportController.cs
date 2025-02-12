@@ -15,7 +15,7 @@ public class ReportController : ControllerBase
     {
         _reportService = reportService;
     }
-    [HttpGet]
+    [HttpPost]
     public async Task<IActionResult> GetProductInPeriodByCompanyAtChart(GetProductInPeriodByCompanyAtChartRequest request) 
         => Ok(await _reportService.GetProductInPeriodByCompanyAtChartAsync(request));
     

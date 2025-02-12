@@ -264,7 +264,7 @@
         <MudIconButton Icon="@Icons.Material.Filled.Close"
                        Size="Size.Large" OnClick="() => _visibleOrderFilter = false" Class="p-0" Color="Color.Default"/>
     </MudDrawerHeader>
-    <OrderFilterComponent FilterOrderTuple="@_filterOrderTuple"
+    <OrderFilterComponent FilterOrderTuple="@FilterOrderTuple"
                           PartnerTypeName="@TypeCompanyNames.Suppliers"
                           IsSetOption="OnFilter"/>
 </MudDrawer>
@@ -311,9 +311,9 @@
     public ImportedOrder Order { get; set; } = new ();
 
     private MudTable<ImportedOrder>? _table;
-    private string? _searchString;
-    public string? SelectedOption { get; set; } = SearchChapterNames.ProductPartNumber;
-    private FilterOrderTuple _filterOrderTuple= new FilterOrderTuple();
+    [Parameter]public string? SearchString { get; set;}
+    [Parameter]public string? SelectedOption { get; set; } = SearchChapterNames.ProductPartNumber;
+    [Parameter] public FilterOrderTuple FilterOrderTuple { get; set; } = new FilterOrderTuple();
     //private string _widthCommentForOrderDriver = "350px";
 
     private bool _showDetails;
@@ -354,17 +354,21 @@
 
     private async Task<TableData<ImportedOrder>> ServerReload(TableState state, CancellationToken token)
     {
+        if (WindowHeight == 0)
+        {
+            WindowHeight = 900;
+        }
         var response = await ImportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
         {
             PageIndex = state.Page,
             PageSize = state.PageSize,
-            SearchString = _searchString,
+            SearchString = SearchString,
             SortLabel = state.SortLabel,
             Chapter = Chapter,
             ChapterId = ChapterId,
             SortDirection = state.SortDirection,
              SearchInChapter = SelectedOption,
-                FilterTuple = _filterOrderTuple,
+                FilterTuple = FilterOrderTuple,
                 GlobalFilterValue = GlobalFilterValue,
                 GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
         });
@@ -390,25 +394,25 @@
         {
             _filterIsOn = false;
         }
-        _filterOrderTuple = filterTuple;
+        FilterOrderTuple = filterTuple;
         _table!.ReloadServerData();
     }
     private void OnHistory()
     {
         _showHistoryOrders = !_showHistoryOrders;
-        _filterOrderTuple.IsHistoryOrders = !_filterOrderTuple.IsHistoryOrders;
+        FilterOrderTuple.IsHistoryOrders = !FilterOrderTuple.IsHistoryOrders;
         _table!.ReloadServerData();
     }
     private void OnSearch(string text)
     {
-        _searchString = text;
+        SearchString = text;
         SelectedOption = SelectedOption != "null" ? SelectedOption : null;
         _table!.ReloadServerData();
     }
     private void OnStatusFilter(ImportedOrderStatus? status)
     {
         CurrentOrderStatus = status;
-        _filterOrderTuple.CurrentStatusId = status?.Id;
+        FilterOrderTuple.CurrentStatusId = status?.Id;
 
         _table!.ReloadServerData();
     }
@@ -416,7 +420,7 @@
     private void ResetStatusFilter()
     {
         CurrentOrderStatus = null;
-        _filterOrderTuple.CurrentStatusId =  null;
+        FilterOrderTuple.CurrentStatusId =  null;
         _table!.ReloadServerData();
     }
 
@@ -443,7 +447,7 @@
     }
     private async Task GetImportOrdersByProduct(string partNumber)
     {
-        _searchString = partNumber;
+        SearchString = partNumber;
         SelectedOption = SearchChapterNames.ProductPartNumber;
         await _table!.ReloadServerData();
         StateHasChanged();

@@ -18,41 +18,86 @@ public class ReportService : IReportService
     public async Task<IEnumerable<GetProductReportByCompanyAtChartResponse>> GetProductInPeriodByCompanyAtChartAsync(GetProductInPeriodByCompanyAtChartRequest request)
     {
         var result = new List<GetProductReportByCompanyAtChartResponse>();
-        
-        foreach (var period in request.PeriodMonthsYearNumbers)
+        DateTime? oldsYear = null;
+        if (request.TypeOrder != null && request.TypeOrder == nameof(ExportedOrder))
         {
-         
-            var exportedProducts = await
-                _context.ExportedProducts.Where(w => w.Product!.PartNumber == request.PartNumber
-                                                     && w.ExportedOrder.DateTimeUpdate.Value.Month == period.Month
-                                                     && w.ExportedOrder.DateTimeUpdate.Value.Year == period.Year
-                                                     && w.ExportedOrder.OrderIsOver == request.OrderIsOver)
-                    .Include(exportedProduct => exportedProduct.ExportedOrder)
-                    .ThenInclude(ti=>ti.CompanyBuyer).ToListAsync();
-            var products = exportedProducts.GroupBy(g => g.ExportedOrder.CompanyBuyerId);
+            foreach (var period in request.PeriodMonthsYearNumbers)
+            {
+                oldsYear ??= _context.ExportedOrders.Select(s => s.DateTimeUpdate).Min();
+                var exportedProducts = await
+                    _context.ExportedProducts.Where(w => w.Product!.PartNumber == request.PartNumber
+                                                         && w.ExportedOrder.DateTimeUpdate.Value.Month == period.Month
+                                                         && w.ExportedOrder.DateTimeUpdate.Value.Year == period.Year
+                                                         && w.ExportedOrder.OrderIsOver == request.OrderIsOver)
+                        .Include(i => i.Product)
+                        .Include(exportedProduct => exportedProduct.ExportedOrder)
+                        .ThenInclude(ti => ti.CompanyBuyer).ToListAsync();
+                var products = exportedProducts.GroupBy(g => g.ExportedOrder.CompanyBuyerId);
 
-            var rr = new GetProductReportByCompanyAtChartResponse()
-            {
-                PeriodMonthYearNumber = period,
-                ProductsInPeriodList = new List<ProductInPeriodByCompanyAtChartDto>()
-            };
-            foreach (var item in products)
-            {
-                var dto = new ProductInPeriodByCompanyAtChartDto()
+                var rr = new GetProductReportByCompanyAtChartResponse()
                 {
-                    CompanyId = (Guid)item.Key!,
-               
-                    ProductName = item.Select(s => s.Product.Name).FirstOrDefault(),
-                    ProductPartNumber = item.Select(s => s.Product.PartNumber).FirstOrDefault(),
-                    CompanyName = item.Select(s => s.ExportedOrder.CompanyBuyer.Name).FirstOrDefault(),
-                    MonthYearPeriodNumber = period,
-                    SumQuantity = item.Sum(s => s.Quantity)
+                    PeriodMonthYearNumber = period,
+                    ProductsInPeriodList = new List<ProductInPeriodByCompanyAtChartDto>()
                 };
-                rr.ProductsInPeriodList.Add(dto);
-            }
+                foreach (var item in products)
+                {
+                    var dto = new ProductInPeriodByCompanyAtChartDto()
+                    {
+                        CompanyId = (Guid)item.Key!,
 
-            result.Add(rr);
-            
+                        ProductName = item.Select(s => s.Product.Name).FirstOrDefault(),
+                        ProductPartNumber = item.Select(s => s.Product.PartNumber).FirstOrDefault(),
+                        CompanyName = item.Select(s => s.ExportedOrder.CompanyBuyer.Name).FirstOrDefault(),
+                        MonthYearPeriodNumber = period,
+                        SumQuantity = item.Sum(s => s.Quantity)
+                    };
+                    rr.ProductsInPeriodList.Add(dto);
+                }
+
+                rr.OldsYears = (DateTime)oldsYear!;
+                result.Add(rr);
+
+            }
+        }
+        else
+        {
+            foreach (var period in request.PeriodMonthsYearNumbers)
+            {
+                oldsYear ??= _context.ImportedOrders.Select(s => s.DateTimeUpdate).Min();
+                var importedProducts = await
+                    _context.ImportedProducts.Where(w => w.Product!.PartNumber == request.PartNumber
+                                                         && w.ImportedOrder.DateTimeUpdate.Value.Month == period.Month
+                                                         && w.ImportedOrder.DateTimeUpdate.Value.Year == period.Year
+                                                         && w.ImportedOrder.OrderIsOver == request.OrderIsOver)
+                        .Include(i => i.Product)
+                        .Include(exportedProduct => exportedProduct.ImportedOrder)
+                        .ThenInclude(ti => ti.SellersCompany).ToListAsync();
+                var products = importedProducts.GroupBy(g => g.ImportedOrder.SellersCompanyId);
+
+                var rr = new GetProductReportByCompanyAtChartResponse()
+                {
+                    PeriodMonthYearNumber = period,
+                    ProductsInPeriodList = new List<ProductInPeriodByCompanyAtChartDto>()
+                };
+                foreach (var item in products)
+                {
+                    var dto = new ProductInPeriodByCompanyAtChartDto()
+                    {
+                        CompanyId = (Guid)item.Key!,
+
+                        ProductName = item.Select(s => s.Product.Name).FirstOrDefault(),
+                        ProductPartNumber = item.Select(s => s.Product.PartNumber).FirstOrDefault(),
+                        CompanyName = item.Select(s => s.ImportedOrder.SellersCompany.Name).FirstOrDefault(),
+                        MonthYearPeriodNumber = period,
+                        SumQuantity = item.Sum(s => s.Quantity)
+                    };
+                    rr.ProductsInPeriodList.Add(dto);
+                }
+
+                rr.OldsYears = (DateTime)oldsYear!;
+                result.Add(rr);
+
+            }
         }
         return result;
         
@@ -102,7 +147,7 @@ public class ReportService : IReportService
         {
             foreach (var period in request.PeriodMonthsYearNumbers)
             {
-                oldsYear ??= _context.ExportedOrders.Select(s => s.DateTimeUpdate).Min();
+                oldsYear ??= _context.ImportedOrders.Select(s => s.DateTimeUpdate).Min();
                 var importedProducts = await
                     _context.ImportedProducts.Where(w => w.Product!.PartNumber == request.PartNumber
                                                          && w.ImportedOrder!.DateTimeUpdate!.Value.Year == period.Year 
