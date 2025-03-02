@@ -3,6 +3,7 @@
 @using DKCrm.Shared.Constants
 @using DKCrm.Client.Pages.ProductManagement.Components
 @using DKCrm.Client.Components.CategoryDrawer
+@using DKCrm.Shared.Requests
 
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
@@ -24,6 +25,25 @@
                      Icon="@Icons.Material.Sharp.FilterAlt"
                      Class="pa-0 ml-2"/>
         </MudButton>
+        <MudTooltip Text="Выгрузить в Excel файл">
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       OnClick="() =>SaveProductsInXlsToClientPc()"
+                       Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                <MudIcon Size="@Size.Medium" Color="Color.Default"
+                         Icon="@Icons.Material.Filled.FileUpload" Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
+        <MudTooltip Text="Загрузить из Excel файла">
+            <MudFileUpload  MaximumFileCount="1" T="IBrowserFile" FilesChanged="UploadFiles">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                               Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                        <MudIcon Size="@Size.Medium" Color="Color.Default"
+                                 Icon="@Icons.Material.Filled.FileDownload" Class="pa-0 ml-2"/>
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+        </MudTooltip>
     </div>
     <div class="d-flex">
         <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
@@ -31,20 +51,34 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" 
                       IconSize="Size.Medium" Class="mt-0"></MudTextField>
-        <MudButton Variant="Variant.Filled" Size="Size.Medium"
-                   OnClick="()=> _visibleCreatedProductDialog =true" Style="margin-left: 1rem;"
-                   Color="Color.Tertiary">
-            Добавить продукт
-            <MudIcon Size="@Size.Medium" Color="Color.Default"
-                     Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
-        </MudButton>
-        @if (_selectedItemsId.Any())
-        {
-            <MudButton Variant="Variant.Filled" 
-                       StartIcon="@Icons.Material.Filled.Delete" 
-                       Color="Color.Error" OnClick="OnButtonDeleteClicked" 
-                       Style="margin-left: 1rem;">Удалить</MudButton>
-        }
+        <MudTooltip Text="Добавить продукт">
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       OnClick="()=> _visibleCreatedProductDialog =true" Style="margin-left: 1rem;"
+                       Color="Color.Tertiary">
+                <MudIcon Size="@Size.Medium" Color="Color.Default"
+                         Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
+            </MudButton>
+        </MudTooltip>
+        <AuthorizeView Roles="@RoleNames.SuAdmin">
+            <Authorized>
+                <MudTooltip Text="Удаленные">
+                    <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                               OnClick="() => LoadOnlyDelete()"
+                               Style="margin-left: 1rem;" Color="@(_loadDeleted ? Color.Warning : Color.Default)">
+                        <MudIcon Size="@Size.Medium" Color="Color.Default"
+                                 Icon="@Icons.Material.Sharp.DeleteSweep" Class="pa-0 ml-2" />
+                    </MudButton>
+                </MudTooltip>
+                @if (_selectedItemsId.Any())
+                {
+                    <MudButton Variant="Variant.Filled" 
+                               StartIcon="@Icons.Material.Filled.Delete" 
+                               Color="Color.Error" OnClick="OnButtonDeleteClicked" 
+                               Style="margin-left: 1rem;">Удалить</MudButton>
+                }
+            </Authorized>
+        </AuthorizeView>
+       
     </div>
 </MudPaper>
 
@@ -79,6 +113,8 @@
             <MudIconButton Icon="@Icons.Material.Filled.FormatLineSpacing"
                            OnClick="() => _isOpenQuantityAtStorages = _isOpenQuantityAtStorages != true"></MudIconButton>
         </MudTh>
+        <MudTh><MudTableSortLabel SortLabel="create_field" T="ProductsDto">Создан</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="update_field" T="ProductsDto">Обновлен</MudTableSortLabel></MudTh>
         <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -119,6 +155,18 @@
                 }
             }
         </MudTd>
+        <MudTd DataLabel="DateCreate">
+            @if (context.DateTimeCreated != null)
+            {
+                @context.DateTimeCreated.Value.Date.ToString("dd.MM.yyyy")
+            }
+        </MudTd>
+        <MudTd DataLabel="DateUpdate">
+            @if (context.DateTimeUpdated != null)
+            {
+                @context.DateTimeUpdated.Value.Date.ToString("dd.MM.yyyy")
+            }
+        </MudTd>
         <MudTd Style="text-align: center" DataLabel="Edit">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenUpdateProductDialog(context.Id)"></MudIconButton>
         </MudTd>
@@ -157,6 +205,7 @@
 
 <StorageSettings @ref="_storageSettings"/>
 <CategoryDrawerComponent @ref="_categoryDrawerRef"/>
+
 @code {
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
@@ -173,6 +222,7 @@
     private bool _thisSecondClickOnRow;
     private bool _filterIsOn; 
     bool _isOpenQuantityAtStorages;
+    private bool _loadDeleted;
     private HashSet<Guid> _selectedItemsId = new();
     private MudTable<ProductsDto>? _table;
     private StorageSettings? _storageSettings;
@@ -197,9 +247,11 @@
                 SortLabel = state.SortLabel,
                 Chapter = Chapter,
                 ChapterId = ChapterId,
+               
                 SortDirection = state.SortDirection,
                 FilterTuple = _filterProductTuple,
                 GlobalFilterValue = GlobalFilterValue,
+                LoadOnlyDeleted = _loadDeleted,
                 GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
 
             });
@@ -279,23 +331,23 @@
 
     private async void OnButtonDeleteClicked()
     {
-        var result = await DialogService.ShowMessageBox(
-            "Внимание",
-            $"Подтвердите удаление!",
-            yesText: "Удалить!  ", cancelText: "  Отменить");
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление"))
+            return;
+        if(_loadDeleted)
+            if (!await ConfirmationActionService.ConfirmationActionAsync("Произойдет полное удаление"))
+                return;
 
-        if (result != null && (bool)result)
-        {
-            RemoveElement(_selectedItemsId);
-        }
+        RemoveElement(_selectedItemsId);
+        
         StateHasChanged();
     }
     private async void RemoveElement(IEnumerable<Guid> selectedItems)
     {
         foreach (var item in selectedItems)
         {
-            await ProductManager.RemoveAsync(item);
+            await ProductManager.RemoveAsync(new DeleteForGuidRequest(){Id = item, IsFullDelete = _loadDeleted});
         }
+        _selectedItemsId.Clear();
         await _table!.ReloadServerData();
     }
     private void CheckboxBrandClicked(ProductsDto aSelected, object aChecked)
@@ -319,6 +371,43 @@
     {
         if (aChecked == false)
             _selectedItemsId.Clear();
+    }
+
+    private async Task SaveProductsInXlsToClientPc()
+    {
+        
+        if(!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите скачивание"))
+            return;
+        if(!_selectedItemsId.Any())
+            if(!await ConfirmationActionService.ConfirmationActionAsync("Так как нет выбранных продуктов, выгрузится весь список. Продолжить?"))
+                return;
+        var fileInByte = await ProductManager.OutputProductListToExcelAsync(_selectedItemsId.ToList());
+
+        await _jsRuntime.InvokeVoidAsync
+            ("BlazorDownloadFile", $"Выгруженный список {DateTime.Now}" + ".XLSX", "application/octet-stream", fileInByte);
+    
+    }
+    private async Task UploadFiles(IBrowserFile file)
+    {
+       using (var ms = new MemoryStream())
+        {
+            await file.OpenReadStream(maxAllowedSize: 3500000).CopyToAsync(ms);
+            var messageResult = await ProductManager.LoadProductsFromExcelAsync(ms.ToArray());
+            if (messageResult.Any())
+            {
+                var res = messageResult.Aggregate("", (current, mess) => current + $"{mess} //  ");
+
+                _snackBar.Add(res);
+            }
+        }
+        
+    }
+
+    private async Task LoadOnlyDelete()
+    {
+        _selectedItemsId.Clear();
+        _loadDeleted = !_loadDeleted;
+        await _table!.ReloadServerData();
     }
 }
 <style>

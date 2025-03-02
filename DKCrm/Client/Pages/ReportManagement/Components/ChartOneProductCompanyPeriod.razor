@@ -10,7 +10,7 @@
     @if (_visibleChart)
     {
         <div class="d-flex justify-content-around">
-            <MudText Typo="Typo.button" Class="mr-4">@_title</MudText>
+            <MudText Typo="Typo.button" Class="mr-4">@($"{_title}/ {_selectedYear}")</MudText>
             <MudText>@PartNumber</MudText>
         </div>
         <BarChart @ref="_barChart" Width="@((int)((WindowWidth*0.95)/2))" Height="300" />
@@ -49,7 +49,8 @@
                                   IconSize="Size.Medium" Class="mt-0 mb-2"
                                   Required="true" />
                     <div style="width: 228px;" class="mb-2">
-                        <MudSelect T="Guid" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
+                        <MudSelect T="Guid" 
+                                   MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
                                    MultiSelection="true" Placeholder="Компании"
                                    @bind-SelectedValues="_selectedCompanies"
                                    Variant="Variant.Outlined" Dense="true"
@@ -66,8 +67,8 @@
                     </div>
                     <div style="width: 228px;" class="mb-2">
                         <MudSelect T="int"
-                                  Value = "@_selectedYears"
-                                   @bind-SelectedValue="_selectedYears"
+                                   Immediate="true" ValueChanged="(s) => _selectedYear = s"
+                                   Value = "_selectedYear"
                                    Variant="Variant.Outlined" Dense="true"
                                    Class="select-button">
                             @foreach (var dtms in _dateTimes)
@@ -77,7 +78,7 @@
                         </MudSelect>
                     </div>
                     <div style="width: 228px; margin-right: 1rem">
-                        <MudSelect T="int"
+                        <MudSelect T="int" Immediate="true"
                                    MultiSelection="true"
                                    @bind-SelectedValues="_selectedMonths"
                                    MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionTextMonths))"
@@ -167,7 +168,7 @@
     private List<string> _downLabels = new();
     List<IChartDataset> _datasets = new();
     private List<int> _dateTimes = [DateTime.Now.Year,];
-    private int _selectedYears =  DateTime.Now.Year;
+    private int _selectedYear =  DateTime.Now.Year;
     private IEnumerable<Guid> _selectedCompanies = new HashSet<Guid>() { };
     private List<Company>? _companyList;
     //private List<ExportedProduct> _listData;
@@ -251,7 +252,8 @@
                     PartNumber = PartNumber,
                     OrderIsOver = false,
                     CompaniesIds = _selectedCompanies.ToList(),
-                    PeriodMonthsYearNumbers = _selectedMonths.OrderBy(o=>o).Select(s => new DateTime(_selectedYears, s, 1, 0, 0, 0))
+                    PeriodMonthsYearNumbers = _selectedMonths.OrderBy(o=>o).Select(s => 
+                            new DateTime(_selectedYear, s, 1, 0, 0, 0))
                         .OrderBy(o => o.Year).ToList()
                 });
 
@@ -260,7 +262,8 @@
         var getProductReportByCompanyAtChartResponses = response as GetProductReportByCompanyAtChartResponse[] ?? response.ToArray();
         var datesYear = getProductReportByCompanyAtChartResponses.Select(s => s.PeriodMonthYearNumber.Month.ToString());
         Equalization(getProductReportByCompanyAtChartResponses);
-        tempResp = getProductReportByCompanyAtChartResponses.SelectMany(s => s.ProductsInPeriodList)
+        tempResp = getProductReportByCompanyAtChartResponses.SelectMany(s => 
+                s.ProductsInPeriodList)
                .GroupBy(g => g.CompanyName).OrderBy(o => o.Key).ToList();
         var countColor = tempResp.Count();
         foreach (var gr in tempResp)

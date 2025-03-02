@@ -16,5 +16,6 @@ namespace DKCrm.Shared.Models
         public T? FilterTuple{ get; set; }
         public string? GlobalFilterValue { get; set;}
         public GlobalFilterTypes GlobalFilterType { get; set;}
+        public bool LoadOnlyDeleted { get; set; }
     }
 }

@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="DocXToPdfConverter" Version="1.0.5" />
+    <PackageReference Include="FastExcel" Version="3.0.13" />
     <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.4.21" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.8" />

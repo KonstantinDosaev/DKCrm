@@ -3,6 +3,7 @@ using System;
 using DKCrm.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DKCrm.Server.Migrations.UserDb
 {
     [DbContext(typeof(UserDbContext))]
-    partial class UserDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250212213601_AddUserEmailSettings")]
+    partial class AddUserEmailSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -321,63 +324,6 @@ namespace DKCrm.Server.Migrations.UserDb
                     b.ToTable("UserEmailSettings");
                 });
 
-            modelBuilder.Entity("DKCrm.Shared.SendEmailTask", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<byte[]>("AttachmentOne")
-                        .HasColumnType("bytea");
-
-                    b.Property<byte[]>("AttachmentTwo")
-                        .HasColumnType("bytea");
-
-                    b.Property<DateTime>("DateTimeCreate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime>("DateTimeInit")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Emails")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("PhoneNumbers")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<bool>("PrivetTask")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("SendByUser")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("UseCreatorId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserCreatorId")
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UseCreatorId");
-
-                    b.ToTable("SendEmailTasks");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -574,15 +520,6 @@ namespace DKCrm.Server.Migrations.UserDb
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DKCrm.Shared.SendEmailTask", b =>
-                {
-                    b.HasOne("DKCrm.Shared.Models.ApplicationUser", "UseCreator")
-                        .WithMany("SendEmailTasks")
-                        .HasForeignKey("UseCreatorId");
-
-                    b.Navigation("UseCreator");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -637,8 +574,6 @@ namespace DKCrm.Server.Migrations.UserDb
             modelBuilder.Entity("DKCrm.Shared.Models.ApplicationUser", b =>
                 {
                     b.Navigation("LogUsersVisitToChatList");
-
-                    b.Navigation("SendEmailTasks");
 
                     b.Navigation("UserEmailSettings");
                 });

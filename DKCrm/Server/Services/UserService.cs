@@ -1,8 +1,12 @@
-﻿using DKCrm.Server.Data;
+﻿using System.Security.Claims;
+using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces;
 using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.UserAuth;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor;
 
 namespace DKCrm.Server.Services
 {
@@ -11,11 +15,13 @@ namespace DKCrm.Server.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserDbContext _context;
-        public UserService(UserManager<ApplicationUser> userManager, UserDbContext context, RoleManager<IdentityRole> roleManager)
+        private readonly IConfiguration _configuration;
+        public UserService(UserManager<ApplicationUser> userManager, UserDbContext context, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
         {
             _userManager = userManager;
             _context = context;
             _roleManager = roleManager;
+            _configuration = configuration;
         }
 
         public async Task<IEnumerable<ApplicationUser>> GetAsync()
@@ -100,6 +106,42 @@ namespace DKCrm.Server.Services
             await _userManager.RemoveFromRolesAsync(user, oldRole);
             var result = await _userManager.AddToRoleAsync(user, request.RoleName!);
             return result;
+        }
+        public async Task<UserEmailSettings> GetUserEmailSettingsByUserIdAsync(string userId, ClaimsPrincipal claims)
+        {
+            /*var currentUserId = claims.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier)
+                .Select(a => a.Value).FirstOrDefault();
+            if (currentUserId == null)
+                return new UserEmailSettings();
+            var user = await _userManager.FindByIdAsync(currentUserId);
+            if (user is { EmailConfirmed: false }) throw new Exception("Подтверждение по электронной почте не пройдено");*/
+
+            var settings = await _context.UserEmailSettings.FirstOrDefaultAsync(f => f.UserId == userId);
+            return settings ?? new UserEmailSettings();
+        }
+        public async Task<int> AddOrUpdateUserEmailSettingsAsync(UserEmailSettings settings)
+        {
+            var user = await _userManager.FindByIdAsync(settings.UserId);
+            if (user == null)
+                return 0;
+            _context.UserEmailSettings.Entry(settings).State = settings.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
+            return await _context.SaveChangesAsync();
+        }    
+        public int CheckPass(string pass)
+        {
+                var mPass = _configuration[$"mpass"];
+                if (mPass == null) return 0;
+                return Base64Decode(pass) == mPass ? 1 : 0;
+        }
+        public static string Base64Encode(string plainText)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+            return System.Convert.ToBase64String(plainTextBytes);
+        }
+        public static string Base64Decode(string base64EncodedData)
+        {
+            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
+            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
         //[HttpPost("addtoroles")]
         //public async Task<IdentityResult> AddToRoles(RolesRequest request)

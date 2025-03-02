@@ -1,5 +1,7 @@
-﻿@using DKCrm.Shared.Models.OrderModels
+﻿@using System.Net.WebSockets
+@using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Client.Components.SelectedCategoriesListComponents
+@using DKCrm.Client.Pages.ProductManagement.Components
 
 <MudText Typo="Typo.h5">@TitleText</MudText>
 @if (Product != null)
@@ -35,20 +37,39 @@
                     </MudPaper>
                     
                 </div>
-                <MudSelect Variant="Variant.Outlined" @bind-Value="Product.BrandId"
-                           Label="Производитель"
-                           T="Guid?" 
-                           ToStringFunc="b =>  Brands!.Select(b=>b).FirstOrDefault(w=>w.Id==Product.BrandId)!.Name" 
-                           CloseIcon="@Icons.Material.Filled.Flag"
-                           AdornmentColor="Color.Tertiary">
-                    @if (Brands != null)
-                    {
-                        @foreach (var item in Brands)
+                <div class="d-flex align-items-center justify-content-center">
+                    <MudSelect Variant="Variant.Outlined" @bind-Value="Product.BrandId"
+                               Label="Производитель"
+                               T="Guid?" 
+                               ToStringFunc="b =>  Brands!.Select(b=>b).FirstOrDefault(w=>w.Id==Product.BrandId)!.Name" 
+                               CloseIcon="@Icons.Material.Filled.Flag"
+                               AdornmentColor="Color.Tertiary">
+                        @if (Brands != null)
                         {
-                            <MudSelectItem T="Guid?" Value="@item.Id">@item.Name</MudSelectItem>
+                            @foreach (var item in Brands)
+                            {
+                                <MudSelectItem T="Guid?" Value="@item.Id">
+                                    <MudText> @item.Name</MudText>
+                                </MudSelectItem>
+                            }
                         }
+                    </MudSelect>
+                    @if (Product.BrandId != null && Product.BrandId != Guid.Empty)
+                    {
+                        <MudTooltip Text="изменить">
+                            <MudIconButton Size="@Size.Medium"
+                                           Icon="@Icons.Material.Sharp.Edit" Variant="Variant.Filled"
+                                           OnClick="@(() => OpenEditBrandDialog(Product.BrandId))" Style="margin-left: 1rem;"
+                                           Color="Color.Tertiary"/>
+                        </MudTooltip>
                     }
-                </MudSelect>
+                    <MudTooltip Text="Добавить бренд">
+                        <MudIconButton Variant="Variant.Filled" Size="Size.Medium"
+                                       Icon="@Icons.Material.Sharp.Add"
+                                       OnClick="@(()=> _visibleAddBrandDialog =true)" Style="margin-left: 1rem;"
+                                       Color="Color.Tertiary"/>
+                    </MudTooltip>
+                </div>
                 <MudPaper Style="margin: 1rem 0; padding: 1rem" Outlined="true">
                     <MudText>Количество на складах</MudText>
                     @if (Product.ProductsInStorage != null && Product.ProductsInStorage.Any())
@@ -81,7 +102,7 @@
                         }
                     </MudMenu>
                 </MudPaper>
-                <MudTextField Label="Цена" @bind-Value="Product.Price"
+                <MudNumericField T="decimal?" Label="Цена" @bind-Value="Product.Price"
                               For="@(() => Product.Price)"
                               Variant="Variant.Outlined"
                               Class="mb-3"/>
@@ -149,6 +170,14 @@
                        OnClick="ApplyCategory" Color="Color.Tertiary">Применить</MudButton>
         </DialogContent>
     </MudDialog>
+
+        <AddOrEditBrandDialog @bind-VisibleDialog="_visibleAddBrandDialog"
+                              RefreshParentItem="AddBrandToBrandList" />
+
+        <AddOrEditBrandDialog @bind-VisibleDialog="_visibleEditBrandDialog"
+                              IsEditDialog="true" 
+                              Brand="_brand"
+                              RefreshParentItem="UpdateBrandInBrandList" />
 }
 
 
@@ -162,10 +191,13 @@
 
     public List<Brand>? Brands { get; set; }
     public List<Storage>? Storages { get; set; } = null!;
+    private Brand _brand { get; set; }
 
     private bool _checkSizeTextArea { get; set; } = false;
     private int _sizeTextArea = 5;
     private bool _visibleCategorySelectedList;
+    private bool _visibleAddBrandDialog;
+    private bool _visibleEditBrandDialog;
 
     bool _success;
     protected override async Task OnInitializedAsync()
@@ -220,5 +252,27 @@
         Product!.ProductOption ??= new List<ProductOption>();
         Product.ProductOption.Add(new ProductOption() { CategoryOptionId = categoryOption.Id, CategoryOption = categoryOption, Product = Product, ProductId = Product.Id});
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenEditBrandDialog(Guid? brandId)
+    {
+        if (Brands == null || brandId==null || brandId == Guid.Empty)return;
+        var brand = Brands.FirstOrDefault(f => f.Id == brandId);
+        _brand = brand!;
+        _visibleEditBrandDialog = true;
+    }
+
+    private void AddBrandToBrandList(Brand brand)
+    {
+        Brands?.Insert(0, brand);
+    }
+    private void UpdateBrandInBrandList(Brand brand)
+    {
+        if (Brands != null)
+        {
+            var indexEditedBrand = Brands?.IndexOf(Brands.FirstOrDefault(f => f.Id == brand.Id)!);
+           Brands!.RemoveAt((int)indexEditedBrand!);
+           Brands?.Insert(0, brand);
+        }
     }
 }

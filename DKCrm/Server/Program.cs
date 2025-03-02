@@ -19,12 +19,16 @@ using System.Dynamic;
 using System.Net;
 using DKCrm.Server.Interfaces.ReportInterfaces;
 using DKCrm.Server.Services.ReportServices;
+using DKCrm.Shared;
 using DKCrm.Shared.Constants;
 using Microsoft.AspNetCore.ResponseCompression;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using Microsoft.Extensions.DependencyInjection;
 
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSignalR();
+
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -111,7 +115,14 @@ builder.Services.AddTransient<OrderSpecificationPdfGenerator>();
 builder.Services.AddTransient<CommercialOfferPdfGenerator>();
 builder.Services.AddTransient<ICurrencyDictionaryService, CurrencyDictionaryService>();
 builder.Services.AddTransient<IImageService, ImageService>();
+/*builder.Services.AddTransient<SendEmailTaskTimerService>();
+builder.Services.AddHostedService<SendEmailTaskTimerService>();*/
+builder.Services.AddSingleton<EmailTaskService>();
+builder.Services.AddHostedService<EmailTaskService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+
+
 builder.Services.AddTransient<ICompanyCommentsService, CompanyCommentsService>();
 builder.Services.AddTransient<IReportService, ReportService>();
 

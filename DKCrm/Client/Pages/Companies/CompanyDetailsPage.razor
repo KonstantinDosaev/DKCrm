@@ -259,13 +259,17 @@
                     }
                 }
                 </MudPaper>
-            
-            <MudButton Variant="Variant.Filled" Size="Size.Small" 
-                       OnClick="()=>_visibleRemoveCompanyDialog=true" 
-                       Style="margin-top: 2rem;" Color="Color.Warning">Удалить компанию
-                       <MudIcon Size="@Size.Medium" Color="Color.Default"
-                                Icon="@Icons.Material.Sharp.DeleteForever" Class="pa-0 ml-2" />
-            </MudButton>
+        <AuthorizeView Roles="@RoleNames.SuAdmin">
+            <Authorized>
+                <MudButton Variant="Variant.Filled" Size="Size.Small" 
+                           OnClick="()=>_visibleRemoveCompanyDialog=true" 
+                           Style="margin-top: 2rem;" Color="Color.Warning">Удалить компанию
+                    <MudIcon Size="@Size.Medium" Color="Color.Default"
+                             Icon="@Icons.Material.Sharp.DeleteForever" Class="pa-0 ml-2" />
+                </MudButton>
+            </Authorized>
+        </AuthorizeView>
+           
         </div>
         <div style="min-width: 250px">
             <MudCard Outlined="true" Class=" pa-3">

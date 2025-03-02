@@ -3,6 +3,7 @@
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 @using DKCrm.Shared.Constants
 @using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Client.Pages.Companies
 @page "/export_orders"
 @page "/export_orders/{OrderNumber}/{OrderId:guid}/{ShowOrder:bool}"
 @*@page "/imported_order/tag/{tagid:guid}"*@
@@ -181,8 +182,14 @@
         <MudTd DataLabel="Компания покупатель">
             @if (context.CompanyBuyer != null)
             {
-                <div><MudText Typo="Typo.button"> @context.CompanyBuyer.Name </MudText></div>
-                @if (context.EmployeeBuyer != null)
+                <div>
+                    <MudLink Underline="Underline.Hover" 
+                             Color="Color.Dark" Typo="Typo.button"
+                             OnClick ="@(()=> OpenCompanyDetailsDialog((Guid)context.CompanyBuyerId!))">
+                        @context.CompanyBuyer.Name
+                    </MudLink>
+                </div>
+               @if (context.EmployeeBuyer != null)
                 {
                     <MudMenu>
                         <ActivatorContent>
@@ -328,6 +335,18 @@
     </DialogContent>
   
 </MudDialog>
+@if (_visibleCompanyDetailsDialog)
+{
+    <MudDialog @bind-Visible="_visibleCompanyDetailsDialog"
+               Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true, CloseButton = true }"
+               Style="height: 100VH">
+        <TitleContent>
+        </TitleContent>
+        <DialogContent>
+            <CompanyDetailsPage CompanyId="@CompanyId"></CompanyDetailsPage>
+        </DialogContent>
+    </MudDialog>
+}
 <CreateExportedOrderDialog 
     RefreshParentItem="() => _table.ReloadServerData()"
     @bind-VisibleDialog="_visibleAddOrderDialog"/>
@@ -354,7 +373,7 @@
     public ExportedOrder Order { get; set; } = new();
     [Parameter]public string? SearchString { get; set; }
     [Parameter] public string? SelectedOption { get; set; } = SearchChapterNames.ProductPartNumber;
- 
+    public Guid CompanyId { get; set; }
     private MudTable<ExportedOrder> _table = null!;
     //private MudTable<ExportedOrder> _tables;
     private ExportedOrderStatus? CurrentOrderStatus { get; set; }
@@ -369,7 +388,7 @@
     private bool _visibleDocumentManagerDialog;
     private bool _isOnUnreadComments;
     private bool _unreadCommentsAny;
-
+    private bool _visibleCompanyDetailsDialog;
     private IEnumerable<string> _currencyDisplay = new HashSet<string>() { "Сделки" };
     protected override async Task OnInitializedAsync()
     {
@@ -509,6 +528,11 @@
     {
         order.OrderIsWarn = false;
         await ExportedOrderManager.UpdateAsync(order);
+    }
+    private void OpenCompanyDetailsDialog(Guid companyId)
+    {
+        CompanyId = companyId;
+        _visibleCompanyDetailsDialog = true;
     }
     private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
 

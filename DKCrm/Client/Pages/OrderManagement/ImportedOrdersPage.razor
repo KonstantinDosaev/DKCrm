@@ -2,6 +2,7 @@
 @using DKCrm.Client.Pages.OrderManagement.Components
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 @using DKCrm.Shared.Constants
+@using DKCrm.Client.Pages.Companies
 @page "/imported_orders"
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
@@ -150,8 +151,13 @@
         <MudTd DataLabel="Компания поставщик">
             @if (context.SellersCompany != null)
             {
-
-                <div><MudText Typo="Typo.button"> @context.SellersCompany.Name </MudText></div>
+                <div>
+                    <MudLink Underline="Underline.Hover" 
+                             Color="Color.Dark" Typo="Typo.button"
+                             OnClick ="@(()=> OpenCompanyDetailsDialog((Guid)context.SellersCompanyId!))">
+                        @context.SellersCompany.Name
+                    </MudLink>
+                </div>
                 @if (context.EmployeeSeller != null)
                 {
                     <MudMenu>
@@ -283,7 +289,18 @@
         
     </DialogContent>
 </MudDialog>
-
+@if (_visibleCompanyDetailsDialog)
+{
+    <MudDialog @bind-Visible="_visibleCompanyDetailsDialog"
+               Options="new DialogOptions() { CloseButton=true, FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true }"
+               Style="height: 100VH">
+        <TitleContent>
+        </TitleContent>
+        <DialogContent>
+            <CompanyDetailsPage CompanyId="@CompanyId"></CompanyDetailsPage>
+        </DialogContent>
+    </MudDialog>
+}
 <CreateImportedOrderDialog
     @bind-VisibleDialog="_visibleAddOrderDialog"
                            RefreshProductList="() => _table!.ReloadServerData()" />
@@ -304,6 +321,7 @@
     private NotCompleteExportedProductsComponent? _completeExportedProductsComponent = null!;
     private Guid OrderId { get; set; }
     private IEnumerable<string> _currencyDisplay = new HashSet<string>() { "Сделки" };
+    public Guid CompanyId { get; set; }
 
     private  List<ImportedOrderStatus>? StatusList { get; set; }
     private ImportedOrderStatus? CurrentOrderStatus { get; set; }
@@ -324,6 +342,7 @@
     private bool _showHistoryOrders;
     private bool _filterIsOn; 
     private bool _visibleOrderComments;
+    private bool _visibleCompanyDetailsDialog;
 
     private bool _isActiveMovingProductToOrder;
     private bool _isActiveMergeProductToOrder;
@@ -451,6 +470,11 @@
         SelectedOption = SearchChapterNames.ProductPartNumber;
         await _table!.ReloadServerData();
         StateHasChanged();
+    }
+    private void OpenCompanyDetailsDialog(Guid companyId)
+    {
+        CompanyId = companyId;
+        _visibleCompanyDetailsDialog = true;
     }
     /*private void ResizeOrderCommentDrawer()
     {

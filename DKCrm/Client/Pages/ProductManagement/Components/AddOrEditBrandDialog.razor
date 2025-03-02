@@ -1,0 +1,71 @@
+﻿
+<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <MudForm @bind-IsValid="@_success">
+                <MudTextField Variant="Variant.Outlined"
+                              @bind-Value="@Brand.Name"
+                              For="@(() => Brand.Name)"
+                              Immediate="true"
+                              Label="Название"
+                              Required="true"
+                              Class="m-2"
+                              RequiredError="Введите описание" />
+                <MudTextField Variant="Variant.Outlined"
+                              @bind-Value="@Brand.Description"
+                              For="@(() => Brand.Description)"
+                              Immediate="true"
+                              Label="Описание"
+                              Lines="6"
+                              Required="true"
+                              Class="m-2"
+                              RequiredError="Введите сообщение" />
+                
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@(!_success)" Class="ml-auto"
+                           OnClick="Create">Применить</MudButton>
+
+            </MudForm>
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public bool IsEditDialog { get; set; }
+    [Parameter] public EventCallback<Brand> RefreshParentItem { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public Brand Brand { get; set; } = new ();
+    bool _success;
+   
+    /*protected override async Task OnInitializedAsync()
+    {
+       
+    }*/
+    async Task Create()
+    {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
+        if (IsEditDialog)
+            await BrandManager.UpdateAsync(Brand);
+        else
+            await BrandManager.AddAsync(Brand);
+
+        await RefreshParentItem.InvokeAsync(Brand);
+        _snackBar.Add("Сохранено");
+        await CloseClick();
+    }
+    
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+}

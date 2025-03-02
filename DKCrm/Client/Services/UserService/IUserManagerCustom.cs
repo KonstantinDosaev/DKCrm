@@ -1,4 +1,5 @@
 ﻿using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Identity;
 
 namespace DKCrm.Client.Services.UserService
@@ -15,6 +16,12 @@ namespace DKCrm.Client.Services.UserService
         Task<List<string>> GetRoleFromUser(string userId);
         Task AddUserToRole(RoleRequest request);
         Task UpdateUserRole(RoleRequest request);
+
+        Task<UserEmailSettings> GetUserEmailSettingsByUserIdAsync(string userId);
+
+        Task AddOrUpdateUserEmailSettingsAsync(UserEmailSettings settings);
+
+        Task<int> CheckPass(string pass);
         //Task AddUserToRoles(RolesRequest request);
         //Task AddRole(string roleName);
 

@@ -80,8 +80,9 @@
                                                               Required="true"/>
                                                 <MudTextField @bind-Value="emailMessage"
                                                               For="@(() => emailMessage)"
-                                                              Immediate="true"
-                                                              Label="Сообение" Class="mb-2"/>
+                                                              Immediate="true" Required="true"
+                                                              Label="Сообщение" Class="mb-2"/>
+                                                <MudSwitch @bind-Value="sendByUser" Label="как пользователь" Color="Color.Success" />
                                                 <MudButton OnClick="SendPdfToMessage"
                                                            Disabled="@(!_successEmail)" Class="ml-auto mr-n3 mb-1"
                                                            Variant="Variant.Filled"
@@ -95,7 +96,6 @@
                             }
                         }
                     </div>
-
                     @if (_visibleStampPdf)
                     {
                         <div>
@@ -261,8 +261,6 @@
                             </div>
 
                         }
-
-
                     }
                 }
             </div>
@@ -310,6 +308,7 @@
     string email;
     string emailSubject;
     string emailMessage;
+    bool sendByUser;
     Orientation _tempOrientation;
     [Parameter] public byte[]? PdfDocument { get; set; }
     private bool _isOpenMenuAddedStamps;
@@ -613,9 +612,11 @@
         if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите отправку сообщения")) return;
         await MailManager.SendEmail(new SendEmailRequest()
         {
-                Email = email,
+                Emails = [email],
                 Message = emailMessage,
                 Subject = emailSubject, 
+                SendByUser = sendByUser,
+                
                 Attachments = new Dictionary<string, byte[]>() { { InfoSet.Name, PdfDocument! } }
         });
     }

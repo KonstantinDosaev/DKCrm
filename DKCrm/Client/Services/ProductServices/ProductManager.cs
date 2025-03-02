@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using DKCrm.Client.Constants;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
+using DKCrm.Shared.Requests;
 
 namespace DKCrm.Client.Services.ProductServices
 {
@@ -46,9 +47,10 @@ namespace DKCrm.Client.Services.ProductServices
         {
            return (await _httpClient.PutAsJsonAsync("api/product/range", products, JsonOptions.JsonIgnore)).StatusCode== HttpStatusCode.OK;
         }    
-        public async Task<bool> RemoveAsync(Guid id)
+        public async Task<bool> RemoveAsync(DeleteForGuidRequest request)
         {
-           return (await _httpClient.DeleteAsync($"api/product/{id}")).StatusCode== HttpStatusCode.OK;
+            var response = await _httpClient.PostAsJsonAsync($"api/Product/delete", request) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<int>() > 0 ;
         }
 
         public async Task AddProductAsync(Product product)
@@ -59,6 +61,19 @@ namespace DKCrm.Client.Services.ProductServices
         public async Task RemoveRangeProductsAsync(IEnumerable<Product> products)
         {
              await _httpClient.PostAsJsonAsync($"api/product/removerange",products);
+        }
+
+        public async Task<byte[]> OutputProductListToExcelAsync(List<Guid> productsIds)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/Product/outputXl", productsIds) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<byte[]>() ?? throw new InvalidOperationException();
+
+        }
+        public async Task<List<string>> LoadProductsFromExcelAsync(byte[] excelBt)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/Product/loadFromXl", excelBt) ?? throw new InvalidOperationException();
+            return await response.Content.ReadFromJsonAsync<List<string>>() ?? throw new InvalidOperationException();
+
         }
     }
 }

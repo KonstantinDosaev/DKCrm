@@ -1,0 +1,191 @@
+﻿<MudTooltip Text="Показать важные комментарии">
+    <MudIconButton OnClick="()=> OpenCheckPass(true)"
+                   Icon="@Icons.Material.Filled.AlternateEmail"/>
+</MudTooltip>
+
+    <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleCheckPassDialog" Style="max-width: 700px; padding: 0"
+               Options="new DialogOptions() { CloseButton = true, }" Class="no-padding"
+               TitleClass="order_commentWarning">
+        <TitleContent>
+
+        </TitleContent>
+        <DialogContent>
+            <div class="p-3">
+                <MudForm @ref="_form" @bind-IsValid="@_success">
+                    <div class="">
+                        <MudTextField T="string" @bind-Value="@_pass" Placeholder="Пароль" F
+                                      InputType="InputType.Password"
+                                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 228px;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium" Class="mt-0 mb-2"
+                                      Required="true" />
+                    </div>
+                    <MudButton Variant="Variant.Filled"
+                               Size="Size.Medium"
+                               Disabled="@( !_success)"
+                               OnClick="GetCheckedPass"
+                               Style="margin-right: 1rem;"
+                               Color="Color.Tertiary">
+                        Применить
+                    </MudButton>
+                </MudForm>
+            </div>
+        </DialogContent>
+    </MudDialog>
+
+
+    <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleDialog" Style="max-width: 700px; padding: 0"
+               Options="new DialogOptions() { CloseButton = true, }" Class="no-padding"
+               TitleClass="order_commentWarning">
+        <TitleContent>
+
+        </TitleContent>
+        <DialogContent>
+            <div class="p-3">
+                <MudForm @ref="_form" @bind-IsValid="@_success">
+                    <div class="d-flex flex-wrap">
+                        <MudTextField T="string" @bind-Value="@Settings.MailPort" Placeholder="Mail Port"
+                                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 228px;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium" Class="mt-0 mb-2"
+                                      Required="true" />
+                        <div style="width: 228px;" class="mb-2">
+                            <MudSelect T="string"
+                                       ValueChanged="OnSelectMailPort"
+                                       Variant="Variant.Outlined" Dense="true"
+                                       Class="select-button">
+                                <MudSelectItem T="string" Value="@("587")">587</MudSelectItem>
+                                <MudSelectItem T="string" Value="@("25")">25</MudSelectItem>
+                                <MudSelectItem T="string" Value="@("465")">467</MudSelectItem>
+                            </MudSelect>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap">
+                        <MudTextField T="string" @bind-Value="@Settings.MailServer" Placeholder="Mail Server"
+                                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 228px;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium" Class="mt-0 mb-2"
+                                      Required="true" />
+                        <div style="width: 228px;" class="mb-2">
+                            <MudSelect T="string"
+                                       ValueChanged="OnSelectMaiServer"
+                                       Variant="Variant.Outlined" Dense="true"
+                                       Class="select-button">
+                                <MudSelectItem T="string" Value="@("smtp.yandex.ru")">smtp.yandex.ru</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("smtp.mail.ru")">smtp.mail.ru</MudSelectItem>
+                            </MudSelect>
+                        </div>
+                    </div>
+                    <div class="">
+                        <MudTextField T="string" @bind-Value="@Settings.SenderName" Placeholder="Имя отправителя"
+                                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 228px;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium" Class="mt-0 mb-2"
+                                      Required="true" />
+                    </div>
+                    <div class="">
+                        <MudTextField T="string" @bind-Value="@Settings.Sender" Placeholder="E-mail"
+                                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 228px;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium" Class="mt-0 mb-2"
+                                      Required="true" />
+                    </div>
+                    <div class="">
+                        <MudTextField T="string" @bind-Value="@Settings.Password" Placeholder="Пароль"
+                                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; width: 228px;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium" Class="mt-0 mb-2"
+                                      Required="true" />
+                    </div>
+                    <MudButton Variant="Variant.Filled"
+                               Size="Size.Medium"
+                               Disabled="@( !_success)"
+                               OnClick="SetSettings"
+                               Style="margin-right: 1rem;"
+                               Color="Color.Tertiary">
+                        Применить
+                    </MudButton>
+                </MudForm>
+            </div>
+        </DialogContent>
+    </MudDialog>
+
+
+@code {
+    [Parameter] public ApplicationUser User { get; set; } = null!;
+  
+    private UserEmailSettings Settings { get; set; } = new();
+    private string _pass { get; set; }
+
+
+    MudForm _form;
+    bool _visibleDialog;
+    bool _visibleCheckPassDialog;
+    private bool _success;
+
+    private async Task LoadSettings()
+    {
+        Settings = await UserManagerCustom.GetUserEmailSettingsByUserIdAsync(User.Id);
+        if (string.IsNullOrEmpty(Settings.Sender) )
+        {
+            Settings = new UserEmailSettings()
+            {
+               Sender = User.Email!,
+               SenderName = $"{User.LastName} {User.FirstName}", 
+               UserId = User.Id, 
+            };
+        }
+    }
+
+    private void OnSelectMailPort(string value) => Settings.MailPort = value;
+    private void OnSelectMaiServer(string value) => Settings.MailServer = value;    
+
+    private async Task OpenDialog(bool toggle)
+    {
+
+       await LoadSettings();
+        _visibleDialog = true;
+       
+    }
+    private void OpenCheckPass(bool toggle)
+    {
+        _visibleCheckPassDialog = true;
+    }
+    private async Task GetCheckedPass()
+    {
+        var response = await UserManagerCustom.CheckPass(Base64Encode(_pass));
+        _visibleCheckPassDialog = false;
+        _pass = "";
+        if (response == 1)
+        {
+           await OpenDialog(true);
+        }
+    }
+    private async Task SetSettings()
+    {
+        await UserManagerCustom.AddOrUpdateUserEmailSettingsAsync(Settings);
+        _visibleDialog = false;
+    }
+    public static string Base64Encode(string plainText)
+    {
+        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        return System.Convert.ToBase64String(plainTextBytes);
+    }
+}
+<style>
+     .select-button {
+         margin: 0 !important;
+     }
+
+         .select-button .mud-input-slot.mud-input-root-outlined {
+             padding: 0.67rem 0.8rem !important;
+             text-transform: uppercase !important;
+             font-size: 0.85rem !important;
+         }
+</style>

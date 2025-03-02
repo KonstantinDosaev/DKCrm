@@ -25,5 +25,6 @@ namespace DKCrm.Shared.Models.Products
 
         public ICollection<ExportedProduct>? ExportedProducts { get; set; }
         public ICollection<ImportedProduct>? ImportedProducts { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

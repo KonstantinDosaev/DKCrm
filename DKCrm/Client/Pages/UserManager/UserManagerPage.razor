@@ -1,7 +1,7 @@
 ﻿@inject HttpClient httpClient
 @inject ISnackbar Snackbar
 @page "/usermanager"
-@using Microsoft.AspNetCore.Identity
+@using DKCrm.Client.Pages.UserManager.Components
 <MudTable Items="@_elements"
           Dense="true"
           Hover="true"
@@ -21,7 +21,7 @@
           SelectOnRowClick="true">
          
     <ToolBarContent>
-        <MudText Typo="Typo.h4">Управление пользователями</MudText>
+        <MudText Typo="Typo.h4">Управление пользователями</MudText>  <EmailConfigSettings  />
         <MudButton Variant="Variant.Filled" Size="Size.Medium" OnClick="OpenDialog" Style="margin-left: 1rem;" Color="Color.Tertiary">Создать пользователя  <MudIcon Size="@Size.Large" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" /></MudButton>
 
         @if (_selectedItems.Any())
@@ -62,14 +62,16 @@
         <MudTd DataLabel="Role"> <MudButton Variant="Variant.Filled" Size="Size.Medium" 
                                             OnClick="() => OpenRoleDialog(context)" 
                                             Color="Color.Tertiary">Изменить роль</MudButton> 
-                                <MudButton Variant="Variant.Filled" Size="Size.Medium" 
-                                           OnClick="() => OpenEditUserProfileDialog(context)" 
-                                           Color="Color.Tertiary">Редактировать профиль</MudButton></MudTd>
+            <MudButton Variant="Variant.Filled" Size="Size.Medium" 
+                       OnClick="() => OpenEditUserProfileDialog(context)" 
+                       Color="Color.Tertiary">Редактировать профиль</MudButton></MudTd>
+        <EmailConfigSettings User="@context"/>
     </RowTemplate>
     <RowEditingTemplate>
         <MudTd DataLabel="Фамили">@context.LastName</MudTd>
         <MudTd DataLabel="Email">
             <MudTextField @bind-Value="@context.Email" Required/>
+           
         </MudTd>
         <MudTd DataLabel="Login">
             <MudTextField @bind-Value="@context.UserName" Required/>

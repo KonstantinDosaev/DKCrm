@@ -59,12 +59,8 @@ namespace DKCrm.Server.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<Product>()
-                .HasQueryFilter(x => x.IsDeleted == false);
-            builder.Entity<Storage>()
-                .HasQueryFilter(x => x.IsDeleted == false);
-            builder.Entity<ApplicationOrderingProducts>()
-                .HasQueryFilter(x => x.IsDeleted == false);
+          
+        
 
             builder.Entity<Category>(entity =>
             {

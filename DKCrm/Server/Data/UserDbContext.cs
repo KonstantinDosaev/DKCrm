@@ -1,5 +1,7 @@
-﻿using DKCrm.Shared.Models;
+﻿using DKCrm.Shared;
+using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Chat;
+using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +16,8 @@ namespace DKCrm.Server.Data
         public DbSet<ChatGroup> ChatGroups { get; set; } = null!;
         public DbSet<LogUsersVisitToChat> LogUsersVisitToChats { get; set; } = null!;
         public DbSet<Address> Addresses { get; set; } = null!;
+        public DbSet<UserEmailSettings> UserEmailSettings { get; set; }
+        public DbSet<SendEmailTask> SendEmailTasks { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -38,6 +42,11 @@ namespace DKCrm.Server.Data
                         j.HasKey(t => new { t.ApplicationUserId, t.ChatGroupId });
                         j.ToTable("LogUsersVisitToChats");
                     });
+
+            builder.Entity<ApplicationUser>()
+                .HasOne(a => a.UserEmailSettings)
+                .WithOne(b => b.User)
+                .HasForeignKey<UserEmailSettings>(b => b.UserId);
             //builder.Entity<ApplicationUser>(entity =>
             //{
             //    entity.HasOne(d => d.Address)

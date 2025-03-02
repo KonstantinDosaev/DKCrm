@@ -1,0 +1,176 @@
+﻿@page "/tasks"
+@using DKCrm.Shared
+@using DKCrm.Shared.Constants
+@using DKCrm.Client.Pages.TaskSchedulerManagement.Components
+
+
+
+<MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
+    @*<div class="d-flex">
+        <MudTooltip Text="фильтр">
+            <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                       OnClick="() => _visibleProductFilter = true"
+                       Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
+                <MudIcon Size="@Size.Medium" Color="Color.Default"
+                         Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2" />
+            </MudButton>
+        </MudTooltip>
+        <MudButton Variant="Variant.Filled" Style="margin-left: 1rem;"
+                   OnClick="@(() =>_categoryDrawerRef!.OpenCategoryDrawer())">Категории</MudButton>
+        <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                   OnClick="() => _storageSettings!.OpenStorageDialog()"
+                   Style="margin-left: 1rem;" Color="Color.Default">
+            Склады
+            <MudIcon Size="@Size.Medium" Color="Color.Default"
+                     Icon="@Icons.Material.Sharp.FilterAlt"
+                     Class="pa-0 ml-2" />
+        </MudButton>
+    </div>*@
+    <div class="d-flex">
+        @*<MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
+                      Style="box-shadow: rgba(100, 100, 111, 0.4) 0 7px 29px 0;border-radius: 6px;padding: 0.2rem; margin-left: 1rem; width: 300px;"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
+        <MudButton Variant="Variant.Filled" Size="Size.Medium"
+                   OnClick="()=> _visibleCreatedDialog =true" Style="margin-left: 1rem;"
+                   Color="Color.Tertiary">
+            Добавить оповещение
+            <MudIcon Size="@Size.Medium" Color="Color.Default"
+                     Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
+        </MudButton>
+        @*@if (_selectedItemsId.Any())
+        {
+            <MudButton Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       Color="Color.Error" OnClick="OnButtonDeleteClicked"
+                       Style="margin-left: 1rem;">Удалить</MudButton>
+        }*@
+    </div>
+</MudPaper>
+<MudTable ServerData="ServerReload"
+          Dense="true"
+          Hover="true"
+          ReadOnly="false"
+         
+          SelectOnRowClick="false"
+          Striped="true"
+          Bordered="true"
+        
+          AllowUnsorted="true"
+          HeaderClass="mud-table-header table-head-bordered mud-table-header-fix"
+          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.78)}px")"
+          @ref="_table">
+    <ColGroup>
+    </ColGroup>
+    <HeaderContent>
+        @*<MudTh>
+            <MudCheckBox Value="@(_selectedItemsId.Count!= 0)"
+                         Dense="true"
+                         ValueChanged="(s)=>CheckboxAllChange(s)"
+                         T="bool"></MudCheckBox>
+        </MudTh>*@
+        <MudTh><MudTableSortLabel SortLabel="subj_field" T="SendEmailTask">Описание</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="dateInit_field" T="SendEmailTask">Дата запуска</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="brand_field" T="SendEmailTask">Содержание</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="dateCre_field" T="SendEmailTask">Дата создания</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="brand_field" T="SendEmailTask">E-mails</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="brand_field" T="SendEmailTask">Создатель</MudTableSortLabel></MudTh>
+        
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Subjectn">@context.Subject</MudTd>
+        <MudTd DataLabel="DateTimeInit">@context.DateTimeInit</MudTd>
+        <MudTd DataLabel="Brand">@context.Message</MudTd>
+        <MudTd DataLabel="DateTimeCreate">@context.DateTimeCreate</MudTd>
+        <MudTd DataLabel="DateTimeCreate">@context.Emails</MudTd>
+
+        <MudTd DataLabel="Категория">
+            @if (context.UseCreator != null)
+            {
+                @($"{context.UseCreator.FirstName} {context.UseCreator.LastName}")
+            }
+        </MudTd>
+        <MudTd Style="text-align: center" DataLabel="Edit">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OpenUpdateDialog(context))"></MudIconButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => Remove(context))"></MudIconButton>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>Нет данных в списке</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Загрузка...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new [] { 10, 20, int.MaxValue }" Style="height: 30px;" RowsPerPageString="Строк на странице" />
+    </PagerContent>
+</MudTable>
+@if (_table != null)
+{
+    <CreateUpdateTaskSendEmail @bind-VisibleDialog="_visibleCreatedDialog"
+                               RefreshParentItem="@(_table!.ReloadServerData)"/>
+}
+@if (_editedEmailTask != null)
+{
+    <CreateUpdateTaskSendEmail @bind-VisibleDialog="_visibleUpdatedDialog"
+                               SendEmailTaskItem="_editedEmailTask"
+                               IsEditDialog="true"
+                               RefreshParentItem="@(_table!.ReloadServerData)"/>
+}
+
+@code {
+    [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
+    [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
+    [CascadingParameter(Name = "GlobalFilterValue")] private string? GlobalFilterValue { get; set; }
+    private MudTable<SendEmailTask>? _table;
+    private string? _searchString;
+    private SendEmailTask? _editedEmailTask;
+    private FilterTaskSendEmailTuple? _filterTuple;
+    private bool _visibleCreatedDialog;
+    private bool _visibleUpdatedDialog;
+
+    private async Task<TableData<SendEmailTask>> ServerReload(TableState state, CancellationToken token)
+    {
+        var response = await MailManager.GetTasksBySortAsync(new SortPagedRequest<FilterTaskSendEmailTuple>()
+        {
+            PageIndex = state.Page,
+            PageSize = state.PageSize,
+            SearchString = _searchString,
+            SortLabel = state.SortLabel,
+            SortDirection = state.SortDirection,
+            FilterTuple = _filterTuple,
+            GlobalFilterValue = GlobalFilterValue,
+            GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
+
+        });
+        return new TableData<SendEmailTask>() { TotalItems = response.TotalItems, Items = response.Items };
+    }
+    private async Task Start()
+    {
+        /*var time = (int)Math.Abs((DateTime.Now.AddMinutes(5) - DateTime.Now).TotalMilliseconds);
+        var tt = time;*/
+        await MailManager.AddOrUpdateSendEmailTask(new SendEmailTask()
+        {
+            DateTimeCreate = DateTime.Now,
+            DateTimeInit = DateTime.Now.AddMinutes(1),
+            Emails = "dosaevk@yandex.ru",
+            Message = "Test Task", Subject = "Subj test",
+        });
+    }
+
+    private async Task Remove(SendEmailTask task)
+    {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удаление"))
+            return;
+        await MailManager.RemoveTask(task);
+        await _table!.ReloadServerData();
+
+    }
+    private void OpenUpdateDialog(SendEmailTask tsk)
+    {
+        _editedEmailTask = tsk;
+        _visibleUpdatedDialog = true;
+    }
+}

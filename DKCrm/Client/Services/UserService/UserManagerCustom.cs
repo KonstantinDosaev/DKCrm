@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using DKCrm.Client.Constants;
+using DKCrm.Shared.Models.UserAuth;
 
 namespace DKCrm.Client.Services.UserService
 {
@@ -64,7 +65,18 @@ namespace DKCrm.Client.Services.UserService
         {
             await _httpClient.PostAsJsonAsync("api/user/updateuserrole", request, JsonOptions.JsonIgnore);
         }
-
+        public async Task<UserEmailSettings> GetUserEmailSettingsByUserIdAsync(string userId)
+        {
+            return await _httpClient.GetFromJsonAsync<UserEmailSettings>($"api/user/GetUserEmailSettingsByUserId/{userId}") ?? throw new InvalidOperationException();
+        }
+        public async Task AddOrUpdateUserEmailSettingsAsync(UserEmailSettings settings)
+        {
+             await _httpClient.PostAsJsonAsync("api/user/AddOrUpdateUserEmailSettingsAsync", settings, JsonOptions.JsonIgnore);
+        }
+        public async Task<int> CheckPass(string pass)
+        {
+            return await _httpClient.GetFromJsonAsync<int>($"api/user/CheckPass/{pass}");
+        }
         //public async Task AddUserToRoles(RolesRequest request)
         //{
         //    await _httpClient.PostAsJsonAsync("api/user/addtoroles", request);

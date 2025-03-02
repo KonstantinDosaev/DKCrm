@@ -4,7 +4,7 @@ using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Shared.Models.CompanyModels
 {
-    public class Company: IIdentifiable
+    public class Company: IIdentifiable, ISoftDelete
     {
         public Guid Id { get; set; }
         [MaxLength(50)]
@@ -47,5 +47,9 @@ namespace DKCrm.Shared.Models.CompanyModels
         public virtual ICollection<ExportedOrder>? ExportedOrdersBuyerCompany { get; set; }
         public virtual ICollection<ImportedOrder>? ImportedOrdersOurCompany { get; set; }
         public virtual ICollection<ImportedOrder>? ImportedOrdersSellersCompany { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsFullDeleted { get; set; }
+        public DateTime? DateTimeUpdate { get; set; }
+        public string? UpdatedUser { get; set; }
     }
 }

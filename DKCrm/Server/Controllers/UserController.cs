@@ -1,5 +1,6 @@
 ﻿using DKCrm.Server.Interfaces;
 using DKCrm.Shared.Models;
+using DKCrm.Shared.Models.UserAuth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -66,6 +67,21 @@ namespace DKCrm.Server.Controllers
         public async Task<IdentityResult> UpdateUserRole(RoleRequest request)
         {
             return await _userService.UpdateUserRoleAsync(request);
+        }
+        [HttpGet("GetUserEmailSettingsByUserId/{userId}")]
+        public async Task<IActionResult> GetUserEmailSettingsByUserId(string userId)
+        {
+            return Ok(await _userService.GetUserEmailSettingsByUserIdAsync(userId, User));
+        }
+        [HttpPost("AddOrUpdateUserEmailSettingsAsync")]
+        public async Task<IActionResult> AddOrUpdateUserEmailSettingsAsync(UserEmailSettings settings)
+        {
+            return Ok(await _userService.AddOrUpdateUserEmailSettingsAsync(settings));
+        }
+        [HttpGet("CheckPass/{pass}")]
+        public IActionResult CheckPass(string pass)
+        {
+            return Ok( _userService.CheckPass(pass));
         }
     }
 }

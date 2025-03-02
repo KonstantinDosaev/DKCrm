@@ -1,0 +1,215 @@
+﻿@using System.Security.Claims
+@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared
+@using DKCrm.Shared.Models.OrderModels
+<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium }">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <MudForm @bind-IsValid="@_success">
+                <div class="d-flex">
+                    <MudDatePicker Editable="true" 
+                                   @bind-Date="_tempDate"
+                                   Required="true"
+                                   Mask="@(new DateMask("dd/MM/yyyy"))"
+                                   DateFormat="dd/MM/yyyy"
+                                   Placeholder="Дата запуска"
+                                   Variant="Variant.Outlined"
+                                   Style=" margin: 0 1rem;"
+                                   Class="myDataPicker_filter"
+                                   Clearable IconSize="Size.Small" />
+                    <MudTimePicker Required="true"
+                                   Placeholder="Время запуска"
+                                   Variant="Variant.Outlined"
+                                   Style=" margin: 0 1rem;"
+                                   Class="myDataPicker_filter"
+                                   Time="@_tempTime"
+                                   TimeChanged="@((t) => _tempTime = t!)" />
+                </div>
+                <MudTextField Variant="Variant.Outlined"
+                              @bind-Value="@SendEmailTaskItem.Subject"
+                              For="@(() => SendEmailTaskItem.Subject)"
+                              Immediate="true"
+                              Label="Описание"
+                              Required="true"
+                             Class="m-2"
+                              RequiredError="Введите описание"/>
+                <MudTextField Variant="Variant.Outlined"
+                              @bind-Value="@SendEmailTaskItem.Message"
+                              For="@(() => SendEmailTaskItem.Message)"
+                              Immediate="true"
+                              Label="Сообщение"
+                              Lines="6"
+                              Required="true"
+                              Class="m-2"
+                              RequiredError="Введите сообщение"/>
+                <div class="d-flex">
+                    @foreach (var email in _emails)
+                    {
+                        <div class="d-flex m-2 align-items-center">
+                            <MudText>@email</MudText>
+                            <MudIconButton 
+                                Class="mr-2"
+                                Icon="@Icons.Material.Filled.Close"
+                                OnClick="@(()=>RemoveEmail(email))"
+                                Color="Color.Error" />
+                        </div>
+                    }
+                    @if (!_emails.Any())
+                    {
+                        <MudText Color="Color.Warning">Добавте адресата</MudText>
+                    }
+                </div>
+                <div class="d-flex ">
+                    @if (!_manualEnterEmail)
+                    {
+                        <MudAutocomplete T="ApplicationUser"
+                                         Label="Пользователи"
+                                         @bind-Value="_selectedUser"
+                                         SearchFunc="@Search2"
+                                       
+                                         Class="m-2"
+                                         Variant="Variant.Outlined"
+                                         AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Check" Class="mr-2"
+                                       Color="Color.Success" Size="Size.Small"
+                                       OnClick="@AddEmail"/>
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Color="Color.Success" Size="Size.Small"
+                                       OnClick="@(()=> _manualEnterEmail = true)"/>
+                    }
+                    else
+                    {
+                        <MudTextField Variant="Variant.Outlined"
+                                      @bind-Value="@_emailManual"
+                                      For="@(() => SendEmailTaskItem.Subject)"
+                                      Immediate="true"
+                                      Label="Введите e-mail"
+                                      Class="m-2"
+                                      RequiredError="Введите описание"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Check" Class="mr-2"
+                                       Color="Color.Success" Size="Size.Small"
+                                       OnClick="@AddEmailManual"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                       Color="Color.Success" Size="Size.Small"
+                                       OnClick="@(()=> _manualEnterEmail = false)"/>
+                    }
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                          
+                           Disabled="@(!_success || !_emails.Any())" Class="ml-auto"
+                           OnClick="Create">Применить</MudButton>
+
+            </MudForm>
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+<AuthorizeView>
+    <Authorized>
+            @if (context.User.Identity != null)
+            {
+                userId = @context.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).Select(a => a.Value).FirstOrDefault();
+            }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public bool IsEditDialog { get; set; }
+    [Parameter] public EventCallback RefreshParentItem { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public SendEmailTask SendEmailTaskItem { get; set; } = new SendEmailTask();
+    string userId;
+    private string? _emailManual;
+    private DateTime? _tempDate;
+    private TimeSpan? _tempTime;
+    private bool _manualEnterEmail;
+    private List<string> _emails = new List<string>();
+    bool _success;
+    List<ApplicationUser> _users;
+    ApplicationUser? _selectedUser;
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await UserManagerCustom.GetUsersAsync();
+        if (IsEditDialog == true)
+        {
+            _tempDate = SendEmailTaskItem.DateTimeInit;
+            _tempTime = SendEmailTaskItem.DateTimeInit.TimeOfDay;
+            _emails = SendEmailTaskItem.Emails.Split(';').ToList();
+        }
+        else
+        {
+            var usr = _users.FirstOrDefault(f => f.Id == userId);
+            if (usr != null) _emails.Add(usr.Email!);
+        }
+    }
+    async Task Create()
+    {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
+       
+        var temIniDateTime = new DateTime(_tempDate!.Value.Year, _tempDate.Value.Month, _tempDate.Value.Day,
+            _tempTime!.Value.Hours, _tempTime.Value.Minutes,00);
+        SendEmailTaskItem.DateTimeInit = temIniDateTime;
+        SendEmailTaskItem.DateTimeCreate = DateTime.Now;
+        if (!_emails.Any())
+            return;
+        SendEmailTaskItem.Emails = string.Join(";", _emails);
+        if (await MailManager.AddOrUpdateSendEmailTask(SendEmailTaskItem))
+        {
+            await RefreshParentItem.InvokeAsync();
+            _snackBar.Add("Задание создано");
+            await CloseClick();
+        }
+    }
+    private async Task<IEnumerable<ApplicationUser>> Search2(string value, CancellationToken token)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+        await Task.Delay(5, token);
+        
+        // if text is null or empty, don't return values (drop-down will not open)
+        if (string.IsNullOrEmpty(value))
+            return _users;
+        var result = _users.Where(x =>             
+         (x.FirstName != null && x.FirstName.ToLower().Contains(value.ToLower()))
+                               || (x.LastName != null && x.LastName.ToLower().Contains(value.ToLower()))
+                               ||
+                            
+                               ( x.Email != null && x.Email.ToLower().Contains(value.ToLower()))
+                               || (x.UserName != null && x.UserName.ToLower().Contains(value.ToLower())));
+        return result;
+    }
+
+    private void AddEmail()
+    {
+        if (_selectedUser != null && !string.IsNullOrEmpty(_selectedUser.Email) && !_emails.Contains(_selectedUser.Email!))
+        {
+            _emails.Add(_selectedUser.Email!);
+            _selectedUser = null;
+        }
+    }
+    private void AddEmailManual()
+    {
+        if (!string.IsNullOrEmpty(_emailManual) && !_emails.Contains(_emailManual))
+        {
+            _emails.Add(_emailManual!);
+            _emailManual = null;
+        }
+    }
+    private void RemoveEmail(string email)
+    {
+        _emails.Remove(email);
+    }
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+}

@@ -1,7 +1,10 @@
 ﻿using DKCrm.Server.Interfaces.ProductInterfaces;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
+using DKCrm.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Threading.Tasks;
 
 namespace DKCrm.Server.Controllers.ProductControllers
 {
@@ -37,11 +40,18 @@ namespace DKCrm.Server.Controllers.ProductControllers
         [HttpPut("range")]
         public async Task<IActionResult> PutRange(IEnumerable<Product> products) => Ok(await _productService.PutRangeAsync(products));
 
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id) => Ok(await _productService.DeleteAsync(id));
+        [HttpPost("delete")]
+        public async Task<IActionResult> Delete(DeleteForGuidRequest request) => Ok(await _productService.DeleteAsync(request));
 
         [HttpPost("removerange")]
         public async Task<IActionResult> DeleteRange(IEnumerable<Guid> products) => Ok(await _productService.DeleteRangeAsync(products));
 
+        [HttpPost("outputXl")]
+        public async Task<IActionResult> OutputProductListToExcel(List<Guid> productsIds)
+            => Ok(await _productService.OutputProductListToExcelAsync(productsIds));   
+        
+        [HttpPost("loadFromXl")]
+        public async Task<IActionResult> LoadProductsFromExcel(byte[] excelBt)
+            => Ok(await _productService.LoadProductsFromExcelAsync(excelBt));
     }
 }

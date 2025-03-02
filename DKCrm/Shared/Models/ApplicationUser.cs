@@ -2,6 +2,7 @@
 using DKCrm.Shared.Models.Chat;
 using Microsoft.AspNetCore.Identity;
 using DKCrm.Shared.Iterfaces;
+using DKCrm.Shared.Models.UserAuth;
 
 namespace DKCrm.Shared.Models
 {
@@ -21,11 +22,14 @@ namespace DKCrm.Shared.Models
         public bool AreThereNewOrderComments { get; set; }
         public virtual ICollection<LogUsersVisitToChat>? LogUsersVisitToChatList { get; set; }
         public virtual ICollection<ChatGroup>? ChatGroups { get; set; }
+        public virtual ICollection<SendEmailTask>? SendEmailTasks { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }
         [MaxLength(50)]
         public string? UpdatedUser { get; set; }
         public Guid? EmployeeId { get; set; }
+        public Guid? UserEmailSettingsId { get; set; }
+        public virtual UserEmailSettings? UserEmailSettings { get; set; }
     }
 }

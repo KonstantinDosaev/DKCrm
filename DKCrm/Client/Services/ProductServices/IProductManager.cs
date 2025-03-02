@@ -1,5 +1,6 @@
 ﻿using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.Products;
+using DKCrm.Shared.Requests;
 
 namespace DKCrm.Client.Services.ProductServices
 {
@@ -14,6 +15,8 @@ namespace DKCrm.Client.Services.ProductServices
         Task <bool> UpdateRangeProductsAsync(IEnumerable<Product> products);
         Task AddProductAsync(Product user);
         Task RemoveRangeProductsAsync(IEnumerable<Product> products);
-        Task<bool> RemoveAsync(Guid id);
+        Task<bool> RemoveAsync(DeleteForGuidRequest requestQ);
+        Task<byte[]> OutputProductListToExcelAsync(List<Guid> productsIds);
+        Task<List<string>> LoadProductsFromExcelAsync(byte[] excelBt);
     }
 }
