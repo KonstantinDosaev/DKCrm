@@ -22,7 +22,7 @@
                    Style="margin-left: 1rem;" Color="Color.Default">
             Склады
             <MudIcon Size="@Size.Medium" Color="Color.Default"
-                     Icon="@Icons.Material.Sharp.FilterAlt"
+                     Icon="@Icons.Material.Sharp.Storefront"
                      Class="pa-0 ml-2"/>
         </MudButton>
         <MudTooltip Text="Выгрузить в Excel файл">
@@ -30,7 +30,7 @@
                        OnClick="() =>SaveProductsInXlsToClientPc()"
                        Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
                 <MudIcon Size="@Size.Medium" Color="Color.Default"
-                         Icon="@Icons.Material.Filled.FileUpload" Class="pa-0 ml-2"/>
+                         Icon="@Icons.Material.Filled.UploadFile" Class="pa-0 ml-2"/>
             </MudButton>
         </MudTooltip>
         <MudTooltip Text="Загрузить из Excel файла">
@@ -39,7 +39,7 @@
                     <MudButton Variant="Variant.Filled" Size="Size.Medium"
                                Style="margin-left: 1rem;" Color="@(_filterIsOn ? Color.Warning : Color.Default)">
                         <MudIcon Size="@Size.Medium" Color="Color.Default"
-                                 Icon="@Icons.Material.Filled.FileDownload" Class="pa-0 ml-2"/>
+                                 Icon="@Icons.Material.Outlined.SimCardDownload" Class="pa-0 ml-2"/>
                     </MudButton>
                 </ActivatorContent>
             </MudFileUpload>

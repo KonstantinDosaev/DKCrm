@@ -1,0 +1,58 @@
+﻿@using DKCrm.Shared.Constants
+<MudMenu Class="mr-2">
+    <ActivatorContent>
+        <MudTooltip Text="Заметки">
+            <MudIconButton Variant="Variant.Filled" Size="Size.Medium" OnClick="GetItems" Style="color:aliceblue"
+                           Icon="@Icons.Material.Filled.StickyNote2" />
+        </MudTooltip>
+    </ActivatorContent>
+    <ChildContent>
+        <MudTextField T="string" ValueChanged="@(AddItem)" Placeholder="Заметки" FullWidth="true"
+                      Style="padding: 0.5rem; width:400px" Value="_noteText"
+                      Adornment="Adornment.Start"
+                      IconSize="Size.Medium"
+                      Class="mt-0  myBoxShadow" Lines="15"></MudTextField>
+    </ChildContent>
+</MudMenu>
+
+
+@code {
+    private string? _noteText;
+    private LocalStorageItem[]? LocalStorageItems { get; set; }
+
+    private async Task GetItems()
+    {
+        if (_noteText == null)
+        {
+            LocalStorageItems = await SessionStorageService.GetItemAsync<LocalStorageItem[]>(LocalStorageItemTypes.NotePadeItem.ToString());
+
+            if (LocalStorageItems != null && LocalStorageItems.Any())
+            {
+                                _noteText = LocalStorageItems.FirstOrDefault()?.Value ?? "";
+            }
+
+        }
+    }
+
+    private async Task AddItem(string text)
+    {
+        _noteText = text;
+        LocalStorageItems = new LocalStorageItem[] {
+            new()
+            {
+                Name = _noteText.Substring(0,
+                    _noteText.Length >= 10 ? 10 : _noteText.Length),
+                Value = _noteText
+            }
+        };
+        await SessionStorageService.SetItemAsync<LocalStorageItem[]>(LocalStorageItemTypes.NotePadeItem.ToString(), LocalStorageItems);
+        // private async Task AddOrUpdateItem()
+        // {
+        //     LocalStorageItems = await MyLocalStorageService.GetValueAsync<List<LocalStorageItem>>(LocalStorageItemTypes.NotePadeItem.ToString());
+        //     LocalStorageItems ??= [];
+        //     LocalStorageItems.Add(new LocalStorageItem(){Name = ItemName, Value = ItemValue});
+        //     await MyLocalStorageService.SetValueAsync<List<LocalStorageItem>>(LocalStorageItemType.ToString(), LocalStorageItems);
+        // }
+    }
+
+}

@@ -12,22 +12,8 @@
             </button>
         </div>
     </div>
-    <div class="d-flex">
-        <MudMenu Class="mr-2">
-            <ActivatorContent>
-                <MudTooltip Text="Заметки">
-                    <MudIconButton Size="Size.Small"
-                                   Icon="@Icons.Material.Filled.StickyNote2" />
-                </MudTooltip>
-            </ActivatorContent>
-            <ChildContent>
-                <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Заметки" FullWidth="true"
-                              Style="padding: 0.5rem; width:400px" Value="_noteText"
-                              Adornment="Adornment.Start"
-                              IconSize="Size.Medium"
-                              Class="mt-0  myBoxShadow" Lines="15"></MudTextField>
-            </ChildContent>
-        </MudMenu>
+    <div class="d-flex mb-2">
+        <NotePadComponent/>
         <GlobalFilterComponent OnGlobalFilter="@OnGlobalFilter"
                                ResetGlobalFilter="@ResetGlobalFilter"/>
     </div>
@@ -80,7 +66,8 @@
                 </AuthorizeView>
            
                 <div class="my-navitem">
-                    <MudNavLink ActiveClass="nav-active" Class="my-navlink" Href="/r">
+                    <MudNavLink ActiveClass="nav-active" Class="my-navlink" Style = "color:aliceblue"
+                                Href="/r"> 
                         <MudIcon Size="@Size.Medium" Color="Color.Default" 
                                  Icon="@Icons.Material.Sharp.BarChart" Class="pa-0 mr-2"/>
                     </MudNavLink>
@@ -174,7 +161,7 @@
     [Parameter] public EventCallback<(int, string)> OnGlobalFilter { get; set; }
     [Parameter] public EventCallback ResetGlobalFilter { get; set; }
    [Parameter] public bool UserProfileIsValid { get; set; }
-   private string _noteText;
+ 
     private void ToggleNavMenu()
     {
         _collapseNavMenu = !_collapseNavMenu;
@@ -184,12 +171,7 @@
         await AuthStateProvider.Logout();
         _navigationManager.NavigateTo("/login");
     }
-    private void OnSearch(string text)
-    {
-        _noteText = text;
-        // SelectedOption = SelectedOption != "null" ? SelectedOption : null;
-        //_table.ReloadServerData();
-    }
+  
 }
 <style>
     .my-navbody {
@@ -235,6 +217,8 @@
     .nav-active {
         background-color: white!important;
         color: grey !important;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
     }
     .user-nav {
         display: flex;

@@ -255,7 +255,7 @@
         var response = await ExportedProductManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterExportedProductTuple>()
         {
             PageIndex = _currentPageNumber,
-            PageSize = 1,
+            PageSize = 5,
             SearchString = _searchString,
             //SortLabel = state.SortLabel,
             ////Chapter = Chapter,

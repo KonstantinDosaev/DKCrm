@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace DKCrm.Shared.Constants
 {
-    public enum ImageTypes
+    public enum LocalStorageItemTypes
     {
-        Avatar,
-        Stamp,
+        NotePadeItem,
         Image,
-        OrderRecipientImage,
-        OrderImage
+        PdfDocument,
+        ExportedOrder,
+        ImportedOrder,
+        Product
     }
 }

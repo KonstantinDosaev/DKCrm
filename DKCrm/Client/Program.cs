@@ -1,3 +1,4 @@
+using Blazored.SessionStorage;
 using DKCrm.Client;
 using DKCrm.Client.Services.AccessRestrictionService;
 using DKCrm.Client.Services.Auth;
@@ -27,7 +28,8 @@ using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
+//builder.RootComponents.Add<HeadOutlet>("head::after");
+builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
@@ -68,6 +70,7 @@ builder.Services.AddTransient<IMailManager, MailManager>();
 builder.Services.AddTransient<ICompanyCommentsManager, CompanyCommentsManager>();
 builder.Services.AddTransient<IAccessRestrictionManager, AccessRestrictionManager>();
 builder.Services.AddTransient<IReportManager, ReportManager>();
+
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

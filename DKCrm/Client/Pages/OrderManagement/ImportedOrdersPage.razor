@@ -19,6 +19,15 @@
                 <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2"/>
             </MudButton>
         </MudTooltip>
+        <MudTooltip Placement="Placement.Right" Text="не прочитанные комментарии">
+            <MudButton Size="@Size.Medium" Style="margin-right: 0.7rem;"
+                       Variant="Variant.Filled" OnClick="() => OnUnreadComments()"
+                       StartIcon="@Icons.Material.Filled.CommentBank"
+                       Color="@(_isOnUnreadComments ? Color.Primary : Color.Default)">
+                <MudIcon Icon="@(_unreadCommentsAny ? Icons.Material.Filled.PlusOne : Icons.Material.Filled.Check)"/>
+
+            </MudButton>
+        </MudTooltip>
         <MudTooltip Text="история">
             <MudButton Variant="Variant.Filled"
                        Color="@(_showHistoryOrders ? Color.Primary : Color.Default)"
@@ -343,7 +352,8 @@
     private bool _filterIsOn; 
     private bool _visibleOrderComments;
     private bool _visibleCompanyDetailsDialog;
-
+    private bool _isOnUnreadComments;
+    private bool _unreadCommentsAny;
     private bool _isActiveMovingProductToOrder;
     private bool _isActiveMergeProductToOrder;
     protected override async Task OnInitializedAsync()
@@ -391,6 +401,7 @@
                 GlobalFilterValue = GlobalFilterValue,
                 GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
         });
+        _unreadCommentsAny = response.AnyUnreadComment;
         return new TableData<ImportedOrder>() { TotalItems = response.TotalItems, Items = response.Items };
     }   
     private async Task LoadStatusList()
@@ -475,6 +486,12 @@
     {
         CompanyId = companyId;
         _visibleCompanyDetailsDialog = true;
+    }
+    private void OnUnreadComments()
+    {
+        _isOnUnreadComments = !_isOnUnreadComments;
+        FilterOrderTuple.IsOrdersWithUnreadComments = !FilterOrderTuple.IsOrdersWithUnreadComments;
+        _table!.ReloadServerData();
     }
     /*private void ResizeOrderCommentDrawer()
     {

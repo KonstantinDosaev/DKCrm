@@ -161,8 +161,32 @@ namespace DKCrm.Server.Services.CompanyServices
                                        || w.ActualAddress.Country.ToLower().Contains(request.SearchString));
             }
 
+            var unreadAny = data.Any(wm =>
+                (_context.CompanyComments.Where(w => w.CompanyId == wm.Id)
+                    .Select(s => s.DateTimeUpdate).Any() && _context.LogUsersVisitToCompanyComments
+                    .FirstOrDefault(f => f.CompanyOwnerCommentsId == wm.Id
+                                         && f.UserId == userId) == null)
+                || (_context.LogUsersVisitToCompanyComments
+                    .FirstOrDefault(f => f.CompanyOwnerCommentsId == wm.Id
+                                         && f.UserId == userId)!.DateTimeVisit < _context.CompanyComments
+                    .Where(w => w.CompanyId == wm.Id)
+                    .Select(s => s.DateTimeUpdate).Max()));
+
             if (request.FilterTuple != null)
             {
+                if (request.FilterTuple.IsItemsWithUnreadComments)
+                {
+                    data = data.Where(wm =>
+                        (_context.CompanyComments.Where(w => w.CompanyId == wm.Id)
+                            .Select(s => s.DateTimeUpdate).Any() && _context.LogUsersVisitToCompanyComments
+                            .FirstOrDefault(f => f.CompanyOwnerCommentsId == wm.Id
+                                                 && f.UserId == userId) == null)
+                        || (_context.LogUsersVisitToCompanyComments
+                            .FirstOrDefault(f => f.CompanyOwnerCommentsId == wm.Id
+                                                 && f.UserId == userId)!.DateTimeVisit < _context.CompanyComments
+                            .Where(w => w.CompanyId == wm.Id)
+                            .Select(s => s.DateTimeUpdate).Max()));
+                }
                 if (request.FilterTuple.CompanyTypeId != null)
                 {
                     data = data.Where(o => o.CompanyTypeId == request.FilterTuple.CompanyTypeId);
@@ -203,7 +227,11 @@ namespace DKCrm.Server.Services.CompanyServices
             }
             data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
 
-            return new SortPagedResponse<Company>() { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() };
+            return new SortPagedResponse<Company>() { 
+                TotalItems = totalItems, 
+                Items = await data.AsSingleQuery().ToListAsync(),
+                AnyUnreadComment = unreadAny
+            };
 
         }
         public async Task<Guid> PostAsync(Company company)

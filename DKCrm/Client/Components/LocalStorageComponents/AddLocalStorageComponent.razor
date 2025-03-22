@@ -1,0 +1,25 @@
+﻿@using DKCrm.Shared.Constants
+
+<MudTooltip Text="Добавить в клипборд">
+    <MudIconButton OnClick="AddOrUpdateItem"
+                   Icon="@Icons.Material.Filled.WarningAmber"/>
+</MudTooltip>
+
+@code {
+    [Parameter] public LocalStorageItemTypes LocalStorageItemType { get; set; }
+    [Parameter] public string ItemName { get; set; } = null!;
+    [Parameter] public string ItemValue { get; set; } = "";
+    [Parameter] public byte[]? ItemAttachment { get; set; }
+    private List<LocalStorageItem>? LocalStorageItems{get; set; }
+
+    private async Task AddOrUpdateItem()
+    {
+        LocalStorageItems = await SessionStorageService.GetItemAsync<List<LocalStorageItem>>(LocalStorageItemType.ToString());
+        LocalStorageItems ??= [];
+        var insertItem = new LocalStorageItem() { Name = ItemName, Value = ItemValue };
+        if (ItemAttachment != null)
+            insertItem.Attachment = ItemAttachment;
+        LocalStorageItems.Add(insertItem);
+        await SessionStorageService.SetItemAsync<List<LocalStorageItem>>(LocalStorageItemType.ToString(), LocalStorageItems);
+    }
+}

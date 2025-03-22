@@ -24,7 +24,15 @@
             <MudIcon Size="@Size.Small" Color="Color.Default"
                      Icon="@Icons.Material.Sharp.Settings" Class="pa-0 ml-2" />
         </MudButton>
+        <MudTooltip Placement="Placement.Right" Text="не прочитанные комментарии">
+            <MudButton Size="@Size.Medium" Style="margin-right: 0.7rem;"
+                       Variant="Variant.Filled" OnClick="() => OnUnreadComments()"
+                       StartIcon="@Icons.Material.Filled.CommentBank"
+                       Color="@(_isOnUnreadComments ? Color.Primary : Color.Default)">
+                <MudIcon Icon="@(_unreadCommentsAny ? Icons.Material.Filled.PlusOne : Icons.Material.Filled.Check)"/>
 
+            </MudButton>
+        </MudTooltip>
 
     </div>
     <div class="d-flex">
@@ -177,6 +185,8 @@
     object _selectedValue = 1;
     private bool _visibleAddCompanyDialog;
     private bool _visibleComments;
+    private bool _isOnUnreadComments;
+    private bool _unreadCommentsAny;
     private List<Guid>? NotOpenedCommentIsd { get; set; }
     private List<CompanyComment>? _warnComments;
     private Color WarningCommentIconColor { get; set; }
@@ -211,6 +221,7 @@
             GlobalFilterValue = GlobalFilterValue,
             GlobalFilterType = (GlobalFilterTypes)Enum.GetValues(typeof(GlobalFilterTypes)).GetValue(GlobalFilterType)!
         });
+        _unreadCommentsAny = response.AnyUnreadComment;
         return new TableData<Company>() { TotalItems = response.TotalItems, Items = response.Items };
     }   
     protected override async Task OnParametersSetAsync()
@@ -281,6 +292,12 @@
             }
            
         }
+    }
+    private void OnUnreadComments()
+    {
+        _isOnUnreadComments = !_isOnUnreadComments;
+        _filterTuple.IsItemsWithUnreadComments = !_filterTuple.IsItemsWithUnreadComments;
+        _table!.ReloadServerData();
     }
     // private async Task CheckNotOpenComments()
     // {

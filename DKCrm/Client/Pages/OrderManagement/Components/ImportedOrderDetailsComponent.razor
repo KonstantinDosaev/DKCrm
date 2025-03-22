@@ -1,5 +1,6 @@
 ﻿@using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
+@using DKCrm.Shared.Constants
 
 @if (Order != null)
 {
@@ -62,6 +63,21 @@
     <div class="d-flex px-3 align-items-center">
         <MudText Typo="Typo.h6">Список продуктов поставки</MudText>
         <MudSpacer />
+        <MudMenu>
+            <ActivatorContent>
+                <MudTooltip Text="Изображения">
+                <MudIconButton Size="@Size.Medium"
+                               Color="Color.Tertiary"
+                               Icon="@Icons.Material.Sharp.Image"
+                               Variant="Variant.Filled"
+                                   Class="pa-1 mr-2" />
+                </MudTooltip>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem OnClick="(() => VisibleImageDialogToggle(true))">Приемка</MudMenuItem>
+                <MudMenuItem OnClick="(() => VisibleDefaultImageDialogToggle(true))">Другие</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
         <MudTooltip Text="Редактировать заказ">
             <MudIconButton Size="@Size.Medium"
                            OnClick="@(() =>  _visibleUpdateOrderDialog = true)"
@@ -234,6 +250,31 @@
         @bind-VisibleDialog="_visibleUpdateOrderDialog"
         RefreshParentItem="RefreshParentItem"
         Id="Order.Id"/>
+
+    @if (_visibleImageDialog)
+    {
+        <DKImageManagerDialog DirectoryType="@DirectoryType.PrivateFolder"
+                              FileType="FileTypes.Images"
+                              RelativePath="@(Path.Combine(PathsToDirectories.FileContainer,PathsToDirectories.Images))"
+                              LoadMoreCount="5"
+                              TitleText="Изображения"
+                              @bind-VisibleDialog="_visibleImageDialog"
+                              ImageType="@ImageTypes.OrderRecipientImage"
+                              IsPreviewImage="true"
+                              OwnerId="@Id" />
+    }
+    @if (_visibleDefaultImageDialog)
+    {
+        <DKImageManagerDialog DirectoryType="@DirectoryType.PrivateFolder"
+                              FileType="FileTypes.Images"
+                              RelativePath="@(Path.Combine(PathsToDirectories.FileContainer,PathsToDirectories.Images))"
+                              LoadMoreCount="5"
+                              TitleText="Изображения"
+                              @bind-VisibleDialog="_visibleDefaultImageDialog"
+                              ImageType="@ImageTypes.OrderImage"
+                              IsPreviewImage="true"
+                              OwnerId="@Id" />
+    }
     
 }
 @code {
@@ -252,7 +293,8 @@
 
     private bool _visibleAddImportedProductDialog;
     private bool _visibleEditImportedProductDialog;
- 
+    private bool _visibleImageDialog;
+    private bool _visibleDefaultImageDialog;
 
     private bool _oneQuantityPrice = true;
     private bool _isOpenPricePopover;
@@ -311,6 +353,14 @@
     private void OpenOrderComments(Guid orderId)
     {
         _visibleOrderComments = !_visibleOrderComments;
+    }
+    void VisibleImageDialogToggle(bool toggle)
+    {
+        _visibleImageDialog = toggle;
+    }   
+    void VisibleDefaultImageDialogToggle(bool toggle)
+    {
+        _visibleDefaultImageDialog = toggle;
     }
 }
 <style>

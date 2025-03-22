@@ -169,6 +169,16 @@ namespace DKCrm.Server.Services.OrderServices
                             break;
                     }
             }
+            var unreadAny = data.Any(wm =>
+                (_context.CommentOrders.Where(w => w.OrderId == wm.Id)
+                    .Select(s => s.DateTimeUpdate).Any() && _context.LogUsersVisitToOrderComments
+                    .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
+                                         && f.UserId == userId) == null)
+                || (_context.LogUsersVisitToOrderComments
+                    .FirstOrDefault(f => f.OrderOwnerCommentsId == wm.Id
+                                         && f.UserId == userId)!.DateTimeVisit < _context.CommentOrders
+                    .Where(w => w.OrderId == wm.Id)
+                    .Select(s => s.DateTimeUpdate).Max()));
             if (request.FilterTuple != null)
             {
                 if (request.FilterTuple.IsOrdersWithUnreadComments)
@@ -303,7 +313,10 @@ namespace DKCrm.Server.Services.OrderServices
             data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
 
             return new SortPagedResponse<ImportedOrder>()
-                { TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync() };
+            {
+                TotalItems = totalItems, Items = await data.AsSingleQuery().ToListAsync(),
+                AnyUnreadComment = unreadAny
+            };
 
         }
 

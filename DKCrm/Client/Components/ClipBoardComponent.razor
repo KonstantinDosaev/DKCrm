@@ -1,0 +1,110 @@
+﻿@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Requests.ImageService
+<MudTooltip Text="Открыть клипборд">
+    <MudIconButton OnClick="()=> OpenDialog(true)"
+                   Icon="@Icons.Material.Filled.Tablet" />
+</MudTooltip>
+@if (_visibleDialog)
+{
+    <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleDialog" Style="max-width: 700px; padding: 0"
+               Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding"
+               TitleClass="order_commentWarning">
+        <TitleContent>
+            
+        </TitleContent>
+        <DialogContent>
+            @if (ImageItems != null && ImageItems.Any())
+            {
+                <MudList Dense="true" T="string">
+                    @foreach (var file in ImageItems)
+                    {
+                        <MudListItem Style="" Icon="@Icons.Material.Filled.AttachFile">
+                            <MudPaper Class="d-flex px-4 py-2  align-items-center justify-content-between" Elevation="14">
+                                <div class="d-flex align-items-center">
+                                   
+                                    <MudImage ObjectFit="ObjectFit.Contain" Height="180" Width="300"
+                                              Src="@($"data:image;base64,{Convert.ToBase64String(file.Attachment)}")"
+                                              Elevation="25"
+                                              Class="rounded-lg mr-4"
+                                              Alt="@file.Name" Fluid="true"/>
+                                    
+                                    <div class="mr-2">@file.Name</div>
+                                </div>
+                                <MudIconButton Icon="@Icons.Material.Filled.GetApp" Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="() => ApplyImageFile(file)"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Clear" Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="() => RemoveImage(file)"></MudIconButton>
+                            </MudPaper>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+            @if (PdfItems != null && PdfItems.Any())
+            {
+                <MudList Dense="true" T="string">
+                    @foreach (var file in PdfItems)
+                    {
+                        <MudListItem Style="" Icon="@Icons.Material.Filled.AttachFile">
+                            <MudPaper Class="d-flex px-4 py-2  align-items-center justify-content-between" Elevation="14">
+                                <div class="d-flex align-items-center">
+                                    <div class="mr-2">@file.Name</div>
+                                </div>
+                                <MudIconButton Icon="@Icons.Material.Filled.GetApp" Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="() => ApplyPdfFile(file)"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Clear" Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="() => RemoveImage(file)"></MudIconButton>
+                            </MudPaper>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        </DialogContent>
+    </MudDialog>
+    
+}
+@code {
+    bool _visibleDialog;
+    private List<LocalStorageItem>? ImageItems { get; set; }
+    private List<LocalStorageItem>? PdfItems { get; set; }
+    private GetManyImagesResponse? Images { get; set; }
+    private bool _loading = false;
+
+    private async Task OpenDialog(bool toggle)
+    {
+ 
+        _visibleDialog = true;
+        ImageItems = await SessionStorageService.GetItemAsync<List<LocalStorageItem>>(LocalStorageItemTypes.NotePadeItem.ToString());
+        PdfItems = await SessionStorageService.GetItemAsync <List<LocalStorageItem>>(LocalStorageItemTypes.PdfDocument.ToString());
+    }
+    private async Task ApplyPdfFile(LocalStorageItem file)
+    {
+        if (ImageItems != null)
+        {
+          
+        }
+    }   
+    private async Task ApplyImageFile(LocalStorageItem file)
+    {
+        if (ImageItems != null)
+        {
+          
+        }
+    }
+    private async Task RemoveImage(LocalStorageItem file)
+    {
+        if (ImageItems != null)
+        {
+            ImageItems.Remove(file);
+            await SessionStorageService.SetItemAsync<List<LocalStorageItem>>(LocalStorageItemTypes.Image.ToString(), ImageItems);
+        }
+    }
+    private async Task RemovePdf(LocalStorageItem file)
+    {
+        if (PdfItems != null)
+        {
+            PdfItems.Remove(file);
+            await SessionStorageService.SetItemAsync<List<LocalStorageItem>>(LocalStorageItemTypes.PdfDocument.ToString(), PdfItems);
+        }
+    }
+    
+}
