@@ -514,7 +514,7 @@ namespace DKCrm.Server.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "PathToFile",
-                table: "DocumentsToOrder",
+                table: "InfoSetsToDocuments",
                 type: "character varying(200)",
                 maxLength: 200,
                 nullable: false,
@@ -523,7 +523,7 @@ namespace DKCrm.Server.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
-                table: "DocumentsToOrder",
+                table: "InfoSetsToDocuments",
                 type: "character varying(50)",
                 maxLength: 50,
                 nullable: false,
@@ -1466,7 +1466,7 @@ namespace DKCrm.Server.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "PathToFile",
-                table: "DocumentsToOrder",
+                table: "InfoSetsToDocuments",
                 type: "text",
                 nullable: false,
                 oldClrType: typeof(string),
@@ -1475,7 +1475,7 @@ namespace DKCrm.Server.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
-                table: "DocumentsToOrder",
+                table: "InfoSetsToDocuments",
                 type: "text",
                 nullable: false,
                 oldClrType: typeof(string),

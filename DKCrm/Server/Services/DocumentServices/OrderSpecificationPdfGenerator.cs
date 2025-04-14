@@ -44,7 +44,7 @@ public class OrderSpecificationPdfGenerator
 
         var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);
-            var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
+            var infoSetFromDocumentToOrders = docs as InfoSetToDocument[] ?? docs.ToArray();
             var infoSetFromSpecification = infoSetFromDocumentToOrders
                 .Where(w => w.DocumentType == (int)DocumentTypes.OrderSpecification).ToArray();
             _indexInstanceDocument = infoSetFromSpecification.Any() ? infoSetFromSpecification
@@ -91,12 +91,12 @@ public class OrderSpecificationPdfGenerator
             if (!File.Exists(fullOutPdfPath))
                 throw new FileNotFoundException();
             
-            var document = new InfoSetFromDocumentToOrder()
+            var document = new InfoSetToDocument()
             {
                 Name = fileOutPdfName,
                 FileType = (int)FileTypes.Documents,
                 DateTimeCreated = DateTime.Now,
-                OrderId = Order.Id,
+                OwnerId = Order.Id,
                 DocumentType = (int)DocumentTypes.OrderSpecification,
                 PathToFile = fullOutPdfPath,
                 StampPosition = _stampPosition

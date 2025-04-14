@@ -11,7 +11,7 @@ namespace DKCrm.Server.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "DocumentsToOrder",
+                name: "InfoSetsToDocuments",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -32,7 +32,7 @@ namespace DKCrm.Server.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "DocumentsToOrder");
+                name: "InfoSetsToDocuments");
         }
     }
 }

@@ -1,0 +1,96 @@
+﻿@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Requests.FileService
+
+<MudFileUpload  MaximumFileCount="10" T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
+    @*             <ButtonTemplate>
+                <MudButton HtmlTag="label"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary" Size="Size.Medium"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           for="@context.Id">
+                    Добавить
+                </MudButton>
+                
+            </ButtonTemplate> *@
+    <ActivatorContent>
+        <MudTooltip Text="Загрузить документ">
+            <MudIconButton Icon="@Icons.Material.Filled.Upload"
+                           Color="Color.Info"
+                           Variant="Variant.Outlined"/>
+        </MudTooltip>
+    </ActivatorContent>
+</MudFileUpload>
+
+@code {
+    [Parameter] public FileTypes FileType { get; set; }
+    [Parameter] public DocumentTypes DocumentType { get; set; }
+    [Parameter] public Guid OwnerId { get; set; }
+    [Parameter] public DirectoryType DirectoryType { get; set; }
+    [Parameter] public DocumentOwner Owner { get; set; }
+    [Parameter] public EventCallback UploadsFilesCallback { get; set; }
+    
+    private async Task UploadFiles(IReadOnlyList<IBrowserFile>? files)
+    {
+        if (files == null) return;
+        foreach (var file in files)
+        {
+            var contentAsByte = await ConvertBrowseFileToByteArray(file);
+            var request = new UploadDocumentRequest()
+            {
+                DirectoryType = DirectoryType,
+                IsFullPath = false,
+                FileName = file.Name,
+                DocumentType = DocumentType,
+                OwnerId = OwnerId,
+                Content = contentAsByte,
+                OwnerType = Owner
+            };
+            var extArr = file.Name.Split('.');
+            request.Extension = extArr[^1].ToLower() switch
+            {
+                "pdf" => DocumentExtension.Pdf,
+                "xls" or "xlsx" => DocumentExtension.Xls,
+                "doc" => DocumentExtension.Doc,
+                _ => DocumentExtension.None
+            };
+            await DocumentManager.UploadDocumentFileAsync(request);
+        }
+
+        await UploadsFilesCallback.InvokeAsync();
+    }
+    /*private async Task SaveFilesAsync()
+    {
+        foreach (var file in files)
+        {
+            var request = new UploadDocumentRequest()
+            {
+                DirectoryType = DirectoryType,
+                IsFullPath = false,
+                FileName = file.FileName,
+                DocumentType = DocumentType,
+                OwnerId = OwnerId,
+                Content = file.Content, 
+                OwnerType = Owner
+            };
+            switch (file.)
+            {
+                
+            }
+            if (file.ContentType is FileTypes.Documents)
+            {
+                await DocumentManager.UploadDocumentFileAsync(request);
+            }
+        }
+        await UploadsFilesCallback.InvokeAsync();
+        files.Clear();
+    }*/
+    private async Task<byte[]> ConvertBrowseFileToByteArray(IBrowserFile file)
+    {
+        using (var ms = new MemoryStream())
+        {
+            await file.OpenReadStream(maxAllowedSize: 3500000).CopyToAsync(ms);
+            return ms.ToArray();
+        }
+    }
+
+}

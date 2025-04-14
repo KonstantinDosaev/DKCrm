@@ -20,5 +20,6 @@ namespace DKCrm.Server.Interfaces.ProductInterfaces
         Task<int> DeleteRangeAsync(IEnumerable<Guid> products);
         Task<byte[]> OutputProductListToExcelAsync(List<Guid> productsIds);
         Task<List<string>> LoadProductsFromExcelAsync(byte[] excelBt);
+        Task<IEnumerable<Product>> GetAllContainsInIdsAsync(IEnumerable<Guid> ids);
     }
 }

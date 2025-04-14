@@ -1,6 +1,7 @@
 ﻿using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -8,6 +9,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [Authorize]
     public class ExportedOrderController:ControllerBase
     {
         private readonly IExportedOrderService _exportedOrderService;

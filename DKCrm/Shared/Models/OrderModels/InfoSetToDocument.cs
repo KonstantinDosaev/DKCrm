@@ -2,7 +2,7 @@
 
 namespace DKCrm.Shared.Models.OrderModels
 {
-    public class InfoSetFromDocumentToOrder
+    public class InfoSetToDocument
     {
         public Guid Id { get; set; }
         [MaxLength(50)]
@@ -12,7 +12,10 @@ namespace DKCrm.Shared.Models.OrderModels
         public DateTime DateTimeCreated { get; set; }
         [MaxLength(200)]
         public string PathToFile { get; set; } = null!;
-        public Guid OrderId { get; set; }
+        public Guid OwnerId { get; set; }
+        public int OwnerType { get; set; }
+        public int Extension { get; set; }
+
         public float StampPosition { get; set;}
     }
 }

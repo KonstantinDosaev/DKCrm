@@ -1,0 +1,193 @@
+﻿@using System.Runtime.CompilerServices
+@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Models.OfferModels
+<MudMenu>
+    <ActivatorContent>
+        <MudTooltip Text="Предложения">
+            <MudIconButton Icon="@Icons.Material.Filled.Money"
+                           Variant="Variant.Filled"
+                           Style="" />
+        </MudTooltip>
+    </ActivatorContent>
+    <ChildContent>
+        <MudPaper Style="background-color: rgba(255, 255, 255, 0.1);"
+                  Class="p-3"
+                  Elevation="20">
+            <div class="mb-3">
+                <MudText Typo="Typo.button" Class="mr-4 fs-6">Предложения</MudText>
+                @*@if (FilterIsOn)
+                {
+                    <MudIconButton Variant="Variant.Filled" Class="myBoxShadow"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Close"
+                                   OnClick="() => CloseFilter()"
+                                   Color="Color.Error" />
+                }*@
+            </div>
+            <div class="mb-2">
+                <MudSelect Variant="Variant.Outlined" Dense="true"
+                           Style="" Class="select-button"
+                           T="int" Value="SelectedOption"
+                           ValueChanged="OnSelectedOption">
+                    <MudSelectItem Value="@((int)GlobalFilterTypes.Product)">продукт</MudSelectItem>
+                    @*<MudSelectItem Value="@((int)GlobalFilterTypes.ExportedOrder)">импорт(номер заказа)</MudSelectItem>
+                    <MudSelectItem Value="@((int)GlobalFilterTypes.ImportedOrder)">экспорт(номер заказа)</MudSelectItem>*@
+                    <MudSelectItem Value="@((int)GlobalFilterTypes.Company)">компания</MudSelectItem>
+                </MudSelect>
+            </div>
+            <div class="">
+                @if (SelectedOption == (int)GlobalFilterTypes.Product)
+                {
+                    <div class="mb-2">
+                        <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск" Variant="Variant.Outlined"
+                                      Style="padding: 0;" Value="_searchString"
+                                      Adornment="Adornment.Start" 
+                                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"
+                                      Class="mt-0 select-button"
+                        ></MudTextField>
+                    </div>
+                    if (Products != null)
+                    {
+                        <div class="mb-2">
+                            <MudSelect T="Product"
+                                       Placeholder="Продукт" Value="@CurrenProduct" ValueChanged="OnProductFilter"
+                                       Variant="Variant.Outlined" Dense="true"
+                                       Class="select-button p-0"
+                                       OnOpen="() => LoadCompanyList()"
+                                       ToStringFunc="com => com?.Name!">
+                           
+                                @foreach (var product in Products)
+                                {
+                                    <MudSelectItem T="Product" Value="@(product)">п-н/ @product.PartNumber /@product.Name</MudSelectItem>
+                                }
+                            
+                            </MudSelect>
+                        </div>
+                    }
+                    
+                } 
+                @if (SelectedOption == (int)GlobalFilterTypes.Company)
+                {
+                    <div class="mb-2">
+                        <MudSelect T="Company"
+                                   Placeholder="компания" Value="@CurrentCompany" ValueChanged="OnCompanyFilter"
+                                   Style="" Class="select-button"
+                                   Variant="Variant.Outlined" Dense="true"
+                                   OnOpen="() => LoadCompanyList()"
+                                   ToStringFunc="com => com?.Name!">
+                            @if (Companies != null)
+                            {
+                                foreach (var company in Companies)
+                                {
+                                    <MudSelectItem T="Company" Value="@(company)">@company.Name</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </div>
+                }
+
+                
+                <div>
+                    <MudButton Variant="Variant.Filled" Class=""
+                               Size="Size.Large"
+                               OnClick="() => OnFilter()"
+                               Style="color: #26b050">Применить</MudButton>
+
+                </div>
+            </div>
+        </MudPaper>
+    </ChildContent>
+</MudMenu>
+@if (_visible)
+{
+    <MudDialog @bind-Visible="_visible" Style="padding: 0"
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+        <DialogContent>
+            <ImportedOfferComponent CompanyId="FilterTuple.CurrentCompanyId" FilterTuple="FilterTuple" />
+        </DialogContent>
+    </MudDialog>
+}
+
+@code {
+    [Parameter] public EventCallback<(int, string)> OnGlobalFilter { get; set; }
+    [Parameter] public EventCallback ResetGlobalFilter { get; set; }
+    private string? _searchString;
+    public bool FilterIsOn { get; set; }
+    public int SelectedOption { get; set; } = 0;
+    private List<Company>? Companies;
+    private Company? CurrentCompany;
+    private List<Product>? Products;
+    private Product? CurrenProduct;
+    
+    FilterOfferTuple FilterTuple = new FilterOfferTuple();
+    bool _visible;
+    private async Task LoadCompanyList()
+    {
+     
+        Companies ??= await CompanyManager.GetCompaniesByTypeAsync(TypeCompanyNames.Suppliers);
+   
+        
+    }
+    private void OnSelectedOption(int indexOption)
+    {
+        ResetSelectedItems();
+        SelectedOption = indexOption;
+    } 
+    private void OnCompanyFilter(Company? company)
+    {
+        CurrentCompany = company;
+    } 
+    private void OnProductFilter(Product? product)
+    {
+        CurrenProduct = product;
+    } 
+    private async Task OnSearch(string text)
+    {
+        _searchString = text;
+        if(string.IsNullOrEmpty(_searchString)) return;
+        Products = await ProductManager.GetSearchProductAsync(_searchString);
+        // SelectedOption = SelectedOption != "null" ? SelectedOption : null;
+        //_table.ReloadServerData();
+    }
+
+
+    private async Task OnFilter()
+    {
+        if (SelectedOption == (int)GlobalFilterTypes.Product)
+        {
+            if (CurrenProduct != null)
+            {
+                FilterTuple = new FilterOfferTuple();
+                FilterTuple.ProductId = CurrenProduct.Id;
+                FilterIsOn = true;
+                _visible = true;
+            }
+        }
+        if (SelectedOption == (int)GlobalFilterTypes.Company)
+        {
+            FilterTuple = new FilterOfferTuple();
+            FilterTuple.CurrentCompanyId = CurrentCompany?.Id;
+            FilterIsOn = true;
+            _visible = true;
+        }
+ 
+
+    }
+
+    private void ResetSelectedItems()
+    {
+        CurrenProduct = null;
+        CurrentCompany = null;
+    }
+    private async Task CloseFilter()
+    {
+        FilterIsOn = false;
+        FilterTuple = new FilterOfferTuple();
+    }
+}
+<style>
+    .select-buttonGlobal .mud-input > input.mud-input-root, div.mud-input-slot.mud-input-root {
+        padding: 14px 10px !important;
+    }
+</style>

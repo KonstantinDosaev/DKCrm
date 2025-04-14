@@ -1,6 +1,7 @@
 ﻿using DKCrm.Server.Services;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.CompanyModels;
+using DKCrm.Shared.Models.OfferModels;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Models.Products;
 using Microsoft.EntityFrameworkCore;
@@ -50,12 +51,15 @@ namespace DKCrm.Server.Data
         public DbSet<ApplicationOrderingProducts> ApplicationOrderingProducts { get; set; } = null!;
         public DbSet<ApplicationOrderingProductsProduct> ApplicationOrderingProductsProducts { get; set; } = null!;
         public DbSet<CurrencyDictionary> CurrencyDictionaries { get; set; } = null!;
-        public DbSet<InfoSetFromDocumentToOrder> DocumentsToOrder { get; set; } = null!;
+        public DbSet<InfoSetToDocument> InfoSetsToDocuments { get; set; } = null!;
         public DbSet<InfoSetToImage> InfoSetsToImages { get; set; } = null!;
         public DbSet<CompanyComment> CompanyComments { get; set; } = null!;
         public DbSet<AccessRestriction> AccessRestrictions { get; set; } = null!;
         public DbSet<LogUsersVisitToOrderComments> LogUsersVisitToOrderComments { get; set; } = null!;
         public DbSet<LogUsersVisitToCompanyComments> LogUsersVisitToCompanyComments { get; set; } = null!;
+        public DbSet<ImportOffer> ImportOffers { get; set; } = null!;
+        public DbSet<PriceForImportOffer> PricesForImportOffers { get; set; } = null!;
+        public DbSet<ExportProductPriceImportOffer> ExportProductPriceImportOffers { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -278,6 +282,26 @@ namespace DKCrm.Server.Data
                     .HasForeignKey(d => d.ParentId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
+
+            builder
+                .Entity<ExportedProduct>()
+                .HasMany(c => c.PriceForImportOffers)
+                .WithMany(s => s.ExportedProducts)
+                .UsingEntity<ExportProductPriceImportOffer>(
+                    j => j
+                        .HasOne(pt => pt.Price)
+                        .WithMany(t => t.ExportProductPriceImportOffers)
+                        .HasForeignKey(pt => pt.PriceId),
+                    j => j
+                        .HasOne(pt => pt.ExportedProducts)
+                        .WithMany(p => p.ExportProductPriceImportOffers)
+                        .HasForeignKey(pt => pt.ExportedProductsId),
+                    j =>
+                    {
+                        j.Property(pt => pt.Quantity).HasDefaultValue(0);
+                        j.HasKey(t => new { t.ExportedProductsId, t.PriceId });
+                        j.ToTable("ExportProductPriceImportOffer");
+                    });
 
         }
 

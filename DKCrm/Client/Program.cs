@@ -15,6 +15,7 @@ using DKCrm.Client.Services.FnsRequesting;
 using DKCrm.Client.Services.ImageService;
 using DKCrm.Client.Services.InternalCompanyDataService;
 using DKCrm.Client.Services.MailService;
+using DKCrm.Client.Services.OfferService;
 using DKCrm.Client.Services.OrderServices;
 using DKCrm.Client.Services.ProductServices;
 using DKCrm.Client.Services.ReportManager;
@@ -70,6 +71,7 @@ builder.Services.AddTransient<IMailManager, MailManager>();
 builder.Services.AddTransient<ICompanyCommentsManager, CompanyCommentsManager>();
 builder.Services.AddTransient<IAccessRestrictionManager, AccessRestrictionManager>();
 builder.Services.AddTransient<IReportManager, ReportManager>();
+builder.Services.AddTransient<IImportOfferManager, ImportOfferManager>();
 
 
 builder.Services.AddMudServices(c => { c.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight; });

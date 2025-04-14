@@ -565,6 +565,139 @@ namespace DKCrm.Server.Migrations
                     b.ToTable("InternalCompanyData");
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.ExportProductPriceImportOffer", b =>
+                {
+                    b.Property<Guid>("ExportedProductsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PriceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateTimeCreate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("ImportedProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(0.0);
+
+                    b.HasKey("ExportedProductsId", "PriceId");
+
+                    b.HasIndex("ImportedProductId");
+
+                    b.HasIndex("PriceId");
+
+                    b.ToTable("ExportProductPriceImportOffer", (string)null);
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.ImportOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime?>("DateTimeCreate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DateTimeUpdate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFullDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Quantity")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("UpdatedUser")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ImportOffers");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.PriceForImportOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("CurrencyLocal")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<double>("CurrencyPercent")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("DateTimeCreate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DateTimeOver")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DateTimeUpdate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("ImportOfferId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFullDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("Nds")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Quantity")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("UpdatedUser")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("ValueLocal")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImportOfferId");
+
+                    b.ToTable("PricesForImportOffers");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ApplicationOrderingProducts", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1141,7 +1274,7 @@ namespace DKCrm.Server.Migrations
                     b.ToTable("ImportedProducts");
                 });
 
-            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.InfoSetFromDocumentToOrder", b =>
+            modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.InfoSetToDocument", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1153,6 +1286,9 @@ namespace DKCrm.Server.Migrations
                     b.Property<int>("DocumentType")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Extension")
+                        .HasColumnType("integer");
+
                     b.Property<int>("FileType")
                         .HasColumnType("integer");
 
@@ -1161,8 +1297,11 @@ namespace DKCrm.Server.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("OrderId")
+                    b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("OwnerType")
+                        .HasColumnType("integer");
 
                     b.Property<string>("PathToFile")
                         .IsRequired()
@@ -1174,7 +1313,7 @@ namespace DKCrm.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DocumentsToOrder");
+                    b.ToTable("InfoSetsToDocuments");
                 });
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.LogUsersVisitToOrderComments", b =>
@@ -1563,6 +1702,55 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.ExportProductPriceImportOffer", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.OrderModels.ExportedProduct", "ExportedProducts")
+                        .WithMany("ExportProductPriceImportOffers")
+                        .HasForeignKey("ExportedProductsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DKCrm.Shared.Models.OrderModels.ImportedProduct", "ImportedProduct")
+                        .WithMany("ExportProductPriceImportOffers")
+                        .HasForeignKey("ImportedProductId");
+
+                    b.HasOne("DKCrm.Shared.Models.OfferModels.PriceForImportOffer", "Price")
+                        .WithMany("ExportProductPriceImportOffers")
+                        .HasForeignKey("PriceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExportedProducts");
+
+                    b.Navigation("ImportedProduct");
+
+                    b.Navigation("Price");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.ImportOffer", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.CompanyModels.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId");
+
+                    b.HasOne("DKCrm.Shared.Models.Products.Product", "Product")
+                        .WithMany("ImportOffers")
+                        .HasForeignKey("ProductId");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.PriceForImportOffer", b =>
+                {
+                    b.HasOne("DKCrm.Shared.Models.OfferModels.ImportOffer", "ImportOffer")
+                        .WithMany("PricesForImportOffer")
+                        .HasForeignKey("ImportOfferId");
+
+                    b.Navigation("ImportOffer");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ApplicationOrderingProducts", b =>
                 {
                     b.HasOne("DKCrm.Shared.Models.OrderModels.ExportedOrder", "ExportedOrder")
@@ -1915,6 +2103,16 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("ImportedOrdersSellers");
                 });
 
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.ImportOffer", b =>
+                {
+                    b.Navigation("PricesForImportOffer");
+                });
+
+            modelBuilder.Entity("DKCrm.Shared.Models.OfferModels.PriceForImportOffer", b =>
+                {
+                    b.Navigation("ExportProductPriceImportOffers");
+                });
+
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ApplicationOrderingProducts", b =>
                 {
                     b.Navigation("ApplicationOrderingProductProduct");
@@ -1938,6 +2136,8 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ExportedProduct", b =>
                 {
+                    b.Navigation("ExportProductPriceImportOffers");
+
                     b.Navigation("PurchaseAtExports");
 
                     b.Navigation("SoldFromStorage");
@@ -1959,6 +2159,8 @@ namespace DKCrm.Server.Migrations
 
             modelBuilder.Entity("DKCrm.Shared.Models.OrderModels.ImportedProduct", b =>
                 {
+                    b.Navigation("ExportProductPriceImportOffers");
+
                     b.Navigation("PurchaseAtExportList");
 
                     b.Navigation("PurchaseAtStorageList");
@@ -1988,6 +2190,8 @@ namespace DKCrm.Server.Migrations
                     b.Navigation("ApplicationOrderingProductProduct");
 
                     b.Navigation("ExportedProducts");
+
+                    b.Navigation("ImportOffers");
 
                     b.Navigation("ImportedProducts");
 

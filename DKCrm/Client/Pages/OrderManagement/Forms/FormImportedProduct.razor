@@ -8,7 +8,8 @@
         <MudPaper Elevation="12" Class="p-4">
             <MudAutocomplete T="Product"  Placeholder="Введите партномер или название продукта" 
                              Label="Продукт"
-                             @bind-Value="ImportedProduct.Product" 
+                             Value = "ImportedProduct.Product"
+                             ValueChanged="OnProduct" 
                              SearchFunc="@Search" 
                              Variant="Variant.Outlined" 
                              ShowProgressIndicator="true"
@@ -57,7 +58,7 @@
                     foreach (var item in ImportedProduct.PurchaseAtStorageList)
                     {
                         <div class="d-flex align-items-center">
-                            <MudText Class="mr-2" Typo="Typo.body1"><b>@item.Storage!.Name :</b></MudText>
+                            <MudText Class="mr-2" Typo="Typo.body1"><b>@(StorageList.FirstOrDefault(f => f.Id == item.StorageId)?.Name) :</b></MudText>
                             <MudTextField Variant="Variant.Outlined"
                                           @bind-Value="item.Quantity"
                                           For="@(() => item.Quantity)"
@@ -90,7 +91,7 @@
                     {
                         <div class="d-flex align-items-center">
                             <MudText Class="mr-2" Typo="Typo.body1">
-                                <b>@item.ExportedProduct!.ExportedOrder!.Number @item.ExportedProduct!.ExportedOrder!.DateTimeCreated:</b>
+                                <b>@item.ExportedProduct?.ExportedOrder?.Number @item.ExportedProduct?.ExportedOrder?.DateTimeCreated:</b>
                             </MudText>
                             <MudTextField Variant="Variant.Outlined"
                                           @bind-Value="item.Quantity"
@@ -182,14 +183,22 @@
 
     protected override async Task OnInitializedAsync()
     {
-        StorageList = await StorageManager.GetAsync();
-        NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync((Guid)ImportedProduct?.ProductId!);
-        if (ImportedProduct!.ImportedOrder!.LocalCurrency != null && 
-            ImportedProduct!.ImportedOrder.SupplierCurrency != null && 
-            ImportedProduct!.ImportedOrder.TransactionCurrency != null)
+        if (ImportedProduct != null)
         {
-            _isSetCurrency = true;
+            if (ImportedProduct.ImportedOrder != null)
+            {
+                if (ImportedProduct!.ImportedOrder!.LocalCurrency != null && 
+                    ImportedProduct!.ImportedOrder.SupplierCurrency != null && 
+                    ImportedProduct!.ImportedOrder.TransactionCurrency != null)
+                {
+                    _isSetCurrency = true;
+                }
+            }
+            if (ImportedProduct.Product != null)
+                NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync((Guid)ImportedProduct?.ProductId!);
         }
+        StorageList = await StorageManager.GetAsync();
+       
     }
     
     private async Task Validation()
@@ -203,6 +212,13 @@
             await ImportedOrderForm.Validate();
     }
 
+    private async Task OnProduct(Product product)
+    {
+        ImportedProduct!.Product = product;
+        ImportedProduct.ProductId = product.Id;
+        NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync((Guid)ImportedProduct?.ProductId!);
+
+    }
     private async Task<IEnumerable<Product>> Search(string value, CancellationToken token)
     {
         var result = await ProductManager.GetSearchProductAsync(value);

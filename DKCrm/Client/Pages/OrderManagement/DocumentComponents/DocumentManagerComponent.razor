@@ -1,34 +1,40 @@
 ﻿@using DKCrm.Shared.Models.OrderModels
-@using Microsoft.AspNetCore.Components
 @inject IDocumentManager Doc
-@using BlazorBootstrap;
 @using Size = MudBlazor.Size
-@using Placement = MudBlazor.Placement
-@using Orientation = BlazorBootstrap.Orientation
-@using System.Reflection
 @using DKCrm.Shared.Requests.FileService
-@using System.Buffers.Text
 @using DKCrm.Shared.Constants
 @inject IConfiguration conf
-<MudMenu>
-    <ActivatorContent>
-        <MudButton EndIcon="@Icons.Material.Filled.Add" Color="Color.Success" Variant="Variant.Filled">Создать</MudButton>
-    </ActivatorContent>
-    <ChildContent>
-        <MudButton OnClick="() => _visibleCreatePaymentInvoiceDialog = true">Счет на оплату</MudButton>
-        <MudButton OnClick="(() => _visibleCreateSpecificationDialog = true)">Спецификацию</MudButton>
-        <MudButton OnClick="(() => _visibleCommercialOfferDialog = true)">Коммерческое предложение</MudButton>
-        <MudMenuItem>Armory</MudMenuItem>
-    </ChildContent>
-</MudMenu>
-@if (ImageToOrder!=null && ImageToOrder.Any() && ImageToOrder.Length > 0)
+
+<div class="d-flex">
+    @if (OwnerType is DocumentOwner.ExportedOrder)
+    {
+        <MudMenu Class="mr-2">
+            <ActivatorContent>
+                <MudButton EndIcon="@Icons.Material.Filled.Add" Color="Color.Success" Variant="Variant.Filled">Создать</MudButton>
+            </ActivatorContent>
+            <ChildContent>
+                <MudButton OnClick="() => _visibleCreatePaymentInvoiceDialog = true">Счет на оплату</MudButton>
+                <MudButton OnClick="(() => _visibleCreateSpecificationDialog = true)">Спецификацию</MudButton>
+                <MudButton OnClick="(() => _visibleCommercialOfferDialog = true)">Коммерческое предложение</MudButton>
+                <MudMenuItem>Armory</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    }
+    <DocumentUploaderComponent DirectoryType="DirectoryType.PrivateFolder"
+                               DocumentType="DocumentTypes.Other"
+                               FileType="FileTypes.Documents"
+                               Owner="OwnerType"
+                               OwnerId="OrderId"
+                               UploadsFilesCallback="LoadDocInfoList"/>
+</div>
+@*@if (ImageToOrder!=null && ImageToOrder.Any() && ImageToOrder.Length > 0)
 {
     <img width="100" height="100" src="data:image;base64, @Convert.ToBase64String(ImageToOrder)" />
 }
 else
 {
     <img width="100" height="100" src="/default.jpg" />
-}
+}*@
 @if (GroupInfoSet != null && GroupInfoSet.Any())
 {
    
@@ -153,11 +159,11 @@ else
     byte[]? ImageToOrder { get; set; }
 
 
-
+    [Parameter] public DocumentOwner OwnerType { get; set; }
     [Parameter] public Guid OrderId { get; set; }
-    IEnumerable<InfoSetFromDocumentToOrder>? InfoSets { get; set; }
-    IEnumerable<InfoSetFromDocumentToOrder>? GroupInfoSet { get; set; }
-    InfoSetFromDocumentToOrder? CurrentInfoSet { get; set; }
+    IEnumerable<InfoSetToDocument>? InfoSets { get; set; }
+    IEnumerable<InfoSetToDocument>? GroupInfoSet { get; set; }
+    InfoSetToDocument? CurrentInfoSet { get; set; }
     private bool _visibleViewPdfDialog;
     private bool _visibleViewPdfToStampDialog;
     private Guid OurCompanyId { get; set; }
@@ -227,8 +233,10 @@ else
         await DocumentManager.RemoveDocumentAsync(infoSetId);
         await LoadDocInfoList();
     }
-    private void OpenDocument(InfoSetFromDocumentToOrder response)
+    private void OpenDocument(InfoSetToDocument response)
     {
+        if (response.Extension != (int)DocumentExtension.Pdf)
+            return;
         CurrentInfoSet = response;
         _visibleViewPdfDialog = true;
       

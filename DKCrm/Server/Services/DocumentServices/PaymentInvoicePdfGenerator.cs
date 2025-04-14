@@ -53,7 +53,7 @@ namespace DKCrm.Server.Services.DocumentServices
             BuyerCompany = Order.CompanyBuyer;
             var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);
-            var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
+            var infoSetFromDocumentToOrders = docs as InfoSetToDocument[] ?? docs.ToArray();
             var dateNow = DateTime.Now.Date;
             var infoSetFromPayment = infoSetFromDocumentToOrders
                 .Where(w => w.DocumentType == (int)DocumentTypes.PaymentInvoice 

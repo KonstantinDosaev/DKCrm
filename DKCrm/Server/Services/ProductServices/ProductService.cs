@@ -61,6 +61,7 @@ namespace DKCrm.Server.Services.ProductServices
             {
                 Id = s.Id,
                 Name = s.Name,
+                Image = s.Image,
                 ProductsInStorage = s.ProductsInStorage,
                 Storage = s.Storage,
                 Brand = s.Brand,
@@ -80,7 +81,34 @@ namespace DKCrm.Server.Services.ProductServices
                  await _context.Entry(product.Category).Collection(c => c.CategoryOptions!).LoadAsync();
             return product ?? throw new InvalidOperationException();
         }
-
+        public async Task<IEnumerable<Product>> GetAllContainsInIdsAsync(IEnumerable<Guid> ids)
+        {
+            // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataQuery
+            var product = await _context.Products.Select(s => new Product()
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Image = s.Image,
+                ProductsInStorage = s.ProductsInStorage,
+                Storage = s.Storage,
+                Brand = s.Brand,
+                Price = s.Price,
+                Category = s.Category,
+                ProductOption = s.ProductOption,
+                PartNumber = s.PartNumber,
+                Description = s.Description,
+                CategoryId = s.CategoryId,
+                BrandId = s.BrandId,
+                ExportedProducts = s.ExportedProducts,
+                ImportedProducts = s.ImportedProducts,
+                DateTimeCreated = s.DateTimeCreated,
+                DateDelivery = s.DateDelivery,
+            }).Where(w => ids.Contains(w.Id)).ToArrayAsync();
+            /*if (product is { Category: not null })
+                // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
+                await _context.Entry(product.Category).Collection(c => c.CategoryOptions!).LoadAsync();*/
+            return product ?? throw new InvalidOperationException();
+        }
         public async Task<SortPagedResponse<ProductsDto>> GetBySortPagedSearchChapterAsync(SortPagedRequest<FilterProductTuple> request)
         {
             var data = _context.Products.Select(s => new ProductsDto()

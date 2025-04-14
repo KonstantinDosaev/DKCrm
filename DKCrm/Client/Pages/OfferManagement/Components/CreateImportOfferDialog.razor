@@ -1,0 +1,314 @@
+﻿@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Models.OfferModels
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Client.Pages.ProductManagement
+<MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" 
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true }">
+    @*<TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>*@
+    <DialogContent>
+        <MudCard>
+         
+                <MudForm @ref="OrderForm" @bind-IsValid="@_success">
+                    <MudCard>
+                        <MudCardContent>
+
+
+                            <MudAutocomplete T="Product" Placeholder="Введите партномер или название продукта"
+                                             Label="Продукт"
+                                             ValueChanged="SetProduct"
+                                             SearchFunc="@Search"
+                                             Variant="Variant.Outlined"
+                                             ShowProgressIndicator="true"
+                                             Value="Offer.Product"
+                                             ToStringFunc="@(e => e == null ? null : $"{e.PartNumber} / {e.Name} / {e.Brand?.Name}")"
+                                             MinCharacters="1"
+                                             Class="mb-3"
+                                             Disabled="IsAddPriceForm == true"/>
+                            @if (Offer.Product != null)
+                            {
+                                <MudButton Class="mb-2" Variant="Variant.Outlined" Size="Size.Medium"
+                                           OnClick="() => _visibleDetailProductDialog = true"
+                                           Color="Color.Tertiary">Подробности о продукте</MudButton>
+                                <ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
+                                                     ProductId="Offer.Product.Id"
+                                                     Close="() => _visibleDetailProductDialog = false"/>
+                            }
+                            @if (!IsAddPriceForm)
+                            {
+                                <div class="mb-2">
+                                    <span>Если товар не найден вы можете </span>
+                                    <MudButton Variant="Variant.Outlined"
+                                               Size="Size.Medium"
+                                               OnClick="() => _visibleCreatedProductDialog = true"
+                                               Color="Color.Tertiary">Создать новый продукт</MudButton>
+                                </div>
+                            }
+                            <MudNumericField T="double" Label="Количество" @bind-Value="_newQuantity"
+                                             For="@(() => _newQuantity)"
+                                             Variant="Variant.Outlined"
+                                             RequiredError="Введите количество"
+                                             Class="mb-3" Min="0"/>
+                            <MudDatePicker Editable="true" Label="Дата окончания" @ref="_picker"
+                                           Date="@_newDateTimeOver"
+                                           DateChanged="OnDateTimeOver"
+                                           Mask="@(new DateMask("dd/MM/yyyy"))"
+                                           DateFormat="dd/MM/yyyy"
+                                           Placeholder="день/месяц/год"
+                                           Variant="Variant.Outlined"
+                                           Style=" margin: 0 1rem;"
+                                           Class="myDataPicker_filter"
+                                           Clearable IconSize="Size.Small">
+                            </MudDatePicker>
+
+                            <MudButton Class="mr-auto align-self-start"
+                                       OnClick="@(() => _newDateTimeOver = DateTime.Now)">Текущяя дата</MudButton>
+
+                            <MudText Typo="Typo.h6">Настройка валют</MudText>
+                            <div class="d-flex flex-wrap">
+                                <MudNumericField Label="Процент на курс валюты"
+                                                 @bind-Value="_newPercent"
+                                                 Variant="Variant.Outlined"
+                                                 RequiredError="Введите процент"
+                                                 Class="mb-3 mr-2"
+                                                 Format="0.##"
+                                                 Step="0.1F"
+                                                 T="double" Min="0" Max="100"
+                                                 Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent"/>
+                                <MudNumericField Label="НДС"
+                                                 @bind-Value="_newNds"
+                                                 Variant="Variant.Outlined"
+                                                 RequiredError="Введите НДС"
+                                                 Class="mb-3"
+                                                 Format="0.##"
+                                                 Step="0.1F"
+                                                 T="double" Min="0" Max="100"
+                                                 Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent"/>
+                            </div>
+                            <div class="d-flex flex-wrap">
+                                <div class="d-flex align-items-center">
+                                    <MudNumericField Label="Цена в валюте покупателя" @bind-Value="_newPrice"
+                                                     For="@(() => _newPrice)"
+                                                     Variant="Variant.Outlined"
+                                                     RequiredError="Введите цену"
+                                                     Class=""
+                                                     Format="0.##"
+                                                     Step="0.1M"
+                                                     T="decimal" Min="0"
+                                                     Adornment="Adornment.End"/>
+
+                                    <MudItem Class="py-0 px-3">
+                                        <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту покупателя"
+                                                   Label="Валюта покупателя"
+                                                   T="string" ToStringFunc="c => c.ToString()"
+                                                   CloseIcon="@Icons.Material.Filled.Flag"
+                                                   AdornmentColor="Color.Tertiary"
+                                                   OnOpen="async () => CurrencyCharCodes ??= await GetCurrencyCharCodes()"
+                                                   ValueChanged="SetCurrency"
+                                                   Value="_newCurrency">
+                                            @if (CurrencyCharCodes != null)
+                                            {
+                                                @foreach (var item in CurrencyCharCodes)
+                                                {
+                                                    <MudSelectItem T="string" Value="@item.charCode">@item.charCode @item.name</MudSelectItem>
+                                                }
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                </div>
+                            </div>
+
+
+
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="Create" Color="Color.Tertiary">Применить</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudForm>
+            
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [Parameter] public bool VisibleDialog { get; set; }
+    [Parameter] public Guid  CompanyId { get; set; }
+    [Parameter] public EventCallback RefreshParentItem { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public Guid? OfferId { get; set; }
+    [Parameter] public bool IsAddPriceForm { get; set; }
+    [Parameter] public MudForm? OrderForm { get; set; }
+    [Parameter] public ImportOffer Offer { get; set; } = null!;
+    private MudDatePicker _picker;
+    decimal _newPrice;
+    string _newCurrency;
+    string _localCurrency = "RUB";
+    double _newPercent;
+    double _newNds;
+    double _newQuantity;
+    DateTime? _newDateTimeOver = DateTime.MaxValue;
+    bool _currencyEdited;
+    bool _success;
+    private bool _disableEditProduct; 
+    private bool _visibleDetailProductDialog;
+    private bool _visibleCreatedProductDialog;
+    private bool _isSetCurrency;
+    public List<(string charCode, string name)>? CurrencyCharCodes { get; set; }
+    private async Task<List<(string charCode, string name)>> GetCurrencyCharCodes() => await CurrencyManager.GetCurrencyCharCode();
+
+
+
+   
+    private InternalCompanyData? InternalData { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        if (OfferId != null && IsAddPriceForm)
+        {
+           // Offer = await ImportOfferManager.GetDetailsAsync((Guid)OfferId);
+           // var last = Offer.PricesForImportOffer!.MaxBy(o => o.DateTimeOver);
+            
+        }
+        else 
+            Offer = new ImportOffer() { };
+    }
+    private async Task<IEnumerable<Product>> Search(string value, CancellationToken token)
+    {
+        var result = await ProductManager.GetSearchProductAsync(value);
+        return result;
+    }
+    async Task Create()
+    {
+        if (!await ConfirmationActionService.ConfirmationActionAsync("Подтвердите сохранение"))
+            return;
+        var localPrice = await GetLocalPriceConverted();
+
+        var createdPrice = new PriceForImportOffer()
+        {
+            Quantity = _newQuantity,
+            Value = _newPrice,
+            Currency = _newCurrency,
+            Nds = _newNds,
+            CurrencyPercent = _newPercent,
+            ValueLocal = localPrice,
+            CurrencyLocal = _localCurrency,
+            DateTimeCreate = DateTime.Now,
+            DateTimeUpdate = DateTime.Now,
+            DateTimeOver = _newDateTimeOver
+        };
+        if (IsAddPriceForm)
+        {
+            createdPrice.ImportOfferId = Offer.Id;
+            if (await ImportOfferManager.UpdatePriceAsync(createdPrice))
+            {
+                await RefreshParentItem.InvokeAsync();
+                _snackBar.Add("Предложения обновлено");
+                await CloseClick();
+            }
+        }
+        else
+        {
+            
+            Offer.Product = null;
+            Offer.Currency = _newCurrency;
+            Offer.CompanyId = CompanyId;
+            Offer.PricesForImportOffer = new List<PriceForImportOffer>{createdPrice};
+            if (await ImportOfferManager.AddAsync(Offer))
+            {
+                await RefreshParentItem.InvokeAsync();
+                _snackBar.Add("Предложение создано");
+                await CloseClick();
+            }
+        }
+       
+       
+    }
+    /*private void SetPercent(double? currency)
+    {
+        ExportedOrder!.CurrencyPercent = currency;
+        _currencyEdited = true;
+    }
+    private void SetNds(double? nds)
+    {
+        ExportedOrder!.Nds = nds;
+        _currencyEdited = true;
+    }*/
+    private void SetCurrency(string currency)
+    {
+        _newCurrency = currency;
+    }
+    /*private async Task UpdatePricesInExportedProducts()
+    {
+        if (!IsEditForm)return;
+        var productList = ExportedOrder!.ExportedProducts;
+        if (productList == null || !productList.Any()) return;
+        foreach (var product in productList)
+        {
+            if (product.PriceInTransactionCurrency==null || product.PriceLocal==null || product.PriceInBuyerCurrency==null)
+                continue;
+            
+            var buyerCurrency = Offer!.BuyerCurrency!;
+            var transactionCharCode = ExportedOrder!.TransactionCurrency!;
+            var convertResult = await CurrencyManager.CurrencyConverter(currencyToConvert: ExportedOrder.LocalCurrency!,
+                firstPrice: product.PriceLocal, currencyPercent: (double)ExportedOrder.CurrencyPercent!, currencyCharCodesToConvert: new List<string>() { buyerCurrency, transactionCharCode });
+            foreach (var item in convertResult)
+            {
+                if (item.charCod==buyerCurrency)
+                {
+                    product.PriceInBuyerCurrency=item.Item2;
+                }
+                else if (item.charCod==transactionCharCode)
+                {
+                    product.PriceInTransactionCurrency=item.Item2;
+                }
+            }
+            await ExportedProductManager.UpdateAsync(product);
+        }
+    }*/
+
+    private void SetProduct(Product product)
+    {
+        if (Offer != null)
+        {
+            Offer.Product = product;
+            Offer.ProductId = product.Id;
+        }
+    }
+    private async Task<decimal> GetLocalPriceConverted()
+    {
+        InternalData ??= await InternalCompanyDataManager.GetAsync();
+        _localCurrency = InternalData.LocalCurrency;
+
+        if (_newCurrency == _localCurrency)
+            return (_newPrice);
+ 
+        var convertResult = await CurrencyManager.CurrencyConverter(currencyToConvert: _newCurrency!,
+                firstPrice: _newPrice, currencyPercent: (double)_newPercent, currencyCharCodesToConvert: new List<string>() { _localCurrency });
+        var result = convertResult.FirstOrDefault(f => f.charCod == _localCurrency).Item2;
+        return result ?? 0;
+
+    }
+    private void OnDateTimeOver(DateTime? dateTime)
+    {
+        _newDateTimeOver = dateTime;
+    }
+    private Task TodayAsync()
+    {
+        
+        return _picker.GoToDate(DateTime.Today);
+    }
+
+    [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
+    async Task CloseClick()
+    {
+        VisibleDialog = false;
+        await VisibleDialogChanged.InvokeAsync(VisibleDialog);
+    }
+}

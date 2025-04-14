@@ -49,7 +49,7 @@ namespace DKCrm.Server.Services.DocumentServices
              _ourCompany = await _companyService.GetAsync((Guid)Order.OurCompanyId!, _user);
             var docs = await _infoSetFromDocumentToOrderService
                     .GetAllInfoSetsDocumentsToOrderAsync(Order.Id);
-            var infoSetFromDocumentToOrders = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
+            var infoSetFromDocumentToOrders = docs as InfoSetToDocument[] ?? docs.ToArray();
             var infoSetFromSpecification = infoSetFromDocumentToOrders
                 .Where(w => w.DocumentType == (int)DocumentTypes.OrderSpecification).ToArray();
             _indexInstanceDocument = infoSetFromSpecification.Any() ? infoSetFromSpecification

@@ -2,6 +2,7 @@
 using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Models;
 using DKCrm.Shared.Models.OrderModels;
+using DKCrm.Shared.Requests.FileService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DKCrm.Server.Controllers
@@ -48,6 +49,11 @@ namespace DKCrm.Server.Controllers
 
         [HttpPost("{request}")]
         public async Task<IActionResult> SetStampAndGetDocumentBytArray(AddStampToPdfRequest request) 
-            => Ok(await _documentService.AddStampToPdfAsync(request));
+            => Ok(await _documentService.AddStampToPdfAsync(request)); 
+        
+        [HttpPost("{request}")]
+        public async Task<IActionResult> UploadDocumentFile(UploadDocumentRequest request) 
+            => Ok(await _documentService.UploadDocumentFileAsync(request));
+
     }
 }

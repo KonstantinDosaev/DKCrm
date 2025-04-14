@@ -17,7 +17,9 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 using System.Dynamic;
 using System.Net;
+using DKCrm.Server.Interfaces.ImportOfferInterfaces;
 using DKCrm.Server.Interfaces.ReportInterfaces;
+using DKCrm.Server.Services.ImportOfferServices;
 using DKCrm.Server.Services.ReportServices;
 using DKCrm.Shared;
 using DKCrm.Shared.Constants;
@@ -120,7 +122,7 @@ builder.Services.AddHostedService<SendEmailTaskTimerService>();*/
 builder.Services.AddSingleton<EmailTaskService>();
 builder.Services.AddHostedService<EmailTaskService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
-
+builder.Services.AddTransient<IImportOfferService, ImportOfferService>();
 
 
 builder.Services.AddTransient<ICompanyCommentsService, CompanyCommentsService>();

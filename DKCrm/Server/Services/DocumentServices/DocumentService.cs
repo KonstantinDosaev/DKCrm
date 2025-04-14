@@ -77,12 +77,14 @@ namespace DKCrm.Server.Services.DocumentServices
                 return false;
 
             var pathToDb = Path.Combine(pathToDirectory, saveResult.FileName);
-            var document = new InfoSetFromDocumentToOrder()
+            var document = new InfoSetToDocument()
             {
                 Name = fileToDbName,
                 FileType = (int)FileTypes.Documents,
                 DateTimeCreated = DateTime.Now,
-                OrderId = request.OrderId,
+                OwnerId = request.OrderId,
+                OwnerType = (int)DocumentOwner.ExportedOrder,
+                Extension = (int)DocumentExtension.Pdf,
                 DocumentType = (int)DocumentTypes.PaymentInvoice,
                 PathToFile = pathToDb,
             };
@@ -123,12 +125,14 @@ namespace DKCrm.Server.Services.DocumentServices
                 return false;
             
             var pathToDb = Path.Combine(pathToDirectory, saveResult.FileName);
-            var document = new InfoSetFromDocumentToOrder()
+            var document = new InfoSetToDocument()
             {
                 Name = fileToDbName,
                 FileType = (int)FileTypes.Documents,
                 DateTimeCreated = DateTime.Now,
-                OrderId = request.OrderId,
+                OwnerId = request.OrderId,
+                Extension = (int)DocumentExtension.Pdf,
+                OwnerType = (int)DocumentOwner.ExportedOrder,
                 DocumentType = (int)DocumentTypes.OrderSpecification,
                 PathToFile = pathToDb,
             };
@@ -160,6 +164,7 @@ namespace DKCrm.Server.Services.DocumentServices
                 ContentType = FileTypes.Documents,
                 DirectoryType = DirectoryType.PrivateFolder,
                 Content = byteArr,
+
                 PathToDirectory = pathToDirectory,
                 FileName = fileToDbName,
                 IsFullPath = false,
@@ -168,12 +173,14 @@ namespace DKCrm.Server.Services.DocumentServices
                 return false;
 
             var pathToDb = Path.Combine(pathToDirectory, saveResult.FileName);
-            var document = new InfoSetFromDocumentToOrder()
+            var document = new InfoSetToDocument()
             {
                 Name = fileToDbName,
                 FileType = (int)FileTypes.Documents,
                 DateTimeCreated = DateTime.Now,
-                OrderId = request.OrderId,
+                OwnerId = request.OrderId,
+                OwnerType = (int)DocumentOwner.ExportedOrder,
+                Extension = (int)DocumentExtension.Pdf,
                 DocumentType = (int)DocumentTypes.CommercialOffer,
                 PathToFile = pathToDb,
             };
@@ -288,7 +295,7 @@ namespace DKCrm.Server.Services.DocumentServices
              var indexInstanceDocument = 0;
             var docs = await _infoSetFromDocumentToOrderService
                 .GetAllInfoSetsDocumentsToOrderAsync(orderId);
-            var infoSetFromDocumentToOrderCollection = docs as InfoSetFromDocumentToOrder[] ?? docs.ToArray();
+            var infoSetFromDocumentToOrderCollection = docs as InfoSetToDocument[] ?? docs.ToArray();
             var infoSetByType = infoSetFromDocumentToOrderCollection
                 .Where(w => w.DocumentType == (int)documentType).ToArray();
             if (infoSetByType.Any())
@@ -297,6 +304,42 @@ namespace DKCrm.Server.Services.DocumentServices
                     .Select(s => s.Count()).Max(s => s) + 1;
             }
             return indexInstanceDocument;
+        }
+
+        public async Task<bool> UploadDocumentFileAsync(UploadDocumentRequest request)
+        {
+            var pathToDirectory = Path.Combine(PathsToDirectories.FileContainer, PathsToDirectories.Documents, 
+                request.OwnerType.ToString(), request.DocumentType.ToString(), request.OwnerId.ToString());
+            var tt = await _fileService.SaveFileAsync(new SaveFileRequest()
+            {
+                DirectoryType = request.DirectoryType,
+                FileName = request.FileName,
+                IsFullPath = request.IsFullPath,
+                OwnerId = request.OwnerId,
+                ContentType = FileTypes.Documents,
+                PathToDirectory = pathToDirectory,
+                Content = request.Content,
+                Preview = request.Preview
+            });
+            var result = 0;
+            if (!string.IsNullOrEmpty(tt.FileName))
+            {
+                var infoSet = 
+                    new InfoSetToDocument()
+                    {
+                        Name = request.FileName,
+                        FileType = (int)FileTypes.Documents,
+                        DateTimeCreated = DateTime.Now,
+                        OwnerId = request.OwnerId,
+                        OwnerType = (int)request.OwnerType,
+                        Extension = (int)request.Extension,
+                        DocumentType = (int)request.DocumentType,
+                        PathToFile = Path.Combine(pathToDirectory, tt.FileName)
+                    };
+                _context.InfoSetsToDocuments.Entry(infoSet).State = EntityState.Added;
+                result = await _context.SaveChangesAsync();
+            }
+            return result > 0;
         }
         //private void AddStampToPdf(string inputFilePath, string outputFilePath, float positionY, DocumentTypes documentType)
         //{

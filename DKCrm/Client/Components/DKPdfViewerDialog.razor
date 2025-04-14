@@ -297,7 +297,7 @@
     [Parameter] public FileTypes FileType { get; set; }
     [Parameter] public DirectoryType DirectoryType { get; set; }
     [Parameter] public string? RelativePath { get; set; } = null!;
-    [Parameter] public InfoSetFromDocumentToOrder InfoSet { get; set; }
+    [Parameter] public InfoSetToDocument InfoSet { get; set; }
     [Parameter] public EventCallback<byte[]>StampedFileChanged { get; set; }
  public Guid OurCompanyId { get; set; }
     [Parameter] public Guid OrderId { get; set; }

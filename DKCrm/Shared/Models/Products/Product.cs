@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using DKCrm.Shared.Iterfaces;
+using DKCrm.Shared.Models.OfferModels;
 using DKCrm.Shared.Models.OrderModels;
 
 namespace DKCrm.Shared.Models.Products
@@ -32,6 +33,7 @@ namespace DKCrm.Shared.Models.Products
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
         public virtual ICollection<ApplicationOrderingProducts>? ApplicationOrderingList { get; set; }
         public virtual ICollection<ApplicationOrderingProductsProduct>? ApplicationOrderingProductProduct { get; set; }
+        public virtual ICollection<ImportOffer>? ImportOffers { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }

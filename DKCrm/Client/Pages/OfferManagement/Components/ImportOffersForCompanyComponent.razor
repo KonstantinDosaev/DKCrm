@@ -1,0 +1,28 @@
+﻿@using DKCrm.Shared.Models.OfferModels
+<MudTooltip Arrow="true" Text="Предложения">
+    <MudIconButton Icon="@Icons.Material.Sharp.Money" Variant="Variant.Filled"
+                   OnClick="() => _visible = !_visible"
+                   Size="Size.Medium"
+                   Color="Color.Default" Class="mr-2" />
+</MudTooltip>
+@if (_visible)
+{
+    <MudDialog @bind-Visible="_visible" Style="padding: 0"
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+        <DialogContent>
+            <ImportedOfferComponent CompanyId="CompanyId" FilterTuple="FilterOfferTuple"/>
+        </DialogContent>
+    </MudDialog>
+}
+
+@code {
+    bool _visible;
+    [Parameter] public Guid CompanyId { get; set; }
+    [Parameter] public FilterOfferTuple FilterOfferTuple { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+       FilterOfferTuple = new FilterOfferTuple() { CurrentCompanyId = CompanyId };
+    }
+
+}

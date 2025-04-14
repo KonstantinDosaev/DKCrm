@@ -82,7 +82,8 @@
                                      Step="0.1M"
                                      T="decimal?" Min="0"
                                      Adornment="Adornment.End" AdornmentText="@ExportedProduct.ExportedOrder!.BuyerCurrency"/>
-                    <MudIconButton Icon="@Icons.Material.Filled.Loop" OnClick="() => ConvertedCurrency(ExportedProduct.ExportedOrder.BuyerCurrency!, ExportedProduct.PriceInBuyerCurrency)"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Loop" 
+                                   OnClick="() => ConvertedCurrency(ExportedProduct.ExportedOrder.BuyerCurrency!, ExportedProduct.PriceInBuyerCurrency)"/>
                 </div>
                 <div class="d-flex align-items-center">
                     <MudNumericField Disabled="!_isSetCurrency" Label="Цена в валюте сделки" @bind-Value="ExportedProduct.PriceInTransactionCurrency"

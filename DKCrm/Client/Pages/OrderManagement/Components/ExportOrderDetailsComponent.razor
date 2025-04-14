@@ -176,10 +176,9 @@
                     </div>
                     @if (ExportedProductId == context.Id && _isOpenCompletePopover)
                     {
-                        <MudPopover Open="@_isOpenCompletePopover"
+                        @*<MudPopover Open="@_isOpenCompletePopover"
                                     Style="min-width: 550px;"
-                                    AnchorOrigin="Origin.BottomRight"
-                            TransformOrigin="Origin.BottomRight" Fixed="true" Class="px-4 pt-4" OverflowBehavior="OverflowBehavior.FlipAlways">
+                                    Fixed="true" Class="px-4 pt-4" OverflowBehavior="OverflowBehavior.FlipAlways">
                             <CompleteExportedProductComponent ExportedProduct="EditedExportedProduct"
                                                               CancelEditCallback="() => _isOpenCompletePopover = false"
                                                               RefreshParentCallback="GetOrder"
@@ -187,7 +186,16 @@
                             <div class="text-end mb-2">
                                 <MudButton OnClick="(() => _isOpenCompletePopover = false)" Color="Color.Info">закрыть</MudButton>
                             </div>
-                        </MudPopover>
+                        </MudPopover>*@
+                        <MudDialog @bind-Visible="_isOpenCompletePopover" Style="max-width: 700px;padding: 0"
+                                   Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+                            <DialogContent>
+                                <CompleteExportedProductComponent ExportedProduct="EditedExportedProduct"
+                                                                  CancelEditCallback="() => _isOpenCompletePopover = false"
+                                                                  RefreshParentCallback="GetOrder"
+                                                                  IsDoubleNested="IsDoubleNested"/>
+                            </DialogContent>
+                        </MudDialog>
                     }
                 </div>
             </MudTd>

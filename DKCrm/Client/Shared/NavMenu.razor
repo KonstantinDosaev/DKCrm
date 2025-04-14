@@ -1,5 +1,5 @@
 ﻿@using DKCrm.Shared.Constants
-@using DKCrm.Client.Components.CategoryDrawer
+
 @inject CustomStateProvider AuthStateProvider
 
 
@@ -16,6 +16,7 @@
         <NotePadComponent/>
         <GlobalFilterComponent OnGlobalFilter="@OnGlobalFilter"
                                ResetGlobalFilter="@ResetGlobalFilter"/>
+
     </div>
         <div class="@MyNavMenuCssClass" @onclick="ToggleNavMenu">
         <div class="navcontainer">

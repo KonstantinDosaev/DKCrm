@@ -3,6 +3,8 @@
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 @using DKCrm.Shared.Constants
 @using DKCrm.Client.Pages.Companies
+@using DKCrm.Client.Pages.OfferManagement.Components
+@using DKCrm.Client.Pages.OrderManagement.DocumentComponents
 @page "/imported_orders"
 @*@page "/imported_order/tag/{tagid:guid}"*@
 
@@ -40,7 +42,7 @@
         </MudTooltip>
         <MudMenu>
             <ActivatorContent>
-                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings"
+                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" Class="mr-2"
                                Color="@(CurrentOrderStatus != null ? Color.Warning : Color.Default)"/>
             </ActivatorContent>
             <ChildContent>
@@ -76,7 +78,7 @@
                 </div>
             </ChildContent>
         </MudMenu>
-       
+        <ImportedOffersForKeyComponent />
     </div>
     <div class="d-flex">
         <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
@@ -233,6 +235,11 @@
                            Color="Color.Default" 
                            Icon="@Icons.Material.Sharp.Comment" 
                            Class="pa-0 ml-2"/>
+            <MudIconButton Size="@Size.Medium" 
+                           OnClick="() => OpenDocumentManager(context.Id)"
+                           Color="Color.Default"
+                           Icon="@Icons.Material.Sharp.DocumentScanner"
+                           Class="pa-0 ml-2"/>
             @if (_isActiveMovingProductToOrder){
             <MudIconButton Size="@Size.Medium"
                           OnClick="() => MovingProductToOrder(context)"
@@ -312,7 +319,24 @@
 }
 <CreateImportedOrderDialog
     @bind-VisibleDialog="_visibleAddOrderDialog"
-                           RefreshProductList="() => _table!.ReloadServerData()" />
+    RefreshProductList="() => _table!.ReloadServerData()" />
+
+<MudDialog @bind-Visible="_visibleDocumentManagerDialog"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}"
+           Style="height: 100VH">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" 
+                       Size="Size.Small"
+                       OnClick="(() =>_visibleDocumentManagerDialog = false)"
+                       Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <DocumentManagerComponent OrderId="OrderId" OwnerType ="DocumentOwner.ImportedOrder"/>
+    </DialogContent>
+  
+</MudDialog>
 @*
 <EditImportedOrderDialog
     @bind-VisibleDialog="_visibleUpdateOrderDialog"
@@ -356,9 +380,16 @@
     private bool _unreadCommentsAny;
     private bool _isActiveMovingProductToOrder;
     private bool _isActiveMergeProductToOrder;
+    private bool _visibleDocumentManagerDialog;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadStatusList();
+    }
+    private void OpenDocumentManager(Guid orderId)
+    {
+        OrderId = orderId;
+        _visibleDocumentManagerDialog = true;
     }
     protected override async Task OnParametersSetAsync()
     {

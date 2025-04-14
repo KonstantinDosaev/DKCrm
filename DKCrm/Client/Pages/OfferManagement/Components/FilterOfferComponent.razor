@@ -1,0 +1,194 @@
+﻿@using DKCrm.Shared.Models.CompanyModels
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Shared.Constants
+@using DKCrm.Shared.Models.OfferModels
+<div style="position: relative">
+    <div class="order-filter-field">
+        <MudSelect T="Company"
+                   Label="Компания" Value="CurrentCompany" ValueChanged="OnCompanyFilter"
+                   Variant="Variant.Outlined" Dense="true"
+                   Class="select-button"
+                   OnOpen="() => LoadCompanyList()"
+                   ToStringFunc="com => com?.Name!"
+                   Clearable OnClearButtonClick="()=> ResetCompanyFilter(true)">
+            @if (Companies != null)
+            {
+                foreach (var company in Companies)
+                {
+                    <MudSelectItem T="Company" Value="@(company)">@company.Name</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </div>
+    @*
+    @if (CurrentOurCompany is { Employees: { } })
+    {  $1$ToStringFunc="eml => eml.FirstName?.ToString()! + eml.MiddleName?.ToString()! + eml.LastName?.ToString()!"#1#
+        <div class="order-filter-field">
+            <MudSelect T="Employee"
+                       Label="Наш сотрудник"
+                       Value="CurrentOurEmployee"
+                       ValueChanged="OnOurEmployeeFilter"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Class="select-button"
+                       Clearable OnClearButtonClick="()=> ResetOurEmployeeFilter(true)">
+
+                @foreach (var item in CurrentOurCompany.Employees)
+                {
+                    <MudSelectItem T="Employee" Value="@item">@item.FirstName @item.MiddleName @item.LastName</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+    }
+    *@
+
+    <MudPaper Class="p-3"
+              Outlined="true">
+        <MudText Typo="Typo.button" Class=" fs-6">Создан</MudText>
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <MudText Typo="Typo.button" Class=" fs-6">С</MudText>
+            <div>
+                <MudDatePicker Editable="true"
+                               Date="FilterTuple.CreateDateFirst"
+                               DateChanged="OnFirstDateTimeCreatedFilter"
+                               Mask="@(new DateMask("dd/MM/yyyy"))"
+                               DateFormat="dd/MM/yyyy"
+                               Placeholder="день/месяц/год"
+                               Variant="Variant.Outlined"
+                               Style=" margin: 0 1rem;"
+                               Class="myDataPicker_filter"
+                               Clearable IconSize="Size.Small" />
+            </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <MudText Typo="Typo.button" Class=" fs-6">По</MudText>
+            <div>
+                <MudDatePicker Editable="true"
+                               Date="FilterTuple.CreateDateLast"
+                               DateChanged="OnLastDateTimeCreatedFilter"
+                               Mask="@(new DateMask("dd/MM/yyyy"))"
+                               DateFormat="dd/MM/yyyy"
+                               Placeholder="день/месяц/год"
+                               Variant="Variant.Outlined"
+                               Style="margin: 0 1rem"
+                               Clearable
+                               Class="myDataPicker_filter" />
+            </div>
+        </div>
+    </MudPaper>
+    <MudPaper Class="p-3"
+              Outlined="true">
+        <MudText Typo="Typo.button" Class=" fs-6">Обновлен</MudText>
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <MudText Typo="Typo.button" Class=" fs-6">С</MudText>
+            <div>
+                <MudDatePicker Editable="true"
+                               Date="FilterTuple.UpdateDateFirst"
+                               DateChanged="OnFirstDateTimeUpdateFilter"
+                               Mask="@(new DateMask("dd/MM/yyyy"))"
+                               DateFormat="dd/MM/yyyy"
+                               Placeholder="день/месяц/год"
+                               Variant="Variant.Outlined"
+                               Style=" margin: 0 1rem;"
+                               Required="@(FilterTuple.UpdateDateLast!=null)"
+                               Class="myDataPicker_filter"
+                               Clearable IconSize="Size.Small" />
+            </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <MudText Typo="Typo.button" Class=" fs-6">По</MudText>
+            <div>
+                <MudDatePicker Editable="true"
+                               Date="FilterTuple.UpdateDateLast"
+                               DateChanged="OnLastDateTimeUpdateFilter"
+                               Mask="@(new DateMask("dd/MM/yyyy"))"
+                               DateFormat="dd/MM/yyyy"
+                               Placeholder="день/месяц/год"
+                               Variant="Variant.Outlined"
+                               Style="margin: 0 1rem"
+                               Clearable
+                               Required="@(FilterTuple.UpdateDateFirst!=null)"
+                               Class="myDataPicker_filter" />
+            </div>
+        </div>
+
+    </MudPaper>
+    <div style="position: sticky; bottom: 0; background: white; display: flex; justify-content:space-between;padding: 1rem">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Warning" Class="" OnClick="ClearAll">Сбросить</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success"
+                   Class="" OnClick="ApplyFilter">Применить</MudButton>
+    </div>
+</div>
+
+
+@code {
+    private List<Company>? Companies { get; set; }
+    [Parameter] public FilterOfferTuple FilterTuple { get; set; } = null!;
+    [Parameter] public EventCallback<FilterOfferTuple> IsSetOption { get; set; }
+    [Parameter] public string TypeCompanyName { get; set; } = null!;
+    private Company? CurrentCompany { get; set; }
+   
+
+    private async Task LoadCompanyList()
+    {
+        Companies ??= await CompanyManager.GetCompaniesByTypeAsync(TypeCompanyName);
+    }
+
+    private void OnCompanyFilter(Company? company)
+    {
+        CurrentCompany = company;
+        FilterTuple.CurrentCompanyId = company?.Id;
+    }
+    /*private void OnOurEmployeeFilter(Employee? employee)
+    {
+        CurrentOurEmployee = employee;
+        FilterOrderTuple.CurrentOurEmployeeId = employee?.Id;
+    }*/
+    private void OnFirstDateTimeCreatedFilter(DateTime? dateTime)
+    {
+        FilterTuple.CreateDateFirst = dateTime;
+    }
+
+    private void OnLastDateTimeCreatedFilter(DateTime? dateTime)
+    {
+        FilterTuple.CreateDateLast = dateTime;
+    }
+    private void OnFirstDateTimeUpdateFilter(DateTime? dateTime)
+    {
+        FilterTuple.UpdateDateFirst = dateTime;
+    }
+
+    private void OnLastDateTimeUpdateFilter(DateTime? dateTime)
+    {
+        FilterTuple.UpdateDateLast = dateTime;
+    }
+    private async Task ApplyFilter()
+    {
+        await IsSetOption.InvokeAsync(FilterTuple);
+    }
+    private void ResetCompanyFilter(bool refreshParent)
+    {
+        CurrentCompany = null;
+        FilterTuple.CurrentCompanyId = null;
+      // ResetPartnerEmployeeFilter(refreshParent);
+    }
+   
+
+    private async Task ClearAll()
+    {
+        ResetCompanyFilter(false);
+       
+        FilterTuple.CreateDateLast = null;
+        FilterTuple.CreateDateFirst = null;
+        await IsSetOption.InvokeAsync(FilterTuple);
+    }
+
+}
+<style>
+    .order-filter-field {
+        margin: 0 0 20px 0;
+    }
+
+</style>
+

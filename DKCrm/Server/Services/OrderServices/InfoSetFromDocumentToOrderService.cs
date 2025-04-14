@@ -13,22 +13,22 @@ namespace DKCrm.Server.Services.OrderServices
         {
             _context = context;
         }
-        public async Task<InfoSetFromDocumentToOrder> GetOneAsync(Guid infoSetId)
+        public async Task<InfoSetToDocument> GetOneAsync(Guid infoSetId)
         {
-            return await _context.DocumentsToOrder.FirstOrDefaultAsync(w => w.Id == infoSetId) ?? throw new InvalidOperationException();
+            return await _context.InfoSetsToDocuments.FirstOrDefaultAsync(w => w.Id == infoSetId) ?? throw new InvalidOperationException();
         }
-        public async Task<IEnumerable<InfoSetFromDocumentToOrder>> GetAllInfoSetsDocumentsToOrderAsync(Guid orderId)
+        public async Task<IEnumerable<InfoSetToDocument>> GetAllInfoSetsDocumentsToOrderAsync(Guid orderId)
         {
-            return await _context.DocumentsToOrder.Where(w => w.OrderId == orderId).ToArrayAsync();
+            return await _context.InfoSetsToDocuments.Where(w => w.OwnerId == orderId).ToArrayAsync();
         }
-        public async Task<int> AddInfoSetToOrderAsync(InfoSetFromDocumentToOrder infoSetFromDocumentToOrder)
+        public async Task<int> AddInfoSetToOrderAsync(InfoSetToDocument infoSetToDocument)
         {
-            _context.DocumentsToOrder.Add(infoSetFromDocumentToOrder);
+            _context.InfoSetsToDocuments.Add(infoSetToDocument);
             return await _context.SaveChangesAsync();
         }
-        public async Task<int> UpdateInfoSetToOrderAsync(InfoSetFromDocumentToOrder infoSetFromDocumentToOrder)
+        public async Task<int> UpdateInfoSetToOrderAsync(InfoSetToDocument infoSetToDocument)
         {
-            _context.Entry(infoSetFromDocumentToOrder).State = EntityState.Modified;
+            _context.Entry(infoSetToDocument).State = EntityState.Modified;
             return await _context.SaveChangesAsync();
         }
         public async Task<int> RemoveInfoSetFromOrderAsync(Guid id)

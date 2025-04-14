@@ -81,6 +81,7 @@
 
 @code {
     [Parameter] public FileTypes FileType { get; set; }
+
     [Parameter] public ImageTypes? ImageType { get; set; }
     [Parameter] public Guid? OwnerId { get; set; }
     [Parameter] public DirectoryType DirectoryType { get; set; }
@@ -136,9 +137,21 @@
                     Preview = file.Preview
                 });
             }
-            else 
+            if (file.ContentType is FileTypes.Documents)
+            {
+                await ImageManager.AddImageAsync(new SaveImageRequest()
+                {
+                    DirectoryType = DirectoryType,
+                    IsFullPath = false, FileName = file.FileName,
+                    ImageType = (ImageTypes)ImageType,
+                    OwnerId = (Guid)OwnerId,
+                    Content = file.Content,
+                    Preview = file.Preview
+                });
+            }
+            /*else 
               
-                await FilesManager.SaveFileAsync(file);
+                await FilesManager.SaveFileAsync(file);*/
         }
         await UploadsFilesCallback.InvokeAsync();
         files.Clear();

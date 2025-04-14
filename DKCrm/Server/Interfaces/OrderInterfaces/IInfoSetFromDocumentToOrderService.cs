@@ -4,10 +4,10 @@ namespace DKCrm.Server.Interfaces.OrderInterfaces
 {
     public interface IInfoSetFromDocumentToOrderService
     {
-        Task<InfoSetFromDocumentToOrder> GetOneAsync(Guid orderId);
-        Task<IEnumerable<InfoSetFromDocumentToOrder>> GetAllInfoSetsDocumentsToOrderAsync(Guid orderId);
-        Task<int> AddInfoSetToOrderAsync(InfoSetFromDocumentToOrder infoSetFromDocumentToOrder);
+        Task<InfoSetToDocument> GetOneAsync(Guid orderId);
+        Task<IEnumerable<InfoSetToDocument>> GetAllInfoSetsDocumentsToOrderAsync(Guid orderId);
+        Task<int> AddInfoSetToOrderAsync(InfoSetToDocument infoSetToDocument);
         Task<int> RemoveInfoSetFromOrderAsync(Guid id);
-        Task<int> UpdateInfoSetToOrderAsync(InfoSetFromDocumentToOrder infoSetFromDocumentToOrder);
+        Task<int> UpdateInfoSetToOrderAsync(InfoSetToDocument infoSetToDocument);
     }
 }

@@ -4,6 +4,7 @@
 @using DKCrm.Client.Pages.ProductManagement.Components
 @using DKCrm.Client.Components.CategoryDrawer
 @using DKCrm.Shared.Requests
+@using DKCrm.Client.Pages.OrderManagement.DocumentComponents
 
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
@@ -168,7 +169,13 @@
             }
         </MudTd>
         <MudTd Style="text-align: center" DataLabel="Edit">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenUpdateProductDialog(context.Id)"></MudIconButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                           OnClick="() => OpenUpdateProductDialog(context.Id)"/>
+            <MudIconButton Size="@Size.Medium" 
+                           OnClick="() => OpenDocumentManager(context.Id)"
+                           Color="Color.Default"
+                           Icon="@Icons.Material.Sharp.DocumentScanner"
+                           Class="pa-0 ml-2"/>
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
@@ -206,6 +213,23 @@
 <StorageSettings @ref="_storageSettings"/>
 <CategoryDrawerComponent @ref="_categoryDrawerRef"/>
 
+<MudDialog @bind-Visible="_visibleDocumentManagerDialog"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}"
+           Style="height: 100VH">
+    <TitleContent>
+        <div style="text-align: right">
+            <MudButton Variant="Variant.Outlined" 
+                       Size="Size.Small"
+                       OnClick="(() =>_visibleDocumentManagerDialog = false)"
+                       Color="Color.Info">Закрыть</MudButton>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <DocumentManagerComponent OrderId="ProductId" OwnerType ="DocumentOwner.Product"/>
+    </DialogContent>
+  
+</MudDialog>
+
 @code {
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
@@ -221,8 +245,10 @@
     private bool _visibleProductFilter;
     private bool _thisSecondClickOnRow;
     private bool _filterIsOn; 
-    bool _isOpenQuantityAtStorages;
+    private bool _visibleDocumentManagerDialog;
+    private bool _isOpenQuantityAtStorages;
     private bool _loadDeleted;
+
     private HashSet<Guid> _selectedItemsId = new();
     private MudTable<ProductsDto>? _table;
     private StorageSettings? _storageSettings;
@@ -321,7 +347,11 @@
          
         }
     }
-
+    private void OpenDocumentManager(Guid id)
+    {
+        ProductId = id;
+        _visibleDocumentManagerDialog = true;
+    }
     private async Task Timer()
     {
         await Task.Delay(500);
