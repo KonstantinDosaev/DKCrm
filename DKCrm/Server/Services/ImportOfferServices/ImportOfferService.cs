@@ -7,9 +7,7 @@ using System.Security.Claims;
 using DKCrm.Server.Interfaces.ImportOfferInterfaces;
 using DKCrm.Shared.Models.OfferModels;
 using MudBlazor;
-using OpenXmlPowerTools;
-using DKCrm.Shared.Models.Products;
-using DocumentFormat.OpenXml.Drawing.Charts;
+
 
 namespace DKCrm.Server.Services.ImportOfferServices
 {
@@ -198,7 +196,7 @@ namespace DKCrm.Server.Services.ImportOfferServices
                 .Include(i => i.Brand).LoadAsync();
             await _context.ExportProductPriceImportOffers.Where(w => data!.SelectMany(s => s.PricesForImportOffer)
                     .Select(s=>s.Id).Contains(w.PriceId))
-                .Include(i => i.ExportedProducts).LoadAsync();
+                .Include(i => i.ExportedProduct).LoadAsync();
             return new SortPagedResponse<ImportOffer>()
             {
                 TotalItems = totalItems,
@@ -322,7 +320,7 @@ namespace DKCrm.Server.Services.ImportOfferServices
                     .FirstOrDefault(f => f.Id == link.PriceId);
             var linkInDb = ex.ExportProductPriceImportOffers
                 .FirstOrDefault(f => f.PriceId == link.PriceId 
-                                     && link.ExportedProductsId == f.ExportedProductsId);
+                                     && link.ExportedProductId == f.ExportedProductId);
             if (ex == null)
                 return 0;
             if (ex is { ExportProductPriceImportOffers: not null })

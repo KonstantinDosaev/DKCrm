@@ -60,6 +60,7 @@ namespace DKCrm.Server.Data
         public DbSet<ImportOffer> ImportOffers { get; set; } = null!;
         public DbSet<PriceForImportOffer> PricesForImportOffers { get; set; } = null!;
         public DbSet<ExportProductPriceImportOffer> ExportProductPriceImportOffers { get; set; } = null!;
+        public DbSet<ImportProductPriceImportOffer> ImportProductPriceImportOffers { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -293,14 +294,33 @@ namespace DKCrm.Server.Data
                         .WithMany(t => t.ExportProductPriceImportOffers)
                         .HasForeignKey(pt => pt.PriceId),
                     j => j
-                        .HasOne(pt => pt.ExportedProducts)
+                        .HasOne(pt => pt.ExportedProduct)
                         .WithMany(p => p.ExportProductPriceImportOffers)
-                        .HasForeignKey(pt => pt.ExportedProductsId),
+                        .HasForeignKey(pt => pt.ExportedProductId),
                     j =>
                     {
                         j.Property(pt => pt.Quantity).HasDefaultValue(0);
-                        j.HasKey(t => new { t.ExportedProductsId, t.PriceId });
+                        j.HasKey(t => new { ExportedProductsId = t.ExportedProductId, t.PriceId });
                         j.ToTable("ExportProductPriceImportOffer");
+                    });
+            builder
+                .Entity<ImportedProduct>()
+                .HasMany(c => c.PriceForImportOffers)
+                .WithMany(s => s.ImportedProducts)
+                .UsingEntity<ImportProductPriceImportOffer>(
+                    j => j
+                        .HasOne(pt => pt.Price)
+                        .WithMany(t => t.ImportProductPriceImportOffers)
+                        .HasForeignKey(pt => pt.PriceId),
+                    j => j
+                        .HasOne(pt => pt.ImportedProduct)
+                        .WithMany(p => p.ImportProductPriceImportOffers)
+                        .HasForeignKey(pt => pt.ImportedProductId),
+                    j =>
+                    {
+                        j.Property(pt => pt.Quantity).HasDefaultValue(0);
+                        j.HasKey(t => new { t.ImportedProductId, t.PriceId });
+                        j.ToTable("ImportProductPriceImportOffers");
                     });
 
         }

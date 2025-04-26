@@ -38,7 +38,7 @@ namespace DKCrm.Server.Migrations
                 name: "ExportProductPriceImportOffer",
                 columns: table => new
                 {
-                    ExportedProductsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExportedProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     PriceId = table.Column<Guid>(type: "uuid", nullable: false),
                     Quantity = table.Column<double>(type: "double precision", nullable: false, defaultValue: 0.0),
                     ImportedProductId = table.Column<Guid>(type: "uuid", nullable: true),
@@ -46,10 +46,10 @@ namespace DKCrm.Server.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ExportProductPriceImportOffer", x => new { x.ExportedProductsId, x.PriceId });
+                    table.PrimaryKey("PK_ExportProductPriceImportOffer", x => new { x.ExportedProductId, x.PriceId });
                     table.ForeignKey(
                         name: "FK_ExportProductPriceImportOffer_ExportedProducts_ExportedProd~",
-                        column: x => x.ExportedProductsId,
+                        column: x => x.ExportedProductId,
                         principalTable: "ExportedProducts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -101,16 +101,16 @@ namespace DKCrm.Server.Migrations
                 name: "ExportedProductImportOffer",
                 columns: table => new
                 {
-                    ExportedProductsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExportedProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     ImportOffersId = table.Column<Guid>(type: "uuid", nullable: false),
                     Quantity = table.Column<double>(type: "double precision", nullable: false, defaultValue: 0.0)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ExportedProductImportOffer", x => new { x.ExportedProductsId, x.ImportOffersId });
+                    table.PrimaryKey("PK_ExportedProductImportOffer", x => new { x.ExportedProductId, x.ImportOffersId });
                     table.ForeignKey(
                         name: "FK_ExportedProductImportOffer_ExportedProducts_ExportedProduct~",
-                        column: x => x.ExportedProductsId,
+                        column: x => x.ExportedProductId,
                         principalTable: "ExportedProducts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);

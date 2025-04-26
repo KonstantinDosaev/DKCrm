@@ -1,4 +1,5 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared.Models.OfferModels
 @using DKCrm.Shared.Models.OrderModels
 <MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog"
            Options="new DialogOptions() { FullWidth = true }">
@@ -28,11 +29,33 @@
     [Parameter] public Product? Product { get; set; }
     [Parameter] public PurchaseAtExport? PurchaseAtExport { get; set; }
     [Parameter] public ImportedProduct? ImportedProduct { get; set; }
+    [Parameter] public ImportProductPriceImportOffer? LinkPriceForImportOffer { get; set; }
 
     protected override void OnParametersSet()
     {
         ImportedProduct ??= new ImportedProduct();
+        if (Product != null)
+        {
+	        ImportedProduct.Product = Product;
+	        ImportedProduct.ProductId = Product.Id;
+        }
 
+        if (PurchaseAtExport != null)
+        {
+	        ImportedProduct.Quantity = PurchaseAtExport.Quantity;
+	        ImportedProduct.PurchaseAtExportList ??= new List<PurchaseAtExport>();
+	        ImportedProduct.PurchaseAtExportList.Add(PurchaseAtExport);
+        }
+
+        if (LinkPriceForImportOffer != null)
+        {
+	        LinkPriceForImportOffer.ImportedProduct = ImportedProduct;
+            
+	        ImportedProduct.ImportProductPriceImportOffers = new List<ImportProductPriceImportOffer>()
+	        {
+	                LinkPriceForImportOffer
+	        };
+        }
         if (Order != null)
         {
             ImportedProduct.ImportedOrder = Order;

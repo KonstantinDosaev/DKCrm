@@ -221,10 +221,14 @@
                 </div>
             </MudTd>
            <MudTd DataLabel="Редактировать">
-                <MudIconButton Size="@Size.Small"
-                           OnClick="() => OpenEditImportProductDialog(context)"
-                           Style=" background-color: rgba(217, 214, 81, 0.431);"
-                           Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
+	           <MudIconButton Size="@Size.Small"
+	                          OnClick="() => OpenEditImportProductDialog(context)"
+	                          Style=" background-color: rgba(217, 214, 81, 0.431);"
+	                          Icon="@Icons.Material.Sharp.Edit" Class="pa-0 ml-2" />
+	           <MudIconButton Size="@Size.Small"
+	                          OnClick="() => RemoveExportedProduct(context.Id)"
+	                          Style=" background-color: rgba(217, 214, 81, 0.431);"
+	                          Icon="@Icons.Material.Sharp.Delete" Class="pa-0 ml-2" />
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -361,6 +365,13 @@
     void VisibleDefaultImageDialogToggle(bool toggle)
     {
         _visibleDefaultImageDialog = toggle;
+    }
+    private async Task RemoveExportedProduct(Guid id)
+    {
+	    if (await ConfirmationActionService.ConfirmationActionAsync("Подтвердите удалени!!!"))
+	    {
+		    await ImportedProductManager.RemoveAsync(id);
+	    }
     }
 }
 <style>

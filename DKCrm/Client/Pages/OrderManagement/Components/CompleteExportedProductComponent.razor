@@ -13,19 +13,19 @@
                 <MudText Typo="Typo.button" Class="fw-bold mr-1" Style="color: darkgray">Заказано покупателем:
                     <span style="color: black">@ExportedProduct.Quantity</span> </MudText>
                 <MudIconButton Size="@Size.Small" OnClick="() => _editTotalQuantity = true" 
-                               Icon="@Icons.Material.Outlined.Edit"/> 
+                Icon="@Icons.Material.Outlined.Edit"/> 
             </div>
         }
         else
         {
             <div class="d-flex">
                 <MudNumericField T="int" Variant="Variant.Outlined"
-                                 For="@(() => ExportedProduct.Quantity)"
-                                 Immediate="true"
-                                 FullWidth="false"
-                                 Margin="Margin.Dense"
-                                 Min="QuantityInReserveAll"
-                         @bind-Value="ExportedProduct.Quantity" />
+                For="@(() => ExportedProduct.Quantity)"
+                Immediate="true"
+                FullWidth="false"
+                Margin="Margin.Dense"
+                Min="QuantityInReserveAll"
+                @bind-Value="ExportedProduct.Quantity" />
                 <MudButton OnClick="UpdateTotalQuantity">Сохранить</MudButton>
                 <MudButton OnClick="ResetEditTotalQuantity">Отменить</MudButton>
             </div>
@@ -47,64 +47,64 @@
     {
         <table class="table table-bordered table-striped table-sm">
             <thead>
-            <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                <tr style="background-color: rgba(0, 169, 255, 0.388)">
                     <th scope="col">Склад</th>
                     <th scope="col" style="width: 150px">Количество в наличии</th>
                     <th scope="col" style="width: 150px">Забранное количество</th>
-            </tr>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var item in StorageList)
-            {
-                <tr>
-                    <td>@item.Storage!.Name</td>
-                    <td>@item.Quantity</td>
+                @foreach (var item in StorageList)
+                {
+                    <tr>
+                        <td>@item.Storage!.Name</td>
+                        <td>@item.Quantity</td>
                         <td class="d-flex align-items-center justify-content-center">
-                        @if (ExportedProduct.SoldFromStorage != null && ExportedProduct.SoldFromStorage.Select(s => s.StorageId).Contains((Guid)item.StorageId!))
-                        {
-                            var quantitySoldFromStorage = ExportedProduct!.SoldFromStorage!
-                                .FirstOrDefault(f => f.ExportedProductId == ExportedProduct.Id && f.StorageId == item.StorageId)!.Quantity;
-                            <MudNumericField T="int" Variant="Variant.Outlined"
-                                             For="@(() => item.Quantity)"
-                                             Immediate="true"
-                                             FullWidth="false"
-                                             Margin="Margin.Dense"
-                                             Min="0"
-                                             Max="@((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity) + quantitySoldFromStorage)"
-                                             ValueChanged="@(v => SetFromStorageQuantity(v, (Guid)item.StorageId!))" 
-                                             Value="quantitySoldFromStorage" Clearable="true"/>
-                        }
-                        else
-                        {
-                            @*<MudNumericField T="int" Variant="Variant.Outlined"
+                            @if (ExportedProduct.SoldFromStorage != null && ExportedProduct.SoldFromStorage.Select(s => s.StorageId).Contains((Guid)item.StorageId!))
+                            {
+                                var quantitySoldFromStorage = ExportedProduct!.SoldFromStorage!
+                                    .FirstOrDefault(f => f.ExportedProductId == ExportedProduct.Id && f.StorageId == item.StorageId)!.Quantity;
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                For="@(() => item.Quantity)"
+                                Immediate="true"
+                                FullWidth="false"
+                                Margin="Margin.Dense"
+                                Min="0"
+                                Max="@((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity) + quantitySoldFromStorage)"
+                                ValueChanged="@(v => SetFromStorageQuantity(v, (Guid)item.StorageId!))" 
+                                Value="quantitySoldFromStorage" Clearable="true"/>
+                            }
+                            else
+                            {
+                                @*<MudNumericField T="int" Variant="Variant.Outlined"
                                              Immediate="true"
                                              Label="Количество"
                                              Margin="Margin.Dense"
                                              Min="0"
                                              Max="@((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity))"
                                              ValueChanged="@(v => SetFromStorageQuantity(v, (Guid)item.StorageId!))" Value="0"/>*@
-                           
-                            <MudIconButton Disabled="MissingQuantity <= 0" 
-                                           Color="Color.Primary" 
-                                           Style="width: 100%; height: 100%"
-                               OnClick="@(() => SetFromStorageQuantity((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity), (Guid)item.StorageId!))"
-                                           Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleUp"></MudIconButton>
-                        }
-                        @if (EditedQuantity.Contains((Guid)item.StorageId!) & _errorUpdate)
+
+                                <MudIconButton Disabled="MissingQuantity <= 0" 
+                                Color="Color.Primary" 
+                                Style="width: 100%; height: 100%"
+                                OnClick="@(() => SetFromStorageQuantity((MissingQuantity > item.Quantity ? item.Quantity : MissingQuantity), (Guid)item.StorageId!))"
+                                Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleUp"></MudIconButton>
+                            }
+                            @if (EditedQuantity.Contains((Guid)item.StorageId!) & _errorUpdate)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Error"/>
+                            }
+                        </td>
+                    </tr>
+                }
+                <tr style="background-color: rgba(100, 255, 0, 0.388)">
+                    <th colspan="3" style="text-align: end">ВСЕГО:
+                        @if (ExportedProduct.SoldFromStorage != null)
                         {
-                            <MudIcon Icon="@Icons.Material.Filled.Error"/>
+                            @ExportedProduct.SoldFromStorage.Select(s => s.Quantity).Sum()
                         }
-                    </td>
+                    </th>
                 </tr>
-            }
-            <tr style="background-color: rgba(100, 255, 0, 0.388)">
-                <th colspan="3" style="text-align: end">ВСЕГО:
-                    @if (ExportedProduct.SoldFromStorage != null)
-                    {
-                        @ExportedProduct.SoldFromStorage.Select(s => s.Quantity).Sum()
-                    }
-                </th>
-            </tr>
             </tbody>
         </table>
     }
@@ -124,96 +124,94 @@
                 </tr>
             </thead>
             <tbody>
-                    @foreach (var importedProduct in NotEquippedImportedProducts)
-                    {
-                        var notEquippedQuantity = @importedProduct.Quantity - (@importedProduct.PurchaseAtExportList?.Select(s => s.Quantity).Sum() + @importedProduct.PurchaseAtStorageList?.Select(s => s.Quantity).Sum())?? 0;
-                        <tr>
-                            <td>@importedProduct.ImportedOrder?.Number
-                                @if (@importedProduct.ImportedOrderId != null && !IsDoubleNested)
+                @foreach (var importedProduct in NotEquippedImportedProducts)
+                {
+                    var notEquippedQuantity = @importedProduct.Quantity - (@importedProduct.PurchaseAtExportList?.Select(s => s.Quantity).Sum() + @importedProduct.PurchaseAtStorageList?.Select(s => s.Quantity).Sum())?? 0;
+                    <tr>
+                        <td>@importedProduct.ImportedOrder?.Number
+                            @if (@importedProduct.ImportedOrderId != null && !IsDoubleNested)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
+                                OnClick="@(() => OpenImportedOrderPopover((Guid)importedProduct.ImportedOrderId))"/>
+                                @if (@importedProduct.ImportedOrderId == ShowingImportOrderId && _visibleImportOrder)
                                 {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
-                                                   OnClick="@(() => OpenImportedOrderPopover((Guid)importedProduct.ImportedOrderId))"/>
-                                    @if (@importedProduct.ImportedOrderId == ShowingImportOrderId && _visibleImportOrder)
-                                    {
-                                        <MudPopover Open="@_visibleImportOrder"
-                                                    Style=""
-                                                    Class="px-4 pt-4"
-                                                    OverflowBehavior="OverflowBehavior.FlipAlways">
-                                            <MudText>@importedProduct.ImportedOrder?.SellersCompany?.Name</MudText>
-                                            <ImportedOrderDetailsComponent Id="(Guid)importedProduct.ImportedOrderId"
-                                                                           CurrencyDisplay="@(new[] { "Сделки" })"
-                                                                           ShowCompanyInfo="true"
-                                                                           IsDoubleNested="true"/>
-                                            <div class="text-end mb-2">
-                                                <MudButton OnClick="(() => _visibleImportOrder = false)" Color="Color.Info">закрыть</MudButton>
-                                            </div>
-                                        </MudPopover>
-                                    }
+                                    <MudPopover Open="@_visibleImportOrder"
+                                    Style=""
+                                    Class="px-4 pt-4"
+                                    OverflowBehavior="OverflowBehavior.FlipAlways">
+                                        <MudText>@importedProduct.ImportedOrder?.SellersCompany?.Name</MudText>
+                                        <ImportedOrderDetailsComponent Id="(Guid)importedProduct.ImportedOrderId"
+                                        CurrencyDisplay="@(new[] { "Сделки" })"
+                                        ShowCompanyInfo="true"
+                                        IsDoubleNested="true"/>
+                                        <div class="text-end mb-2">
+                                            <MudButton OnClick="(() => _visibleImportOrder = false)" Color="Color.Info">закрыть</MudButton>
+                                        </div>
+                                    </MudPopover>
                                 }
-                            </td>
-                            <td>@notEquippedQuantity</td>
-                            <td class="d-flex align-items-center">
-                                @if (ExportedProduct.PurchaseAtExports != null && ExportedProduct.PurchaseAtExports.Select(s => s.ImportedProductId).Contains(importedProduct.Id))
-                                {
-                                    var quantityPurchaseAtExport = ExportedProduct.PurchaseAtExports.FirstOrDefault(f => f.ExportedProductId == ExportedProduct.Id && f.ImportedProductId == importedProduct.Id)!.Quantity;
-                                    <MudNumericField T="int" Variant="Variant.Outlined"
-                                                     For="@(() => quantityPurchaseAtExport)"
-                                                     Immediate="true"
-                                                     Margin="Margin.Dense"
-                                                     Min="0"
-                                                     Max="@((MissingQuantity > notEquippedQuantity ? notEquippedQuantity : MissingQuantity) + quantityPurchaseAtExport)"
-                                                     ValueChanged="@(v => SetPurchaseAtExportQuantity(v, importedProduct.Id))"
-                                                     Value="quantityPurchaseAtExport" Clearable="true"/>
-                                }
-                                else
-                                {
-                                    <MudIconButton Disabled="MissingQuantity <= 0"
-                                                   Color="Color.Primary"
-                                                   Style="width: 100%; height: 100%"
-                                                   OnClick="() => SetPurchaseAtExportQuantity((MissingQuantity > notEquippedQuantity ? notEquippedQuantity : MissingQuantity), importedProduct.Id)"
-                                                   Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleUp"/>
-                                }
-                                @if (EditedQuantity.Contains(importedProduct.Id) & _errorUpdate)
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Error"/>
-                                }
-                            </td>
-                        </tr>
-                    }   
-                    @if (ExportedProduct.PurchaseAtExports != null)
-                    {
-                        <tr style="background-color: rgba(100, 255, 0, 0.388)">
-                            <th colspan="3" style="text-align: end">
-                                ВСЕГО:
-                                @ExportedProduct.PurchaseAtExports.Select(s => s.Quantity).Sum()
-                            </th>
-                        </tr>
-                    }
+                            }
+                        </td>
+                        <td>@notEquippedQuantity</td>
+                        <td class="d-flex align-items-center">
+                            @if (ExportedProduct.PurchaseAtExports != null && ExportedProduct.PurchaseAtExports.Select(s => s.ImportedProductId).Contains(importedProduct.Id))
+                            {
+                                var quantityPurchaseAtExport = ExportedProduct.PurchaseAtExports.FirstOrDefault(f => f.ExportedProductId == ExportedProduct.Id && f.ImportedProductId == importedProduct.Id)!.Quantity;
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                For="@(() => quantityPurchaseAtExport)"
+                                Immediate="true"
+                                Margin="Margin.Dense"
+                                Min="0"
+                                Max="@((MissingQuantity > notEquippedQuantity ? notEquippedQuantity : MissingQuantity) + quantityPurchaseAtExport)"
+                                ValueChanged="@(v => SetPurchaseAtExportQuantity(v, importedProduct.Id))"
+                                Value="quantityPurchaseAtExport" Clearable="true"/>
+                            }
+                            else
+                            {
+                                <MudIconButton Disabled="MissingQuantity <= 0"
+                                Color="Color.Primary"
+                                Style="width: 100%; height: 100%"
+                                OnClick="() => SetPurchaseAtExportQuantity((MissingQuantity > notEquippedQuantity ? notEquippedQuantity : MissingQuantity), importedProduct.Id)"
+                                Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleUp"/>
+                            }
+                            @if (EditedQuantity.Contains(importedProduct.Id) & _errorUpdate)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Error"/>
+                            }
+                        </td>
+                    </tr>
+                }   
+                @if (ExportedProduct.PurchaseAtExports != null)
+                {
+                    <tr style="background-color: rgba(100, 255, 0, 0.388)">
+                        <th colspan="3" style="text-align: end">
+                            ВСЕГО:
+                            @ExportedProduct.PurchaseAtExports.Select(s => s.Quantity).Sum()
+                        </th>
+                    </tr>
+                }
             </tbody>
         </table>
     }
     else
     {
         <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
-        
+
     }
     <MudButton OnClick="CreateImportedProduct">Создать заказ на импорт</MudButton>
-    <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
-                                 RefreshProductList="OnInitializedAsync"/>
 
     <MudText Typo="Typo.h6">Предложения:</MudText>
     @if (ImportOfferCurrentPriceList != null && ImportOfferCurrentPriceList.Any())
     {
         <table class="table table-bordered table-striped table-sm">
             <thead>
-            <tr style="background-color: rgba(0, 169, 255, 0.388)">
-                <th style="width: 30px;"></th>
-                <th>Компания</th>
-                <th style="width: 150px;">Свободное количество</th>
-                <th style="width: 150px;">Цена</th>
-                <th style="width: 150px;">Забранное количество</th>
-                <th style="width: 30px;"></th>
-            </tr>
+                <tr style="background-color: rgba(0, 169, 255, 0.388)">
+                    <th style="width: 30px;"></th>
+                    <th>Компания</th>
+                    <th style="width: 150px;">Свободное количество</th>
+                    <th style="width: 150px;">Цена</th>
+                    <th style="width: 150px;">Забранное количество</th>
+                    <th style="width: 30px;"></th>
+                </tr>
             </thead>
             <tbody>
                 @foreach (var price in ImportOfferCurrentPriceList)
@@ -229,82 +227,94 @@
                         offerNotEquippedQuantity = price.Quantity;
                     }
                     <tr>
-                        <td class="">
-                            @if (true)
-                            {
-                                <MudTooltip Text ="Добавить в заказ на импорт">
-             
-                                    <MudIconButton Icon="@Icons.Material.Filled.ProductionQuantityLimits"
-                                                   Variant="Variant.Filled"
-                                                   Style="" 
-                                                   OnClick="() => OpenAddToImportOrderComponent((Guid)(ImportOfferList!.FirstOrDefault(f => f.Id == price.ImportOfferId)?.Company!.Id)!)"
-                                    />
-                                    <MudDialog @bind-Visible="_visibleImportOrdersFromOffer" Style="max-width: 700px;padding: 0"
-                                               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
-                                        <DialogContent>
-                                                @if (BeginFormedImportOrders != null)
-                                                {
-                                                    foreach (var order in BeginFormedImportOrders)
-                                                    {
-                                                        <MudPaper Class="p-3">
-                                                            <div>
-                                                                <MudText> @order.Number @order.DateTimeCreated</MudText>
-                                                                @if (!IsDoubleNested)
-                                                                {
-                                                                    <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
-                                                                                   OnClick="@(() => OpenImportedOrderInOfferPopover((Guid)order.Id))"/>
-                                                                    @if (@order.Id == ShowingImportOrderInOfferId && _visibleImportOrderInOffer)
-                                                                    {
-                                                                        <MudPopover Open="@_visibleImportOrderInOffer"
-                                                                                    Style=""
-                                                                                    Class="px-4 pt-4"
-                                                                                    OverflowBehavior="OverflowBehavior.FlipAlways">
-                                                                            <MudText>@order?.SellersCompany?.Name</MudText>
-                                                                            <ImportedOrderDetailsComponent Id="order.Id"
-                                                                                                           CurrencyDisplay="@(new[] { "Сделки" })"
-                                                                                                           ShowCompanyInfo="true"
-                                                                                                           IsDoubleNested="true"/>
-                                                                            <div class="text-end mb-2">
-                                                                                <MudButton OnClick="(() => _visibleImportOrderInOffer = false)" Color="Color.Info">закрыть</MudButton>
-                                                                            </div>
-                                                                        </MudPopover>
-                                                                    }
-                                                                }
-                                                            </div>
-                                                            <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
-                                                                       OnClick="@(() => CreateImportProductByOffer())" />
-                                                        </MudPaper>
-                                                    }
-                                                }
-                                        </DialogContent>
-                                    </MudDialog>
-                                </MudTooltip>
-                            } 
-                        </td>
-                        <td>
-                            @(ImportOfferList!.FirstOrDefault(f => f.Id == price.ImportOfferId)?.Company!.Name)
+	                    @{
+		                    double quantitySelectByOffer = 0;
+
+	                    }
+	                    @if (price.ExportProductPriceImportOffers != null && price.ExportProductPriceImportOffers.Select(s => s.ExportedProductId).Contains(ExportedProduct.Id))
+	                    {
+		                    quantitySelectByOffer = price.ExportProductPriceImportOffers.FirstOrDefault(f => f.ExportedProductId == ExportedProduct.Id
+		                                                                                                     && f.PriceId == price.Id)!.Quantity;
+	                    }
+	                    <td class="">
+		                    @if (true)
+		                    {
+			                    <MudTooltip Text="Добавить в заказ на импорт">
+
+				                    <MudIconButton Icon="@Icons.Material.Filled.ProductionQuantityLimits"
+				                                   Variant="Variant.Filled"
+				                                   Style=""
+				                                   OnClick="() => OpenAddToImportOrderComponent((Guid)(ImportOfferList!.FirstOrDefault(f => f.Id == price.ImportOfferId)?.Company!.Id)!)"/>
+				                    <MudDialog @bind-Visible="_visibleImportOrdersFromOffer" Style="max-width: 700px;padding: 0"
+				                               Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding">
+					                    <DialogContent>
+						                    <div class="p-3 d-flex justify-content-between">
+							                    <MudText Style="font-weight:600;">№ заказа</MudText>
+							                    <MudButton>Создать заказ</MudButton>
+						                    </div>
+						                    @if (BeginFormedImportOrders != null)
+						                    {
+							                    foreach (var order in BeginFormedImportOrders)
+							                    {
+								                    <MudPaper Class="p-3 mb-2">
+									                    <div class="d-flex justify-content-between">
+										                    <div class="d-flex">
+											                    <MudText> @order.Number @order.DateTimeCreated</MudText>
+											                    @if (!IsDoubleNested)
+											                    {
+												                    <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
+												                                   OnClick="@(() => OpenImportedOrderInOfferPopover((Guid)order.Id))"/>
+												                    @if (@order.Id == ShowingImportOrderInOfferId && _visibleImportOrderInOffer)
+												                    {
+													                    <MudPopover Open="@_visibleImportOrderInOffer"
+													                                Style=""
+													                                Class="px-4 pt-4"
+													                                OverflowBehavior="OverflowBehavior.FlipAlways">
+														                    <MudText>@order?.SellersCompany?.Name</MudText>
+														                    <ImportedOrderDetailsComponent Id="order.Id"
+														                                                   CurrencyDisplay="@(new[] { "Сделки" })"
+														                                                   ShowCompanyInfo="true"
+														                                                   IsDoubleNested="true"/>
+														                    <div class="text-end mb-2">
+															                    <MudButton OnClick="(() => _visibleImportOrderInOffer = false)" Color="Color.Info">закрыть</MudButton>
+														                    </div>
+													                    </MudPopover>
+												                    }
+											                    }
+										                    </div>
+										                    <MudTooltip Text="Добавить к этому заказу">
+											                    <MudIconButton Icon="@Icons.Material.Filled.Add" Size='Size.Small'
+                                                                               OnClick="@(() => OpenAddProductAtOfferToImportOrderComponent(order, (int)quantitySelectByOffer, price))" />
+										                    </MudTooltip>
+									                    </div>
+
+								                    </MudPaper>
+							                    }
+						                    }
+					                    </DialogContent>
+				                    </MudDialog>
+			                    </MudTooltip>
+		                    }
+	                    </td>
+	                    <td>
+		                    @(ImportOfferList!.FirstOrDefault(f => f.Id == price.ImportOfferId)?.Company!.Name)
 
 
-                        </td>
-                        <td>@offerNotEquippedQuantity</td>
-                        <td>@($"{decimal.Round(price.ValueLocal, 2)} {price.CurrencyLocal}")</td>
-                        <td class="d-flex align-items-center">
-                            @{ double quantitySelectByOffer = 0; }
-                            @if (price.ExportProductPriceImportOffers != null && price.ExportProductPriceImportOffers.Select(s => s.ExportedProductsId).Contains(ExportedProduct.Id))
-                            {
-                                quantitySelectByOffer = price.ExportProductPriceImportOffers.FirstOrDefault(f => f.ExportedProductsId == ExportedProduct.Id
-                                                                                                                 && f.PriceId == price.Id)!.Quantity;
-                            }
-                            <MudNumericField T="double" Variant="Variant.Outlined"
-                                             For="@(() => quantitySelectByOffer)"
-                                             Immediate="true"
-                                             Margin="Margin.Dense"
-                                             Min="0"
-                                             Max="@((MissingQuantity > offerNotEquippedQuantity ? offerNotEquippedQuantity : MissingQuantity) + quantitySelectByOffer)"
-                                             ValueChanged="@(v => SetOfferToExportedProduct(v, price))"
-                                             Value="editedPriceId == price.Id && editedPrice != null ? editedPrice.Quantity : quantitySelectByOffer" Clearable="true"/>
+	                    </td>
+	                    <td>@offerNotEquippedQuantity</td>
+	                    <td>@($"{decimal.Round(price.ValueLocal, 2)} {price.CurrencyLocal}")</td>
+	                    <td class="d-flex align-items-center">
 
-                            @*else
+		                    <MudNumericField T="double" Variant="Variant.Outlined"
+		                                     For="@(() => quantitySelectByOffer)"
+		                                     Immediate="true"
+		                                     Margin="Margin.Dense"
+		                                     Min="0"
+		                                     Max="@((MissingQuantity > offerNotEquippedQuantity ? offerNotEquippedQuantity : MissingQuantity) + quantitySelectByOffer)"
+		                                     ValueChanged="@(v => SetOfferToExportedProduct(v, price))"
+		                                     Value="editedPriceId == price.Id && editedPrice != null ? editedPrice.Quantity : quantitySelectByOffer" Clearable="true"/>
+
+		                    @*else
                             {
                                 <MudIconButton Disabled="MissingQuantity <= 0"
                                                Color="Color.Primary"
@@ -313,28 +323,28 @@
                                                Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleUp"/>
                             }*@
 
-                            @*@if (EditedQuantity.Contains(importedProduct.Id) & _errorUpdate)
+		                    @*@if (EditedQuantity.Contains(importedProduct.Id) & _errorUpdate)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.Error" />
                             }*@
-                        </td>
-                        <td class="">
-                            @if (editedPriceId == price.Id)
-                            {
-                                <MudIconButton Disabled="MissingQuantity <= 0"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               OnClick="() => AddOfferToExportedProduct()"
-                                               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Check"/>
-                                <MudIconButton Disabled="MissingQuantity <= 0"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               OnClick="() => ResetEditPrice(price)"
-                                               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Clear"/>
-                            }
-                        </td>
+	                    </td>
+	                    <td class="">
+		                    @if (editedPriceId == price.Id)
+		                    {
+			                    <MudIconButton Disabled="MissingQuantity <= 0"
+			                                   Color="Color.Primary"
+			                                   Size="Size.Small"
+			                                   OnClick="() => AddOfferToExportedProduct()"
+			                                   Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Check"/>
+			                    <MudIconButton Disabled="MissingQuantity <= 0"
+			                                   Color="Color.Primary"
+			                                   Size="Size.Small"
+			                                   OnClick="() => ResetEditPrice(price)"
+			                                   Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Clear"/>
+		                    }
+	                    </td>
                     </tr>
-                    
+
                 }
                 @if (ExportedProduct.PurchaseAtExports != null)
                 {
@@ -362,14 +372,22 @@
     @if (EditedQuantity != null && EditedQuantity.Any())
     {
         <MudButton Color="Color.Primary"
-                   OnClick="() => UpdateSources()"
-                   Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Check">Сохранить</MudButton>
+        OnClick="() => UpdateSources()"
+        Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Check">Сохранить</MudButton>
     }
-@*    @if (EditedQuantity!.Any())
+    @*    @if (EditedQuantity!.Any())
     {
         <MudButton OnClick="(async () => await CancelEditCallback.InvokeAsync())" Color="Color.Info">отменить</MudButton>
     }*@
 </div>
+<CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
+RefreshProductList="OnInitializedAsync"
+Order="OrderOwner" 
+Product="@ExportedProduct.Product"
+PurchaseAtExport="@PurchaseAtOffer"
+                             LinkPriceForImportOffer="ImportOfferPriceForAddedToOrder" />
+@* <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
+                             RefreshProductList="OnInitializedAsync"/> *@
 @code
 {
     [Parameter] public bool IsDoubleNested { get; set; }
@@ -390,11 +408,13 @@
     private List<Guid> EditedQuantity { get; set; } = new();
     private List<ImportedOrder>? BeginFormedImportOrders { get; set; }
     private Dictionary<Guid, List<ImportedOrder>> BackupImportOrdersForCompany = new Dictionary<Guid, List<ImportedOrder>>();
-
+    private ImportedOrder? OrderOwner { get; set; }
+    private PurchaseAtExport PurchaseAtOffer;
     private Guid? editedPriceId;
     private ExportProductPriceImportOffer? editedPrice;
     private double? _backupOfferQuantity;
     private double? _allSelectedFromOffers;
+    private ImportProductPriceImportOffer? ImportOfferPriceForAddedToOrder { get; set; }
 
     private bool _errorUpdate;
     private bool _soldFromStorageIsEdit;
@@ -417,7 +437,7 @@
             _loadProduct = true;
             CalculateQuantity();
         }
-      
+
         return base.OnAfterRenderAsync(firstRender);
     }
 
@@ -464,10 +484,10 @@
             return;
         if (ExportedProduct!=null)
         {
-           
+
             if (await ExportedProductManager.UpdateAsync(ExportedProduct))
             {
-               SetBackup();
+                SetBackup();
                 CalculateQuantity();
                 await RefreshParentCallback.InvokeAsync();
             }
@@ -477,7 +497,7 @@
             }
             _editTotalQuantity = false;
         }
-       
+
     }
     private void ResetEditTotalQuantity()
     {
@@ -494,7 +514,7 @@
         SetBackup();
         await InvokeAsync(StateHasChanged);
     }
-   
+
     private void SetFromStorageQuantity(int quantity, Guid storageId)
     {
         var soldInDb = ExportedProduct!.SoldFromStorage?.FirstOrDefault(f => f.StorageId == storageId);
@@ -526,7 +546,7 @@
                     modQuantity = soldInDb.Quantity - quantity;
                     productInStorage.Quantity += modQuantity;
                 }
-               
+
                 soldInDb.Quantity = quantity;
             }
             else
@@ -637,7 +657,7 @@
         if (ImportOfferCurrentPriceList != null)
         {
             var offersWithSelect = ImportOfferCurrentPriceList.Where(w => w.ExportProductPriceImportOffers != null)
-            .SelectMany(s => s.ExportProductPriceImportOffers).Where(w => w.ExportedProductsId == ExportedProduct.Id);
+            .SelectMany(s => s.ExportProductPriceImportOffers).Where(w => w.ExportedProductId == ExportedProduct.Id);
             if (offersWithSelect != null && offersWithSelect.Any())
             {
                 _allSelectedFromOffers = offersWithSelect.Sum(s => s.Quantity);
@@ -646,10 +666,10 @@
             {
                 _allSelectedFromOffers = 0;
             }
-       
+
         }
     }
-  
+
     private async Task OpenCreateImportedProductDialog(ProductsInStorage productsInStorage)
     {
         CreatedImportedProduct = new ImportedProduct()
@@ -680,8 +700,8 @@
     {
         _visibleAddImportedProductDialog = true;
         /*CreatedImportedProduct = new ImportedProduct()
-            {
-                Product = ExportedProduct!.Product,
+        {
+            Product = ExportedProduct!.Product,
                 ProductId = ExportedProduct.ProductId,
                 ExportedProducts = new List<ExportedProduct>() { ExportedProduct! },
                 Quantity = MissingQuantity
@@ -702,7 +722,7 @@
             _snackBar.Add($"Шаблон на импорт создан");
             await ReloadExportedProduct();
             CalculateQuantity();
-        }*/
+            }*/
     }
 
     private async void RemoveSoldFromStorage(SoldFromStorage soldFromStorage)
@@ -759,7 +779,7 @@
             if (price.ExportProductPriceImportOffers != null)
             {
                 var o = price.ExportProductPriceImportOffers.
-                    FirstOrDefault(f => f.ExportedProductsId == ExportedProduct!.Id)!.Quantity;
+                    FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id)!.Quantity;
                 _backupOfferQuantity = o != null ? o : 0;
             }
             else
@@ -769,10 +789,10 @@
         }
         if (editedPrice == null)
         {
-           
+
             var pr = price.ExportProductPriceImportOffers != null ? price.ExportProductPriceImportOffers
-                    .FirstOrDefault(f => f.ExportedProductsId == ExportedProduct!.Id) : null;
-            
+                    .FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id) : null;
+
 
             if (pr != null)
             {
@@ -796,7 +816,7 @@
                 editedPriceId = price.Id;
                 editedPrice = new ExportProductPriceImportOffer()
                 {
-                    ExportedProductsId = ExportedProduct!.Id,
+                    ExportedProductId = ExportedProduct!.Id,
                     Quantity = quantity,
                     PriceId = price.Id
                 };
@@ -815,7 +835,7 @@
             else
             {
                 var tempAll = _allSelectedFromOffers + quantity - editedPrice.Quantity;
-               
+
                 if (_allSelectedFromOffers >= MissingQuantity)
                     return;
                 _allSelectedFromOffers = tempAll;
@@ -827,10 +847,10 @@
                 editedPrice = null;
                 editedPriceId = null;
                 _backupOfferQuantity = null;
-            }*/
+                }*/
         }
-        
-        
+
+
     }
     private async Task AddOfferToExportedProduct()
     {
@@ -854,8 +874,8 @@
         if (old != null)
         {
             if (old.ExportProductPriceImportOffers != null) old.ExportProductPriceImportOffers
-                .FirstOrDefault(f => f.ExportedProductsId == ExportedProduct!.Id)!.Quantity = _backupOfferQuantity ?? 0;
-           
+                .FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id)!.Quantity = _backupOfferQuantity ?? 0;
+
         }
         _backupOfferQuantity = null;
         CalculateQuantity();
@@ -899,9 +919,25 @@
 
         if (BeginFormedImportOrders != null && BeginFormedImportOrders.Any())
             _visibleImportOrdersFromOffer = true;
-       
+
 
     }
+
+    private async Task OpenAddProductAtOfferToImportOrderComponent(ImportedOrder order, int quantity, PriceForImportOffer price)
+    {
+	    OrderOwner = order;
+        ImportOfferPriceForAddedToOrder = new ImportProductPriceImportOffer()
+        {
+            Quantity = quantity, PriceId = price.Id, Price = price
+        };
+	    var product = ExportedProduct.Product;
+        PurchaseAtOffer = new PurchaseAtExport() { 
+            ExportedProduct = ExportedProduct,
+	        ExportedProductId = ExportedProduct.Id
+	        , Quantity = quantity };
+	    _visibleAddImportedProductDialog = true;
+    }
+
     private async Task CreateImportProductByOffer()
     {
 

@@ -1,6 +1,7 @@
 ﻿using DKCrm.Server.Data;
 using DKCrm.Server.Interfaces.OrderInterfaces;
 using DKCrm.Shared.Constants;
+using DKCrm.Shared.Models.OfferModels;
 using DKCrm.Shared.Models.OrderModels;
 using DKCrm.Shared.Requests;
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +93,13 @@ namespace DKCrm.Server.Services.OrderServices
                 {
                     _context.Entry(item).State = EntityState.Added;
                 }
+            }
+            if (importedProduct.ImportProductPriceImportOffers != null)
+            {
+                foreach (var item in importedProduct.ImportProductPriceImportOffers)
+                {
+                    _context.Entry(item).State = EntityState.Added;
+                }       
             }
             await _context.SaveChangesAsync();
             return importedProduct.Id;
@@ -289,6 +297,10 @@ namespace DKCrm.Server.Services.OrderServices
         public async Task<int> DeleteAsync(Guid id)
         {
             var dev = await GetOneAsync(id);
+            if (dev.IsDeleted)
+            {
+                dev.IsFullDeleted = true;
+            }
             _context.Remove(dev);
             return await _context.SaveChangesAsync();
         }
