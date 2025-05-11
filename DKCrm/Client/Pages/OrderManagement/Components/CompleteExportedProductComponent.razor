@@ -1,8 +1,6 @@
-﻿@using System.Runtime.InteropServices.JavaScript
-@using DKCrm.Shared.Models.OrderModels
-@using DKCrm.Client.Pages.OrderManagement.Dialogs
-@using DKCrm.Shared.Constants
+﻿@using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Shared.Models.OfferModels
+@using DKCrm.Client.Pages.OfferManagement.Components
 @inject IConfirmationActionService ConfirmationActionService
 @if (ExportedProduct != null)
 {
@@ -133,22 +131,6 @@
                             {
                                 <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
                                 OnClick="@(() => OpenImportedOrderPopover((Guid)importedProduct.ImportedOrderId))"/>
-                                @if (@importedProduct.ImportedOrderId == ShowingImportOrderId && _visibleImportOrder)
-                                {
-                                    <MudPopover Open="@_visibleImportOrder"
-                                    Style=""
-                                    Class="px-4 pt-4"
-                                    OverflowBehavior="OverflowBehavior.FlipAlways">
-                                        <MudText>@importedProduct.ImportedOrder?.SellersCompany?.Name</MudText>
-                                        <ImportedOrderDetailsComponent Id="(Guid)importedProduct.ImportedOrderId"
-                                        CurrencyDisplay="@(new[] { "Сделки" })"
-                                        ShowCompanyInfo="true"
-                                        IsDoubleNested="true"/>
-                                        <div class="text-end mb-2">
-                                            <MudButton OnClick="(() => _visibleImportOrder = false)" Color="Color.Info">закрыть</MudButton>
-                                        </div>
-                                    </MudPopover>
-                                }
                             }
                         </td>
                         <td>@notEquippedQuantity</td>
@@ -197,179 +179,27 @@
         <MudText Typo="Typo.body1">заказы с данным продуктом отсутствуют</MudText>
 
     }
-    <MudButton OnClick="CreateImportedProduct">Создать заказ на импорт</MudButton>
 
-    <MudText Typo="Typo.h6">Предложения:</MudText>
-    @if (ImportOfferCurrentPriceList != null && ImportOfferCurrentPriceList.Any())
+    @if (_visibleImportOffers)
     {
-        <table class="table table-bordered table-striped table-sm">
-            <thead>
-                <tr style="background-color: rgba(0, 169, 255, 0.388)">
-                    <th style="width: 30px;"></th>
-                    <th>Компания</th>
-                    <th style="width: 150px;">Свободное количество</th>
-                    <th style="width: 150px;">Цена</th>
-                    <th style="width: 150px;">Забранное количество</th>
-                    <th style="width: 30px;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var price in ImportOfferCurrentPriceList)
-                {
-
-                    double offerNotEquippedQuantity = 0;
-                    if (@price.ExportProductPriceImportOffers != null)
-                    {
-                        offerNotEquippedQuantity = price.Quantity - (@price.ExportProductPriceImportOffers.Select(s => s.Quantity).Sum());
-                    }
-                    else
-                    {
-                        offerNotEquippedQuantity = price.Quantity;
-                    }
-                    <tr>
-	                    @{
-		                    double quantitySelectByOffer = 0;
-
-	                    }
-	                    @if (price.ExportProductPriceImportOffers != null && price.ExportProductPriceImportOffers.Select(s => s.ExportedProductId).Contains(ExportedProduct.Id))
-	                    {
-		                    quantitySelectByOffer = price.ExportProductPriceImportOffers.FirstOrDefault(f => f.ExportedProductId == ExportedProduct.Id
-		                                                                                                     && f.PriceId == price.Id)!.Quantity;
-	                    }
-	                    <td class="">
-		                    @if (true)
-		                    {
-			                    <MudTooltip Text="Добавить в заказ на импорт">
-
-				                    <MudIconButton Icon="@Icons.Material.Filled.ProductionQuantityLimits"
-				                                   Variant="Variant.Filled"
-				                                   Style=""
-				                                   OnClick="() => OpenAddToImportOrderComponent((Guid)(ImportOfferList!.FirstOrDefault(f => f.Id == price.ImportOfferId)?.Company!.Id)!)"/>
-				                    <MudDialog @bind-Visible="_visibleImportOrdersFromOffer" Style="max-width: 700px;padding: 0"
-				                               Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding">
-					                    <DialogContent>
-						                    <div class="p-3 d-flex justify-content-between">
-							                    <MudText Style="font-weight:600;">№ заказа</MudText>
-							                    <MudButton>Создать заказ</MudButton>
-						                    </div>
-						                    @if (BeginFormedImportOrders != null)
-						                    {
-							                    foreach (var order in BeginFormedImportOrders)
-							                    {
-								                    <MudPaper Class="p-3 mb-2">
-									                    <div class="d-flex justify-content-between">
-										                    <div class="d-flex">
-											                    <MudText> @order.Number @order.DateTimeCreated</MudText>
-											                    @if (!IsDoubleNested)
-											                    {
-												                    <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
-												                                   OnClick="@(() => OpenImportedOrderInOfferPopover((Guid)order.Id))"/>
-												                    @if (@order.Id == ShowingImportOrderInOfferId && _visibleImportOrderInOffer)
-												                    {
-													                    <MudPopover Open="@_visibleImportOrderInOffer"
-													                                Style=""
-													                                Class="px-4 pt-4"
-													                                OverflowBehavior="OverflowBehavior.FlipAlways">
-														                    <MudText>@order?.SellersCompany?.Name</MudText>
-														                    <ImportedOrderDetailsComponent Id="order.Id"
-														                                                   CurrencyDisplay="@(new[] { "Сделки" })"
-														                                                   ShowCompanyInfo="true"
-														                                                   IsDoubleNested="true"/>
-														                    <div class="text-end mb-2">
-															                    <MudButton OnClick="(() => _visibleImportOrderInOffer = false)" Color="Color.Info">закрыть</MudButton>
-														                    </div>
-													                    </MudPopover>
-												                    }
-											                    }
-										                    </div>
-										                    <MudTooltip Text="Добавить к этому заказу">
-											                    <MudIconButton Icon="@Icons.Material.Filled.Add" Size='Size.Small'
-                                                                               OnClick="@(() => OpenAddProductAtOfferToImportOrderComponent(order, (int)quantitySelectByOffer, price))" />
-										                    </MudTooltip>
-									                    </div>
-
-								                    </MudPaper>
-							                    }
-						                    }
-					                    </DialogContent>
-				                    </MudDialog>
-			                    </MudTooltip>
-		                    }
-	                    </td>
-	                    <td>
-		                    @(ImportOfferList!.FirstOrDefault(f => f.Id == price.ImportOfferId)?.Company!.Name)
-
-
-	                    </td>
-	                    <td>@offerNotEquippedQuantity</td>
-	                    <td>@($"{decimal.Round(price.ValueLocal, 2)} {price.CurrencyLocal}")</td>
-	                    <td class="d-flex align-items-center">
-
-		                    <MudNumericField T="double" Variant="Variant.Outlined"
-		                                     For="@(() => quantitySelectByOffer)"
-		                                     Immediate="true"
-		                                     Margin="Margin.Dense"
-		                                     Min="0"
-		                                     Max="@((MissingQuantity > offerNotEquippedQuantity ? offerNotEquippedQuantity : MissingQuantity) + quantitySelectByOffer)"
-		                                     ValueChanged="@(v => SetOfferToExportedProduct(v, price))"
-		                                     Value="editedPriceId == price.Id && editedPrice != null ? editedPrice.Quantity : quantitySelectByOffer" Clearable="true"/>
-
-		                    @*else
-                            {
-                                <MudIconButton Disabled="MissingQuantity <= 0"
-                                               Color="Color.Primary"
-                                               Style="width: 100%; height: 100%"
-                                               OnClick="() => SetOfferToExportedProduct((int)(MissingQuantity > offerNotEquippedQuantity ? offerNotEquippedQuantity : MissingQuantity), price)"
-                                               Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowCircleUp"/>
-                            }*@
-
-		                    @*@if (EditedQuantity.Contains(importedProduct.Id) & _errorUpdate)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Error" />
-                            }*@
-	                    </td>
-	                    <td class="">
-		                    @if (editedPriceId == price.Id)
-		                    {
-			                    <MudIconButton Disabled="MissingQuantity <= 0"
-			                                   Color="Color.Primary"
-			                                   Size="Size.Small"
-			                                   OnClick="() => AddOfferToExportedProduct()"
-			                                   Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Check"/>
-			                    <MudIconButton Disabled="MissingQuantity <= 0"
-			                                   Color="Color.Primary"
-			                                   Size="Size.Small"
-			                                   OnClick="() => ResetEditPrice(price)"
-			                                   Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Clear"/>
-		                    }
-	                    </td>
-                    </tr>
-
-                }
-                @if (ExportedProduct.PurchaseAtExports != null)
-                {
-                    <tr style="background-color: rgba(100, 255, 0, 0.388)">
-                        <th colspan="4" style="text-align: end">
-                            ВСЕГО:
-                            @_allSelectedFromOffers
-                        </th>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <MudDialog @bind-Visible="_visibleImportOffers" Style="padding: 0"
+	               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+		    <DialogContent>
+                <ImportedOfferComponent CompanyId="_filterOfferTuple?.CurrentCompanyId" FilterTuple="_filterOfferTuple" />
+		    </DialogContent>
+	    </MudDialog>
     }
-    else
-    {
-        <MudText Typo="Typo.body1">Предложения с данным продуктом отсутствуют</MudText>
+    <MudButton Color="Color.Primary"
+               OnClick="() => OpenOffers()"
+               Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Check">Предложения</MudButton>
 
-    }
 }
 <div class="d-flex justify-content-end mb-3">
     @if (_errorUpdate)
     {
         <MudText Color="Color.Error">Возникла ошибка при обновлении</MudText>
     }
-    @if (EditedQuantity != null && EditedQuantity.Any())
+    @if (EditedQuantity.Any())
     {
         <MudButton Color="Color.Primary"
         OnClick="() => UpdateSources()"
@@ -380,12 +210,19 @@
         <MudButton OnClick="(async () => await CancelEditCallback.InvokeAsync())" Color="Color.Info">отменить</MudButton>
     }*@
 </div>
-<CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
-RefreshProductList="OnInitializedAsync"
-Order="OrderOwner" 
-Product="@ExportedProduct.Product"
-PurchaseAtExport="@PurchaseAtOffer"
-                             LinkPriceForImportOffer="ImportOfferPriceForAddedToOrder" />
+
+@if (_visibleImportOrder)
+{
+    <MudDialog @bind-Visible="_visibleImportOrder" Style="max-width:padding: 0"
+	           Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+		<DialogContent>
+			<ImportedOrderDetailsComponent Id="ShowingImportOrderId"
+			                               CurrencyDisplay="@(new[] { "Сделки" })"
+			                               ShowCompanyInfo="true"
+			                               IsDoubleNested="true"/>
+		</DialogContent>
+	</MudDialog>
+}
 @* <CreateImportedProductDialog @bind-VisibleDialog="_visibleAddImportedProductDialog"
                              RefreshProductList="OnInitializedAsync"/> *@
 @code
@@ -398,33 +235,31 @@ PurchaseAtExport="@PurchaseAtOffer"
     private List<PurchaseAtExport>? BackupPurchaseAtExport { get; set; }
     public List<ProductsInStorage>? StorageList { get; set; }
     private List<ImportedProduct>? NotEquippedImportedProducts { get; set; }
-    private List<ImportOffer>? ImportOfferList { get; set; }
-    private List<PriceForImportOffer>? ImportOfferCurrentPriceList { get; set; }
+    // private List<ImportOffer>? ImportOfferList { get; set; }
+    // private List<PriceForImportOffer>? ImportOfferCurrentPriceList { get; set; }
     private ImportedProduct? CreatedImportedProduct { get; set; }
     private Guid ShowingImportOrderId { get; set; }
     private Guid ShowingImportOrderInOfferId { get; set; }
     private int MissingQuantity { get; set; }
     private int QuantityInReserveAll { get; set; }
     private List<Guid> EditedQuantity { get; set; } = new();
-    private List<ImportedOrder>? BeginFormedImportOrders { get; set; }
-    private Dictionary<Guid, List<ImportedOrder>> BackupImportOrdersForCompany = new Dictionary<Guid, List<ImportedOrder>>();
+ 
+    
     private ImportedOrder? OrderOwner { get; set; }
-    private PurchaseAtExport PurchaseAtOffer;
-    private Guid? editedPriceId;
-    private ExportProductPriceImportOffer? editedPrice;
+
     private double? _backupOfferQuantity;
     private double? _allSelectedFromOffers;
-    private ImportProductPriceImportOffer? ImportOfferPriceForAddedToOrder { get; set; }
-
+    private PriceForImportOffer? ImportOfferPriceForAddedToOrder { get; set; }
+    private FilterOfferTuple? _filterOfferTuple;
     private bool _errorUpdate;
     private bool _soldFromStorageIsEdit;
     private bool _loadProduct;
     private bool _editTotalQuantity;
     private int _backupTotalQuantity; 
-    private bool _visibleAddImportedProductDialog;
+
     private bool _visibleImportOrder; 
-    private bool _visibleImportOrderInOffer;    
-    private bool _visibleImportOrdersFromOffer;
+    private bool _visibleImportOrderInOffer;
+    private bool _visibleImportOffers;
 
     protected override void OnInitialized()
     {
@@ -447,19 +282,19 @@ PurchaseAtExport="@PurchaseAtOffer"
             StorageList = ExportedProduct.Product.ProductsInStorage.ToList();
 
         NotEquippedImportedProducts ??= await ImportedProductManager.GetNotEquippedAsync((Guid)ExportedProduct?.ProductId!);
-        var response = await ImportOfferManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOfferTuple>()
-        {
-            PageIndex = 0,
-            PageSize = Int32.MaxValue,
-            FilterTuple = new FilterOfferTuple()
-            {
-                    ProductId = (Guid)ExportedProduct?.ProductId!,
-            },
-        }, new CancellationToken(false));
-        ImportOfferList = (List<ImportOffer>?)response.Items;
-        if (ImportOfferList != null) 
-            ImportOfferCurrentPriceList = ImportOfferList.Where(w=>w.PricesForImportOffer!= null)
-                .Select(s => s.PricesForImportOffer!.MaxBy(o => o.DateTimeOver)!).ToList();
+        // var response = await ImportOfferManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOfferTuple>()
+        // {
+        //     PageIndex = 0,
+        //     PageSize = Int32.MaxValue,
+        //     FilterTuple = new FilterOfferTuple()
+        //     {
+        //             ProductId = (Guid)ExportedProduct?.ProductId!,
+        //     },
+        // }, new CancellationToken(false));
+        // ImportOfferList = (List<ImportOffer>?)response.Items;
+        // if (ImportOfferList != null) 
+        //     ImportOfferCurrentPriceList = ImportOfferList.Where(w=>w.PricesForImportOffer!= null)
+        //         .Select(s => s.PricesForImportOffer!.MaxBy(o => o.DateTimeOver)!).ToList();
 
         CalculateQuantity();
     }
@@ -585,8 +420,8 @@ PurchaseAtExport="@PurchaseAtOffer"
         if (importedProduct != null)
         {
             var purchaseInDb = ExportedProduct!.PurchaseAtExports?.FirstOrDefault(f => f.ImportedProductId == importedProductId);
-            var notReservedQuantity = importedProduct.Quantity - (importedProduct.PurchaseAtExportList?.Select(s => s.Quantity).Sum()
-                                                                  + importedProduct.PurchaseAtStorageList?.Select(s => s.Quantity).Sum());
+            // var notReservedQuantity = importedProduct.Quantity - (importedProduct.PurchaseAtExportList?.Select(s => s.Quantity).Sum()
+            //                                                       + importedProduct.PurchaseAtStorageList?.Select(s => s.Quantity).Sum());
             if (purchaseInDb != null)
             {
                 if (purchaseInDb.Quantity == quantity)
@@ -595,7 +430,7 @@ PurchaseAtExport="@PurchaseAtOffer"
                     return;
                 }
                 purchaseInDb.Quantity = quantity;
-                importedProduct!.PurchaseAtExportList!.FirstOrDefault(f => f.ImportedProductId == importedProductId)!.Quantity = quantity;
+                importedProduct.PurchaseAtExportList!.FirstOrDefault(f => f.ImportedProductId == importedProductId)!.Quantity = quantity;
             }
             else
             {
@@ -637,9 +472,9 @@ PurchaseAtExport="@PurchaseAtOffer"
     {
         var soldFromStorage = ExportedProduct!.SoldFromStorage!.FirstOrDefault(f => f.StorageId == storageId);
         soldFromStorage!.ExportedProduct = ExportedProduct;
-        if (await StorageManager.ReserveAProductAsync(soldFromStorage!))
+        if (await StorageManager.ReserveAProductAsync(soldFromStorage))
         {
-            _snackBar.Add($"Зарезервировано {soldFromStorage!.Quantity} шт.");
+            _snackBar.Add($"Зарезервировано {soldFromStorage.Quantity} шт.");
             _soldFromStorageIsEdit = false;
         }
     }
@@ -654,20 +489,6 @@ PurchaseAtExport="@PurchaseAtOffer"
             QuantityInReserveAll += ExportedProduct.PurchaseAtExports.Select(s => s.Quantity).Sum();
 
         MissingQuantity = ExportedProduct.Quantity - QuantityInReserveAll;
-        if (ImportOfferCurrentPriceList != null)
-        {
-            var offersWithSelect = ImportOfferCurrentPriceList.Where(w => w.ExportProductPriceImportOffers != null)
-            .SelectMany(s => s.ExportProductPriceImportOffers).Where(w => w.ExportedProductId == ExportedProduct.Id);
-            if (offersWithSelect != null && offersWithSelect.Any())
-            {
-                _allSelectedFromOffers = offersWithSelect.Sum(s => s.Quantity);
-            }
-            else
-            {
-                _allSelectedFromOffers = 0;
-            }
-
-        }
     }
 
     private async Task OpenCreateImportedProductDialog(ProductsInStorage productsInStorage)
@@ -696,34 +517,7 @@ PurchaseAtExport="@PurchaseAtOffer"
         }
 
     }
-    private async void CreateImportedProduct()
-    {
-        _visibleAddImportedProductDialog = true;
-        /*CreatedImportedProduct = new ImportedProduct()
-        {
-            Product = ExportedProduct!.Product,
-                ProductId = ExportedProduct.ProductId,
-                ExportedProducts = new List<ExportedProduct>() { ExportedProduct! },
-                Quantity = MissingQuantity
-            };
-        CreatedImportedProduct.PurchaseAtExportList = new List<PurchaseAtExport>()
-        {
-            new()
-            {
-                ExportedProduct = ExportedProduct,
-                ExportedProductId = ExportedProduct!.Id,
-                Quantity = MissingQuantity,
-                ImportedProduct = CreatedImportedProduct,
-                ImportedProductId = CreatedImportedProduct.Id
-            }
-        };
-        if (await ImportedProductManager.AddAsync(CreatedImportedProduct))
-        {
-            _snackBar.Add($"Шаблон на импорт создан");
-            await ReloadExportedProduct();
-            CalculateQuantity();
-            }*/
-    }
+   
 
     private async void RemoveSoldFromStorage(SoldFromStorage soldFromStorage)
     {
@@ -771,175 +565,95 @@ PurchaseAtExport="@PurchaseAtOffer"
         ShowingImportOrderId = importedOrderId;
         _visibleImportOrder = true;
     }
-    private void SetOfferToExportedProduct(double quantity, PriceForImportOffer price)
+
+    private void OpenOffers()
     {
-        if (editedPriceId != null && editedPriceId != price.Id) return;
-        if (_backupOfferQuantity == null)
-        {
-            if (price.ExportProductPriceImportOffers != null)
-            {
-                var o = price.ExportProductPriceImportOffers.
-                    FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id)!.Quantity;
-                _backupOfferQuantity = o != null ? o : 0;
-            }
-            else
-            {
-                _backupOfferQuantity = 0;
-            }
-        }
-        if (editedPrice == null)
-        {
-
-            var pr = price.ExportProductPriceImportOffers != null ? price.ExportProductPriceImportOffers
-                    .FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id) : null;
-
-
-            if (pr != null)
-            {
-                editedPriceId = price.Id;
-                editedPrice = pr;
-
-                if (editedPrice.Quantity > quantity)
-                    _allSelectedFromOffers -= editedPrice.Quantity - quantity;
-                else
-                {
-                    var tempAll = _allSelectedFromOffers + quantity - editedPrice.Quantity;
-                    if (_allSelectedFromOffers >= MissingQuantity)
-                        return;
-                    _allSelectedFromOffers = tempAll;
-                }
-
-                editedPrice!.Quantity = quantity;
-            }
-            else
-            {
-                editedPriceId = price.Id;
-                editedPrice = new ExportProductPriceImportOffer()
-                {
-                    ExportedProductId = ExportedProduct!.Id,
-                    Quantity = quantity,
-                    PriceId = price.Id
-                };
-                if (_allSelectedFromOffers + quantity >= MissingQuantity)
-                    return;
-
-                _allSelectedFromOffers += quantity;
-                price.ExportProductPriceImportOffers ??= new List<ExportProductPriceImportOffer>();
-                price.ExportProductPriceImportOffers.Add(editedPrice);
-            }
-        }
-        else
-        {
-            if (editedPrice.Quantity > quantity)
-                _allSelectedFromOffers -= editedPrice.Quantity - quantity;
-            else
-            {
-                var tempAll = _allSelectedFromOffers + quantity - editedPrice.Quantity;
-
-                if (_allSelectedFromOffers >= MissingQuantity)
-                    return;
-                _allSelectedFromOffers = tempAll;
-            }
-
-            editedPrice!.Quantity = quantity;
-            /*if (quantity == 0)
-            {
-                editedPrice = null;
-                editedPriceId = null;
-                _backupOfferQuantity = null;
-                }*/
-        }
-
-
+	    _filterOfferTuple = new FilterOfferTuple()
+	    {
+		    ProductId = ExportedProduct?.ProductId
+	    };
+	    _visibleImportOffers = true;
     }
-    private async Task AddOfferToExportedProduct()
-    {
-        if (editedPrice == null) return;
+    // private void SetOfferToExportedProduct(double quantity, PriceForImportOffer price)
+    // {
+    //     if (editedPriceId != null && editedPriceId != price.Id) return;
+    //     if (_backupOfferQuantity == null)
+    //     {
+    //         if (price.ExportProductPriceImportOffers != null)
+    //         {
+    //             var o = price.ExportProductPriceImportOffers.
+    //                 FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id)!.Quantity;
+    //             _backupOfferQuantity = o != null ? o : 0;
+    //         }
+    //         else
+    //         {
+    //             _backupOfferQuantity = 0;
+    //         }
+    //     }
+    //     if (editedPrice == null)
+    //     {
 
-        if (await ConfirmationActionService.ConfirmationActionAsync("Подтвердите изменение"))
-        {
-            await ImportOfferManager.AddOfferToExportOrderAsync(editedPrice);
-            editedPrice = null;
-            editedPriceId = null;
-            _backupOfferQuantity = null;
-        }
-    }
-
-    private void ResetEditPrice(PriceForImportOffer price)
-    {
-        editedPrice = null;
-        editedPriceId = null;
-        var old = ImportOfferCurrentPriceList!.FirstOrDefault(s => s.Id == price.Id);
-
-        if (old != null)
-        {
-            if (old.ExportProductPriceImportOffers != null) old.ExportProductPriceImportOffers
-                .FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id)!.Quantity = _backupOfferQuantity ?? 0;
-
-        }
-        _backupOfferQuantity = null;
-        CalculateQuantity();
-    }
-
-    private void OpenImportedOrderInOfferPopover(Guid importedOrderId)
-    {
-        //CloseAllPopover();
-        ShowingImportOrderInOfferId = importedOrderId;
-        _visibleImportOrderInOffer = true;
-    }
-
-    private async Task OpenAddToImportOrderComponent(Guid companyId)
-    {
-        BeginFormedImportOrders = null;
-        try
-        {
-            BeginFormedImportOrders = BackupImportOrdersForCompany[companyId];
-        }
-        catch 
-        {
-            var statusList = await ImportedOrderStatusManager.GetAsync();
-            var statusId = statusList.FirstOrDefault(f => f.Value == ImportOrderStatusNames.BeginFormed)!.Id;
-            var responseOrders = await ImportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
-            {
-                PageIndex = 0,
-                PageSize = int.MaxValue,
-                FilterTuple = new FilterOrderTuple()
-                {
-                    ContragentsCompanies = new List<Guid>() { companyId },
-                    CurrentStatusId = statusId
-                },
-
-            });
-            if (responseOrders.Items != null)
-            {
-                BeginFormedImportOrders = responseOrders.Items.ToList();
-                BackupImportOrdersForCompany.Add(companyId, BeginFormedImportOrders);
-            }
-        }
-
-        if (BeginFormedImportOrders != null && BeginFormedImportOrders.Any())
-            _visibleImportOrdersFromOffer = true;
+    //         var pr = price.ExportProductPriceImportOffers != null ? price.ExportProductPriceImportOffers
+    //                 .FirstOrDefault(f => f.ExportedProductId == ExportedProduct!.Id) : null;
 
 
-    }
+    //         if (pr != null)
+    //         {
+    //             editedPriceId = price.Id;
+    //             editedPrice = pr;
 
-    private async Task OpenAddProductAtOfferToImportOrderComponent(ImportedOrder order, int quantity, PriceForImportOffer price)
-    {
-	    OrderOwner = order;
-        ImportOfferPriceForAddedToOrder = new ImportProductPriceImportOffer()
-        {
-            Quantity = quantity, PriceId = price.Id, Price = price
-        };
-	    var product = ExportedProduct.Product;
-        PurchaseAtOffer = new PurchaseAtExport() { 
-            ExportedProduct = ExportedProduct,
-	        ExportedProductId = ExportedProduct.Id
-	        , Quantity = quantity };
-	    _visibleAddImportedProductDialog = true;
-    }
+    //             if (editedPrice.Quantity > quantity)
+    //                 _allSelectedFromOffers -= editedPrice.Quantity - quantity;
+    //             else
+    //             {
+    //                 var tempAll = _allSelectedFromOffers + quantity - editedPrice.Quantity;
+    //                 if (_allSelectedFromOffers >= MissingQuantity)
+    //                     return;
+    //                 _allSelectedFromOffers = tempAll;
+    //             }
 
-    private async Task CreateImportProductByOffer()
-    {
+    //             editedPrice!.Quantity = quantity;
+    //         }
+    //         else
+    //         {
+    //             editedPriceId = price.Id;
+    //             editedPrice = new ExportProductPriceImportOffer()
+    //             {
+    //                 ExportedProductId = ExportedProduct!.Id,
+    //                 Quantity = quantity,
+    //                 PriceId = price.Id
+    //             };
+    //             if (_allSelectedFromOffers + quantity >= MissingQuantity)
+    //                 return;
 
-    }
+    //             _allSelectedFromOffers += quantity;
+    //             price.ExportProductPriceImportOffers ??= new List<ExportProductPriceImportOffer>();
+    //             price.ExportProductPriceImportOffers.Add(editedPrice);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         if (editedPrice.Quantity > quantity)
+    //             _allSelectedFromOffers -= editedPrice.Quantity - quantity;
+    //         else
+    //         {
+    //             var tempAll = _allSelectedFromOffers + quantity - editedPrice.Quantity;
+
+    //             if (_allSelectedFromOffers >= MissingQuantity)
+    //                 return;
+    //             _allSelectedFromOffers = tempAll;
+    //         }
+
+    //         editedPrice!.Quantity = quantity;
+    //         /*if (quantity == 0)
+    //         {
+    //             editedPrice = null;
+    //             editedPriceId = null;
+    //             _backupOfferQuantity = null;
+    //             }*/
+    //     }
+
+
+    // }
+    
 }

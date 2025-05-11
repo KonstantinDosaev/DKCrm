@@ -1,14 +1,10 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Components
-@using DKCrm.Client.Pages.OrderManagement.DocumentComponents
 @using DKCrm.Client.Pages.OrderManagement.Dialogs
 @using DKCrm.Shared.Constants
 @using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Client.Pages.Companies
 @using DKCrm.Shared.Models.OfferModels
-@using DKCrm.Client.Pages.OfferManagement.Components
 
-
-@*@page "/imported_order/tag/{tagid:guid}"*@
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2 flex-wrap" Elevation="4" Outlined="true">
     <div class="d-flex">
         <MudTooltip Text="фильтр">
@@ -19,73 +15,6 @@
                          Icon="@Icons.Material.Sharp.FilterAlt" Class="pa-0 ml-2" />
             </MudButton>
         </MudTooltip>
-        @*<MudTooltip Placement="Placement.Right" Text="не прочитанные комментарии">
-            <MudButton Size="@Size.Medium" Style="margin-right: 0.7rem;"
-                       Variant="Variant.Filled" OnClick="() => OnUnreadComments()"
-                       StartIcon="@Icons.Material.Filled.CommentBank"
-                       Color="@(_isOnUnreadComments ? Color.Primary : Color.Default)">
-                <MudIcon Icon="@(_unreadCommentsAny ? Icons.Material.Filled.PlusOne : Icons.Material.Filled.Check)" />
-
-            </MudButton>
-        </MudTooltip>*@
-        @*<MudTooltip Text="история">
-            <MudButton Variant="Variant.Filled"
-                       Color="@(_showHistoryOrders ? Color.Primary : Color.Default)"
-                       Style="margin-right: 0.7rem;"
-                       OnClick="OnHistory">
-                <MudIcon Size="@Size.Medium"
-                         Icon="@Icons.Material.Sharp.History"
-                         Class="pa-0 ml-2" />
-            </MudButton>
-        </MudTooltip>*@
-        @*<MudMenu>
-            <ActivatorContent>
-                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings"
-                               Color="@(CurrentOrderStatus != null || OrdersIsCompleted != null ? Color.Warning : Color.Default)" />
-            </ActivatorContent>
-            <ChildContent>
-                <div style="width: 228px; margin: 0.2rem 0;">
-                    <MudSelect T="ExportedOrderStatus"
-                               Placeholder="Статус" Value="CurrentOrderStatus"
-                               ValueChanged="OnStatusFilter"
-                               Variant="Variant.Outlined" Dense="true" Style=""
-                               Class="select-button"
-                               OnOpen="LoadStatusList" ToStringFunc="status => status.Value" Clearable
-                               OnClearButtonClick="ResetStatusFilter">
-                        @if (StatusList != null)
-                        {
-                            foreach (var status in StatusList)
-                            {
-                                <MudSelectItem T="ExportedOrderStatus" Value="@(status)">@status.Value</MudSelectItem>
-                            }
-                        }
-                    </MudSelect>
-                </div>
-                <div style="width: 228px; margin-bottom: 0.2rem;">
-                    <MudSelect T="bool?"
-                               Placeholder="Укомплектованность" Value="OrdersIsCompleted" ValueChanged="OnCompleteOrderFilter"
-                               Variant="Variant.Outlined" Dense="true" Style=""
-                               Class="select-button" Clearable="true">
-                        <MudSelectItem T="bool?" Value="true">Укомплектованные</MudSelectItem>
-                        <MudSelectItem T="bool?" Value="false">Не укомплектованные</MudSelectItem>
-                        <MudSelectItem T="bool?" Value="null">Все</MudSelectItem>
-                    </MudSelect>
-                </div>
-                <div style="width: 228px;margin-bottom: 0.2rem;">
-                    <MudSelect T="string"
-                               MultiSelection="true"
-                               @bind-SelectedValues="_currencyDisplay"
-                               MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))"
-                               Variant="Variant.Outlined" Dense="true"
-                               Class="select-button">
-                        <MudSelectItem T="string" Value="@("Продавца")">Продавца</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("Сделки")">Сделки</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("Локальная")">Локальная</MudSelectItem>
-                    </MudSelect>
-                </div>
-            </ChildContent>
-        </MudMenu>*@
-
     </div>
     <div class="d-flex">
         <MudTextField Clearable="true" T="string" ValueChanged="@(OnSearch)" Placeholder="Поиск"
@@ -161,11 +90,16 @@
                 @context.Product.Brand.Name
             }
         </MudTd>
-        @{ var last = context.PricesForImportOffer!.MaxBy(o => o.DateTimeOver); }
+        @{
+	        var last = context.PricesForImportOffer!.MaxBy(o => o.DateTimeOver);
+		        var takeQuantity = last?.ImportedProducts?.Select(s => s.Quantity).Sum() ?? 0;
+	        
+        }
         <MudTd DataLabel="Количество">
-            <div class="d-flex justify-content-between align-items-center">
-                @last.Quantity
-                @*@{
+	        <div class="d-flex justify-content-between align-items-center">
+                <span>@last?.Quantity</span>/<span>@(last?.Quantity - takeQuantity)</span>
+		     
+		        @*@{
                     var freeQuantity = GetFreeQuantity(context);
                 }
                 <MudText>
@@ -176,7 +110,7 @@
                 <div style="margin: 0 -0.5rem 0 1rem">
                     <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCompletePopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
                 </div>*@
-            </div>
+	        </div>
             @*@if (ImportedProductId == context.Id && _isOpenCompletePopover)
             {
                 <MudPopover Open="@_isOpenCompletePopover"
@@ -235,45 +169,64 @@
         </MudTd>
         <MudTd DataLabel="Редактировать">
             <div class="d-flex align-items-center"> 
-                <MudMenu>
-                    <ActivatorContent>
-                        <MudIconButton Icon="@Icons.Material.Filled.History" Size="@Size.Medium"
-                                       Color="Color.Primary" Class="pa-1 mr-2"/>
-                    </ActivatorContent>
-                    <ChildContent>
-                        @if (context.PricesForImportOffer != null)
-                        {
-                            <div class="p-2">
-                                <MudText Class="mb-2" Typo="Typo.button">История изменения</MudText>
-                                @foreach (var price in context.PricesForImportOffer.OrderByDescending(o => o.DateTimeOver))
-                                {
-                                    <div class="mb-1 border-bottom">
-                                        <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
-                                            @($"{price.DateTimeCreate.ToShortDateString()} - {price.DateTimeOver?.ToShortDateString()}")
-                                        </MudText>
-                                        <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
-                                            @($"Колю-во: {price.Quantity} шт.")
-                                        </MudText>
-                                        <div class="d-flex justify-content-between px-2">
-                                            <MudText>@($"{decimal.Round(price.Value, 4)}")</MudText>
-                                            <MudText>@($"{price.Currency}")</MudText>
-                                        </div>
-                                        <div class="d-flex justify-content-between px-2">
-                                            <MudText>@($"{decimal.Round(price.ValueLocal, 4)}")</MudText>
-                                            <MudText>@($"{price.CurrencyLocal}")</MudText>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </ChildContent>
-                </MudMenu>
+	            <MudMenu>
+		            <ActivatorContent>
+			            <MudIconButton Icon="@Icons.Material.Filled.History" Size="@Size.Medium"
+			                           Color="Color.Primary" Class="pa-1 mr-2"/>
+		            </ActivatorContent>
+		            <ChildContent>
+			            @if (context.PricesForImportOffer != null)
+			            {
+				            <div class="p-2">
+					            <MudText Class="mb-2" Typo="Typo.button">История изменения</MudText>
+					            @foreach (var price in context.PricesForImportOffer.OrderByDescending(o => o.DateTimeOver))
+					            {
+						            <div class="mb-1 border-bottom">
+							            <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
+								            @($"{price.DateTimeCreate.ToShortDateString()} - {price.DateTimeOver?.ToShortDateString()}")
+							            </MudText>
+							            <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
+								            @($"Колю-во: {price.Quantity} шт.")
+							            </MudText>
+							            <div class="d-flex justify-content-between px-2">
+								            <MudText>@($"{decimal.Round(price.Value, 4)}")</MudText>
+								            <MudText>@($"{price.Currency}")</MudText>
+							            </div>
+							            <div class="d-flex justify-content-between px-2">
+								            <MudText>@($"{decimal.Round(price.ValueLocal, 4)}")</MudText>
+								            <MudText>@($"{price.CurrencyLocal}")</MudText>
+							            </div>
+						            </div>
+					            }
+				            </div>
+			            }
+		            </ChildContent>
+	            </MudMenu>
+
             @if (CompanyId != null)
                 {
+
                     <MudIconButton Size="@Size.Medium"
                                    OnClick="() => OpenAddPriceDialog(context)"
                                    Style=" background-color: rgba(217, 214, 81, 0.431);"
-                                   Icon="@Icons.Material.Sharp.Edit" Class="pa-1"/>
+                                   Icon="@Icons.Material.Sharp.Edit" Class="pa-1 mr-2"/>
+                }
+                @if (last != null && !OnSelectButton)
+	            {
+		            <MudTooltip Text="Добавить в заказ на импорт">
+			            <MudIconButton Icon="@Icons.Material.Filled.ProductionQuantityLimits"
+			                           Variant="Variant.Filled"
+			                           Style=""
+			                           OnClick="@(() => OpenAddToImportOrderComponent((Guid)context.CompanyId, last, context))"/>
+		            </MudTooltip>
+	            }
+	            @if (OnSelectButton)
+                {
+	                <MudTooltip Text="Выбрать предложение">
+		                <MudIconButton Size="@Size.Medium"
+		                               OnClick="() => SelectOffer(context)"
+		                               Icon="@Icons.Material.Sharp.Check" Class="pa-1"/>
+	                </MudTooltip>
                 }
             </div>
         </MudTd>
@@ -309,22 +262,85 @@
         </DialogContent>
     </MudDialog>
 }
-<MudDialog @bind-Visible="_visibleDocumentManagerDialog"
-           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}"
-           Style="height: 100VH">
-    <TitleContent>
-        <div style="text-align: right">
-            <MudButton Variant="Variant.Outlined"
-                       Size="Size.Small"
-                       OnClick="(() =>_visibleDocumentManagerDialog = false)"
-                       Color="Color.Info">Закрыть</MudButton>
-        </div>
-    </TitleContent>
-    <DialogContent>
-        <DocumentManagerComponent OrderId="OrderId" OwnerType="DocumentOwner.ExportedOrder"></DocumentManagerComponent>
-    </DialogContent>
-
-</MudDialog>
+@if (_visibleImportOrdersFromOffer)
+{
+        <MudDialog @bind-Visible="_visibleImportOrdersFromOffer" Style="max-width: 700px;padding: 0"
+                   Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding">
+            <DialogContent>
+	            <div class="p-3 d-flex justify-content-between">
+	            <div class="offer_order_table_struct">
+		            <MudText Style="font-weight:600;">Компания</MudText>
+		            <MudText Style="font-weight:600;">№ заказа</MudText>
+		            <MudText Style="font-weight:600;">Дата</MudText>
+		            </div>
+		            <MudTooltip Text="Создать новый заказ">
+			            <div class="offer_order_table_btn">
+				            <MudIconButton Variant="Variant.Filled"
+				                           Icon="@Icons.Material.Filled.Add"
+				                           Size='Size.Medium'
+				                           Color="Color.Tertiary" 
+				                           OnClick="@(()=> OpenAddOrderDialog())"/>
+			            </div>
+		            </MudTooltip>
+	            </div>
+                @if (BeginFormedImportOrders != null)
+                {
+                    foreach (var order in BeginFormedImportOrders)
+                    {
+                        <MudPaper Class="p-3 mb-2">
+                            <div class="d-flex">
+	                            <div class="offer_order_table_struct">
+		                            <div class="d-flex">
+                                        @if (ImportProductsWhitOfferOrderIds != null && 
+                                             ImportProductsWhitOfferOrderIds.Any() && 
+                                             ImportProductsWhitOfferOrderIds.Contains(order.Id))
+                                        {
+	                                        <MudTooltip 
+		                                        Placement="Placement.Right"
+		                                        Text = "Присутствуют продукты по данному предложению">
+		                                        <MudIcon
+			                                        Class="mr-1" Size="Size.Small"
+			                                        Icon ="@Icons.Material.Filled.LocalOffer"/>
+	                                        </MudTooltip>
+                                        }
+                                        <MudText>@order.SellersCompany?.Name</MudText>
+		                            </div>
+		                          
+		                            <div class="d-flex">
+			                            <MudText>@order.Number</MudText>
+			                            @if (!IsDoubleNested)
+			                            {
+				                            <MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
+				                                           OnClick="@(() => OpenImportedOrderPopover(order.Id))"/>
+			                            }
+		                            </div>
+		                            <MudText>@($"/{order.DateTimeCreated}/")</MudText>
+	                            </div>
+                                <MudTooltip Text="Добавить к этому заказу">
+	                                <div class="offer_order_table_btn">
+		                                <MudIconButton Icon="@Icons.Material.Filled.Add" Size='Size.Small'
+		                                               OnClick="@(() => OpenAddProductAtOfferToImportOrderComponent(order))"/>
+	                                </div>
+                                </MudTooltip>
+                            </div>
+                        </MudPaper>
+                    }
+                }
+            </DialogContent>
+        </MudDialog>
+}
+@if (_visibleImportOrder)
+{
+	<MudDialog @bind-Visible="_visibleImportOrder" Style="max-width:padding: 0"
+	           Options="new DialogOptions(){CloseButton = true, FullScreen = true, CloseOnEscapeKey = true}" Class="no-padding">
+		<DialogContent>
+			<ImportedOrderDetailsComponent Id="ShowingImportOrderId"
+			                               CurrencyDisplay="@(new[] { "Сделки" })"
+			                               ShowCompanyInfo="true"
+			                               IsDoubleNested="true"/>
+		</DialogContent>
+	</MudDialog>
+}
 @if (_visibleCompanyDetailsDialog)
 {
     <MudDialog @bind-Visible="_visibleCompanyDetailsDialog"
@@ -339,29 +355,29 @@
 }
 @if (_visibleAddDialog)
 {
-
-
     <CreateImportOfferDialog RefreshParentItem="() => _table.ReloadServerData()"
                              @bind-VisibleDialog="_visibleAddDialog" CompanyId="@((Guid)CompanyId)"/>
 }
 @if (_visibleAddPriceDialog)
-    {
-        <CreateImportOfferDialog RefreshParentItem="() => _table.ReloadServerData()"
-                                 @bind-VisibleDialog="_visibleAddPriceDialog"
+{
+    <CreateImportOfferDialog RefreshParentItem="() => _table.ReloadServerData()"
+                             @bind-VisibleDialog="_visibleAddPriceDialog"
 
-                                 OfferId="@OfferId"
-                                 Offer="CurrentOffer"
-                                 CompanyId="@((Guid)CompanyId)"
-                                 IsAddPriceForm="true"/>
-    }
+                             OfferId="@OfferId"
+                             Offer="CurrentOffer"
+                             CompanyId="@((Guid)CompanyId)"
+                             IsAddPriceForm="true"/>
+}
+@if (CurrentOffer != null)
+{
+	<CreateImportedOrderDialog
+		@bind-VisibleDialog="_visibleAddOrderDialog" CompanySeller="@CurrentOffer.Company"
+		RefreshProductList="() => LoadImportOrders((Guid)CompanyId)" />
+}
 
-    @*<EditExportedOrderDialog 
-    Id="Order.Id"
-    RefreshProductList="() => _table.ReloadServerData()"
-    @bind-VisibleDialog="_visibleUpdateOrderDialog"
-    ApplicationOrderingProduct="Order.ApplicationOrderingProducts" />*@
 
 @code {
+	[Parameter] public bool IsDoubleNested { get; set; }
     public Guid OrderId { get; set; }
     public Guid OfferId { get; set; }
     public ImportOffer? CurrentOffer { get; set; }
@@ -378,11 +394,20 @@
     [Parameter] public string? SearchString { get; set; }
     [Parameter] public string? SelectedOption { get; set; } = SearchChapterNames.ProductPartNumber;
     [Parameter]public Guid? CompanyId { get; set; }
-    
+    [Parameter] public EventCallback<PriceForImportOffer> SelectedPriceEventCallback { get; set; }
+    [Parameter]public bool OnSelectButton { get; set; }
     private MudTable<ImportOffer> _table = null!;
     //private MudTable<ExportedOrder> _tables;
     private ExportedOrderStatus? CurrentOrderStatus { get; set; }
     private bool? OrdersIsCompleted { get; set; }
+    
+    PriceForImportOffer CurrentPriceForImportOffer { get; set; }
+    private Guid?[]? ImportProductsWhitOfferOrderIds { get; set; }
+    private Guid ShowingImportOrderId { get; set; }
+    private List<ImportedOrder>? BeginFormedImportOrders { get; set; }
+    private Dictionary<Guid, List<ImportedOrder>> BackupImportOrdersForCompany = new Dictionary<Guid, List<ImportedOrder>>();
+    private bool _visibleImportOrder; 
+    private bool _visibleAddImportedProductDialog;
 
     private bool _visibleAddPriceDialog;
     private bool _visibleFilter;
@@ -396,14 +421,17 @@
     private bool _isOnUnreadComments;
     private bool _unreadCommentsAny;
     private bool _visibleCompanyDetailsDialog;
+    private bool _visibleAddOrderDialog;
+
+    private bool _visibleImportOrdersFromOffer;
     private IEnumerable<string> _currencyDisplay = new HashSet<string>() { "Сделки" };
     protected override async Task OnInitializedAsync()
     {
-        await LoadStatusList();
+        
     }
     protected override async Task OnParametersSetAsync()
     {
-        await _table.ReloadServerData();
+        //await _table.ReloadServerData();
     }
     protected override void OnAfterRender(bool firstRender)
     {
@@ -455,18 +483,6 @@
         CurrentOffer = offer;
         _visibleAddPriceDialog = true;
     }
-    /*private void OnHistory()
-    {
-        _showHistoryOrders = !_showHistoryOrders;
-        FilterOrderTuple.IsHistoryOrders = !FilterOrderTuple.IsHistoryOrders;
-        _table.ReloadServerData();
-    }
-    private void OnUnreadComments()
-    {
-        _isOnUnreadComments = !_isOnUnreadComments;
-        FilterOrderTuple.IsOrdersWithUnreadComments = !FilterOrderTuple.IsOrdersWithUnreadComments;
-        _table.ReloadServerData();
-    }*/
 
     private void OnFilter(FilterOfferTuple filterTuple)
     {
@@ -483,42 +499,87 @@
         FilterTuple = filterTuple;
         _table.ReloadServerData();
     }
-
-    private void OpenUpdateOrderDialog(ExportedOrder order)
-    {
-        Order = order;
-        _visibleUpdateOrderDialog = true;
-    }
-    private void OpenDocumentManager(Guid orderId)
-    {
-        OrderId = orderId;
-        _visibleDocumentManagerDialog = true;
-    }
-
-    private void OpenOrderDetails(Guid orderId)
-    {
-        OrderId = orderId;
-        ShowDetails = !ShowDetails;
-    }
-    private void OpenOrderComments(Guid orderId)
-    {
-        OrderId = orderId;
-        _visibleOrderComments = !_visibleOrderComments;
-    }
-    private async Task LoadStatusList()
-    {
-        StatusList ??= await ExportedOrderStatusManager.GetAsync();
-    }
-
-    private async Task WarningToWorked(ExportedOrder order)
-    {
-        order.OrderIsWarn = false;
-        await ExportedOrderManager.UpdateAsync(order);
-    }
+   
     private void OpenCompanyDetailsDialog(Guid companyId)
     {
         CompanyId = companyId;
         _visibleCompanyDetailsDialog = true;
+    }
+    private void SelectOffer(ImportOffer offer)
+    {
+	    var currentPrice = offer.PricesForImportOffer?.MaxBy(o => o.DateTimeOver);
+	    if (currentPrice != null)
+	    {
+		    if (currentPrice.Quantity - (currentPrice.ImportedProducts?.Select(s => s.Quantity).Sum() ?? 0) == 0)
+			    return;
+		    SelectedPriceEventCallback.InvokeAsync(currentPrice);
+	    }
+
+    }
+    private async Task OpenAddToImportOrderComponent(Guid companyId, PriceForImportOffer currentPrice, ImportOffer offer)
+    {
+	    CurrentOffer = offer;
+	    CurrentPriceForImportOffer = currentPrice;
+	    ImportProductsWhitOfferOrderIds = currentPrice.ImportedProducts?.Select(s => s.ImportedOrderId).ToArray();
+	   await LoadImportOrders(companyId);
+
+	    _visibleImportOrdersFromOffer = true;
+    }
+
+        private async Task LoadImportOrders(Guid companyId)
+    {
+	    BeginFormedImportOrders = null;
+	    try
+	    {
+		    BeginFormedImportOrders = BackupImportOrdersForCompany[companyId];
+	    }
+	    catch 
+	    {
+		    var statusList = await ImportedOrderStatusManager.GetAsync();
+		    var statusId = statusList.FirstOrDefault(f => f.Value == ImportOrderStatusNames.BeginFormed)!.Id;
+		    var responseOrders = await ImportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
+		    {
+			    PageIndex = 0,
+			    PageSize = int.MaxValue,
+			    FilterTuple = new FilterOrderTuple()
+			    {
+				    ContragentsCompanies = new List<Guid>() { companyId },
+				    CurrentStatusId = statusId
+			    },
+
+		    });
+		    if (responseOrders.Items != null)
+		    {
+			    BeginFormedImportOrders = responseOrders.Items.ToList();
+			    BackupImportOrdersForCompany.Add(companyId, BeginFormedImportOrders);
+		    }
+	    }
+    }
+    private void OpenImportedOrderPopover(Guid importedOrderId)
+    {
+	    ShowingImportOrderId = importedOrderId;
+	    _visibleImportOrder = true;
+    }
+    private async Task OpenAddProductAtOfferToImportOrderComponent(ImportedOrder order)
+    {
+	   
+	    _visibleAddImportedProductDialog = true;
+    }
+
+    private async Task OpenAddOrderDialog()
+    {
+	    if(ImportProductsWhitOfferOrderIds != null && ImportProductsWhitOfferOrderIds.Any())
+	    {
+		    var im = BeginFormedImportOrders?.Select(s =>(Guid?) s.Id).ToArray();
+		    var tt = ImportProductsWhitOfferOrderIds.Intersect(im);
+		    if (tt.Any())
+		    {
+			    _snackBar.Add("Заказ с данным предложением присутствует");
+                return;
+		    }
+	    }
+	    if (CurrentOffer != null) CurrentOffer.Company = await CompanyManager.GetDetailsAsync((Guid)CurrentOffer.CompanyId!);
+	    _visibleAddOrderDialog = true;
     }
     private static string GetMultiSelectionText(List<string> selectedValues) => "Отображаемая цена";
 
@@ -550,11 +611,31 @@
         margin: 0 !important;
     }
 
-        .select-button .mud-input-slot.mud-input-root-outlined {
-            padding: 0.67rem 0.8rem !important;
-            text-transform: uppercase !important;
-            font-size: 0.85rem !important;
-        }
+    .select-button .mud-input-slot.mud-input-root-outlined {
+        padding: 0.67rem 0.8rem !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+    }
 
+    .offer_order_table_struct{
+        flex: 1 1 100%;
+        display: flex;
+    }
+
+    .offer_order_table_struct > * {
+        width: calc(100% / 3);
+        padding: 0 1rem;
+        border-right: 1px solid;
+       
+    }
+
+        .offer_order_table_struct :last-child {
+           
+            border-right: none;
+        }
+    .offer_order_table_btn{
+        text-align: center;
+        width: 36px;
+    }
 </style>
 

@@ -34,10 +34,10 @@ namespace DKCrm.Client.Services.OrderServices
             return result.IsSuccessStatusCode;
         }
 
-        public async Task<bool> AddAsync(ImportedOrder item)
+        public async Task<Guid> AddAsync(ImportedOrder item)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/ImportedOrder/Post", item, JsonOptions.JsonIgnore);
-            return result.IsSuccessStatusCode;
+            return await result.Content.ReadFromJsonAsync<Guid>();
         }
 
         public async Task<bool> RemoveRangeAsync(IEnumerable<ImportedOrder> items)

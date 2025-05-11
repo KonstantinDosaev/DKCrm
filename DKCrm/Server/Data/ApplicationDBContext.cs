@@ -59,8 +59,8 @@ namespace DKCrm.Server.Data
         public DbSet<LogUsersVisitToCompanyComments> LogUsersVisitToCompanyComments { get; set; } = null!;
         public DbSet<ImportOffer> ImportOffers { get; set; } = null!;
         public DbSet<PriceForImportOffer> PricesForImportOffers { get; set; } = null!;
-        public DbSet<ExportProductPriceImportOffer> ExportProductPriceImportOffers { get; set; } = null!;
-        public DbSet<ImportProductPriceImportOffer> ImportProductPriceImportOffers { get; set; } = null!;
+/*        public DbSet<ExportProductPriceImportOffer> ExportProductPriceImportOffers { get; set; } = null!;
+        public DbSet<ImportProductPriceImportOffer> ImportProductPriceImportOffers { get; set; } = null!;*/
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -284,7 +284,7 @@ namespace DKCrm.Server.Data
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            builder
+          /*  builder
                 .Entity<ExportedProduct>()
                 .HasMany(c => c.PriceForImportOffers)
                 .WithMany(s => s.ExportedProducts)
@@ -321,7 +321,7 @@ namespace DKCrm.Server.Data
                         j.Property(pt => pt.Quantity).HasDefaultValue(0);
                         j.HasKey(t => new { t.ImportedProductId, t.PriceId });
                         j.ToTable("ImportProductPriceImportOffers");
-                    });
+                    });*/
 
         }
 

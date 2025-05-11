@@ -44,5 +44,10 @@ namespace DKCrm.Client.Services.OfferService
             var result = await _httpClient.PostAsJsonAsync($"api/ImportOffer/AddOfferToExportOrder", link, JsonOptions.JsonIgnore);
             return result.IsSuccessStatusCode;
         }
+        public async Task<bool> AddOfferToImportOrderAsync(ImportProductPriceImportOffer link)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/ImportOffer/AddOfferToImportOrder", link, JsonOptions.JsonIgnore);
+            return result.IsSuccessStatusCode;
+        }
     }
 }

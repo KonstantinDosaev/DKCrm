@@ -91,7 +91,7 @@
                             </div>
                             <div class="d-flex flex-wrap">
                                 <div class="d-flex align-items-center">
-                                    <MudNumericField Label="Цена в валюте покупателя" @bind-Value="_newPrice"
+                                    <MudNumericField Label="Цена в валюте поставщика" @bind-Value="_newPrice"
                                                      For="@(() => _newPrice)"
                                                      Variant="Variant.Outlined"
                                                      RequiredError="Введите цену"
@@ -102,7 +102,7 @@
                                                      Adornment="Adornment.End"/>
 
                                     <MudItem Class="py-0 px-3">
-                                        <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту покупателя"
+                                        <MudSelect Variant="Variant.Outlined" Placeholder="Выберите валюту поставщика"
                                                    Label="Валюта покупателя"
                                                    T="string" ToStringFunc="c => c.ToString()"
                                                    CloseIcon="@Icons.Material.Filled.Flag"

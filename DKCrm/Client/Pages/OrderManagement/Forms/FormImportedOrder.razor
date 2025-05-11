@@ -164,6 +164,7 @@
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter]public MudForm? ImportedOrderForm { get; set; }
     [Parameter]public bool IsEditForm { get; set; }
+    [Parameter] public Company? CompanyPartner { get; set; }
     public List<Company>? Companies { get; set; } = null!;
 
     public List<Company>? OurCompanies { get; set; }
@@ -184,6 +185,11 @@
         Companies ??= await CompanyManager.GetAsync();
         OurCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.OurCompanies).ToList();
         SellersCompanies = Companies.Where(w => w.CompanyType!.Name == TypeCompanyNames.Suppliers).ToList();
+        if (CompanyPartner != null && ImportedOrder != null)
+        {
+	        ImportedOrder.SellersCompanyId = CompanyPartner.Id;
+	        ImportedOrder.SellersCompany = CompanyPartner;
+        }
     }
 
     private async Task Validation()

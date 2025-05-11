@@ -25,8 +25,8 @@ namespace DKCrm.Shared.Models.OrderModels
         public virtual ICollection<SoldFromStorage>? SoldFromStorage { get; set; }
         public virtual ICollection<PurchaseAtExport>? PurchaseAtExports { get; set; }
         public virtual ICollection<Storage>? StorageList { get; set; }
-        public virtual ICollection<PriceForImportOffer>? PriceForImportOffers { get; set; }
-        public virtual ICollection<ExportProductPriceImportOffer>? ExportProductPriceImportOffers { get; set; }
+/*        public virtual ICollection<PriceForImportOffer>? PriceForImportOffers { get; set; }
+        public virtual ICollection<ExportProductPriceImportOffer>? ExportProductPriceImportOffers { get; set; }*/
 
         public virtual Product? Product { get; set; }
         public Guid? ProductId { get; set; }

@@ -1,4 +1,5 @@
 ﻿@using DKCrm.Client.Pages.OrderManagement.Forms
+@using DKCrm.Shared.Models.CompanyModels
 @using DKCrm.Shared.Models.OrderModels
 <MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog" Options="new DialogOptions() { FullWidth = true }">
     <TitleContent>
@@ -11,6 +12,7 @@
             <FormImportedOrder OnValidSubmit="Create"
                                ImportedOrder="Order"
                                ButtonText="Сохранить"
+                               CompanyPartner="CompanySeller"
                                TitleText="Создание заказа на поставку" />
 
         </MudCard>
@@ -23,6 +25,7 @@
     [Parameter] public bool VisibleDialog { get; set; }
     [Parameter] public EventCallback RefreshProductList { get; set; }
     [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public Company? CompanySeller { get; set; }
     public ImportedOrder? Order { get; set; } 
     private InternalCompanyData? InternalData { get; set; }
 

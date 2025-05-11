@@ -5,6 +5,8 @@
 @using DKCrm.Client.Components.CategoryDrawer
 @using DKCrm.Shared.Requests
 @using DKCrm.Client.Pages.OrderManagement.DocumentComponents
+@using DKCrm.Client.Pages.OfferManagement.Components
+@using DKCrm.Shared.Models.OfferModels
 
 <MudPaper class="d-flex align-items-center justify-content-between p-2 m-2" Elevation="4" Outlined="true">
     <div class="d-flex">
@@ -62,7 +64,7 @@
         </MudTooltip>
         <AuthorizeView Roles="@RoleNames.SuAdmin">
             <Authorized>
-                <MudTooltip Text="Удаленные">
+                <MudTooltip Text="@(!_loadDeleted ? "Удаленные" : "Не удаленные")">
                     <MudButton Variant="Variant.Filled" Size="Size.Medium"
                                OnClick="() => LoadOnlyDelete()"
                                Style="margin-left: 1rem;" Color="@(_loadDeleted ? Color.Warning : Color.Default)">
@@ -169,13 +171,23 @@
             }
         </MudTd>
         <MudTd Style="text-align: center" DataLabel="Edit">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                           OnClick="() => OpenUpdateProductDialog(context.Id)"/>
-            <MudIconButton Size="@Size.Medium" 
-                           OnClick="() => OpenDocumentManager(context.Id)"
-                           Color="Color.Default"
-                           Icon="@Icons.Material.Sharp.DocumentScanner"
-                           Class="pa-0 ml-2"/>
+	        <MudMenu Icon="@Icons.Material.Filled.MoreVert" AnchorOrigin="Origin.CenterLeft" TransformOrigin="Origin.CenterLeft"
+                     AriaLabel="Меню" Class="pa-0">
+		        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+		                      
+		                       OnClick="() => OpenUpdateProductDialog(context.Id)"/>
+		        <MudIconButton Size="@Size.Medium"
+		                       OnClick="() => OpenDocumentManager(context.Id)"
+		                       Color="Color.Default"
+		                       Icon="@Icons.Material.Sharp.DocumentScanner"
+		                       Class="ml-2"/>
+
+		        <MudTooltip Placement="Placement.Left" Text="Предложения">
+			        <MudIconButton Color="Color.Default"
+			                       OnClick="() => OpenOffers(context.Id)"
+			                       Class="ml-2" Icon="@Icons.Material.Filled.LocalOffer"/>
+		        </MudTooltip>
+	        </MudMenu>
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
@@ -229,7 +241,15 @@
     </DialogContent>
   
 </MudDialog>
-
+@if (_visibleImportOffers)
+{
+	<MudDialog @bind-Visible="_visibleImportOffers" Style="padding: 0"
+	           Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+		<DialogContent>
+			<ImportedOfferComponent CompanyId="_filterOfferTuple.CurrentCompanyId" FilterTuple="_filterOfferTuple" />
+		</DialogContent>
+	</MudDialog>
+}
 @code {
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
@@ -238,7 +258,8 @@
     [Parameter] public string? Chapter { get; set; }
     public Guid ProductId;
     private CategoryDrawerComponent? _categoryDrawerRef;
-    //private string? _currentCategoryName;
+    private FilterOfferTuple _filterOfferTuple;
+
     bool _visibleCreatedProductDialog; 
     bool _visibleEditProductDialog;
     bool _visibleDetailProductDialog;
@@ -248,6 +269,7 @@
     private bool _visibleDocumentManagerDialog;
     private bool _isOpenQuantityAtStorages;
     private bool _loadDeleted;
+    private bool _visibleImportOffers;
 
     private HashSet<Guid> _selectedItemsId = new();
     private MudTable<ProductsDto>? _table;
@@ -431,6 +453,14 @@
             }
         }
         
+    }
+    private void OpenOffers(Guid productId)
+    {
+	    _filterOfferTuple = new FilterOfferTuple()
+	    {
+                ProductId = productId
+	    };
+	    _visibleImportOffers = true;
     }
 
     private async Task LoadOnlyDelete()

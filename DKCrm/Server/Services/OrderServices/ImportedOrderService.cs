@@ -66,6 +66,7 @@ namespace DKCrm.Server.Services.OrderServices
                 Number = s.Number,
                 OurCompany = s.OurCompany,
                 SellersCompany = s.SellersCompany,
+                SellersCompanyId = s.SellersCompanyId,
                 EmployeeSeller = s.EmployeeSeller,
                 OurEmployee = s.OurEmployee,
                 EmployeeSellerId = s.EmployeeSellerId,
@@ -93,6 +94,10 @@ namespace DKCrm.Server.Services.OrderServices
             }).FirstOrDefaultAsync(a => a.Id == id);
             await _context.PurchaseAtStorages
                 .Where(w => order!.ImportedProducts!.Select(s => s.Id).Contains(w.ImportedProductId)).LoadAsync();
+            await _context.PricesForImportOffers.Include(i=>i.ImportOffer)
+                .Where(w => order!.ImportedProducts.Select(s => s.PriceForImportOfferId).Contains(w.Id)).LoadAsync();
+            //await _context.ImportOffers.Include(i=>i.PricesForImportOffer)
+              //  .Where(w => w.PricesForImportOffer!.SelectMany(s=>s.ImportedProducts!).Select(s => s.ImportedOrderId).Contains(order!.Id)).LoadAsync();
             await _context.PurchaseAtExports
                 .Where(w => order!.ImportedProducts!.Select(s => s.Id).Contains(w.ImportedProductId)).LoadAsync();
             await _context.Products.Where(w => order!.ImportedProducts!.Select(s => s.ProductId).Contains(w.Id))
@@ -346,6 +351,13 @@ namespace DKCrm.Server.Services.OrderServices
                         {
                             _context.Entry(purchaseAtExport).State = EntityState.Added;
                         }
+                    if (importedProduct.PurchaseAtStorageList != null)
+                    {
+                        foreach (var item in importedProduct.PurchaseAtStorageList)
+                        {
+                            _context.Entry(item).State = EntityState.Added;
+                        }
+                    }
                 }
             }
 

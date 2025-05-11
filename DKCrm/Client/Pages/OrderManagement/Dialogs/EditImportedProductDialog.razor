@@ -2,20 +2,24 @@
 @using DKCrm.Client.Pages.OrderManagement.Forms
 
 <MudDialog VisibleChanged="VisibleDialogChanged" Visible="VisibleDialog"
-           Options="new DialogOptions() { FullWidth = true }">
+           Options="new DialogOptions() { FullWidth = true, CloseButton = true }">
     <TitleContent>
         <div style="text-align: right">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton>
+           @*  <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="CloseClick" Color="Color.Info">Закрыть</MudButton> *@
         </div>
     </TitleContent>
     <DialogContent>
-        <MudCard>
-            <FormImportedProduct
-                OnValidSubmit="EditProduct"
-                ImportedProduct="ImportedProduct"
-                ButtonText="Сохранить"
-                TitleText="Изменение продукта"/>
-        </MudCard>
+	    <MudCard>
+            @if (ImportedProduct != null)
+            {
+	            <FormImportedProduct
+		            OnValidSubmit="EditProduct"
+		            ImportedProduct="ImportedProduct"
+		            ButtonText="Сохранить"
+		            TitleText="Изменение продукта"
+		            IsEditForm="true"/>
+            }
+	    </MudCard>
     </DialogContent>
 </MudDialog>
 
@@ -29,7 +33,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != null && Id != Guid.Empty && VisibleDialog) ImportedProduct = await ImportedProductManager.GetDetailsAsync((Guid)Id);
+	    if (Id != null && Id != Guid.Empty && VisibleDialog)
+	    {
+		    ImportedProduct = await ImportedProductManager.GetDetailsAsync((Guid)Id);
+	    }
     }
     
     async Task EditProduct()
@@ -44,12 +51,11 @@
             {
                 _snackBar.Add("Продукт обновлен");
                 await RefreshProductList.InvokeAsync();
-                await CloseClick();
+                await CloseClick(); 
                 VisibleDialog = false;
             }
         }
     }
-   
     
     [Parameter] public EventCallback<bool> VisibleDialogChanged { get; set; }
     async Task CloseClick()

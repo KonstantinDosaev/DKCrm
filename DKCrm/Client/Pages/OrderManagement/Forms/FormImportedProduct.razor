@@ -1,44 +1,81 @@
 ﻿@using DKCrm.Shared.Models.OrderModels
 @using DKCrm.Client.Pages.ProductManagement
+@using DKCrm.Client.Pages.OfferManagement.Components
+@using DKCrm.Shared.Models.OfferModels
 
 <MudText Typo="Typo.h5">@TitleText</MudText>
 @if (ImportedProduct != null)
 {
     <MudForm @ref="ImportedOrderForm" @bind-IsValid="@_success">
-        <MudPaper Elevation="12" Class="p-4">
-            <MudAutocomplete T="Product"  Placeholder="Введите партномер или название продукта" 
-                             Label="Продукт"
-                             Value = "ImportedProduct.Product"
-                             ValueChanged="OnProduct" 
-                             SearchFunc="@Search" 
-                             Variant="Variant.Outlined" 
-                             ShowProgressIndicator="true"
-                             ToStringFunc="@(e=> e==null ? null : $"{e.PartNumber} / {e.Name} / {e.Brand?.Name}")"
-                             MinCharacters="1"
-                             Class="mb-3"  Required="true"/>
-            @if (ImportedProduct.Product != null && !ImportedProduct.Product.IsDeleted)
-            {
-                <MudButton Class="mb-2" Variant="Variant.Outlined" Size="Size.Medium" 
-                           OnClick="()=>_visibleDetailProductDialog=true" 
-                           Color="Color.Tertiary">Подробности о продукте</MudButton>
-                <ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
-                                     ProductId="ImportedProduct.Product.Id"
-                                     Close="() => _visibleDetailProductDialog=false" />
-            }
-                 <div class="mb-2">  
-                     <span>Если товар не найден вы можете </span>
-                     <MudButton Variant="Variant.Outlined" 
-                                Size="Size.Medium" 
-                                OnClick="()=>_visibleCreatedProductDialog=true"
-                                Color="Color.Tertiary">Создать новый продукт</MudButton>
-                 </div>
-        </MudPaper>
+	    <MudPaper Elevation="12" Class="p-4">
+            <div class = "d-flex align-items-center">
+	            <MudAutocomplete T="Product" Placeholder="Введите партномер или название продукта"
+	                             Label="Продукт"  Dense="true"
+	                             Value="ImportedProduct.Product"
+	                             ValueChanged="OnProduct"
+	                             SearchFunc="@Search"
+	                             Variant="Variant.Outlined"
+	                             ShowProgressIndicator="true"
+	                             ToStringFunc="@(e => e == null ? null : $"{e.PartNumber} / {e.Name} / {e.Brand?.Name}")"
+	                             MinCharacters="1"
+	                             Class="mb-3 mr-2" Required="true"/>
+	            <div>
+		            <MudTooltip Text="Если товар не найден вы можете">
+			            <MudIconButton Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined"
+				              Size="@Size.Large"
+			                           OnClick="() => _visibleCreatedProductDialog = true"
+			                           Color="Color.Tertiary"></MudIconButton>
+		            </MudTooltip>
+	            </div>
+            </div>
+		    @if (ImportedProduct.Product != null && !ImportedProduct.Product.IsDeleted)
+		    {
+			    <MudButton Class="" Variant="Variant.Outlined" Size="Size.Medium"
+			               OnClick="() => _visibleDetailProductDialog = true"
+			               Color="Color.Tertiary">Подробности о продукте</MudButton>
+			    <ProductDetailDialog VisibleDialog="_visibleDetailProductDialog"
+			                         ProductId="ImportedProduct.Product.Id"
+			                         Close="() => _visibleDetailProductDialog = false"/>
+			    @if (PriceForImportOffer != null)
+			    {
+
+				    <div class="p-2"> 
+
+					    <div class="mb-1 border-bottom">
+						    <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
+							    @($"{PriceForImportOffer.DateTimeCreate.ToShortDateString()} - {PriceForImportOffer.DateTimeOver?.ToShortDateString()}")
+						    </MudText>
+						    <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
+							    @($"Колю-во: {PriceForImportOffer.Quantity} шт. / Своб.: {PriceForImportOffer.Quantity - (PriceForImportOffer.ImportedProducts?.Select(s=>s.Quantity).Sum() ?? 0)}")
+						    </MudText>
+						    <div class="d-flex justify-content-between px-2">
+							    <MudText>@($"{decimal.Round(PriceForImportOffer.Value, 4)}")</MudText>
+							    <MudText>@($"{PriceForImportOffer.Currency}")</MudText>
+						    </div>
+						    <div class="d-flex justify-content-between px-2">
+							    <MudText>@($"{decimal.Round(PriceForImportOffer.ValueLocal, 4)}")</MudText>
+							    <MudText>@($"{PriceForImportOffer.CurrencyLocal}")</MudText>
+						    </div>
+					    </div>
+
+				    </div>
+			    }
+                @if (!IsEditForm)
+                {
+	                <MudButton Variant="Variant.Outlined" Class="ml-2"
+	                           Size="Size.Medium"
+	                           OnClick="() => OnOffers()"
+	                           Color="Color.Tertiary">Предложения</MudButton>
+                }
+		    }
+	    </MudPaper>
         <MudPaper Elevation="12" Class="p-4 my-1">
-            <MudTextField Label="Количество" @bind-Value="ImportedProduct.Quantity"
+            <MudNumericField Label="Количество" @bind-Value="ImportedProduct.Quantity"
                           For="@(() => ImportedProduct.Quantity)"
                           Variant="Variant.Outlined"
                           RequiredError="Введите количество"
-                          Class="mb-3"/>
+                          Class="mb-3"
+                          Max="@(FreeQuantityOffer)"/>
             @if (StorageList != null)
             {
                 <MudText Typo="Typo.h5">Направление:</MudText>
@@ -165,6 +202,15 @@
     <CreateProductDialog VisibleDialog="_visibleCreatedProductDialog"
                          RefreshProductList="StateHasChanged"
                          Close="() => _visibleCreatedProductDialog=false" />
+    @if (_visibleOffers)
+    {
+        <MudDialog @bind-Visible="_visibleOffers" Style="padding: 0" @ref = "_importOfferDialog"
+	               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+		    <DialogContent>
+                <ImportedOfferComponent OnSelectButton="true" SelectedPriceEventCallback="AddOfferLink" CompanyId="FilterOfferTuple.CurrentCompanyId" FilterTuple="FilterOfferTuple" />
+		    </DialogContent>
+	    </MudDialog>
+    }
 }
 
 @code {
@@ -173,10 +219,17 @@
     [Parameter] public string ButtonText { get; set; } = "Save";
     [Parameter] public string TitleText { get; set; } = "";
     [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public bool IsEditForm { get; set; }
+
+    private PriceForImportOffer? PriceForImportOffer { get; set; }
     public List<Storage>? StorageList { get; set; }
     public List<ExportedProduct>? NotEquippedExportedProducts { get; set; }
+    private int FreeQuantityOffer = Int32.MaxValue;
     
+    FilterOfferTuple FilterOfferTuple = new FilterOfferTuple();
+    private MudDialog _importOfferDialog;
     bool _success;
+    bool _visibleOffers;
     private bool _isSetCurrency;
     private bool _visibleCreatedProductDialog; 
     private bool _visibleDetailProductDialog;
@@ -195,6 +248,18 @@
                     _isSetCurrency = true;
                 }
             }
+
+            if (ImportedProduct.PriceForImportOffer != null)
+            {
+	            var offer = await ImportOfferManager.GetDetailsAsync((Guid)ImportedProduct.PriceForImportOffer.ImportOfferId);
+
+	            PriceForImportOffer = offer.PricesForImportOffer.FirstOrDefault(f=>f.Id == ImportedProduct.PriceForImportOfferId);
+
+	             FreeQuantityOffer = ImportedProduct.Quantity +
+	                              ((int)PriceForImportOffer.Quantity - (PriceForImportOffer.ImportedProducts?.Select(s => s.Quantity).Sum() ?? 0));
+
+            }
+
             if (ImportedProduct.Product != null)
                 NotEquippedExportedProducts = await ExportedProductManager.GetNotEquippedAsync((Guid)ImportedProduct?.ProductId!);
         }
@@ -302,5 +367,35 @@
             }
         }
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task AddOfferLink(PriceForImportOffer price)
+    {
+	    if (ImportedProduct != null)
+	    {
+		    var impProdByOffers = ImportedProduct.ImportedOrder?.ImportedProducts?.Select(s => s.PriceForImportOfferId).ToArray();
+		    if (impProdByOffers != null && impProdByOffers.Any())
+		    {
+			    if (impProdByOffers.Contains(price.Id))
+			    {
+				    _snackBar.Add("Данный заказ содержит продукт по данному предложению");
+                    return;
+			    }
+		    }
+		    PriceForImportOffer = price;
+		   ImportedProduct.PriceForImportOfferId ??= price.Id;
+		  
+	    }
+
+	    FreeQuantityOffer = (int)price.Quantity - (price.ImportedProducts?.Select(s => s.Quantity).Sum() ?? 0);
+	    await _importOfferDialog.CloseAsync();
+    }
+    
+    private async Task OnOffers()
+    { 
+	    FilterOfferTuple = new FilterOfferTuple();
+        FilterOfferTuple.ProductId = ImportedProduct?.ProductId;
+        FilterOfferTuple.CurrentCompanyId = ImportedProduct?.ImportedOrder?.SellersCompanyId;
+        _visibleOffers = true;
     }
 }

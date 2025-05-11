@@ -29,11 +29,11 @@ namespace DKCrm.Shared.Models.OfferModels
         [MaxLength(10)] public string CurrencyLocal { get; set; } = null!;
         public double CurrencyPercent { get; set; }
         public double Nds { get; set; }
-
-        public virtual ICollection<ExportedProduct>? ExportedProducts { get; set; }
         public virtual ICollection<ImportedProduct>? ImportedProducts { get; set; }
-        public virtual ICollection<ExportProductPriceImportOffer>? ExportProductPriceImportOffers { get; set; }
-        public virtual ICollection<ImportProductPriceImportOffer>? ImportProductPriceImportOffers { get; set; }
+
+        //public virtual ICollection<ExportedProduct>? ExportedProducts { get; set; }
+        //public virtual ICollection<ExportProductPriceImportOffer>? ExportProductPriceImportOffers { get; set; }
+        //public virtual ICollection<ImportProductPriceImportOffer>? ImportProductPriceImportOffers { get; set; }
 
     }
 }

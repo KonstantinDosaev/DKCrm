@@ -16,5 +16,6 @@ namespace DKCrm.Server.Interfaces.ImportOfferInterfaces
         Task<int> UpdatePriceAsync(PriceForImportOffer newPrice);
         Task<int> DeleteAsync(Guid id);
         Task<int> AddOfferToExportOrderAsync(ExportProductPriceImportOffer link);
+        Task<int> AddOfferToImportProductAsync(PriceForImportOffer link);
     }
 }

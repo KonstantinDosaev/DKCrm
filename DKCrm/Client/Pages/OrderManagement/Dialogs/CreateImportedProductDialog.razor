@@ -15,7 +15,6 @@
                                ButtonText="Сохранить"
                                TitleText="Создание единицы на поставку" 
                                />
-
         </MudCard>
     </DialogContent>
 </MudDialog>
@@ -29,7 +28,7 @@
     [Parameter] public Product? Product { get; set; }
     [Parameter] public PurchaseAtExport? PurchaseAtExport { get; set; }
     [Parameter] public ImportedProduct? ImportedProduct { get; set; }
-    [Parameter] public ImportProductPriceImportOffer? LinkPriceForImportOffer { get; set; }
+    [Parameter] public PriceForImportOffer? LinkPriceForImportOffer { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -49,12 +48,8 @@
 
         if (LinkPriceForImportOffer != null)
         {
-	        LinkPriceForImportOffer.ImportedProduct = ImportedProduct;
-            
-	        ImportedProduct.ImportProductPriceImportOffers = new List<ImportProductPriceImportOffer>()
-	        {
-	                LinkPriceForImportOffer
-	        };
+	        ImportedProduct.PriceForImportOfferId = LinkPriceForImportOffer.Id;
+	        ImportedProduct.PriceForImportOffer = LinkPriceForImportOffer;
         }
         if (Order != null)
         {

@@ -39,7 +39,7 @@
                 <MudTh Style="text-align: center">Edit</MudTh>
             </HeaderContent>
             <GroupHeaderTemplate>
-                <MudTh Class="mud-table-cell-custom-group" colspan="5">@($"{context.GroupName}: {context.Key} Продавец: {context.Items.FirstOrDefault()!.ExportedOrder?.CompanyBuyer?.Name}")
+                <MudTh Class="mud-table-cell-custom-group" colspan="5">@($"{context.GroupName}: {context.Key} Покупатель: {context.Items.FirstOrDefault()!.ExportedOrder?.CompanyBuyer?.Name}")
                    
                 <MudIconButton Color="Color.Primary" Size="Size.Medium" Icon="@Icons.Material.Filled.Info" OnClick="() => OpenExportedOrderPopover((Guid)context.Items.FirstOrDefault()!.ExportedOrderId!)"></MudIconButton>
                 @if (context.Items.FirstOrDefault()!.ExportedOrderId == ShowingExportOrderId && _visibleExportedOrder)

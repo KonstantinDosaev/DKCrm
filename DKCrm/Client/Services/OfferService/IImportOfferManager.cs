@@ -13,5 +13,6 @@ namespace DKCrm.Client.Services.OfferService
         Task<bool> UpdateAsync(ImportOffer item);
         Task<bool> UpdatePriceAsync(PriceForImportOffer item);
         Task<bool> AddOfferToExportOrderAsync(ExportProductPriceImportOffer link);
+        Task<bool> AddOfferToImportOrderAsync(ImportProductPriceImportOffer link);
     }
 }

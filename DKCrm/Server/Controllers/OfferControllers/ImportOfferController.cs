@@ -41,6 +41,10 @@ namespace DKCrm.Server.Controllers.OfferControllers
         public async Task<IActionResult> Delete(Guid id) => Ok(await _importOfferService.DeleteAsync(id));       
         [HttpPost]
         public async Task<IActionResult> AddOfferToExportOrder(ExportProductPriceImportOffer link)
-            => Ok(await _importOfferService.AddOfferToExportOrderAsync(link));   
+            => Ok(await _importOfferService.AddOfferToExportOrderAsync(link));
+
+        [HttpPost]
+        public async Task<IActionResult> AddOfferToImportProduct(PriceForImportOffer price)
+            => Ok(await _importOfferService.AddOfferToImportProductAsync(price));
     }
 }

@@ -1,5 +1,4 @@
-﻿@using System.Runtime.CompilerServices
-@using DKCrm.Shared.Constants
+﻿@using DKCrm.Shared.Constants
 @using DKCrm.Shared.Models.CompanyModels
 @using DKCrm.Shared.Models.OfferModels
 <MudMenu>
@@ -51,11 +50,11 @@
                     {
                         <div class="mb-2">
                             <MudSelect T="Product"
-                                       Placeholder="Продукт" Value="@CurrenProduct" ValueChanged="OnProductFilter"
+                                       Placeholder="Продукт" Value="@CurrentProduct" ValueChanged="OnProductFilter"
                                        Variant="Variant.Outlined" Dense="true"
                                        Class="select-button p-0"
                                        OnOpen="() => LoadCompanyList()"
-                                       ToStringFunc="com => com?.Name!">
+                                       ToStringFunc="com => com.Name">
                            
                                 @foreach (var product in Products)
                                 {
@@ -75,7 +74,7 @@
                                    Style="" Class="select-button"
                                    Variant="Variant.Outlined" Dense="true"
                                    OnOpen="() => LoadCompanyList()"
-                                   ToStringFunc="com => com?.Name!">
+                                   ToStringFunc="com => com.Name!">
                             @if (Companies != null)
                             {
                                 foreach (var company in Companies)
@@ -104,7 +103,7 @@
     <MudDialog @bind-Visible="_visible" Style="padding: 0"
                Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
         <DialogContent>
-            <ImportedOfferComponent CompanyId="FilterTuple.CurrentCompanyId" FilterTuple="FilterTuple" />
+            <ImportedOfferComponent CompanyId="_filterTuple.CurrentCompanyId" FilterTuple="_filterTuple" />
         </DialogContent>
     </MudDialog>
 }
@@ -115,12 +114,12 @@
     private string? _searchString;
     public bool FilterIsOn { get; set; }
     public int SelectedOption { get; set; } = 0;
-    private List<Company>? Companies;
-    private Company? CurrentCompany;
-    private List<Product>? Products;
-    private Product? CurrenProduct;
+    private List<Company>? Companies { get; set; }
+    private Company? CurrentCompany { get; set; }
+    private List<Product>? Products { get; set; }
+    [Parameter] public Product? CurrentProduct { get; set; }
     
-    FilterOfferTuple FilterTuple = new FilterOfferTuple();
+    private FilterOfferTuple _filterTuple = new FilterOfferTuple();
     bool _visible;
     private async Task LoadCompanyList()
     {
@@ -134,13 +133,13 @@
         ResetSelectedItems();
         SelectedOption = indexOption;
     } 
-    private void OnCompanyFilter(Company? company)
+    private void OnCompanyFilter(Company company)
     {
         CurrentCompany = company;
     } 
-    private void OnProductFilter(Product? product)
+    private void OnProductFilter(Product product)
     {
-        CurrenProduct = product;
+        CurrentProduct = product;
     } 
     private async Task OnSearch(string text)
     {
@@ -152,22 +151,22 @@
     }
 
 
-    private async Task OnFilter()
+    private void OnFilter()
     {
         if (SelectedOption == (int)GlobalFilterTypes.Product)
         {
-            if (CurrenProduct != null)
+            if (CurrentProduct != null)
             {
-                FilterTuple = new FilterOfferTuple();
-                FilterTuple.ProductId = CurrenProduct.Id;
+                _filterTuple = new FilterOfferTuple();
+                _filterTuple.ProductId = CurrentProduct.Id;
                 FilterIsOn = true;
                 _visible = true;
             }
         }
         if (SelectedOption == (int)GlobalFilterTypes.Company)
         {
-            FilterTuple = new FilterOfferTuple();
-            FilterTuple.CurrentCompanyId = CurrentCompany?.Id;
+            _filterTuple = new FilterOfferTuple();
+            _filterTuple.CurrentCompanyId = CurrentCompany?.Id;
             FilterIsOn = true;
             _visible = true;
         }
@@ -177,13 +176,13 @@
 
     private void ResetSelectedItems()
     {
-        CurrenProduct = null;
+        CurrentProduct = null;
         CurrentCompany = null;
     }
-    private async Task CloseFilter()
+    private void CloseFilter()
     {
         FilterIsOn = false;
-        FilterTuple = new FilterOfferTuple();
+        _filterTuple = new FilterOfferTuple();
     }
 }
 <style>

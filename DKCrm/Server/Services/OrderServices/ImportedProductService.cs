@@ -26,12 +26,17 @@ namespace DKCrm.Server.Services.OrderServices
         
         public async Task<ImportedProduct> GetOneAsync(Guid id)
         {
-            return await _context.ImportedProducts.AsNoTracking()
+           var product = await _context.ImportedProducts.AsNoTracking()
                 .Include(i => i.ImportedOrder)
                 .Include(i=>i.PurchaseAtStorageList)
                 .Include(i => i.PurchaseAtExportList)
+                .Include(i=>i.PriceForImportOffer).ThenInclude(t=>t!.ImportOffer)
+
                 .Include(i => i.Product).ThenInclude(t => t!.ProductsInStorage)!.ThenInclude(t=>t.Storage).IgnoreQueryFilters().AsSingleQuery()
                 .FirstOrDefaultAsync(a => a.Id == id) ?? throw new InvalidOperationException();
+await _context.ImportedProducts
+               .Where(w =>w.PriceForImportOfferId == product.PriceForImportOfferId).AsNoTracking().LoadAsync();
+            return product;
         }
 
         public async Task<IEnumerable<ImportedProduct>> GetNotEquippedAsync(Guid productId)
@@ -94,13 +99,13 @@ namespace DKCrm.Server.Services.OrderServices
                     _context.Entry(item).State = EntityState.Added;
                 }
             }
-            if (importedProduct.ImportProductPriceImportOffers != null)
+           /* if (importedProduct.ImportProductPriceImportOffers != null)
             {
                 foreach (var item in importedProduct.ImportProductPriceImportOffers)
                 {
                     _context.Entry(item).State = EntityState.Added;
                 }       
-            }
+            }*/
             await _context.SaveChangesAsync();
             return importedProduct.Id;
         }
@@ -179,10 +184,8 @@ namespace DKCrm.Server.Services.OrderServices
                         }
                         else
                         {
-
                             if (purchInDb.Quantity == purchaseAtStorage.Quantity)
                                 continue;
-
 
                             if (purchaseAtStorage.Quantity == 0)
                             {
@@ -196,7 +199,6 @@ namespace DKCrm.Server.Services.OrderServices
                     }
                 }
             }
-
             if (importedProduct.PurchaseAtExportList != null)
             {
                 foreach (var purchaseAtExport in importedProduct.PurchaseAtExportList)
@@ -226,7 +228,6 @@ namespace DKCrm.Server.Services.OrderServices
                     }
                 }
             }
-
             return await _context.SaveChangesAsync();
         }
         public async Task<Guid> MergeImportedProductsAsync(MergeImportedProductsRequest mergeRequest)

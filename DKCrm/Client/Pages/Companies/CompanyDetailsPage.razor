@@ -10,40 +10,43 @@
     <div class="d-flex justify-content-between m-4">
         <MudText  Typo="Typo.h4">@Company.Name.ToUpper()</MudText>
         <div class="d-flex" style="flex-grow:0; align-items:start;">
-            <ImportOffersForCompanyComponent CompanyId = "@CompanyId"/>
+            @if (Company.CompanyType?.Name == TypeCompanyNames.Suppliers)
+            {
+	            <ImportOffersForCompanyComponent CompanyId="@CompanyId"/>
+            }
             <MudTooltip Arrow="true" Text="Коментарии">
-                <MudIconButton Icon="@Icons.Material.Sharp.Comment" Variant="Variant.Filled"
-                               OnClick="() => _visibleCommentDialog = !_visibleCommentDialog"
-                               Size="Size.Medium"
-                               Color="Color.Default" Class="mr-2"/>
-            </MudTooltip>
+		        <MudIconButton Icon="@Icons.Material.Sharp.Comment" Variant="Variant.Filled"
+		                       OnClick="() => _visibleCommentDialog = !_visibleCommentDialog"
+		                       Size="Size.Medium"
+		                       Color="Color.Default" Class="mr-2"/>
+	        </MudTooltip>
 
-            <MudButton Style="flex-grow:0;" Variant="Variant.Filled"
-                       Size="Size.Medium"
-                       Color="Color.Primary" Class="mr-2"
-                       OnClick="(() => VisibleStampDialogToggle(true))">Печати</MudButton>
+	        <MudButton Style="flex-grow:0;" Variant="Variant.Filled"
+	                   Size="Size.Medium"
+	                   Color="Color.Primary" Class="mr-2"
+	                   OnClick="(() => VisibleStampDialogToggle(true))">Печати</MudButton>
 
-            <MudTooltip Arrow="true" Text="Изображения">
-                <MudIconButton Icon="@Icons.Material.Sharp.Image" Variant="Variant.Filled"
-                               OnClick="(() => VisibleImageDialogToggle(true))"
-                               Size="Size.Medium"
-                               Color="Color.Primary" Class="mr-2"/>
-            </MudTooltip>
+	        <MudTooltip Arrow="true" Text="Изображения">
+		        <MudIconButton Icon="@Icons.Material.Sharp.Image" Variant="Variant.Filled"
+		                       OnClick="(() => VisibleImageDialogToggle(true))"
+		                       Size="Size.Medium"
+		                       Color="Color.Primary" Class="mr-2"/>
+	        </MudTooltip>
 
-            <MudTooltip Arrow="true" Text="Документы" Placement="Placement.Left">
-                <MudIconButton Icon="@Icons.Material.Sharp.DocumentScanner" Variant="Variant.Filled"
-                               OnClick="() => OpenDocumentManager()"
-                               Size="Size.Medium"
-                               Color="Color.Primary" Class="mr-2"/>
-            </MudTooltip>
+	        <MudTooltip Arrow="true" Text="Документы" Placement="Placement.Left">
+		        <MudIconButton Icon="@Icons.Material.Sharp.DocumentScanner" Variant="Variant.Filled"
+		                       OnClick="() => OpenDocumentManager()"
+		                       Size="Size.Medium"
+		                       Color="Color.Primary" Class="mr-2"/>
+	        </MudTooltip>
 
-            <AccessRestrictionEditComponent ComponentId="@CompanyId"/>
-            <MudTooltip Arrow="true" Text="Изменить">
-                <MudIconButton Icon="@Icons.Material.Sharp.Edit" Variant="Variant.Filled"
-                               OnClick="OpenUpdateCompanyDialog"
-                               Size="Size.Medium"
-                               Color="Color.Tertiary" Class="ml-2"/>
-            </MudTooltip>
+	        <AccessRestrictionEditComponent ComponentId="@CompanyId"/>
+	        <MudTooltip Arrow="true" Text="Изменить">
+		        <MudIconButton Icon="@Icons.Material.Sharp.Edit" Variant="Variant.Filled"
+		                       OnClick="OpenUpdateCompanyDialog"
+		                       Size="Size.Medium"
+		                       Color="Color.Tertiary" Class="ml-2"/>
+	        </MudTooltip>
         </div>
     </div>
     <div class="d-flex ">

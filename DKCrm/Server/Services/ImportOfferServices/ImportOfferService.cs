@@ -26,7 +26,9 @@ namespace DKCrm.Server.Services.ImportOfferServices
             if (userId == null) return new ImportOffer();
             var accessCollection = _context.AccessRestrictions;
             var accessedComponents = accessCollection.Select(s => s.AccessedComponentId);
-            var offer = await _context.ImportOffers.Where(w => (
+            var offer = await _context.ImportOffers
+                .Include(i => i.PricesForImportOffer)!
+                .ThenInclude(t => t.ImportedProducts).Where(w => (
                 (w.CompanyId != null && (!accessedComponents.Contains((Guid)w.CompanyId) || (
                     accessedComponents.Contains((Guid)w.CompanyId)
                     && accessCollection.First(f => f.AccessedComponentId == w.CompanyId).AccessUsersToComponent
@@ -38,15 +40,13 @@ namespace DKCrm.Server.Services.ImportOfferServices
                             CompanyId = s.CompanyId,
                             Product = s.Product,
                             ProductId = s.ProductId,
-                            PricesForImportOffer = s.PricesForImportOffer,
-
+                           PricesForImportOffer = s.PricesForImportOffer,
                             DateTimeCreate = s.DateTimeUpdate,
                             DateTimeUpdate = s.DateTimeUpdate,
                             IsDeleted = s.IsDeleted,
                             IsFullDeleted = s.IsFullDeleted
                         })
-                .Include(i=>i.PricesForImportOffer)!
-                .ThenInclude(t=>t.ExportProductPriceImportOffers)
+
                 .FirstOrDefaultAsync(a => a.Id == id);
             /*await _context.PurchaseAtStorages
                 .Where(w => order!.ImportedProducts!.Select(s => s.Id).Contains(w.ImportedProductId)).LoadAsync();
@@ -65,7 +65,8 @@ namespace DKCrm.Server.Services.ImportOfferServices
             if (userId == null) return new SortPagedResponse<ImportOffer>();
             var accessCollection = _context.AccessRestrictions;
             var accessedComponents = accessCollection.Select(s => s.AccessedComponentId);
-            var data = _context.ImportOffers.Select(
+            var data = _context.ImportOffers.Include(i => i.PricesForImportOffer)!
+                .ThenInclude(t => t.ImportedProducts).Select(
                 s => new ImportOffer()
                 {
                     Id = s.Id,
@@ -194,9 +195,12 @@ namespace DKCrm.Server.Services.ImportOfferServices
             data = data.Skip(request.PageIndex * request.PageSize).Take(request.PageSize);
             await _context.Products.Where(w => data!.Select(s => s.ProductId).Contains(w.Id))
                 .Include(i => i.Brand).LoadAsync();
-            await _context.ExportProductPriceImportOffers.Where(w => data!.SelectMany(s => s.PricesForImportOffer)
+           /* await _context.ExportProductPriceImportOffers.Where(w => data!.SelectMany(s => s.PricesForImportOffer)
                     .Select(s=>s.Id).Contains(w.PriceId))
                 .Include(i => i.ExportedProduct).LoadAsync();
+            await _context.ImportProductPriceImportOffers.Where(w => data!.SelectMany(s => s.PricesForImportOffer)
+                    .Select(s => s.Id).Contains(w.PriceId))
+                .Include(i => i.ImportedProduct).LoadAsync();*/
             return new SortPagedResponse<ImportOffer>()
             {
                 TotalItems = totalItems,
@@ -315,7 +319,7 @@ namespace DKCrm.Server.Services.ImportOfferServices
 
         public async Task<int> AddOfferToExportOrderAsync(ExportProductPriceImportOffer link)
         {
-            var ex = _context.PricesForImportOffers
+           /* var ex = _context.PricesForImportOffers
                     .Include(i=>i.ExportProductPriceImportOffers)
                     .FirstOrDefault(f => f.Id == link.PriceId);
             var linkInDb = ex.ExportProductPriceImportOffers
@@ -343,8 +347,42 @@ namespace DKCrm.Server.Services.ImportOfferServices
                 }
                 else
                     _context.Entry(link).State = EntityState.Added;
+            }*/
+
+            return await _context.SaveChangesAsync();
+        }
+        public async Task<int> AddOfferToImportProductAsync(PriceForImportOffer link)
+        {
+          /*  var ex = _context.PricesForImportOffers
+                .Include(i => i.ImportProductPriceImportOffers)
+                .FirstOrDefault(f => f.Id == link.PriceId);
+            var linkInDb = ex.ImportProductPriceImportOffers
+                .FirstOrDefault(f => f.PriceId == link.PriceId
+                                     && link.ImportedProductId == f.ImportedProductId);
+            if (ex == null)
+                return 0;
+            if (ex is { ImportProductPriceImportOffers: not null })
+            {
+                if (ex.Quantity < link.Quantity) return 0;
+                var sum = ex.ImportProductPriceImportOffers.Sum(s => s.Quantity);
+                if (ex.Quantity - sum < link.Quantity && linkInDb == null)
+                    return 0;
             }
 
+            if (ex.ImportProductPriceImportOffers != null)
+            {
+                if (linkInDb != null)
+                {
+                    linkInDb.Quantity = link.Quantity;
+                    if (link.Quantity == 0)
+                    {
+                        _context.Entry(linkInDb).State = EntityState.Deleted;
+                    }
+                }
+                else
+                    _context.Entry(link).State = EntityState.Added;
+            }
+          */
             return await _context.SaveChangesAsync();
         }
         public async Task<int> UpdateOfferItemsSources(ExportedProduct exportedProduct)
