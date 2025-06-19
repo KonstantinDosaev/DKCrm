@@ -1,7 +1,7 @@
 ﻿@using DKCrm.Shared.Constants
 @using DKCrm.Shared.Models.CompanyModels
 @using DKCrm.Shared.Requests
-
+@page "/"
 @page "/companies"
 @page "/companies/tag/{tagid:guid}"
 
@@ -144,7 +144,7 @@
                      @bind-VisibleDialog="_visibleAddCompanyDialog" />
 
 <MudDialog @bind-Visible="@VisibleCompanySettingsDrawer" 
-           Options="new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large}" >
+           Options="new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large,CloseOnEscapeKey = true}">
     <TitleContent> <MudText Typo="Typo.h6">Общие настройки компаний</MudText></TitleContent>
     <DialogContent>
         <CompanyPageSettings/>
@@ -153,7 +153,7 @@
 @if (_visibleComments)
 {
     <MudDialog @bind-Visible="_visibleComments" Style="max-width: 700px;padding: 0"
-               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,CloseOnEscapeKey = true}" Class="no-padding">
         <DialogContent>
             <CompanyCommentsComponent CurrentCompanyId="CompanyId"/>
         </DialogContent>

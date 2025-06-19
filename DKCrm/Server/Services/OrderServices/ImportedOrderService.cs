@@ -260,6 +260,14 @@ namespace DKCrm.Server.Services.OrderServices
                     data = data.Where(o =>
                         request.FilterTuple.ContragentsCompanies.Contains((Guid)o.SellersCompanyId!));
                 }
+
+                if (request.FilterTuple.IncludeProductOrderList != null)
+                {
+                    var searchedOrdersId = await _context.ImportedProducts
+                        .Where(w => request.FilterTuple.IncludeProductOrderList.Contains(w.Id))
+                        .Select(s => s.ImportedOrderId).ToListAsync();
+                    data = data.Where(w => searchedOrdersId.Contains(w.Id));
+                }
             }
 
             if (!string.IsNullOrEmpty(request.SearchString))
@@ -367,6 +375,7 @@ namespace DKCrm.Server.Services.OrderServices
 
         public async Task<Guid> PutAsync(ImportedOrder importedOrder)
         {
+            importedOrder.DateTimeUpdate = DateTime.Now;
             _context.Entry(importedOrder).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return importedOrder.Id;
@@ -376,6 +385,7 @@ namespace DKCrm.Server.Services.OrderServices
         {
             foreach (var importedOrder in importedOrders)
             {
+                importedOrder.DateTimeUpdate = DateTime.Now;
                 _context.Entry(importedOrder).State = EntityState.Modified;
             }
 

@@ -85,6 +85,7 @@ await _context.ImportedProducts
         public async Task<Guid> PostAsync(ImportedProduct importedProduct)
         {
             _context.Entry(importedProduct).State = EntityState.Added;
+            importedProduct.DateTimeUpdate = DateTime.Now;
             if (importedProduct.PurchaseAtStorageList != null)
             {
                 foreach (var item in importedProduct.PurchaseAtStorageList)
@@ -263,6 +264,7 @@ await _context.ImportedProducts
 
         public async Task<Guid> PutAsync(ImportedProduct importedProduct)
         {
+            importedProduct.DateTimeUpdate = DateTime.Now;
             _context.Entry(importedProduct).State = EntityState.Modified;
 
             if (importedProduct.PurchaseAtStorageList != null)

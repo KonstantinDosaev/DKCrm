@@ -81,6 +81,8 @@ namespace DKCrm.Server.Services.OrderServices
                 CurrencyPercent = s.CurrencyPercent,
                 Nds = s.Nds,
                 OrderIsLock = s.OrderIsLock,
+                ExportedOrderStatusExported = s.ExportedOrderStatusExported, 
+                ExportedOrderStatus = s.ExportedOrderStatus
             }).FirstOrDefaultAsync(a => a.Id == id);
             await _context.SoldFromStorages.Where(w => order!.ExportedProducts!.Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();
             await _context.PurchaseAtExports.Where(w => order!.ExportedProducts!.Select(s => s.Id).Contains(w.ExportedProductId)).LoadAsync();

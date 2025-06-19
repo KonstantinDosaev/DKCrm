@@ -58,6 +58,7 @@
                             {
                                 <MudSelectItem T="ExportedOrderStatus" Value="@(status)">@status.Value</MudSelectItem>
                             }
+                            <MudSelectItem T="ExportedOrderStatus"><EditExportOrderStatusComponent WindowHeight="@WindowHeight" /></MudSelectItem>
                         }
                     </MudSelect>
                 </div>
@@ -111,8 +112,7 @@
             <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
         </MudButton>
     </div>
-</MudPaper>
-
+</MudPaper> 
 <MudTable ServerData="(async (state, token) => await ServerReload(state, token))"
           Dense="true"
           Hover="true"
@@ -222,7 +222,7 @@
             @if (context.ExportedOrderStatus != null )
             {
                 <div class="d-flex align-items-center justify-content-between ">
-                    <ExportedOrderStatusListComponent
+                    <ExportedOrderStatusListComponent CurrentUserId="@CurrentUserId"
                         CurrentOrder="context" 
                         StatusList="StatusList"/>
                     <MudMenu Icon="@Icons.Material.Filled.History">
@@ -312,7 +312,7 @@
 @if (_visibleOrderComments)
 {
     <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0"
-               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,CloseOnEscapeKey = true}" Class="no-padding">
         <DialogContent>
             <OrderCommentComponent CurrentOrderId="OrderId"
                                    OrderType="@typeof(ExportedOrder).ToString()"/>
@@ -320,7 +320,7 @@
     </MudDialog>
 }
 <MudDialog @bind-Visible="_visibleDocumentManagerDialog"
-           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true, CloseOnEscapeKey = true}"
            Style="height: 100VH">
     <TitleContent>
         <div style="text-align: right">
@@ -338,7 +338,7 @@
 @if (_visibleCompanyDetailsDialog)
 {
     <MudDialog @bind-Visible="_visibleCompanyDetailsDialog"
-               Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true, CloseButton = true }"
+               Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true, CloseButton = true, CloseOnEscapeKey = true }"
                Style="height: 100VH">
         <TitleContent>
         </TitleContent>
@@ -350,7 +350,14 @@
 <CreateExportedOrderDialog 
     RefreshParentItem="() => _table.ReloadServerData()"
     @bind-VisibleDialog="_visibleAddOrderDialog"/>
-   
+<AuthorizeView>
+    <Authorized>
+            @if (context.User.Identity != null)
+            {
+                CurrentUserId = @context.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault();
+            }
+    </Authorized>
+</AuthorizeView> 
 @*<EditExportedOrderDialog 
     Id="Order.Id"
     RefreshProductList="() => _table.ReloadServerData()"
@@ -378,7 +385,7 @@
     //private MudTable<ExportedOrder> _tables;
     private ExportedOrderStatus? CurrentOrderStatus { get; set; }
     private bool? OrdersIsCompleted { get; set; }
-
+    private string? CurrentUserId { get; set; }
     private bool _visibleAddOrderDialog;
     private bool _visibleUpdateOrderDialog;
     private bool _showHistoryOrders;

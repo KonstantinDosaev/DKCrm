@@ -1,5 +1,136 @@
-﻿<h3>CompleteOfferComponent</h3>
+﻿@using DKCrm.Shared.Models.OfferModels
+@using DKCrm.Shared.Models.OrderModels
+@using DKCrm.Client.Pages.OrderManagement.Components
+<MudTooltip Text="Посмотреть заказы на импорт">
+	<MudIconButton Icon="@Icons.Material.Filled.ProductionQuantityLimits"
+	               Variant="Variant.Filled"
+				   Size="Size.Large"
+	               Style=""
+	               OnClick="@(() => OpenImportOrdersDialog())"/>
+</MudTooltip>
+@if (_visibleImportOrdersFromOffer)
+{
+	<MudDialog @bind-Visible="_visibleImportOrdersFromOffer" Style="max-width: 700px;padding: 0"
+	           Options="new DialogOptions() { CloseButton = true, FullScreen = true, CloseOnEscapeKey=true}" Class="no-padding">
+		<DialogContent>
+			<div class="p-3 d-flex justify-content-between">
+				<div class="offer_order_table_struct">
+					<MudText Style="font-weight:600;">Компания</MudText>
+					<MudText Style="font-weight:600;">№ заказа</MudText>
+					<MudText Style="font-weight:600;">Дата</MudText>
+				</div>
+				<MudTooltip Text="Создать новый заказ">
+					<div class="offer_order_table_btn">
+						@* 		<MudIconButton Variant="Variant.Filled"
+									   Icon="@Icons.Material.Filled.Add"
+									   Size='Size.Medium'
+									   Color="Color.Tertiary"
+									   OnClick="@(()=> OpenAddOrderDialog())" /> *@
+					</div>
+				</MudTooltip>
+			</div>
+			@if (Orders != null)
+			{
+				foreach (var order in Orders)
+				{
+					<MudPaper Class="p-3 mb-2">
+						<div class="d-flex">
+							<div class="offer_order_table_struct">
+								<div class="d-flex">
+									@if (ImportProductsWhitOfferOrderIds != null &&
+									     ImportProductsWhitOfferOrderIds.Any() &&
+									     ImportProductsWhitOfferOrderIds.Contains(order.Id))
+									{
+										<MudTooltip Placement="Placement.Right"
+										            Text="Присутствуют продукты по данному предложению">
+											<MudIcon Class="mr-1" Size="Size.Small"
+											         Icon="@Icons.Material.Filled.LocalOffer" />
+										</MudTooltip>
+									}
+									<MudText>@order.SellersCompany?.Name</MudText>
+								</div>
+
+								<div class="d-flex">
+									<MudText>@order.Number</MudText>
+									@if (!IsDoubleNested)
+									{
+										<MudIconButton Icon="@Icons.Material.Filled.Info" Size='Size.Small'
+										               OnClick="@(() => OpenImportedOrder(order.Id))" />
+									}
+								</div>
+								<MudText>@($"/{order.DateTimeCreated}/")</MudText>
+							</div>
+							@* <MudTooltip Text="Добавить к этому заказу">
+								<div class="offer_order_table_btn">
+									<MudIconButton Icon="@Icons.Material.Filled.Add" Size='Size.Small'
+												   OnClick="@(() => OpenAddProductAtOfferToImportOrderComponent(order))" />
+								</div>
+							</MudTooltip> *@
+						</div>
+					</MudPaper>
+				}
+			}
+		</DialogContent>
+	</MudDialog>
+}
+@if (_visibleImportOrder)
+{
+	<MudDialog @bind-Visible="_visibleImportOrder" Style="max-width:padding: 0"
+			   Options="new DialogOptions(){CloseButton = true, FullScreen = true, CloseOnEscapeKey=true}" Class="no-padding">
+		<DialogContent>
+			<ImportedOrderDetailsComponent Id="ShowingImportOrderId"
+			                               CurrencyDisplay="@(new[] { "Сделки" })"
+			                               ShowCompanyInfo="true"
+			                               IsDoubleNested="true"/>
+		</DialogContent>
+	</MudDialog>
+}
 
 @code {
+	[Parameter] public PriceForImportOffer? PriceForImport { get; set; }
+	[Parameter] public bool IsDoubleNested { get; set; }
+	private Guid ShowingImportOrderId { get; set; }
 
+	private List<ImportedOrder>? Orders { get; set; }
+	private List<Guid>? ImportProductsWhitOfferOrderIds { get; set; }
+
+	private bool _visibleImportOrdersFromOffer;
+	private bool _visibleImportOrder;
+
+	private async Task OpenImportOrdersDialog()
+	{
+		if (PriceForImport == null)
+			return;
+		await LoadImportOrders();
+		_visibleImportOrdersFromOffer = true;
+	}
+	private async Task LoadImportOrders()
+	{
+		if (PriceForImport != null)
+		{
+			 ImportProductsWhitOfferOrderIds = PriceForImport.ImportedProducts?.Select(s => s.Id).ToList();
+			if (ImportProductsWhitOfferOrderIds == null || !ImportProductsWhitOfferOrderIds.Any())
+				return;
+			var responseOrders = await ImportedOrderManager.GetBySortFilterPaginationAsync(new SortPagedRequest<FilterOrderTuple>()
+			{
+				PageIndex = 0,
+				PageSize = int.MaxValue,
+				FilterTuple = new FilterOrderTuple()
+				{
+						IncludeProductOrderList = ImportProductsWhitOfferOrderIds
+				},
+
+			});
+			if (responseOrders.Items != null)
+			{
+				Orders = responseOrders.Items.ToList();
+			
+			}
+		}
+	}
+	private void OpenImportedOrder(Guid importedOrderId)
+	{
+		ShowingImportOrderId = importedOrderId;
+		_visibleImportOrder = true;
+	}
 }

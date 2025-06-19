@@ -61,6 +61,7 @@
                             {
                                 <MudSelectItem T="ImportedOrderStatus" Value="@(status)">@status.Value</MudSelectItem>
                             }
+                            <MudSelectItem T="ImportedOrderStatus"><EditImportOrderStatusComponent WindowHeight="@WindowHeight" /></MudSelectItem>
                         }
                     </MudSelect>
                 </div>
@@ -204,8 +205,9 @@
             <div class="d-flex align-items-center justify-content-between ">
                 <ImportedOrderStatusListComponent
                     CurrentOrder="context"
-                    StatusList="StatusList" 
-                    RefreshParentCallback="@(() => _table!.ReloadServerData())" />
+                    StatusList="StatusList"
+                    RefreshParentCallback="@(() => _table!.ReloadServerData())" 
+                    CurrentUserId="@CurrentUserId" />
                 <MudMenu Icon="@Icons.Material.Filled.History">
                     @if (context.ImportedOrderStatusImportedOrders != null)
                     {
@@ -293,14 +295,14 @@
 @if (_visibleOrderComments)
 {
     <MudDialog @bind-Visible="_visibleOrderComments" Class="no-padding"
-               Style="max-width: 700px;padding: 0" 
-               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}">
+               Style="max-width: 700px;padding: 0"
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,CloseOnEscapeKey = true}">
         <DialogContent>
             <OrderCommentComponent CurrentOrderId="OrderId" OrderType="@typeof(ImportedOrder).ToString()" />
         </DialogContent>
     </MudDialog>
 }
-<MudDialog @bind-Visible="_visibleSettingsOrderDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true}">
+<MudDialog @bind-Visible="_visibleSettingsOrderDialog" Style="min-width: 900px" Options="new DialogOptions(){CloseButton = true,CloseOnEscapeKey = true}">
     <DialogContent>
         
     </DialogContent>
@@ -308,7 +310,7 @@
 @if (_visibleCompanyDetailsDialog)
 {
     <MudDialog @bind-Visible="_visibleCompanyDetailsDialog"
-               Options="new DialogOptions() { CloseButton=true, FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true }"
+               Options="new DialogOptions() { CloseButton=true, FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true ,CloseOnEscapeKey = true}"
                Style="height: 100VH">
         <TitleContent>
         </TitleContent>
@@ -322,7 +324,7 @@
     RefreshProductList="() => _table!.ReloadServerData()" />
 
 <MudDialog @bind-Visible="_visibleDocumentManagerDialog"
-           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true,CloseOnEscapeKey = true}"
            Style="height: 100VH">
     <TitleContent>
         <div style="text-align: right">
@@ -343,7 +345,15 @@
     RefreshProductList="() => _table!.ReloadServerData()"
     Id="Order.Id"/>
     *@
-    
+<AuthorizeView>
+    <Authorized>
+            @if (context.User.Identity != null)
+            {
+                CurrentUserId = @context.User.Claims.Where(a => a.Type.Contains("nameidentifier")).Select(a => a.Value).FirstOrDefault();
+            }
+    </Authorized>
+</AuthorizeView>
+
 @code {
     [CascadingParameter(Name = "WindowHeight")] private int WindowHeight { get; set; }
     [CascadingParameter(Name = "GlobalFilterType")] private int GlobalFilterType { get; set; }
@@ -366,6 +376,7 @@
     [Parameter]public string? SelectedOption { get; set; } = SearchChapterNames.ProductPartNumber;
     [Parameter] public FilterOrderTuple FilterOrderTuple { get; set; } = new FilterOrderTuple();
     //private string _widthCommentForOrderDriver = "350px";
+    private string? CurrentUserId { get; set; }
 
     private bool _showDetails;
     private bool _visibleAddOrderDialog;

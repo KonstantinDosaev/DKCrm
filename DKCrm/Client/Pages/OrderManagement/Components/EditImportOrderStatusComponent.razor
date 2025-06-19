@@ -1,0 +1,179 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+
+<MudTooltip Text="Настройки статусов">
+    <MudIconButton OnClick="() => OpenDialog(true)"
+                   Icon="@Icons.Material.Filled.Settings" />
+</MudTooltip>
+
+@if (_visibleDialog)
+{
+    <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleDialog" Style="padding: 0"
+               Options="new DialogOptions() { CloseButton = true, FullScreen = true, CloseOnEscapeKey = true }" Class="no-padding"
+               TitleClass="order_commentWarning">
+        <TitleContent>
+
+        </TitleContent>
+        <DialogContent>
+            <MudTable Striped="true"
+                      Bordered="true"
+                      Items="@StatusList" Dense="true" Hover="true" CanCancelEdit="true"
+                      @bind-SelectedItem="selectedItem1"
+                      CommitEditTooltip="Commit Edit"
+                      Height="@($"{(int)(WindowHeight * 0.95)}px")"
+                      RowEditPreview="BackupItem"
+                      RowEditCancel="ResetItemToOriginalValues"
+                      RowEditCommit="ItemHasBeenCommitted"
+                      ApplyButtonPosition="TableApplyButtonPosition.End"
+                      EditButtonPosition="TableEditButtonPosition.End"
+                      EditTrigger="@editTrigger">
+                <ToolBarContent>
+
+                </ToolBarContent>
+                <ColGroup>
+ 
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh Style="width:50px;">Позиция</MudTh>
+                    <MudTh>Название</MudTh>
+                    <MudTh Style="width:50px;">Разрешить движение назад</MudTh>
+                    <MudTh Style="width:50px;">Запретить изменение заказа</MudTh>
+                    <MudTh>
+                        Доступ
+                        <MudTooltip Text="Если не заполнен, то движение доступно для всех.">
+                            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Info" />
+                        </MudTooltip>
+                    </MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Позиция">@context.Position</MudTd>
+                    <MudTd DataLabel="Название">@context.Value</MudTd>
+                    <MudTd DataLabel="Движение назад">
+                        <MudCheckBox Disabled="true" @bind-Value="context.AllowMoveBack" />
+                    </MudTd>
+                    <MudTd DataLabel="Запретить изменение заказа">
+                        <MudCheckBox Disabled="true" @bind-Value="context.LimitPositionToEditOrder" />
+                    </MudTd>
+                    <MudTd DataLabel="Доступ">
+                        @string.Join(';', Users!.Where(w => context.UsersWitchAccess != null && context.UsersWitchAccess.Contains(w.Id)).Select(s => s.UserName))
+                    </MudTd>
+                </RowTemplate>
+                <RowEditingTemplate>
+                    <MudTd DataLabel="Позиция">
+                        <MudTextField @bind-Value="context.Position" Required />
+                    </MudTd>
+                    <MudTd DataLabel="Название">
+                        <MudTextField @bind-Value="context.Value" Required />
+                    </MudTd>
+                    <MudTd DataLabel="Name">
+                        <MudCheckBox @bind-Value="context.AllowMoveBack" />
+                    </MudTd>
+                    <MudTd DataLabel="Запретить изменение заказа">
+                        <MudCheckBox @bind-Value="context.LimitPositionToEditOrder" />
+                    </MudTd>
+                    <MudTd DataLabel="Position">
+                        <MudSelect T="ApplicationUser" Label="Пользователи"
+                                   MultiSelection="true" Clearable="true"
+                                   @bind-Value="OneSelectedValue"
+                                   @bind-SelectedValues="SelectedValues">
+                            @if (Users != null)
+                            {
+                                foreach (var user in Users)
+                                {
+                                    <MudSelectItem T="ApplicationUser"
+                                                   Value="@user">@($"{user.FirstName} {user.LastName}/ {user.UserName}")</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </MudTd>
+                </RowEditingTemplate>
+                <EditButtonContent Context="button">
+                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+                </EditButtonContent>
+            </MudTable>
+        </DialogContent>
+    </MudDialog>
+}
+
+@code {
+    [Parameter] public int WindowHeight { get; set; }
+    public List<ImportedOrderStatus>? StatusList { get; set; }
+
+    private IEnumerable<ApplicationUser>? Users { get; set; }
+    private IEnumerable<ApplicationUser> SelectedValues { get; set; } = new HashSet<ApplicationUser>() { };
+    private ApplicationUser? OneSelectedValue { get; set; }
+
+    private ImportedOrderStatus selectedItem1 = null;
+    private TableEditTrigger editTrigger = TableEditTrigger.RowClick;
+    private ImportedOrderStatus elementBeforeEdit;
+
+    private bool _visibleDialog;
+
+    private async Task OpenDialog(bool toggle)
+    {
+        StatusList ??= await ImportedOrderStatusManager.GetAsync();
+        Users ??= await UserManagerCustom.GetUsersAsync();
+        _visibleDialog = true;
+    }
+
+    private async void ItemHasBeenCommitted(object? element)
+    {
+        var es = (ImportedOrderStatus)element!;
+        var userIds = SelectedValues.Select(s => s.Id).ToArray();
+        es.UsersWitchAccess = string.Join(';', userIds);
+
+        if (await ImportedOrderStatusManager.UpdateAsync(es))
+            _snackBar.Add("Изменеия сохранены");
+        else
+        {
+            if (element != null) ResetItemToOriginalValues(element);
+            _snackBar.Add("Ошибка при сохранении");
+        }
+    }
+    private void BackupItem(object element)
+    {
+        elementBeforeEdit = new ImportedOrderStatus
+        {
+            Position = ((ImportedOrderStatus)element).Position,
+            Children = ((ImportedOrderStatus)element).Children,
+            DateTimeUpdate = ((ImportedOrderStatus)element).DateTimeUpdate,
+            ImportedOrderStatusImportedOrders = ((ImportedOrderStatus)element).ImportedOrderStatusImportedOrders,
+            ImportedOrders = ((ImportedOrderStatus)element).ImportedOrders,
+            Id = ((ImportedOrderStatus)element).Id,
+            IsDeleted = ((ImportedOrderStatus)element).IsDeleted,
+            IsFullDeleted = ((ImportedOrderStatus)element).IsFullDeleted,
+            IsValueConstant = ((ImportedOrderStatus)element).IsValueConstant,
+            Parent = ((ImportedOrderStatus)element).Parent,
+            ParentId = ((ImportedOrderStatus)element).ParentId,
+            UpdatedUser = ((ImportedOrderStatus)element).UpdatedUser,
+            Value = ((ImportedOrderStatus)element).Value,
+            AllowMoveBack = ((ImportedOrderStatus)element).AllowMoveBack,
+            UsersWitchAccess = ((ImportedOrderStatus)element).UsersWitchAccess,
+            LimitPositionToEditOrder = ((ImportedOrderStatus)element).LimitPositionToEditOrder,
+        };
+        if (Users != null)
+        {
+            SelectedValues = Array.Empty<ApplicationUser>();
+            if (!string.IsNullOrEmpty(elementBeforeEdit.UsersWitchAccess))
+                SelectedValues = Users.Where(s => elementBeforeEdit.UsersWitchAccess.Contains(s.Id)).ToHashSet<ApplicationUser>();
+        }
+    }
+    private void ResetItemToOriginalValues(object element)
+    {
+        ((ImportedOrderStatus)element).Position = elementBeforeEdit.Position;
+        ((ImportedOrderStatus)element).Children = elementBeforeEdit.Children;
+        ((ImportedOrderStatus)element).DateTimeUpdate = elementBeforeEdit.DateTimeUpdate;
+        ((ImportedOrderStatus)element).ImportedOrderStatusImportedOrders = elementBeforeEdit.ImportedOrderStatusImportedOrders;
+        ((ImportedOrderStatus)element).ImportedOrders = elementBeforeEdit.ImportedOrders;
+        ((ImportedOrderStatus)element).Id = elementBeforeEdit.Id;
+        ((ImportedOrderStatus)element).IsDeleted = elementBeforeEdit.IsDeleted;
+        ((ImportedOrderStatus)element).IsFullDeleted = elementBeforeEdit.IsFullDeleted;
+        ((ImportedOrderStatus)element).IsValueConstant = elementBeforeEdit.IsValueConstant;
+        ((ImportedOrderStatus)element).Parent = elementBeforeEdit.Parent;
+        ((ImportedOrderStatus)element).ParentId = elementBeforeEdit.ParentId;
+        ((ImportedOrderStatus)element).UpdatedUser = elementBeforeEdit.UpdatedUser;
+        ((ImportedOrderStatus)element).Value = elementBeforeEdit.Value;
+        ((ImportedOrderStatus)element).AllowMoveBack = elementBeforeEdit.AllowMoveBack;
+        ((ImportedOrderStatus)element).UsersWitchAccess = elementBeforeEdit.UsersWitchAccess;
+        ((ImportedOrderStatus)element).LimitPositionToEditOrder = elementBeforeEdit.LimitPositionToEditOrder;
+    }
+}

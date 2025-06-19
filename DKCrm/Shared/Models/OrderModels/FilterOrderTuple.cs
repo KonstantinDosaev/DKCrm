@@ -4,6 +4,7 @@
     {
         public List<Guid>? OurCompanies { get; set; }
         public List<Guid>? ContragentsCompanies { get; set; }
+        public List<Guid>? IncludeProductOrderList { get; set; }
         public bool IsHistoryOrders { get; set; }
         public bool? IsCompleteOrders { get; set; }
         public Guid? CurrentStatusId { get; set; }

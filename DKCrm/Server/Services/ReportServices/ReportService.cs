@@ -19,7 +19,7 @@ public class ReportService : IReportService
     {
         var result = new List<GetProductReportByCompanyAtChartResponse>();
         DateTime? oldsYear = null;
-        if (request.TypeOrder != null && request.TypeOrder == nameof(ExportedOrder))
+        if (request.TypeOrder is nameof(ExportedOrder))
         {
             foreach (var period in request.PeriodMonthsYearNumbers)
             {
@@ -53,10 +53,8 @@ public class ReportService : IReportService
                     };
                     rr.ProductsInPeriodList.Add(dto);
                 }
-
                 rr.OldsYears = (DateTime)oldsYear!;
                 result.Add(rr);
-
             }
         }
         else
@@ -93,16 +91,13 @@ public class ReportService : IReportService
                     };
                     rr.ProductsInPeriodList.Add(dto);
                 }
-
                 rr.OldsYears = (DateTime)oldsYear!;
                 result.Add(rr);
-
             }
         }
         return result;
-        
     }
-        public async Task<IEnumerable<GetProductReportByCompanyAtChartResponse>> GetProductFromYearByCompanyAtChartAsync( GetProductInPeriodByCompanyAtChartRequest request)
+    public async Task<IEnumerable<GetProductReportByCompanyAtChartResponse>> GetProductFromYearByCompanyAtChartAsync( GetProductInPeriodByCompanyAtChartRequest request)
     {
         var result = new List<GetProductReportByCompanyAtChartResponse>();
         DateTime? oldsYear = null;
@@ -138,7 +133,6 @@ public class ReportService : IReportService
                     };
                     response.ProductsInPeriodList.Add(dto);
                 }
-
                 response.OldsYears = (DateTime)oldsYear!;
                 result.Add(response);
             }
@@ -178,8 +172,6 @@ public class ReportService : IReportService
                 result.Add(response);
             }
         }
-
         return result;
-        
     }
 }

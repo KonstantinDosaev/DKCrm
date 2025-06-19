@@ -39,10 +39,10 @@
                     <ChildContent>
                         <div class="d-flex flex-column p-2">
                             <MudText Typo="Typo.button">
-                                <span class="text-decoration-underline">Телефон: </span> @Order.EmployeeBuyer.Phone
+                                <span class="text-decoration-underline">Телефон: </span> @Order.EmployeeBuyer?.Phone
                             </MudText>
                             <MudText Typo="Typo.button">
-                                <span class="text-decoration-underline">E-mail: </span> @Order.EmployeeBuyer.Email
+                                <span class="text-decoration-underline">E-mail: </span> @Order.EmployeeBuyer?.Email
                             </MudText>
                         </div>
                     </ChildContent>
@@ -84,11 +84,11 @@
                            Color="Color.Tertiary"
                            Icon="@Icons.Material.Sharp.Edit"
                            Variant="Variant.Filled"
-                           Class="pa-1 mr-2"/>
+                           Class="pa-1 mr-2" Disabled="_itemNotChange" />
         </MudTooltip>
         <MudButton Variant="Variant.Filled"
-                   Size="Size.Small" OnClick="() => _visibleAddExportedProductDialog = true" Style="" 
-                   Color="Color.Tertiary">
+                   Size="Size.Small" OnClick="() => _visibleAddExportedProductDialog = true" Style=""
+                   Color="Color.Tertiary" Disabled="_itemNotChange">
             Добавить продукт<MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2"/>
         </MudButton>
     </div>
@@ -120,7 +120,7 @@
         <HeaderContent>
             <MudTHeadRow Class="header-centered">
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.PartNumber!)">Парт-номер</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Name!)">Наименование</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Name)">Наименование</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.Product!.Brand?.Name!)">Производитель</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel Enabled="true" SortBy="new Func<ExportedProduct, object?>(x => x.Quantity)">Количество</MudTableSortLabel>/ требуется</MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<ExportedProduct, object?>(x => x.MinDaysForDeliveryPlaned)">Мин. дней на доставку</MudTableSortLabel></MudTh>
@@ -172,7 +172,8 @@
                     <div style="margin: 0 -0.5rem 0 1rem">
                         <MudIconButton Size="Size.Small" 
                                        OnClick="(() => OpenEditCompletePopover(context.Id))" 
-                                       Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
+                                       Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"
+                                       Disabled="_itemNotChange"/>
                     </div>
                     @if (ExportedProductId == context.Id && _isOpenCompletePopover)
                     {
@@ -278,7 +279,10 @@
 			            }
 		            </div>
 		            <div style="margin: 0 -0.5rem 0 1rem">
-			            <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCurrencyPopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary" />
+                        <MudIconButton Size="Size.Small" 
+                                       OnClick="(() => OpenEditCurrencyPopover(context.Id))"
+                                       Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary" 
+                                       Disabled="_itemNotChange" />
 		            </div>
 		            @if (ExportedProductId == context.Id && _isOpenPricePopover)
 		            {
@@ -302,7 +306,8 @@
 	            <MudIconButton Size="@Size.Small"
 	                           OnClick="() => RemoveExportedProduct(context.Id)"
 	                           Style="@(context.IsDeleted == false ? " background-color: rgba(217, 214, 81, 0.431;" : $" background-color: rgba(245, 39, 39, 0.5);")"
-	                           Icon="@Icons.Material.Sharp.Delete" Class="pa-0" />
+                               Icon="@Icons.Material.Sharp.Delete" Class="pa-0"
+                               Disabled="_itemNotChange" />
             </MudTd>
         </RowTemplate>
        
@@ -401,10 +406,9 @@
         Order ??= await ExportedOrderManager.GetDetailsAsync(Id);
         if (Order.ExportedOrderStatusExported != null)
         {
-            var currentStatusId = Order.ExportedOrderStatusExported
-                .OrderBy(o => o.DateTimeUpdate).FirstOrDefault()!.ExportedOrderStatusId;
+            var currentStatusId = Order.ExportedOrderStatusExported.MaxBy(o => o.DateTimeCreate)!.ExportedOrderStatusId;
             var currentStatus = Order.ExportedOrderStatus?.FirstOrDefault(f => f.Id == currentStatusId);
-            _itemNotChange = currentStatus!.Value != ExportOrderStatusNames.BeginFormed;
+            _itemNotChange = currentStatus!.LimitPositionToEditOrder;
         }
 
         if (Order.ExportedProducts != null)
@@ -424,7 +428,7 @@
     private int GetAllReserveQuantity(ExportedProduct exportedProduct)
     {
         var quantityInReserveAll = 0;
-        if (exportedProduct!.SoldFromStorage != null)
+        if (exportedProduct.SoldFromStorage != null)
             quantityInReserveAll += exportedProduct.SoldFromStorage.Select(s => s.Quantity).Sum();
 
         if (exportedProduct.PurchaseAtExports != null)

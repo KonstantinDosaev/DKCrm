@@ -5,7 +5,7 @@
     {
         if (CurrentOrder.ImportedOrderStatus != null && CurrentOrder.ImportedOrderStatusImportedOrders!.Any())
         {
-            <MudMenu Label="@CurrentStatus.Value">
+            <MudMenu Disabled="MoveLock" Label="@CurrentStatus.Value">
                 @foreach (var status in ParentStatusList)
                 {
                     @*if (status.Position == CurrentStatus.Position)
@@ -32,7 +32,8 @@
                             </MudPaper>
                         </MudMenuItem>
                     }*@
-                    
+                    var isNotDisable = ((int)status.Position == (int)CurrentStatus.Position + 1)
+                                       | ((int)status.Position == (int)CurrentStatus.Position - 1) | ((int)status.Position < 0);
                     if (status.Position == CurrentStatus.Position)
                     {
                         <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
@@ -43,7 +44,7 @@
                     }
                     if (status.Position != CurrentStatus.Position)
                     {
-                        <MudMenuItem Disabled="false" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                        <MudMenuItem Disabled="!isNotDisable" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder, status)" Class="p-0">
                             <MudPaper Class="pa-3 d-flex" Style="background: none">
                                 <MudText>@status.Value @status.Position</MudText>
                             </MudPaper>
@@ -75,8 +76,10 @@
     [Parameter] public List<ImportedOrderStatus>? ParentStatusList { get; set; }
     [Parameter] public ImportedOrder CurrentOrder { get; set; } = null!;
     [Parameter] public EventCallback RefreshParentCallback { get; set; }
+    [Parameter] public string? CurrentUserId { get; set; }
     private ImportedOrderStatus CurrentStatus { get; set; } = null!;
     private ExportedOrderStatus CurrentChildStatus { get; set; } = null!;
+    private bool MoveLock;
 
     private string _statusBackground = "green";
     private string _statusBackgroundNone = "blue";
@@ -90,7 +93,11 @@
         ParentStatusList = StatusList.Where(w => w.ParentId == null || w.ParentId == Guid.Empty).ToList();
         StatusList = StatusList.Where(w => w.Children == null || !w.Children.Any()).ToList();
         if (CurrentOrder.ImportedOrderStatusImportedOrders != null && CurrentOrder.ImportedOrderStatusImportedOrders.Any())
+        {
             CurrentStatus = CurrentOrder.ImportedOrderStatusImportedOrders.MaxBy(o => o.DateTimeCreate)!.ImportedOrderStatus!;
+            if (!string.IsNullOrEmpty(CurrentStatus.UsersWitchAccess) && CurrentUserId != null) 
+                MoveLock = !CurrentStatus.UsersWitchAccess.Contains(CurrentUserId);
+        }
 
     }
     [Inject] private IDialogService DialogService { get; set; } = null!;

@@ -12,6 +12,10 @@ namespace DKCrm.Shared.Models.OrderModels
         public virtual ICollection<ExportedOrder>? ExportedOrders { get; set; }
         public virtual ICollection<ExportedOrderStatusExportedOrder>? ExportedOrderStatusExported { get; set; }
         public bool IsValueConstant { get; set; }
+        public bool AllowMoveBack { get; set; }
+        [MaxLength(400)]
+        public string? UsersWitchAccess { get; set; }
+        public bool LimitPositionToEditOrder { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsFullDeleted { get; set; }
         public DateTime? DateTimeUpdate { get; set; }

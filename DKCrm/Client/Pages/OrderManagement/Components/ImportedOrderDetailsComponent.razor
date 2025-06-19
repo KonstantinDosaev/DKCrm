@@ -85,9 +85,13 @@
                            Color="Color.Tertiary"
                            Icon="@Icons.Material.Sharp.Edit"
                            Variant="Variant.Filled"
-                           Class="pa-1 mr-2"/>
+                           Class="pa-1 mr-2"
+                           Disabled="_itemNotChange"/>
         </MudTooltip>
-        <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="() => _visibleAddImportedProductDialog=true" Style="margin-left: 1rem;" Color="Color.Tertiary">
+        <MudButton Variant="Variant.Filled" Size="Size.Small" 
+                   OnClick="() => _visibleAddImportedProductDialog=true" 
+                   Style="margin-left: 1rem;" Color="Color.Tertiary"
+                   Disabled="_itemNotChange">
             Добавить продукт <MudIcon Size="@Size.Medium" Color="Color.Default" Icon="@Icons.Material.Sharp.Add" Class="pa-0 ml-2" />
         </MudButton>
     </div>
@@ -159,7 +163,10 @@
                     </MudText>
            
                     <div style="margin: 0 -0.5rem 0 1rem">
-                        <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCompletePopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"/>
+                        <MudIconButton Size="Size.Small" 
+                                       OnClick="(() => OpenEditCompletePopover(context.Id))" 
+                                       Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"
+                                       Disabled="_itemNotChange"/>
                     </div>
                 </div>
                 @if (ImportedProductId == context.Id && _isOpenCompletePopover)
@@ -178,7 +185,7 @@
 		                </div>
 	                </MudPopover> *@
 	                <MudDialog @bind-Visible="_isOpenCompletePopover" Style="max-width: 700px;padding: 0"
-	                           Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+                               Options="new DialogOptions(){CloseButton = true, FullScreen = true,CloseOnEscapeKey = true}" Class="no-padding">
 		                <DialogContent>
 			                <CompleteImportedProductComponent ImportedProduct="EditedImportedProduct"
 			                                                  CancelEditCallback="() => _isOpenCompletePopover = false"
@@ -225,7 +232,10 @@
                         }
                     </div>
                     <div style="margin: 0 -0.5rem 0 1rem">
-                        <MudIconButton Size="Size.Small" OnClick="(() => OpenEditCurrencyPopover(context.Id))" Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary" />
+                        <MudIconButton Size="Size.Small" 
+                                       OnClick="(() => OpenEditCurrencyPopover(context.Id))"
+                                       Icon="@Icons.Material.Filled.Edit" Color="@Color.Primary"
+                                       Disabled="_itemNotChange"/>
                     </div>
                     @if (ImportedProductId == context.Id && _isOpenPricePopover)
                     {
@@ -248,7 +258,8 @@
 	           <MudIconButton Size="@Size.Small"
 	                          OnClick="() => RemoveImportProduct(context.Id)"
 	                          Style="@(context.IsDeleted == false ? " background-color: rgba(217, 214, 81, 0.431;" : $" background-color: rgba(245, 39, 39, 0.5);")"
-	                          Icon="@Icons.Material.Sharp.Delete" Class="pa-0" />
+                              Icon="@Icons.Material.Sharp.Delete" Class="pa-0"
+                              Disabled="_itemNotChange"/>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -265,8 +276,8 @@
    
     @if (_visibleOrderComments)
     {
-        <MudDialog @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0" 
-                   Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+        <MudDialog @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0"
+                   Options="new DialogOptions(){CloseButton = true, FullScreen = true,CloseOnEscapeKey = true}" Class="no-padding">
             <DialogContent>
                 <OrderCommentComponent CurrentOrderId="Order.Id"
                                        OrderType="@typeof(ImportedOrder).ToString()"/>
@@ -328,6 +339,7 @@
     private bool _isOpenCompletePopover;
     private bool _visibleOrderComments;
     private bool _visibleUpdateOrderDialog;
+    private bool _itemNotChange;
     
     protected override async Task OnInitializedAsync()
     {
@@ -339,6 +351,12 @@
             {
                 item.ImportedOrder = Order;
             }
+        }
+        if (Order.ImportedOrderStatusImportedOrders != null)
+        {
+            var currentStatusId = Order.ImportedOrderStatusImportedOrders.MaxBy(o => o.DateTimeCreate)!.ImportedOrderStatusId;
+            var currentStatus = Order.ImportedOrderStatus?.FirstOrDefault(f => f.Id == currentStatusId);
+            _itemNotChange = currentStatus!.LimitPositionToEditOrder;
         }
     }
     private int GetFreeQuantity(ImportedProduct importedProduct)

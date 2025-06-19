@@ -1,15 +1,15 @@
 ﻿@using DKCrm.Shared.Models.OrderModels
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
 
 
 <div class="flex-column">
     @if (ParentStatusList != null && CurrentOrder.ExportedOrderStatus != null && CurrentOrder.ExportedOrderStatusExported!.Any())
     {
-      
-
-        <MudMenu Label="@CurrentStatus.Value">
-            
+        <MudMenu Disabled="MoveLock" Label="@CurrentStatus.Value">
                 @foreach (var status in ParentStatusList)
                 {
+                var isNotDisable = ((int)status.Position == (int)CurrentStatus.Position + 1)
+                | ((int)status.Position == (int)CurrentStatus.Position - 1) | ((int)status.Position < 0);
                     if (status.Position == CurrentStatus.Position)
                     {
                         <MudMenuItem Disabled="true" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
@@ -20,7 +20,7 @@
                     }
                 if (status.Position != CurrentStatus.Position)
                     {
-                        <MudMenuItem Disabled="false" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                    <MudMenuItem Disabled="!isNotDisable" OnClick="() => UpdateStatusInOrderClicked(CurrentOrder, status)" Class="p-0">
                         <MudPaper Class="pa-3 d-flex" Style="background: none">
                         <MudText>@status.Value @status.Position</MudText>
                         </MudPaper>
@@ -44,20 +44,22 @@
                         </MudMenuItem>
                     } *@
                 }
-          
+            @CurrentUserId;
         </MudMenu>
     }
     else
     {
-        
-        <MudMenu Label="Выбрать статус">
-            @foreach (var status in ParentStatusList)
+        <MudMenu Disabled="MoveLock" Label="Выбрать статус">
+            @if (ParentStatusList != null)
             {
-                <MudMenuItem  OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
-                    <MudPaper Class="pa-3 d-flex">
-                        <MudText>@status.Value @status.Position</MudText>
-                    </MudPaper>
-                </MudMenuItem>
+                foreach (var status in ParentStatusList)
+                {
+                    <MudMenuItem OnClick="() => UpdateStatusInOrderClicked(CurrentOrder,status)" Class="p-0">
+                        <MudPaper Class="pa-3 d-flex">
+                            <MudText>@status.Value @status.Position</MudText>
+                        </MudPaper>
+                    </MudMenuItem>
+                }
             }
         </MudMenu>
     }
@@ -68,13 +70,14 @@
     [Parameter] public List<ExportedOrderStatus>? StatusList { get; set; }
     [Parameter] public List<ExportedOrderStatus>? ParentStatusList { get; set; }
     [Parameter] public ExportedOrder CurrentOrder { get; set; } = null!;
-
+    [Parameter] public string? CurrentUserId { get; set; }
     private ExportedOrderStatus CurrentStatus { get; set; } = null!;
     private ExportedOrderStatus CurrentChildStatus { get; set; } = null!;
 
     private string _statusBackground = "green";
     private string _statusBackgroundNone = "blue";
     private bool _IsDisableStatus;
+    private bool MoveLock;
     //MudListItem selectedItem;
     ExportedOrderStatus selectedValue;
 
@@ -84,8 +87,27 @@
         ParentStatusList = StatusList.Where(w => w.ParentId == null || w.ParentId == Guid.Empty).ToList();
         StatusList = StatusList.Where(w => w.Children == null || !w.Children.Any()).ToList();
         if (CurrentOrder.ExportedOrderStatusExported != null && CurrentOrder.ExportedOrderStatusExported.Any())
+        {
             CurrentStatus = CurrentOrder.ExportedOrderStatusExported.MaxBy(o => o.DateTimeCreate)!.ExportedOrderStatus!;
-       
+            if (!string.IsNullOrEmpty(CurrentStatus.UsersWitchAccess) && CurrentUserId != null) 
+                MoveLock = !CurrentStatus.UsersWitchAccess.Contains(CurrentUserId);
+        }
+
+    }
+
+    private async Task MoveStatusStage(ExportedOrder order, ExportedOrderStatus status, bool isNextMove)
+    {
+        /*var neededStatusPosition = isNextMove ? (int)CurrentStatus.Position + 1 : (int)CurrentStatus.Position - 1;
+        if (isNextMove == false && CurrentStatus.AllowMoveBack == false && neededStatusPosition > 0)
+        {
+            _snackBar.Add("На этой стадии запрещено движение назад");
+            return;
+        }*/
+
+        /*var neededStatus = ParentStatusList?.FirstOrDefault(w => (int)w.Position == neededStatusPosition);
+
+
+        await UpdateStatusInOrderClicked(CurrentOrder, neededStatus);*/
     }
 
     private async Task UpdateStatusInOrder(ExportedOrder order, ExportedOrderStatus status)
@@ -104,11 +126,10 @@
             //await _table!.ReloadServerData();
             CurrentStatus = status;
         }
-        
     }
     [Inject] private IDialogService DialogService { get; set; } = null!;
 
-    private async void UpdateStatusInOrderClicked(ExportedOrder order, ExportedOrderStatus status)
+    private async Task UpdateStatusInOrderClicked(ExportedOrder order, ExportedOrderStatus status)
     {
         bool? result = await DialogService.ShowMessageBox(
             "Внимание",

@@ -1,0 +1,47 @@
+﻿@using DKCrm.Shared.Models.OfferModels
+<MudIconButton Icon="@Icons.Material.Filled.History" Size="@Size.Medium"
+			   OnClick="()=> _visibleHistoryDialog = true"
+               Color="Color.Primary" Class="pa-1 mr-2"/>
+		           
+@if (ImportOffer is { PricesForImportOffer: not null })
+{
+	
+	<MudDialog @bind-Visible="_visibleHistoryDialog" Style="max-width: 450px;padding: 0"
+	           Options="new DialogOptions() { CloseButton = true, FullScreen = true, CloseOnEscapeKey = true }" Class="no-padding">
+		<DialogContent>
+			<div class="p-2">
+				<MudText Class="mb-2" Typo="Typo.button">История изменения</MudText>
+				@foreach (var price in ImportOffer.PricesForImportOffer.OrderByDescending(o => o.DateTimeOver))
+				{
+					<div class="mb-1 border-bottom">
+						<div class="d-flex align-items-center">
+							<div class="flex-grow-1">
+								<MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
+									@($"{price.DateTimeCreate.ToShortDateString()} - {price.DateTimeOver?.ToShortDateString()}")
+								</MudText>
+								<MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
+									@($"Колю-во: {price.Quantity} шт.")
+								</MudText>
+							</div>
+							<CompleteOfferComponent PriceForImport="@price"/>
+						</div>
+
+						<div class="d-flex justify-content-between px-2">
+							<MudText>@($"{decimal.Round(price.Value, 4)}")</MudText>
+							<MudText>@($"{price.Currency}")</MudText>
+						</div>
+						<div class="d-flex justify-content-between px-2">
+							<MudText>@($"{decimal.Round(price.ValueLocal, 4)}")</MudText>
+							<MudText>@($"{price.CurrencyLocal}")</MudText>
+						</div>
+					</div>
+				}
+			</div>
+		</DialogContent>
+	</MudDialog>
+}
+
+@code {
+	[Parameter] public ImportOffer? ImportOffer { get; set; }
+	private bool _visibleHistoryDialog;
+}

@@ -226,7 +226,7 @@
 <CategoryDrawerComponent @ref="_categoryDrawerRef"/>
 
 <MudDialog @bind-Visible="_visibleDocumentManagerDialog"
-           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true, CloseOnEscapeKey = true}"
            Style="height: 100VH">
     <TitleContent>
         <div style="text-align: right">
@@ -244,7 +244,7 @@
 @if (_visibleImportOffers)
 {
 	<MudDialog @bind-Visible="_visibleImportOffers" Style="padding: 0"
-	           Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true, CloseOnEscapeKey=true}" Class="no-padding">
 		<DialogContent>
 			<ImportedOfferComponent CompanyId="_filterOfferTuple.CurrentCompanyId" FilterTuple="_filterOfferTuple" />
 		</DialogContent>

@@ -21,7 +21,9 @@
                 <CascadingValue Value="@WindowWidth" Name="WindowWidth">
                     <CascadingValue Value="@GlobalFilterType" Name="GlobalFilterType">
                         <CascadingValue Value="@GlobalFilterValue" Name="GlobalFilterValue">
-                            @Body
+                            <CascadingValue Value="@CurrentUserId" Name="CurrentUserId">
+                             @Body
+                            </CascadingValue>
                         </CascadingValue>
                     </CascadingValue>
                 </CascadingValue>
@@ -40,6 +42,7 @@
     private bool _userProfileIsValid = true;
     private int WindowWidth { get; set; }
     private int WindowHeight { get; set; }
+  
     private string? GlobalFilterValue { get; set;}
     private int GlobalFilterType { get; set;}
     protected override async Task OnInitializedAsync()

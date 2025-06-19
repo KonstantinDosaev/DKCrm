@@ -27,7 +27,7 @@ namespace DKCrm.Server.Controllers.OrderControllers
 
         [HttpPut]
         public async Task<IActionResult> Put(ExportedOrderStatus exportedOrderStatus)
-            => Ok(await _exportedOrderStatusServices.PostAsync(exportedOrderStatus));
+            => Ok(await _exportedOrderStatusServices.PutAsync(exportedOrderStatus));
 
         [HttpPut("range")]
         public async Task<IActionResult> PutRange(IEnumerable<ExportedOrderStatus> exportedOrderStatus)

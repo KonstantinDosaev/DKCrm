@@ -13,7 +13,7 @@
         <div class="d-flex flex-column">
             @if (_isOpen && Users!= null)
             {
-                <MudForm @bind-IsValid="@_successEmail">
+                <MudForm @bind-IsValid="@_success">
                     <MudSelect T="ApplicationUser" Label="US States" MultiSelection="true" @bind-Value="OneSelectedValue"
                                @bind-SelectedValues="SelectedValues">
                         @foreach (var user in Users)
@@ -48,7 +48,7 @@
 @code {
     [Parameter] public Guid ComponentId { get; set; }
     private bool _isOpen;
-    private bool _successEmail;
+    private bool _success;
     private IEnumerable<ApplicationUser>? Users{ get; set; }
     private ApplicationUser? OneSelectedValue { get; set; }
     private AccessRestriction? AccessRestriction { get; set; }

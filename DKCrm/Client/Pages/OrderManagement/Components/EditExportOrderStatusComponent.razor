@@ -1,0 +1,190 @@
+﻿@using DKCrm.Shared.Models.OrderModels
+
+<MudTooltip Text="Настройки статусов">
+    <MudIconButton OnClick="()=> OpenDialog(true)"
+                   Icon="@Icons.Material.Filled.Settings" />
+</MudTooltip>
+
+@if (_visibleDialog)
+{
+    <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleDialog" Style="padding: 0"
+               Options="new DialogOptions() { CloseButton = true, FullScreen = true, CloseOnEscapeKey = true }" Class="no-padding"
+               TitleClass="order_commentWarning">
+        <TitleContent>
+
+        </TitleContent>
+        <DialogContent>
+            <MudTable Striped="true"
+                      Bordered="true"
+                      Items="@StatusList" Dense="true" Hover="true" CanCancelEdit="true"
+                      @bind-SelectedItem="selectedItem1" 
+                      CommitEditTooltip="Commit Edit" 
+                      Height="@($"{(int)(WindowHeight * 0.95)}px")"
+                      RowEditPreview="BackupItem" 
+                      RowEditCancel="ResetItemToOriginalValues"
+                      RowEditCommit="ItemHasBeenCommitted"  
+                      ApplyButtonPosition="TableApplyButtonPosition.End"
+                      EditButtonPosition="TableEditButtonPosition.End" 
+                      EditTrigger="@editTrigger">
+                <ToolBarContent>
+                 
+                </ToolBarContent>
+                <ColGroup>
+                    @*@if (applyButtonPosition.DisplayApplyButtonAtStart() || (editButtonPosition.DisplayEditButtonAtStart() && editTrigger == TableEditTrigger.EditButton))
+                    {
+                        <col style="width:50px;" />
+                    }
+                    <col style="width:50px;" />
+                    <col style="width:80px;" />
+                    <col style="width:50%;" />
+                    <col />
+                    <col />
+                    @if (applyButtonPosition.DisplayApplyButtonAtEnd() || (editButtonPosition.DisplayEditButtonAtEnd() && editTrigger == TableEditTrigger.EditButton))
+                    {
+                        <col style="width:50px;" />
+                    }*@
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh Style="width:50px;">Позиция</MudTh>
+                    <MudTh>Название</MudTh>
+                    <MudTh Style="width:50px;">Разрешить движение назад</MudTh>
+                    <MudTh Style="width:50px;">Запретить изменение заказа</MudTh>
+                    <MudTh>Доступ
+                        <MudTooltip Text="Если не заполнен, то движение доступно для всех.">
+                            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Info"/>
+                        </MudTooltip>
+                        </MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Позиция">@context.Position</MudTd>
+                    <MudTd DataLabel="Название">@context.Value</MudTd>
+                    <MudTd DataLabel="Движение назад">
+                        <MudCheckBox Disabled="true" @bind-Value="context.AllowMoveBack"/>
+                    </MudTd>
+                    <MudTd DataLabel="Запретить изменение заказа">
+                        <MudCheckBox Disabled="true" @bind-Value="context.LimitPositionToEditOrder" />
+                    </MudTd>
+                    <MudTd DataLabel="Доступ">
+                        @string.Join(';', Users!.Where(w => context.UsersWitchAccess != null && context.UsersWitchAccess.Contains(w.Id)).Select(s => s.UserName))
+                    </MudTd>
+                </RowTemplate>
+                <RowEditingTemplate>
+                    <MudTd DataLabel="Позиция">
+                        <MudTextField @bind-Value="context.Position" Required />
+                    </MudTd>
+                    <MudTd DataLabel="Название">
+                        <MudTextField @bind-Value="context.Value" Required/>
+                    </MudTd>
+                    <MudTd DataLabel="Name">
+                        <MudCheckBox @bind-Value="context.AllowMoveBack" />
+                    </MudTd>
+                    <MudTd DataLabel="Запретить изменение заказа">
+                        <MudCheckBox @bind-Value="context.LimitPositionToEditOrder" />
+                    </MudTd>
+                    <MudTd DataLabel="Position">
+                        <MudSelect T="ApplicationUser" Label="Пользователи" 
+                                   MultiSelection="true" Clearable="true"
+                                   @bind-Value="OneSelectedValue"
+                                   @bind-SelectedValues="SelectedValues" >
+                            @if (Users != null)
+                            {
+                                foreach (var user in Users)
+                                {
+                                    <MudSelectItem T="ApplicationUser" 
+                                                   Value="@user">@($"{user.FirstName} {user.LastName}/ {user.UserName}")</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </MudTd>
+                </RowEditingTemplate>
+                <EditButtonContent Context="button">
+                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+                </EditButtonContent>
+            </MudTable>
+        </DialogContent>
+    </MudDialog>
+}
+
+@code {
+    [Parameter] public int WindowHeight { get; set; }
+    public List<ExportedOrderStatus>? StatusList { get; set; }
+
+    private IEnumerable<ApplicationUser>? Users{ get; set; }
+    private IEnumerable<ApplicationUser> SelectedValues { get; set; } = new HashSet<ApplicationUser>() {  };
+    private ApplicationUser? OneSelectedValue { get; set; }
+
+    private ExportedOrderStatus selectedItem1 = null;
+    private TableEditTrigger editTrigger = TableEditTrigger.RowClick;
+    private ExportedOrderStatus elementBeforeEdit;
+
+    private bool _visibleDialog;
+
+    private async Task OpenDialog(bool toggle)
+    {
+        StatusList ??= await ExportedOrderStatusManager.GetAsync();
+        Users ??= await UserManagerCustom.GetUsersAsync();
+        _visibleDialog = true;
+    }
+
+    private async void ItemHasBeenCommitted(object? element)
+    {
+        var es = (ExportedOrderStatus)element;
+        var userIds = SelectedValues.Select(s => s.Id).ToArray();
+        es.UsersWitchAccess = string.Join(';', userIds);
+
+        if(await ExportedOrderStatusManager.UpdateAsync(es))
+            _snackBar.Add("Изменеия сохранены");
+        else
+        {
+            ResetItemToOriginalValues(element);
+            _snackBar.Add("Ошибка при сохранении");
+        }
+    }
+    private void BackupItem(object element)
+    {
+        elementBeforeEdit = new ExportedOrderStatus
+        {
+            Position = ((ExportedOrderStatus)element).Position,
+            Children = ((ExportedOrderStatus)element).Children, 
+            DateTimeUpdate = ((ExportedOrderStatus)element).DateTimeUpdate,
+            ExportedOrderStatusExported = ((ExportedOrderStatus)element).ExportedOrderStatusExported, 
+            ExportedOrders = ((ExportedOrderStatus)element).ExportedOrders, 
+            Id = ((ExportedOrderStatus)element).Id,
+            IsDeleted = ((ExportedOrderStatus)element).IsDeleted, 
+            IsFullDeleted = ((ExportedOrderStatus)element).IsFullDeleted, 
+            IsValueConstant = ((ExportedOrderStatus)element).IsValueConstant,
+            Parent = ((ExportedOrderStatus)element).Parent, 
+            ParentId = ((ExportedOrderStatus)element).ParentId, 
+            UpdatedUser = ((ExportedOrderStatus)element).UpdatedUser, 
+            Value = ((ExportedOrderStatus)element).Value,
+            AllowMoveBack = ((ExportedOrderStatus)element).AllowMoveBack,
+            UsersWitchAccess = ((ExportedOrderStatus)element).UsersWitchAccess,
+            LimitPositionToEditOrder = ((ExportedOrderStatus)element).LimitPositionToEditOrder,
+        };
+        if (Users != null)
+        {
+            SelectedValues = Array.Empty<ApplicationUser>();
+            if (!string.IsNullOrEmpty(elementBeforeEdit.UsersWitchAccess))
+                SelectedValues = Users.Where(s => elementBeforeEdit.UsersWitchAccess.Contains(s.Id)).ToHashSet<ApplicationUser>();
+        }
+    }
+    private void ResetItemToOriginalValues(object element)
+    {
+        ((ExportedOrderStatus)element).Position = elementBeforeEdit.Position;
+        ((ExportedOrderStatus)element).Children = elementBeforeEdit.Children;
+        ((ExportedOrderStatus)element).DateTimeUpdate = elementBeforeEdit.DateTimeUpdate;
+        ((ExportedOrderStatus)element).ExportedOrderStatusExported = elementBeforeEdit.ExportedOrderStatusExported;
+        ((ExportedOrderStatus)element).ExportedOrders = elementBeforeEdit.ExportedOrders;
+        ((ExportedOrderStatus)element).Id = elementBeforeEdit.Id;
+        ((ExportedOrderStatus)element).IsDeleted = elementBeforeEdit.IsDeleted;
+        ((ExportedOrderStatus)element).IsFullDeleted = elementBeforeEdit.IsFullDeleted;
+        ((ExportedOrderStatus)element).IsValueConstant = elementBeforeEdit.IsValueConstant;
+        ((ExportedOrderStatus)element).Parent = elementBeforeEdit.Parent;
+        ((ExportedOrderStatus)element).ParentId = elementBeforeEdit.ParentId;
+        ((ExportedOrderStatus)element).UpdatedUser = elementBeforeEdit.UpdatedUser;
+        ((ExportedOrderStatus)element).Value = elementBeforeEdit.Value;
+        ((ExportedOrderStatus)element).AllowMoveBack = elementBeforeEdit.AllowMoveBack;
+        ((ExportedOrderStatus)element).UsersWitchAccess = elementBeforeEdit.UsersWitchAccess;
+        ((ExportedOrderStatus)element).LimitPositionToEditOrder = elementBeforeEdit.LimitPositionToEditOrder;
+    }
+}

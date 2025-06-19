@@ -420,14 +420,14 @@
 @if (_visibleCommentDialog)
 {
     <MudDialog @bind-Visible="_visibleCommentDialog" Style="max-width: 700px;padding: 0"
-               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true,CloseOnEscapeKey = true}" Class="no-padding">
         <DialogContent>
             <CompanyCommentsComponent CurrentCompanyId="@CompanyId" />
         </DialogContent>
     </MudDialog>
 }
 <MudDialog @bind-Visible="_visibleDocumentManagerDialog"
-           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true}"
+           Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium,BackdropClick = true,CloseOnEscapeKey = true}"
            Style="height: 100VH">
     <TitleContent>
         <div style="text-align: right">

@@ -9,7 +9,7 @@
 @if (_visibleWarningOrderCommentsDialog)
 {
     <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleWarningOrderCommentsDialog" Style="max-width: 700px; padding: 0"
-               Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding"
+               Options="new DialogOptions() { CloseButton = true, FullScreen = true, CloseOnEscapeKey = true }" Class="no-padding"
                TitleClass="order_commentWarning">
         <TitleContent>
             

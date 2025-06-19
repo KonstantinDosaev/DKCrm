@@ -209,8 +209,8 @@
 
 @if (CurrentChatId != Guid.Empty)
 {
-    <MudDialog VisibleChanged="OpenCloseAddUserDialog" Visible="_addUserDialogIsOpen" 
-               Options="new DialogOptions() { CloseButton = true, }">
+    <MudDialog VisibleChanged="OpenCloseAddUserDialog" Visible="_addUserDialogIsOpen"
+               Options="new DialogOptions() { CloseButton = true,CloseOnEscapeKey = true }">
         <DialogContent>
             <div class="pt-4" style="min-width: 300px">
                 @foreach (var user in AllChatUsers.Where(w =>!CurrentChatGroup!.ApplicationUsers!.Select(s => s.Id).Contains(w.Id)))
@@ -230,8 +230,8 @@
             </div>
         </DialogContent>
     </MudDialog>
-    <MudDialog VisibleChanged="OpenCloseUsersInChatDialog" Visible="_usersInChatDialogIsOpen" 
-               Options="new DialogOptions() { CloseButton = true,}" >
+    <MudDialog VisibleChanged="OpenCloseUsersInChatDialog" Visible="_usersInChatDialogIsOpen"
+               Options="new DialogOptions() { CloseButton = true,CloseOnEscapeKey = true}">
         <DialogContent>
             <div class="pt-4" style="min-width: 300px">
                 @if (CurrentChatGroup is {ApplicationUsers: { } })

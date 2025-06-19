@@ -222,6 +222,7 @@ namespace DKCrm.Server.Services.OrderServices
         }
         public async Task<Guid> PostAsync(ExportedProduct exportedProduct)
         {
+            exportedProduct.DateTimeUpdate = DateTime.UtcNow;
             _context.Entry(exportedProduct).State = EntityState.Added;
             await _context.SaveChangesAsync();
             return exportedProduct.Id;
@@ -230,6 +231,7 @@ namespace DKCrm.Server.Services.OrderServices
 
         public async Task<Guid> PutAsync(ExportedProduct exportedProduct)
         {
+            exportedProduct.DateTimeUpdate = DateTime.UtcNow;
             _context.Entry(exportedProduct).State = EntityState.Modified;
             
             await _context.SaveChangesAsync();

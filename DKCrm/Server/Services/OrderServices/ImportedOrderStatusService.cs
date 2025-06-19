@@ -72,14 +72,50 @@ namespace DKCrm.Server.Services.OrderServices
         {
             _context.ImportedOrderStatus.AddRange(new[]
             {
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = -1,Value = ExportOrderStatusNames.Canceled,IsValueConstant = true},
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,Value = ImportOrderStatusNames.BeginFormed,IsValueConstant = true},
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ImportOrderStatusNames.CompletedFormed,IsValueConstant = true},
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ImportOrderStatusNames.AwaitingConfirmation,IsValueConstant = true},
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,Value = ImportOrderStatusNames.Delivery,IsValueConstant = true},
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,Value = ImportOrderStatusNames.DeliveryCompleted,IsValueConstant = true},
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,Value = ImportOrderStatusNames.QualityTest,IsValueConstant = true},
-                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 6,Value = ImportOrderStatusNames.Completed,IsValueConstant = true}
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = -1,
+                    Value = ExportOrderStatusNames.Canceled,
+                    LimitPositionToEditOrder = true,
+                    IsValueConstant = true},
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,
+                    Value = ImportOrderStatusNames.BeginFormed,
+                    IsValueConstant = true,
+                    AllowMoveBack = true,
+                },
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,
+                    Value = ImportOrderStatusNames.CompletedFormed,
+                    IsValueConstant = true,
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,
+                    Value = ImportOrderStatusNames.AwaitingConfirmation,
+                    IsValueConstant = true,
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,
+                    Value = ImportOrderStatusNames.Delivery,
+                    IsValueConstant = true,
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,
+                    Value = ImportOrderStatusNames.DeliveryCompleted,
+                    IsValueConstant = true,
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,
+                    Value = ImportOrderStatusNames.QualityTest,
+                    IsValueConstant = true,
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ImportedOrderStatus(){Id = Guid.NewGuid(),Position = 6,
+                    Value = ImportOrderStatusNames.Completed,
+                    IsValueConstant = true,
+                    LimitPositionToEditOrder = true
+                }
 
             });
             return _context.SaveChangesAsync().IsCompletedSuccessfully;

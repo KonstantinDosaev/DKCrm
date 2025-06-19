@@ -81,13 +81,45 @@ namespace DKCrm.Server.Services.OrderServices
         {
             _context.ExportedOrderStatus.AddRange(new[]
             {
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = -1,Value = ExportOrderStatusNames.Canceled,IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,Value = ExportOrderStatusNames.BeginFormed,IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,Value = ExportOrderStatusNames.Formed, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,Value = ExportOrderStatusNames.OfferSentClient, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,Value = ExportOrderStatusNames.OfferСonfirmedClient, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,Value = ExportOrderStatusNames.Delivery, IsValueConstant = true},
-                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,Value = ExportOrderStatusNames.Completed, IsValueConstant = true}
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = -1,
+                    Value = ExportOrderStatusNames.Canceled,
+                    IsValueConstant = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 0,
+                    Value = ExportOrderStatusNames.BeginFormed,
+                    IsValueConstant = true, 
+                    AllowMoveBack = true,
+                },
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 1,
+                    Value = ExportOrderStatusNames.Formed, 
+                    IsValueConstant = true, 
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 2,
+                    Value = ExportOrderStatusNames.OfferSentClient, 
+                    IsValueConstant = true,
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 3,
+                    Value = ExportOrderStatusNames.OfferСonfirmedClient,
+                    IsValueConstant = true, 
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 4,
+                    Value = ExportOrderStatusNames.Delivery, 
+                    IsValueConstant = true, 
+                    AllowMoveBack = true,
+                    LimitPositionToEditOrder = true
+                },
+                new ExportedOrderStatus(){Id = Guid.NewGuid(),Position = 5,
+                    Value = ExportOrderStatusNames.Completed, 
+                    IsValueConstant = true,
+                    LimitPositionToEditOrder = true
+                }
             });
             return _context.SaveChangesAsync().IsCompletedSuccessfully;
         }

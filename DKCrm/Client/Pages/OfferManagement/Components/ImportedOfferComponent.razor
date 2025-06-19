@@ -53,7 +53,7 @@
           Striped="true"
           Bordered="true"
           AllowUnsorted="true"
-          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.65)}px")"
+          FixedHeader="true" Height="@($"{(int)(WindowHeight * 0.63)}px")"
           FixedFooter="true"
           HeaderClass=" table-head-bordered mud-table-header-fix" T="ImportOffer" @ref="_table">
     <HeaderContent>
@@ -169,39 +169,7 @@
         </MudTd>
         <MudTd DataLabel="Редактировать">
             <div class="d-flex align-items-center"> 
-	            <MudMenu>
-		            <ActivatorContent>
-			            <MudIconButton Icon="@Icons.Material.Filled.History" Size="@Size.Medium"
-			                           Color="Color.Primary" Class="pa-1 mr-2"/>
-		            </ActivatorContent>
-		            <ChildContent>
-			            @if (context.PricesForImportOffer != null)
-			            {
-				            <div class="p-2">
-					            <MudText Class="mb-2" Typo="Typo.button">История изменения</MudText>
-					            @foreach (var price in context.PricesForImportOffer.OrderByDescending(o => o.DateTimeOver))
-					            {
-						            <div class="mb-1 border-bottom">
-							            <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
-								            @($"{price.DateTimeCreate.ToShortDateString()} - {price.DateTimeOver?.ToShortDateString()}")
-							            </MudText>
-							            <MudText Class="px-3" style="background-color: rgba(18, 9, 62, 0.18)">
-								            @($"Колю-во: {price.Quantity} шт.")
-							            </MudText>
-							            <div class="d-flex justify-content-between px-2">
-								            <MudText>@($"{decimal.Round(price.Value, 4)}")</MudText>
-								            <MudText>@($"{price.Currency}")</MudText>
-							            </div>
-							            <div class="d-flex justify-content-between px-2">
-								            <MudText>@($"{decimal.Round(price.ValueLocal, 4)}")</MudText>
-								            <MudText>@($"{price.CurrencyLocal}")</MudText>
-							            </div>
-						            </div>
-					            }
-				            </div>
-			            }
-		            </ChildContent>
-	            </MudMenu>
+	            <HistoryImportOfferComponent ImportOffer="@context"/>
 
             @if (CompanyId != null)
                 {
@@ -255,7 +223,7 @@
 @if (_visibleOrderComments)
 {
     <MudDialog ContentClass="content-dialog_noScroll" @bind-Visible="_visibleOrderComments" Style="max-width: 700px;padding: 0"
-               Options="new DialogOptions(){CloseButton = true, FullScreen = true,}" Class="no-padding">
+               Options="new DialogOptions(){CloseButton = true, FullScreen = true, CloseOnEscapeKey=true}" Class="no-padding">
         <DialogContent>
             <OrderCommentComponent CurrentOrderId="OrderId"
                                    OrderType="@typeof(ExportedOrder).ToString()" />
@@ -265,7 +233,7 @@
 @if (_visibleImportOrdersFromOffer)
 {
         <MudDialog @bind-Visible="_visibleImportOrdersFromOffer" Style="max-width: 700px;padding: 0"
-                   Options="new DialogOptions() { CloseButton = true, FullScreen = true, }" Class="no-padding">
+               Options="new DialogOptions() { CloseButton = true, FullScreen = true, CloseOnEscapeKey=true }" Class="no-padding">
             <DialogContent>
 	            <div class="p-3 d-flex justify-content-between">
 	            <div class="offer_order_table_struct">
@@ -329,6 +297,7 @@
             </DialogContent>
         </MudDialog>
 }
+
 @if (_visibleImportOrder)
 {
 	<MudDialog @bind-Visible="_visibleImportOrder" Style="max-width:padding: 0"
@@ -341,10 +310,11 @@
 		</DialogContent>
 	</MudDialog>
 }
+
 @if (_visibleCompanyDetailsDialog)
 {
     <MudDialog @bind-Visible="_visibleCompanyDetailsDialog"
-               Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true, CloseButton = true }"
+               Options="new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackdropClick = true, CloseButton = true, CloseOnEscapeKey=true }"
                Style="height: 100VH">
         <TitleContent>
         </TitleContent>
@@ -353,11 +323,13 @@
         </DialogContent>
     </MudDialog>
 }
+
 @if (_visibleAddDialog)
 {
     <CreateImportOfferDialog RefreshParentItem="() => _table.ReloadServerData()"
                              @bind-VisibleDialog="_visibleAddDialog" CompanyId="@((Guid)CompanyId)"/>
 }
+
 @if (_visibleAddPriceDialog)
 {
     <CreateImportOfferDialog RefreshParentItem="() => _table.ReloadServerData()"
@@ -368,13 +340,13 @@
                              CompanyId="@((Guid)CompanyId)"
                              IsAddPriceForm="true"/>
 }
+
 @if (CurrentOffer != null)
 {
 	<CreateImportedOrderDialog
 		@bind-VisibleDialog="_visibleAddOrderDialog" CompanySeller="@CurrentOffer.Company"
 		RefreshProductList="() => LoadImportOrders((Guid)CompanyId)" />
 }
-
 
 @code {
 	[Parameter] public bool IsDoubleNested { get; set; }
